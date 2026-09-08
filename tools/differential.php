@@ -10,7 +10,7 @@
  */
 declare(strict_types=1);
 
-require '/h/bootstrap_realrandom.php';
+require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
 foreach (['/DirectiveProcessorInterface.php','/VariableResolverInterface.php','/Template/FilteringDepthMeter.php',
@@ -19,7 +19,7 @@ foreach (['/DirectiveProcessorInterface.php','/VariableResolverInterface.php','/
  '/DirectiveProcessor/Filter/FilterPool.php','/DirectiveProcessor/VarDirective.php','/DirectiveProcessor/IfDirective.php',
  '/DirectiveProcessor/DependDirective.php','/DirectiveProcessor/SimpleDirective.php','/DirectiveProcessor/LegacyDirective.php',
  '/DirectiveProcessor/TemplateDirective.php','/SimpleDirective/ProcessorPool.php','/Template.php'] as $f) { require $base . $f; }
-require '/m/tests/bootstrap.php';
+require PKGROOT . '/tests/bootstrap.php';
 
 use Magento\Framework\Stdlib\StringUtils;
 use Magento\Framework\Math\Random;
@@ -60,7 +60,7 @@ printf("mode             : %s\n", $mode);
 foreach (['trans', 'inlinecss', 'else'] as $name) {
     $engine->evaluator()->unregister($name);
 }
-$files = glob('/m/tests/fixtures/corpus/*') ?: [];
+$files = glob(PKGROOT . '/tests/fixtures/corpus/*') ?: [];
 $same = $diff = $legacyThrew = $newThrew = 0;
 $divergences = [];
 

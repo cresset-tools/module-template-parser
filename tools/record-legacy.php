@@ -3,13 +3,14 @@
  * Records what the LEGACY Magento filter does for a corpus of templates, as golden
  * fixtures the test suite can replay without a Magento installation.
  *
- * Run against a Magento tree mounted at /repo; writes tests/fixtures/legacy/cases.json.
- * Regenerate whenever the corpus changes:
- *   docker run --rm -v <magento>:/repo:ro -v <module>:/m -v <harness>:/h \
- *     php:8.3-cli php /m/tools/record-legacy.php
+ * Writes tests/fixtures/legacy/cases.json. Regenerate whenever the corpus changes:
+ *
+ *   MAGENTO_ROOT=/path/to/magento php tools/record-legacy.php
+ *
+ * Use a PRISTINE Magento checkout - see tools/harness.php.
  */
 declare(strict_types=1);
-require '/h/bootstrap_realrandom.php';
+require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
 require MROOT . '/lib/internal/Magento/Framework/DataObject.php';
@@ -170,7 +171,7 @@ $values = [
 // Objects cannot be serialised into the fixture, so they are recorded by tag and rebuilt
 // from the same factory on replay. The first corpus had none at all, which is why the
 // DataObject resolution failure was invisible.
-require '/m/tests/fixtures/legacy/ObjectFixtures.php';
+require PKGROOT . '/tests/fixtures/legacy/ObjectFixtures.php';
 
 /*
  * The recording runs against the real DataObject; the test run replays against
@@ -303,7 +304,7 @@ foreach ($constructs as $clabel => $tpl) {
 // the real harvested templates, rendered with a realistic variable set
 $realVars = ['customer_name'=>'Jan Jansen','store_name'=>'Demo','name'=>'Jan','a'=>1,
              'store_phone'=>'123','store_hours'=>'9-5','logo_width'=>'180','logo_height'=>'50'];
-foreach (glob('/m/tests/fixtures/corpus/*.html') ?: [] as $file) {
+foreach (glob(PKGROOT . '/tests/fixtures/corpus/*.html') ?: [] as $file) {
     $src = (string)file_get_contents($file);
     [$outcome, $value] = record($src, $realVars);
     $cases[] = ['id' => 'real/' . basename($file), 'template' => $src, 'variables' => $realVars,
@@ -317,7 +318,7 @@ if ($json === false) {
     fwrite(STDERR, 'FATAL: json_encode failed: ' . json_last_error_msg() . PHP_EOL);
     exit(1);
 }
-file_put_contents('/m/tests/fixtures/legacy/cases.json', $json);
+file_put_contents(PKGROOT . '/tests/fixtures/legacy/cases.json', $json);
 
 $throws = count(array_filter($cases, static fn ($c) => $c['outcome'] === 'throw'));
 $parity = count(array_filter($cases, static fn ($c) => $c['parity']));

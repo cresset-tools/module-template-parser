@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cresset-tools/setup-bougie@v1
+        with:
+          telemetry: true
+          # This package is a library and does not commit composer.lock, so key
+          # the cache on the manifest instead of the default '**/composer.lock'.
+          cache-dependency-glob: composer.json
+          cache-suffix: php${{ matrix.php }}
+
+      # `bougie run --php` syncs to that interpreter before running, so there is
+      # no separate sync step: an explicit `bougie sync` would resolve against
+      # whichever PHP bougie picked first and then be redone here.
+      #
+      # No services. The suite is plain PHP against pre-recorded fixtures - no
+      # database, no Magento runtime - so `bougie service up` would only add
+      # startup time for something nothing in this package touches.
+      - name: Run the test suite
+        run: bougie run --php ${{ matrix.php }} -- vendor/bin/phpunit

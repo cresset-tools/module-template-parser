@@ -1,0 +1,87 @@
+# Re-records the legacy parity fixtures against current Mage-OS and fails if they
+# moved.
+#
+# LegacyParityTest replays fixtures recorded once, by hand, against one checkout.
+# That makes "compatible mode matches the legacy filter" true as of whenever it was
+# last recorded, and nothing in the normal test run would notice it going stale.
+# This job answers the other half: is it still true of the filter Mage-OS ships today?
+#
+# Deliberately NOT on every pull request. A change upstream in Mage-OS would fail
+# this on PRs that have nothing to do with it, and the answer to drift is usually
+# "look at what changed upstream", not "fix this branch".
+name: Parity drift
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/**'
+      - 'tests/fixtures/corpus/**'
+      - 'tests/fixtures/legacy/cases.json'
+  pull_request:
+    paths:
+      - 'tools/**'
+      - 'tests/fixtures/corpus/**'
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Fixtures vs current Mage-OS
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cresset-tools/setup-bougie@v1
+        with:
+          telemetry: true
+          cache-dependency-glob: composer.json
+
+      # A source checkout, not a composer install: the recorder loads about twenty
+      # framework files by path and needs no autoloader, database or services.
+      - name: Check out Mage-OS
+        uses: actions/checkout@v4
+        with:
+          repository: mage-os/mageos-magento2
+          ref: main
+          path: .mageos
+          fetch-depth: 1
+
+      - name: Record which Mage-OS commit this is
+        working-directory: .mageos
+        run: git log -1 --format='recording against mage-os %h %ad %s' --date=short
+
+      # Only cases.json. tests/fixtures/legacy/stylesmuggler.json must NEVER be
+      # re-recorded here: it captures the filter while it was still vulnerable, and
+      # recording it against a fixed tree would quietly turn the StyleSmuggler
+      # differential into a comparison of two fixed engines.
+      - name: Re-record the parity fixtures
+        env:
+          MAGENTO_ROOT: ${{ github.workspace }}/.mageos
+        run: bougie run -- php tools/record-legacy.php
+
+      - name: Fail if the recording drifted
+        run: |
+          if ! git diff --quiet -- tests/fixtures/legacy/cases.json; then
+            echo '::error::The recorded legacy behaviour no longer matches the committed fixtures.'
+            echo
+            echo 'Either Mage-OS changed Magento\Framework\Filter\Template, or the corpus'
+            echo 'or recorder changed here without the fixtures being re-recorded.'
+            echo
+            echo 'If a security fix landed upstream, the StyleSmuggler differential now'
+            echo 'describes history rather than current behaviour, and says so on purpose.'
+            echo 'Do not re-record stylesmuggler.json to make this pass.'
+            echo
+            git --no-pager diff --stat -- tests/fixtures/legacy/cases.json
+            exit 1
+          fi
+          echo 'Fixtures still match the filter Mage-OS ships.'
+
+      - name: Confirm the StyleSmuggler fixture was left alone
+        run: git diff --quiet -- tests/fixtures/legacy/stylesmuggler.json

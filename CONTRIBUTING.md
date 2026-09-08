@@ -32,13 +32,17 @@ stock filter.
 
 ### Re-recording
 
+Point `MAGENTO_ROOT` at a Magento or Mage-OS checkout. The recorder loads about twenty
+framework files by path, so a plain source checkout is enough - no composer install, no
+database, no services:
+
 ```sh
-docker run --rm --user "$(id -u):$(id -g)" \
-  -v /path/to/magento:/repo:ro \
-  -v /path/to/pristine/Template.php:/repo/lib/internal/Magento/Framework/Filter/Template.php:ro \
-  -v "$PWD":/m -v "$PWD/harness":/h \
-  php:8.3-cli php /m/tools/record-legacy.php
+git clone --depth 1 https://github.com/mage-os/mageos-magento2 /tmp/mageos
+MAGENTO_ROOT=/tmp/mageos php tools/record-legacy.php
 ```
+
+`tools/harness.php` supplies the framework leaves those classes touch. Everything under test
+is Magento's own code.
 
 **Record against a pristine checkout.** These fixtures capture the filter as it is. Recording
 against a tree with a fix applied turns the differential into a comparison of two fixed
@@ -56,6 +60,10 @@ neither of which failed any test at the time:
 The recorder asserts `FakeDataObject` still matches Magento's `DataObject` on 19 probes before
 it writes anything, because recording against one object and replaying against another
 measures nothing.
+
+The `Parity drift` workflow does exactly this against Mage-OS `main` on a weekly schedule, so
+fixtures going stale surfaces as a failing job rather than as an unnoticed assumption. It
+re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 
 ## What the suite covers
 

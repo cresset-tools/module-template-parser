@@ -12,7 +12,7 @@
  * nothing, so this never builds the attacker's object.
  */
 declare(strict_types=1);
-require '/h/bootstrap_realrandom.php';
+require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
 foreach (['/DirectiveProcessorInterface.php','/VariableResolverInterface.php','/Template/FilteringDepthMeter.php',
@@ -119,7 +119,7 @@ $record = [
         'email_output'              => $emailOutput,
     ],
 ];
-file_put_contents('/m/tests/fixtures/legacy/stylesmuggler.json',
+file_put_contents(PKGROOT . '/tests/fixtures/legacy/stylesmuggler.json',
     json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
 printf("legacy signature minted        : %s\n", $signature);
