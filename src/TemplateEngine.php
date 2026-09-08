@@ -45,7 +45,7 @@ final class TemplateEngine
         ?RenderPolicy $policy = null
     ): string {
         $context ??= new Context($variables, $policy);
-        $ast = $this->parser->parse($source);
+        $ast = $this->parser->parse($source, $context->policy()->maxNestingDepth());
         $context->noteIncompatibilities($ast->incompatibilities());
 
         return $this->evaluator->evaluate($ast, $context);

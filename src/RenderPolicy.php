@@ -19,8 +19,31 @@ final class RenderPolicy
     /** @param string[]|null $directives @param string[]|null $blocks */
     private function __construct(
         private readonly ?array $directives = null,
-        private readonly ?array $blocks = null
+        private readonly ?array $blocks = null,
+        private readonly ?int $maxNestingDepth = null
     ) {
+    }
+
+    /**
+     * Overrides the engine's nesting bound for this render.
+     *
+     * Depth is a property of the content, not the installation: a stock transactional
+     * template and a merchant-edited CMS block have different shapes and deserve different
+     * limits. Null leaves the engine's Options default in force.
+     */
+    public function withMaxNestingDepth(?int $depth): self
+    {
+        if ($depth !== null && $depth < 1) {
+            throw new \InvalidArgumentException('maxNestingDepth must be at least 1');
+        }
+
+        return new self($this->directives, $this->blocks, $depth);
+    }
+
+    /** @return int|null null means "use the engine default" */
+    public function maxNestingDepth(): ?int
+    {
+        return $this->maxNestingDepth;
     }
 
     /**
@@ -94,13 +117,13 @@ final class RenderPolicy
         return new self($this->directives, array_map(
             static fn (string $class): string => ltrim($class, '\\'),
             array_values($classes)
-        ));
+        ), $this->maxNestingDepth);
     }
 
     /** @param string[] $directives */
     public function withAllowedDirectives(array $directives): self
     {
-        return new self(array_values($directives), $this->blocks);
+        return new self(array_values($directives), $this->blocks, $this->maxNestingDepth);
     }
 
     /**
@@ -116,7 +139,8 @@ final class RenderPolicy
 
         return new self(
             array_values(array_unique([...$this->directives, ...$directives])),
-            $this->blocks
+            $this->blocks,
+            $this->maxNestingDepth
         );
     }
 

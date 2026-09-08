@@ -80,7 +80,7 @@ final class HostDirectives
                     // Child scope. Its deferred work is handed back up explicitly - no
                     // shared state, and nothing survives in the output stream.
                     $child = $c->withVariables([]);
-                    $rendered = $e->evaluate($parser->parse($source), $child);
+                    $rendered = $e->evaluate($parser->parse($source, $c->policy()->maxNestingDepth()), $child);
                     $c->absorb($child);
                 } finally {
                     $c->leaveInclude();

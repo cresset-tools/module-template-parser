@@ -63,7 +63,20 @@ regex and so cannot contain *itself* (`{{if}}` inside `{{if}}` is a fatal `TypeE
 Magento; only `{{depend}}` around `{{if}}` works, which is why core templates are written
 that way and cap out at two levels).
 
-Depth is bounded by policy rather than by accident, defaulting to 3:
+Depth is bounded by policy rather than by accident, defaulting to 3 and settable per render:
+
+```php
+// Engine-wide default.
+TemplateEngine::withOptions(Options::strict()->withMaxNestingDepth(5));
+
+// Or for one render - depth is a property of the content, not the installation.
+$policy = RenderPolicy::restricted()->withMaxNestingDepth(4);
+$engine->render($template, $variables, null, $policy);
+```
+
+An included `{{template}}` inherits the render's bound rather than falling back to the engine
+default, so a nested template cannot buy itself more depth than its caller had.
+
 
 ```
 Nesting limit exceeded: {{if}} would be 4 levels deep, limit is 3

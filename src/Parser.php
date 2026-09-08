@@ -25,6 +25,9 @@ final class Parser
 
     private string $source = '';
 
+    /** Effective bound for the parse in progress; the Options value unless overridden. */
+    private int $maxNestingDepth = Options::DEFAULT_MAX_NESTING_DEPTH;
+
     /** @var LegacyIncompatibility[] */
     private array $incompatibilities = [];
 
@@ -35,9 +38,17 @@ final class Parser
     ) {
     }
 
-    public function parse(string $source): RootNode
+    /**
+     * @param int|null $maxNestingDepth per-render override; null uses the engine default
+     */
+    public function parse(string $source, ?int $maxNestingDepth = null): RootNode
     {
+        if ($maxNestingDepth !== null && $maxNestingDepth < 1) {
+            throw new \InvalidArgumentException('maxNestingDepth must be at least 1');
+        }
+
         $this->source = $source;
+        $this->maxNestingDepth = $maxNestingDepth ?? $this->options->maxNestingDepth;
         $this->incompatibilities = [];
         $tokens = $this->lexer->tokenize($source);
         $index = 0;
@@ -141,7 +152,7 @@ final class Parser
 
         $this->noteLegacyNesting($token, $openStack);
 
-        if (count($openStack) >= $this->options->maxNestingDepth) {
+        if (count($openStack) >= $this->maxNestingDepth) {
             throw NestingLimitError::at(
                 $this->source,
                 $token->offset,
@@ -149,7 +160,7 @@ final class Parser
                     'Nesting limit exceeded: {{%s}} would be %d levels deep, limit is %d',
                     $token->name,
                     count($openStack) + 1,
-                    $this->options->maxNestingDepth
+                    $this->maxNestingDepth
                 ),
                 sprintf(
                     'enclosing directives are %s; raise it with Options::withMaxNestingDepth() if intentional',

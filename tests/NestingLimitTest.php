@@ -10,6 +10,7 @@ use MageOS\TemplateParser\NestingLimitError;
 use MageOS\TemplateParser\Options;
 use MageOS\TemplateParser\Parser;
 use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\RenderPolicy;
 use MageOS\TemplateParser\TemplateCycleError;
 use MageOS\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\TestCase;
@@ -111,6 +112,113 @@ final class NestingLimitTest extends TestCase
             ['a' => 1, 'b' => 1, 'c' => 1, 'x' => 'v']
         );
         self::assertSame('v', $out);
+    }
+
+    // ------------------------------------------------------------------
+    // Per-render override
+    // ------------------------------------------------------------------
+
+    public function testThePolicyCanRaiseTheBoundForOneRender(): void
+    {
+        $names = ['if', 'depend', 'if', 'depend'];
+        $policy = RenderPolicy::restricted()->withMaxNestingDepth(4);
+
+        self::assertSame(
+            'X',
+            (new TemplateEngine())->render($this->nest($names), $this->vars($names), null, $policy)
+        );
+    }
+
+    public function testThePolicyCanLowerTheBoundForOneRender(): void
+    {
+        $names = ['if', 'depend'];
+        $policy = RenderPolicy::restricted()->withMaxNestingDepth(1);
+
+        $this->expectException(NestingLimitError::class);
+        (new TemplateEngine())->render($this->nest($names), $this->vars($names), null, $policy);
+    }
+
+    public function testTheOverrideAppliesOnlyToThatRender(): void
+    {
+        $names = ['if', 'depend', 'if', 'depend'];
+        $engine = new TemplateEngine();
+
+        // Raised for this one.
+        self::assertSame('X', $engine->render(
+            $this->nest($names),
+            $this->vars($names),
+            null,
+            RenderPolicy::restricted()->withMaxNestingDepth(4)
+        ));
+
+        // Back to the engine default of 3 for the next.
+        $this->expectException(NestingLimitError::class);
+        $engine->render($this->nest($names), $this->vars($names));
+    }
+
+    public function testTheErrorReportsTheEffectiveBoundNotTheEngineDefault(): void
+    {
+        $names = ['if', 'depend', 'if'];
+        try {
+            (new TemplateEngine())->render(
+                $this->nest($names),
+                $this->vars($names),
+                null,
+                RenderPolicy::restricted()->withMaxNestingDepth(2)
+            );
+            self::fail('expected the per-render bound to be enforced');
+        } catch (NestingLimitError $e) {
+            self::assertStringContainsString('would be 3 levels deep, limit is 2', $e->getMessage());
+        }
+    }
+
+    public function testNullLeavesTheEngineDefaultInForce(): void
+    {
+        $names = ['if', 'depend', 'if'];
+        $policy = RenderPolicy::restricted()->withMaxNestingDepth(null);
+
+        self::assertNull($policy->maxNestingDepth());
+        self::assertSame('X', (new TemplateEngine())->render($this->nest($names), $this->vars($names), null, $policy));
+    }
+
+    public function testAnInvalidOverrideIsRejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        RenderPolicy::restricted()->withMaxNestingDepth(0);
+    }
+
+    /** The override survives the other withers. */
+    public function testTheOverrideIsCarriedThroughPolicyChanges(): void
+    {
+        $policy = RenderPolicy::restricted()
+            ->withMaxNestingDepth(4)
+            ->alsoAllowing(['block'])
+            ->withAllowedBlocks(['X'])
+            ->withAllowedDirectives(['var', 'if', 'depend']);
+
+        self::assertSame(4, $policy->maxNestingDepth());
+    }
+
+    /** An included template inherits the render's bound, not the engine default. */
+    public function testIncludedTemplatesInheritTheOverride(): void
+    {
+        $loader = new class implements TemplateLoader {
+            public function load(string $configPath): ?string
+            {
+                return '{{if a}}{{depend a}}{{if a}}{{depend a}}deep{{/depend}}{{/if}}{{/depend}}{{/if}}';
+            }
+        };
+        $parser = new Parser();
+        $evaluator = new Evaluator();
+        HostDirectives::register($evaluator, new \MageOS\TemplateParser\HostServices(templates: $loader), $parser);
+        $engine = new TemplateEngine($parser, $evaluator);
+
+        $context = new Context(['a' => 1], RenderPolicy::restricted()->withMaxNestingDepth(4));
+        self::assertSame('deep', $engine->render('{{template config_path="x"}}', [], $context));
+
+        // Without the override the same include exceeds the default of 3.
+        $this->expectException(NestingLimitError::class);
+        $engine->render('{{template config_path="x"}}', [], new Context(['a' => 1]));
     }
 
     /** A template that includes itself is a cycle, not infinite recursion. */
