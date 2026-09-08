@@ -180,8 +180,11 @@ final class Parser
         if ($this->spec->acceptsElse($token->name)) {
             $split = $this->splitOnElse($body);
             if ($split !== null) {
-                [$body, $alternate] = $split;
-                $node->setAlternate($alternate);
+                [$body, $alternate, $elseRaw] = $split;
+                // A second {{else}} in the same {{if}} is a mistake, not a second branch:
+                // without this it is silently accepted and both branches run into one.
+                $this->assertNoStrayElse($alternate, 'a second {{else}} in one {{if}}');
+                $node->setAlternate($alternate, $elseRaw);
             }
         }
         if (!$this->spec->acceptsElse($token->name)) {
@@ -295,7 +298,7 @@ final class Parser
      *
      * @param Node[] $nodes
      */
-    private function assertNoStrayElse(array $nodes): void
+    private function assertNoStrayElse(array $nodes, ?string $problem = null): void
     {
         if (!$this->options->strictSyntax) {
             return;
@@ -306,8 +309,9 @@ final class Parser
                 throw SyntaxError::at(
                     $this->source,
                     $node->offset(),
-                    '{{else}} outside of an {{if}}',
-                    'only {{if}} has an alternate branch; {{depend}} and {{for}} do not'
+                    $problem ?? '{{else}} outside of an {{if}}',
+                    'only {{if}} has an alternate branch, and only one of them; '
+                    . '{{depend}} and {{for}} have none'
                 );
             }
         }
@@ -340,7 +344,7 @@ final class Parser
     {
         foreach ($body as $i => $node) {
             if ($node instanceof DirectiveNode && $node->name() === 'else') {
-                return [array_slice($body, 0, $i), array_slice($body, $i + 1)];
+                return [array_slice($body, 0, $i), array_slice($body, $i + 1), $node->raw()];
             }
         }
         return null;

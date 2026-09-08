@@ -112,6 +112,13 @@ final class Lexer
             ) {
                 return null;
             }
+            // A closing tag carries nothing but its name, so whatever follows must be the
+            // closing delimiter. Deciding that here rather than in build() is what keeps
+            // `{{/a}x{{/a}x...` linear - see the note on the open-directive case below.
+            $rest = ltrim(substr($window, 1 + strlen($m[1])));
+            if ($rest !== '' && !str_starts_with($rest, self::CLOSE)) {
+                return null;
+            }
             return [TokenType::DirectiveClose, $name];
         }
 
@@ -135,6 +142,16 @@ final class Lexer
         // when the name is unmistakably one. Legacy's reflection is case-insensitive, so
         // {{VAR name}} does resolve there.
         if ($name !== $m[1] && !$this->spec->isKnown($name)) {
+            return null;
+        }
+
+        // When the name butts straight up against a `}`, the only construct that can follow
+        // is the closing `}}`. Rejecting the rest here matters for more than tidiness:
+        // build() can only reach the same verdict after substr()-ing the whole span out to a
+        // distant closer, and since the cursor then advances just two bytes, a document of
+        // `{{a}{{a}{{a}...` is quadratic. Measured 2 MB in ~20 s before this check.
+        $rest = substr($window, strlen($m[1]));
+        if ($rest !== '' && $rest[0] === '}' && !str_starts_with($rest, self::CLOSE)) {
             return null;
         }
 

@@ -15,6 +15,19 @@ use MageOS\TemplateParser\Ast\DirectiveNode as Node;
  */
 final class HostDirectives
 {
+    /**
+     * Decodes HTML entities before guarding a path.
+     *
+     * Handler output is inserted unescaped, so a browser decodes `&#46;&#46;/x` back to
+     * `../x` - the guard has to see the same string the browser will. ENT_HTML5 matters as
+     * well as ENT_QUOTES: the default HTML 4.01 table has no `&period;`, so `&period;&period;/x`
+     * would survive a decode that only asked for ENT_QUOTES.
+     */
+    private static function decodeEntities(string $value): string
+    {
+        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
     public static function register(
         Evaluator $evaluator,
         HostServices $services,
@@ -60,13 +73,34 @@ final class HostDirectives
         }
 
         if ($templates !== null) {
-            // Inherit the evaluator's configuration; a default Parser is fully strict and
-            // would throw on an included template a lenient engine handles fine.
-            $parser ??= new Parser(options: $evaluator->options());
+            // Inherit the evaluator's configuration - BOTH halves of it. A default Parser is
+            // fully strict and would throw on an included template a lenient engine handles
+            // fine; a default DirectiveSpec does not know the host's extra block types, so an
+            // included template using one loses its body and leaks the closing tag as text.
+            $parser ??= new Parser(spec: $evaluator->spec(), options: $evaluator->options());
             $evaluator->register('template', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($templates, $parser): string {
                 $params = $e->params($n);
                 $path = $params['config_path'] ?? '';
-                $source = $path === '' ? null : $templates->load($path);
+                // Guarded like {{config path=}} is. The shipped ConfigTemplateLoader happens
+                // to allowlist, but the TemplateLoader port does not require an implementation
+                // to, so the check belongs on this side of it.
+                if ($path === '' || !PathGuard::isSafeConfigPath($path)) {
+                    return '';
+                }
+
+                if ($c->includeBudgetExhausted()) {
+                    throw TemplateCycleError::at(
+                        '',
+                        $n->offset(),
+                        sprintf(
+                            'Template includes exceeded the budget of %d loads for one render',
+                            Options::DEFAULT_MAX_INCLUDES
+                        ),
+                        'include chain: ' . implode(' > ', [...$c->includeStack(), $path])
+                    );
+                }
+
+                $source = $templates->load($path);
                 if ($source === null) {
                     return '';
                 }
@@ -135,7 +169,7 @@ final class HostDirectives
 
             $evaluator->register('store', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $params = $e->params($n);
-                $path = $params['url'] ?? ($params['direct_url'] ?? '');
+                $path = self::decodeEntities($params['url'] ?? ($params['direct_url'] ?? ''));
                 unset($params['url'], $params['direct_url']);
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
                     return '';
@@ -144,14 +178,14 @@ final class HostDirectives
             });
 
             $evaluator->register('media', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
-                $path = html_entity_decode($e->params($n)['url'] ?? '', ENT_QUOTES);
+                $path = self::decodeEntities($e->params($n)['url'] ?? '');
                 // Legacy concatenates this straight onto the media base URL.
                 return PathGuard::isSafeRelativePath($path) ? $urls->mediaUrl($path) : '';
             });
 
             $evaluator->register('view', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $params = $e->params($n);
-                $path = $params['url'] ?? '';
+                $path = self::decodeEntities($params['url'] ?? '');
                 unset($params['url']);
                 return PathGuard::isSafeRelativePath($path) ? $urls->viewUrl($path, $params) : '';
             });

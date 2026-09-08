@@ -4692,8 +4692,8 @@
             "a": []
         },
         "object": null,
-        "outcome": "ok",
-        "expected": "[Array]",
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {
@@ -5181,8 +5181,8 @@
             ]
         },
         "object": null,
-        "outcome": "ok",
-        "expected": "[Array]",
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {
@@ -5654,8 +5654,8 @@
             }
         },
         "object": null,
-        "outcome": "ok",
-        "expected": "[Array]",
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {
@@ -6122,8 +6122,8 @@
             }
         },
         "object": null,
-        "outcome": "ok",
-        "expected": "[Array]",
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {

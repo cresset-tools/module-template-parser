@@ -16,6 +16,7 @@ final class DirectiveNode implements Node
         private readonly int $offset = 0,
         private array $children = [],
         private ?array $alternate = null,
+        private string $alternateRaw = '{{else}}',
         private string $closingRaw = ''
     ) {
     }
@@ -53,10 +54,14 @@ final class DirectiveNode implements Node
         $this->children = $children;
     }
 
-    /** @param Node[] $alternate */
-    public function setAlternate(array $alternate): void
+    /**
+     * @param Node[] $alternate
+     * @param string $raw the {{else}} tag exactly as written, so fullRaw() stays lossless
+     */
+    public function setAlternate(array $alternate, string $raw = '{{else}}'): void
     {
         $this->alternate = $alternate;
+        $this->alternateRaw = $raw;
     }
 
     public function setClosingRaw(string $raw): void
@@ -85,7 +90,10 @@ final class DirectiveNode implements Node
             $out .= $child instanceof self ? $child->fullRaw() : $child->raw();
         }
         if ($this->alternate !== null) {
-            $out .= '{{else}}';
+            // The tag as written, not a canonical one: {{ELSE}} and {{else }} both reach
+            // here, and rewriting them would make fullRaw() lossy for the one construct
+            // whose whole job is to hand a directive back exactly as the author typed it.
+            $out .= $this->alternateRaw;
             foreach ($this->alternate as $child) {
                 $out .= $child instanceof self ? $child->fullRaw() : $child->raw();
             }

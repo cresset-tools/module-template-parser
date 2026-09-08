@@ -22,6 +22,14 @@ final class Context
     /** @var string[] template paths currently being rendered, outermost first */
     private array $includeStack = [];
 
+    /**
+     * Total includes spent in this render, shared by reference with every child scope.
+     *
+     * An object, not an int, precisely so the clone in withVariables() keeps pointing at the
+     * same counter: a budget each scope could reset would not be a budget.
+     */
+    private \stdClass $includeBudget;
+
     /** @var \MageOS\TemplateParser\LegacyIncompatibility[] */
     private array $incompatibilities = [];
 
@@ -35,6 +43,7 @@ final class Context
     {
         $this->variables = $variables;
         $this->policy = $policy ?? RenderPolicy::restricted();
+        $this->includeBudget = (object)['spent' => 0];
     }
 
     public function policy(): RenderPolicy
@@ -80,6 +89,7 @@ final class Context
         // a child scope inherits both - a nested template cannot escape its parent's policy.
         $clone->includeStack = $this->includeStack;
         $clone->policy = $this->policy;
+        $clone->includeBudget = $this->includeBudget;
         return $clone;
     }
 
@@ -95,7 +105,19 @@ final class Context
             return false;
         }
         $this->includeStack[] = $path;
+        $this->includeBudget->spent++;
         return true;
+    }
+
+    /** Whether this render has used up its total include allowance. */
+    public function includeBudgetExhausted(): bool
+    {
+        return $this->includeBudget->spent >= Options::DEFAULT_MAX_INCLUDES;
+    }
+
+    public function includesSpent(): int
+    {
+        return $this->includeBudget->spent;
     }
 
     public function leaveInclude(): void

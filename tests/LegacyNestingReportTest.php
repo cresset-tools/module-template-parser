@@ -106,12 +106,13 @@ final class LegacyNestingReportTest extends TestCase
     public function testDepthReportUsesTheLegacyLimitNotTheConfiguredOne(): void
     {
         // maxNestingDepth is 3, so this renders; but legacy manages only 2.
-        $context = new Context(['a' => 1, 'b' => 1, 'c' => 1]);
+        // Every variable goes in the context: render() refuses a context AND a variables
+        // array, which is how this test used to render with `xs` silently out of scope.
+        $context = new Context(['a' => 1, 'b' => 1, 'c' => 1, 'xs' => ['q']]);
         $engine = TemplateEngine::withOptions(
             Options::compatible()->withMaxNestingDepth(4)->withRefuseLegacyIncompatible(false)
         );
-        $engine->render('{{depend a}}{{if b}}{{for i in xs}}X{{/for}}{{/if}}{{/depend}}',
-            ['a' => 1, 'b' => 1, 'xs' => ['q']], $context);
+        $engine->render('{{depend a}}{{if b}}{{for i in xs}}X{{/for}}{{/if}}{{/depend}}', context: $context);
 
         $found = $context->incompatibilities();
         self::assertCount(1, $found);

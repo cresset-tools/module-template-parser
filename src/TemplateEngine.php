@@ -44,6 +44,16 @@ final class TemplateEngine
         ?Context $context = null,
         ?RenderPolicy $policy = null
     ): string {
+        if ($context !== null && ($variables !== [] || $policy !== null)) {
+            // Silently dropping them is the dangerous reading: a caller tightening a render
+            // by adding a policy argument would get no error and no policy.
+            throw new \InvalidArgumentException(
+                'render() takes either a $context or a $variables/$policy pair, not both - '
+                . 'the context already carries its own variables and policy, so passing both '
+                . 'leaves it ambiguous which should win'
+            );
+        }
+
         $context ??= new Context($variables, $policy);
         $ast = $this->parser->parse($source, $context->policy()->maxNestingDepth());
         $context->noteIncompatibilities($ast->incompatibilities());

@@ -25,6 +25,15 @@ final class Options
      */
     public const DEFAULT_MAX_INCLUDE_DEPTH = 5;
 
+    /**
+     * Total {{template}} loads allowed in one render.
+     *
+     * The depth bound alone does not bound work: a body may hold any number of includes,
+     * so five levels of B-way fan-out is B^5 renders with every path distinct, which
+     * cycle detection never sees. This caps the total instead of the depth.
+     */
+    public const DEFAULT_MAX_INCLUDES = 64;
+
     public function __construct(
         public readonly bool $strictSyntax = true,
         public readonly bool $strictDirectives = true,

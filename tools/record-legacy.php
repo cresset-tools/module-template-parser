@@ -13,6 +13,7 @@ require '/h/bootstrap_realrandom.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
 require MROOT . '/lib/internal/Magento/Framework/DataObject.php';
+require MROOT . '/lib/internal/Magento/Framework/Escaper.php';
 foreach (['/DirectiveProcessorInterface.php','/VariableResolverInterface.php','/Template/FilteringDepthMeter.php',
  '/Template/SignatureProvider.php','/Template/Tokenizer/AbstractTokenizer.php','/Template/Tokenizer/Parameter.php',
  '/Template/Tokenizer/Variable.php','/VariableResolver/StrictResolver.php','/DirectiveProcessor/Filter/FilterApplier.php',
@@ -44,21 +45,33 @@ class EmailLikeLegacy extends LegacyTemplate {
         parent::__construct(...$args);
         $this->_modifiers['escape'] = [$this, 'modifierEscape'];
     }
+    private ?\Magento\Framework\Escaper $realEscaper = null;
     /**
-     * Email\Model\Template\Filter::modifierEscape, whose 'html' case goes through
-     * Magento's Escaper: ENT_QUOTES|ENT_SUBSTITUTE with double_encode disabled
-     * (lib/internal/Magento/Framework/Escaper.php:24 and :60).
+     * Email\Model\Template\Filter::modifierEscape, copied verbatim - including calling the
+     * REAL Escaper rather than a reimplementation of it.
      *
-     * Getting these flags wrong makes the recording agree with a buggy engine instead of
-     * with Magento, which turns the whole parity measurement circular.
+     * Reimplementing this is how the measurement went circular the first time: the recorder
+     * repeated the engine's own escaping bug, so the fixtures certified the bug as legacy
+     * truth. Two properties are impossible to get right by hand and both change the recorded
+     * outcome:
+     *
+     *  - escapeHtml() recurses into an array and RETURNS AN ARRAY, so a following |nl2br
+     *    receives an array and raises a TypeError. Casting to string here records "[Array]"
+     *    as a successful render instead.
+     *  - htmlentities()/rawurlencode() are called on the raw value, and Filter.php declares
+     *    strict_types=1, so a non-string is a TypeError. This file declares strict_types=1
+     *    for exactly that reason - do not add casts.
      */
     public function modifierEscape($value, $type = 'html') {
-        return match ($type) {
-            'html' => htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false),
-            'htmlentities' => htmlentities((string)$value, ENT_QUOTES),
-            'url' => rawurlencode((string)$value),
-            default => (string)$value,
-        };
+        switch ($type) {
+            case 'html':
+                return ($this->realEscaper ??= new \Magento\Framework\Escaper())->escapeHtml($value);
+            case 'htmlentities':
+                return htmlentities($value, ENT_QUOTES);
+            case 'url':
+                return rawurlencode($value);
+        }
+        return $value;
     }
     public function varDirective($construction) {
         if (count($this->templateVars) == 0) { return $construction[0]; }
@@ -139,6 +152,33 @@ $values = [
 // from the same factory on replay. The first corpus had none at all, which is why the
 // DataObject resolution failure was invisible.
 require '/m/tests/fixtures/legacy/ObjectFixtures.php';
+
+/*
+ * The recording runs against the real DataObject; the test run replays against
+ * FakeDataObject. That is only sound while they behave alike, so prove it here - this is the
+ * one process that has both classes loaded. Recording one object's behaviour and replaying
+ * another's would be a parity measurement of nothing.
+ */
+(static function (): void {
+    $real = new \Magento\Framework\DataObject(ObjectFixtures::dataObjectContents());
+    $fake = new FakeDataObject(ObjectFixtures::dataObjectContents());
+    $drift = [];
+    foreach (ObjectFixtures::equivalenceProbes() as $label => $probe) {
+        $a = $probe($real);
+        $b = $probe($fake);
+        if ($a !== $b) {
+            $drift[] = sprintf('  %-20s real=%s fake=%s', $label, json_encode($a), json_encode($b));
+        }
+    }
+    if ($drift !== []) {
+        fwrite(STDERR, "FakeDataObject has drifted from Magento's DataObject:\n"
+            . implode("\n", $drift) . "\n");
+        exit(1);
+    }
+    fwrite(STDERR, sprintf("FakeDataObject matches DataObject on %d probes\n",
+        count(ObjectFixtures::equivalenceProbes())));
+})();
+
 foreach (ObjectFixtures::TAGS as $tag) {
     $values['@' . $tag] = ObjectFixtures::make($tag);
 }

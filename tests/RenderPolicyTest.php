@@ -284,7 +284,7 @@ final class RenderPolicyTest extends TestCase
         $engine = new TemplateEngine(new Parser(options: $options), $evaluator);
 
         try {
-            $engine->render('{{var a}}', ['a' => 1], new Context(['a' => 1], RenderPolicy::allowing(['if'])));
+            $engine->render('{{var a}}', context: new Context(['a' => 1], RenderPolicy::allowing(['if'])));
             self::fail('expected a policy violation');
         } catch (PolicyViolationError $e) {
             self::assertStringContainsString('does not permit directive "var"', $e->getMessage());

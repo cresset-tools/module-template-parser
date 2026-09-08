@@ -33,7 +33,24 @@ final class PathGuard
             $forms[] = $decoded;
         }
 
-        foreach ($forms as $candidate) {
+        // A leading space is not a control character, so it survives every decode pass and
+        // shifts the value past every ^-anchored check below - ' //evil.example' and
+        // ' javascript:x' would both pass. Browsers strip ASCII whitespace from URL
+        // attributes before fetching, and path normalisers trim segments, so each form is
+        // examined with its whitespace removed as well as verbatim.
+        $candidates = [];
+        foreach ($forms as $form) {
+            if (trim($form, " \t\n\r\f\v") !== $form) {
+                return false;
+            }
+            $candidates[] = $form;
+            $stripped = (string)preg_replace('/[ \t\n\r\f\v]+/', '', $form);
+            if ($stripped !== $form && $stripped !== '') {
+                $candidates[] = $stripped;
+            }
+        }
+
+        foreach ($candidates as $candidate) {
             // Null bytes and control characters.
             if (preg_match('/[\x00-\x1F\x7F]/', $candidate)) {
                 return false;

@@ -17,6 +17,9 @@ use MageOS\TemplateParser\Ast\TextNode;
  */
 final class Evaluator
 {
+    /** The escape types Email\Model\Template\Filter::modifierEscape actually implements. */
+    private const ESCAPE_TYPES = ['html', 'htmlentities', 'url'];
+
     /** @var array<string,callable(DirectiveNode, Context, self):string> */
     private array $handlers = [];
 
@@ -101,6 +104,12 @@ final class Evaluator
             // With no variables set, IfDirective, DependDirective and the Email filter's
             // varDirective all return their construction unchanged - the path used when a
             // template is being validated rather than rendered.
+            //
+            // The output has to stay verbatim for parity, but the body being copied out may
+            // contain directives the policy refused. Nothing executes here, yet the refused
+            // construct still reaches the output as live template source - which matters in
+            // exactly the shadow-rendering setup this mode exists for - so it is recorded.
+            $this->notePolicyInVerbatim($node, $context);
             return $node->fullRaw();
         }
 
@@ -128,6 +137,37 @@ final class Evaluator
         }
 
         return $handler($node, $context, $this);
+    }
+
+    /**
+     * Records the policy refusals inside a subtree that is being emitted verbatim.
+     *
+     * Emitting is not executing, so this changes no output; it exists so that a refused
+     * directive cannot reach the rendered result without leaving a trace.
+     */
+    private function notePolicyInVerbatim(Node $node, Context $context): void
+    {
+        if (!$node instanceof DirectiveNode) {
+            return;
+        }
+
+        $policy = $context->policy();
+
+        if (isset($this->handlers[$node->name()]) && !$policy->permitsDirective($node->name())) {
+            $this->refusedByPolicy($node, $context, PolicyViolation::DIRECTIVE, $node->name());
+        } elseif ($node->name() === 'block') {
+            $class = $this->parameters->parse($node->params())['class'] ?? '';
+            if ($class !== '' && !$policy->permitsBlock($class)) {
+                $this->refusedByPolicy($node, $context, PolicyViolation::BLOCK, $class);
+            }
+        }
+
+        $branches = $node->hasAlternate()
+            ? [...$node->children(), ...$node->alternate()]
+            : $node->children();
+        foreach ($branches as $child) {
+            $this->notePolicyInVerbatim($child, $context);
+        }
     }
 
     /**
@@ -167,6 +207,11 @@ final class Evaluator
         return $this->options;
     }
 
+    public function spec(): DirectiveSpec
+    {
+        return $this->spec;
+    }
+
     /** Safe string conversion - an object with no __toString yields '' rather than a fatal. */
     public function stringify(mixed $value): string
     {
@@ -177,7 +222,7 @@ final class Evaluator
     {
         $this->handlers['var'] = function (DirectiveNode $n, Context $c): string {
             [$expr, $modifiers] = $this->splitModifiers($n->params());
-            $resolution = $this->variables->resolve($expr, $c);
+            $resolution = $this->resolveAt($expr, $c, $n);
 
             if (!$resolution->found) {
                 $this->requireVariable($resolution, $n, $c, $expr);
@@ -208,10 +253,23 @@ final class Evaluator
 
         $this->handlers['for'] = function (DirectiveNode $n, Context $c, self $e): string {
             if (!preg_match('/^\s*(\S+)\s+in\s+(\S+)\s*$/', $n->params(), $m)) {
+                // `{{for i xs}}`, `{{for}}`, `{{for i IN xs}}` - rendering '' for these hides
+                // a template that will never loop, which is the kind of defect strict mode
+                // exists to surface. Compatible mode keeps quiet: legacy's ForDirective has
+                // its own handling for a header it cannot parse, and parity outranks the
+                // diagnostic there.
+                if ($this->options->strictSyntax && !$this->options->legacyQuirks) {
+                    throw SyntaxError::at(
+                        $this->source,
+                        $n->offset(),
+                        sprintf('{{for %s}} is not a loop header', trim($n->params())),
+                        'write it as {{for <item> in <collection>}}, with a lower-case "in"'
+                    );
+                }
                 return '';
             }
             [$_, $item, $collection] = $m;
-            $resolution = $this->variables->resolve($collection, $c);
+            $resolution = $this->resolveAt($collection, $c, $n);
 
             if (!$resolution->found) {
                 $this->requireVariable($resolution, $n, $c, $collection);
@@ -235,6 +293,24 @@ final class Evaluator
                 return '';
             }
             $values = $resolution->value;
+
+            // A Generator satisfies is_iterable() but throws from foreach when it has already
+            // been consumed - two {{for}} loops over the same variable is all it takes. The
+            // bare \Exception PHP raises is not a TemplateError, so it escapes lenient mode
+            // and takes the render with it.
+            if ($values instanceof \Generator) {
+                try {
+                    $values->current();
+                } catch (\Throwable $x) {
+                    throw TemplateTypeError::at(
+                        $this->source,
+                        $n->offset(),
+                        sprintf('{{for %s in %s}} cannot iterate: %s', $item, $collection, $x->getMessage()),
+                        'a Generator can only be walked once - give the template an array'
+                    );
+                }
+            }
+
             $out = '';
             foreach ($values as $value) {
                 // The body gets its own scope for the loop variable, but its deferred work
@@ -265,11 +341,20 @@ final class Evaluator
 
         $this->handlers['trans'] = function (DirectiveNode $n, Context $c): string {
             [$text, $args] = $this->splitTransParams($n->params());
+
+            // One pass, not a str_replace per argument. Substituting in sequence has two
+            // faults: `%name` rewrites the front of `%name_long` before its own turn comes,
+            // and a value that happens to contain `%b` becomes a live placeholder for a
+            // later argument - which would make a variable's value template syntax again,
+            // the one thing this engine exists to prevent. strtr() takes the longest
+            // matching key at each position and never re-scans what it has written.
+            $map = [];
             foreach ($args as $k => $v) {
-                $resolved = $this->variables->value(ltrim($v, '$'), $c);
-                $text = str_replace('%' . $k, $this->toStringValue($resolved ?? $v), $text);
+                $resolved = $this->resolveAt(ltrim($v, '$'), $c, $n)->value;
+                $map['%' . $k] = $this->toStringValue($resolved ?? $v);
             }
-            return $text;
+
+            return $map === [] ? $text : strtr($text, $map);
         };
     }
 
@@ -331,7 +416,7 @@ final class Evaluator
      */
     private function condition(DirectiveNode $node, Context $context, string $directive): bool
     {
-        $resolution = $this->variables->resolve($node->params(), $context);
+        $resolution = $this->resolveAt($node->params(), $context, $node);
 
         if (!$resolution->found) {
             $this->requireVariable($resolution, $node, $context, trim($node->params()), $directive);
@@ -339,6 +424,19 @@ final class Evaluator
         }
 
         return $this->truthy($resolution->value);
+    }
+
+    /**
+     * Resolves against the scope, giving an accessor failure the position of the directive
+     * that triggered it - the resolver itself has no view of the source.
+     */
+    private function resolveAt(string $expression, Context $context, DirectiveNode $node): Resolution
+    {
+        try {
+            return $this->variables->resolve($expression, $context);
+        } catch (AccessorError $e) {
+            throw AccessorError::at($this->source, $node->offset(), $e->problem, $e->hint);
+        }
     }
 
     private function requireVariable(
@@ -460,7 +558,7 @@ final class Evaluator
             $value = match ($lookup) {
                 'raw' => $value,
                 'nl2br' => nl2br(is_string($value) ? $value : $this->toStringValue($value)),
-                'escape' => $this->escape($this->toStringValue($value), $params[0] ?? 'html'),
+                'escape' => $this->applyEscapeModifier($value, $params[0] ?? 'html', $context),
                 default => $value,      // legacy skips an unknown modifier
             };
         }
@@ -473,15 +571,72 @@ final class Evaluator
      * Magento's Escaper: ENT_QUOTES|ENT_SUBSTITUTE and double_encode disabled. Without
      * ENT_SUBSTITUTE an invalid UTF-8 byte makes htmlspecialchars return the empty string,
      * silently deleting the whole value.
+     *
+     * The default arm is html, NOT the value: an unrecognised type must never reach the
+     * output unescaped. Compatible mode's fall-through lives in applyEscapeModifier, which
+     * is the only caller that may legitimately skip escaping.
+     *
+     * htmlentities() is the one branch legacy calls with a bare ENT_QUOTES, which drops
+     * ENT_SUBSTITUTE from PHP's default set and so returns '' for invalid UTF-8. That data
+     * loss is reproduced only where parity demands it.
      */
     private function escape(string $value, string $type = 'html'): string
     {
         return match ($type) {
-            'htmlentities' => htmlentities($value, ENT_QUOTES),
+            'htmlentities' => $this->options->legacyQuirks
+                ? htmlentities($value, ENT_QUOTES)
+                : htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             'url' => rawurlencode($value),
-            'html' => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false),
-            default => $value,
+            default => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false),
         };
+    }
+
+    /**
+     * The `|escape` modifier.
+     *
+     * Legacy's modifierEscape is a switch with no default, so a type it does not know -
+     * `escape:none`, `escape:javascript`, or the empty `escape:` - RETURNS THE VALUE
+     * UNCHANGED. Writing an explicit escape modifier therefore disables escaping entirely.
+     * That is reproduced in compatible mode and refused everywhere else, where an
+     * unrecognised type falls back to html.
+     *
+     * Escaper::escapeHtml recurses into an array and hands back an array, which is why a
+     * following |nl2br is a TypeError rather than receiving the string "Array". htmlentities()
+     * and rawurlencode() get the raw value under strict_types, so a non-string is a TypeError
+     * there too.
+     */
+    private function applyEscapeModifier(mixed $value, string $type, Context $context): mixed
+    {
+        if (!in_array($type, self::ESCAPE_TYPES, true)) {
+            if ($this->options->legacyQuirks) {
+                return $value;
+            }
+            $type = 'html';
+        }
+
+        if ($type === 'html') {
+            if (is_array($value)) {
+                return array_map(
+                    fn (mixed $item): mixed => $this->applyEscapeModifier($item, 'html', $context),
+                    $value
+                );
+            }
+
+            return $this->escape($this->toStringValue($value), 'html');
+        }
+
+        if ($this->options->legacyQuirks && !is_string($value)) {
+            $this->noteLegacyIncompatible(
+                $context,
+                sprintf(
+                    'the |escape:%s modifier receives a non-string value - '
+                    . 'the legacy filter raises a TypeError here',
+                    $type
+                )
+            );
+        }
+
+        return $this->escape($this->toStringValue($value), $type);
     }
 
     private function toStringValue(mixed $value): string
