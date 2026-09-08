@@ -29,9 +29,16 @@ jobs:
           cache-dependency-glob: composer.json
           cache-suffix: php${{ matrix.php }}
 
-      # `bougie run --php` syncs to that interpreter before running, so there is
-      # no separate sync step: an explicit `bougie sync` would resolve against
-      # whichever PHP bougie picked first and then be redone here.
+      # A library does not commit composer.lock, and `bougie sync` installs from a
+      # lock rather than resolving one - without this it reports "Resolved 0
+      # packages" and leaves no vendor/ at all. Resolving fresh here also means
+      # the suite runs against current dependencies, which is what you want from
+      # a library's CI.
+      - name: Resolve dependencies
+        run: bougie lock
+
+      # `bougie run --php` syncs to the requested interpreter before running, so
+      # the install and the version pin happen in one step.
       #
       # No services. The suite is plain PHP against pre-recorded fixtures - no
       # database, no Magento runtime - so `bougie service up` would only add
