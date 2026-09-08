@@ -25,10 +25,32 @@ final class Context
     /** @var \MageOS\TemplateParser\LegacyIncompatibility[] */
     private array $incompatibilities = [];
 
+    /** @var \MageOS\TemplateParser\PolicyViolation[] */
+    private array $violations = [];
+
+    private RenderPolicy $policy;
+
     /** @param array<string,mixed> $variables */
-    public function __construct(array $variables = [])
+    public function __construct(array $variables = [], ?RenderPolicy $policy = null)
     {
         $this->variables = $variables;
+        $this->policy = $policy ?? RenderPolicy::unrestricted();
+    }
+
+    public function policy(): RenderPolicy
+    {
+        return $this->policy;
+    }
+
+    public function recordViolation(PolicyViolation $violation): void
+    {
+        $this->violations[] = $violation;
+    }
+
+    /** @return \MageOS\TemplateParser\PolicyViolation[] */
+    public function violations(): array
+    {
+        return $this->violations;
     }
 
     public function has(string $name): bool
@@ -54,8 +76,10 @@ final class Context
         foreach ($variables as $k => $v) {
             $clone->variables[$k] = $v;
         }
-        // The include stack is a property of the render, not the scope, so it must survive.
+        // The include stack and the policy are properties of the render, not the scope, so
+        // a child scope inherits both - a nested template cannot escape its parent's policy.
         $clone->includeStack = $this->includeStack;
+        $clone->policy = $this->policy;
         return $clone;
     }
 
@@ -130,6 +154,9 @@ final class Context
         }
         foreach ($child->incompatibilities as $item) {
             $this->incompatibilities[] = $item;
+        }
+        foreach ($child->violations as $violation) {
+            $this->violations[] = $violation;
         }
     }
 }

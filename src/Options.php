@@ -22,7 +22,8 @@ final class Options
         public readonly bool $strictVariables = true,
         public readonly int $maxNestingDepth = self::DEFAULT_MAX_NESTING_DEPTH,
         public readonly bool $legacyQuirks = false,
-        public readonly bool $refuseLegacyIncompatible = false
+        public readonly bool $refuseLegacyIncompatible = false,
+        public readonly bool $failOnPolicyViolation = false
     ) {
         if ($this->maxNestingDepth < 1) {
             throw new \InvalidArgumentException('maxNestingDepth must be at least 1');
@@ -57,7 +58,7 @@ final class Options
      */
     public static function compatible(): self
     {
-        return new self(false, false, false, self::DEFAULT_MAX_NESTING_DEPTH, true, true);
+        return new self(false, false, false, self::DEFAULT_MAX_NESTING_DEPTH, true, true, false);
     }
 
     public function withLegacyQuirks(bool $enabled): self
@@ -82,26 +83,39 @@ final class Options
     public function withRefuseLegacyIncompatible(bool $refuse): self
     {
         return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
-            $this->maxNestingDepth, $this->legacyQuirks, $refuse);
+            $this->maxNestingDepth, $this->legacyQuirks, $refuse, $this->failOnPolicyViolation);
+    }
+
+    /**
+     * Raise on a RenderPolicy violation instead of rendering nothing and recording it.
+     *
+     * Off by default: a policy violation should not take down an order email. Turn it on
+     * where a violation means the template is wrong and should be caught - template
+     * validation, tests, CI.
+     */
+    public function withFailOnPolicyViolation(bool $fail): self
+    {
+        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
+            $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $fail);
     }
 
     public function withMaxNestingDepth(int $depth): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables, $depth, $this->legacyQuirks, $this->refuseLegacyIncompatible);
+        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables, $depth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation);
     }
 
     public function withSyntax(bool $strict): self
     {
-        return new self($strict, $this->strictDirectives, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible);
+        return new self($strict, $this->strictDirectives, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation);
     }
 
     public function withDirectives(bool $strict): self
     {
-        return new self($this->strictSyntax, $strict, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible);
+        return new self($this->strictSyntax, $strict, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation);
     }
 
     public function withVariables(bool $strict): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $strict, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible);
+        return new self($this->strictSyntax, $this->strictDirectives, $strict, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation);
     }
 }

@@ -38,9 +38,13 @@ final class TemplateEngine
     }
 
     /** @param array<string,mixed> $variables */
-    public function render(string $source, array $variables = [], ?Context $context = null): string
-    {
-        $context ??= new Context($variables);
+    public function render(
+        string $source,
+        array $variables = [],
+        ?Context $context = null,
+        ?RenderPolicy $policy = null
+    ): string {
+        $context ??= new Context($variables, $policy);
         $ast = $this->parser->parse($source);
         $context->noteIncompatibilities($ast->incompatibilities());
 

@@ -203,6 +203,38 @@ stays unit-testable.
 | `store` `media` `view` `protocol` | `UrlBuilder` | `StoreUrlBuilder` | `PathGuard` — no traversal, scheme, absolute or protocol-relative path |
 | `css` | `StylesheetLoader` | `AssetStylesheetLoader` | `PathGuard` |
 
+### Per-render capability policy
+
+Capability belongs to the template, not the application. A stock transactional email and a
+merchant-edited CMS block reach the same filter and deserve different trust — which a
+DI-time allowlist cannot express, because it is fixed for the whole install.
+
+```php
+// Only these classes may be instantiated, for this render.
+$policy = RenderPolicy::unrestricted()
+    ->withAllowedBlocks(\Magento\Cms\Block\Widget\Block::class);
+
+// Or cut the surface down entirely: substitution and conditionals, no reach into the host.
+$policy = RenderPolicy::allowing('var', 'if', 'depend');
+
+$context = new Context($variables, $policy);
+$html = $engine->render($template, [], $context);
+
+foreach ($context->violations() as $v) {
+    $logger->warning($v->describe());   // policy refused block "..." (line 4, column 12)
+}
+```
+
+The allowlist is checked **before** the port, so a refused class is never constructed — the
+same discipline as the type check, and for the same reason. `{{widget}}` shares the block
+allowlist, since a widget is a block by another name.
+
+A violation renders nothing and is recorded, rather than throwing: a policy violation should
+not take down an order email, but it must not pass unnoticed either. For template validation
+or CI, `Options::withFailOnPolicyViolation(true)` makes it fatal.
+
+A nested `{{template}}` inherits the policy, so an include cannot widen it.
+
 Two things are deliberate here.
 
 **A capability not granted is not available.** A directive whose port is absent stays

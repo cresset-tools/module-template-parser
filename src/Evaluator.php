@@ -101,6 +101,11 @@ final class Evaluator
             return $node->fullRaw();
         }
 
+        if (!$context->policy()->permitsDirective($node->name())) {
+            $this->refusedByPolicy($node, $context, PolicyViolation::DIRECTIVE, $node->name());
+            return '';
+        }
+
         $handler = $this->handlers[$node->name()] ?? null;
         if ($handler === null) {
             if ($this->options->strictDirectives) {
@@ -116,6 +121,28 @@ final class Evaluator
         }
 
         return $handler($node, $context, $this);
+    }
+
+    /**
+     * Records - or raises on - something the render policy refused.
+     *
+     * Recording by default: a policy violation should not take down an order email, but it
+     * must not pass unnoticed either.
+     */
+    public function refusedByPolicy(DirectiveNode $node, Context $context, string $kind, string $name): void
+    {
+        ['line' => $line, 'column' => $column] = Diagnostics::locate($this->source, $node->offset());
+
+        if ($this->options->failOnPolicyViolation) {
+            throw PolicyViolationError::at(
+                $this->source,
+                $node->offset(),
+                sprintf('The render policy does not permit %s "%s"', $kind, $name),
+                'grant it with RenderPolicy::allowing(...) or withAllowedBlocks(...)'
+            );
+        }
+
+        $context->recordViolation(new PolicyViolation($kind, $name, $line, $column));
     }
 
     public function params(DirectiveNode $node): array

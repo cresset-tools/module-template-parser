@@ -31,6 +31,13 @@ final class HostDirectives
                 if ($class === '') {
                     return '';
                 }
+
+                // Checked before the port, so a refused class is never constructed.
+                if (!$c->policy()->permitsBlock($class)) {
+                    $e->refusedByPolicy($n, $c, PolicyViolation::BLOCK, $class);
+                    return '';
+                }
+
                 $method = $params['output'] ?? 'toHtml';
                 unset($params['class'], $params['output']);
 
@@ -183,6 +190,10 @@ final class HostDirectives
                 unset($params['type']);
 
                 if (!PathGuard::isSafeIdentifier($type)) {
+                    return '';
+                }
+                if (!$c->policy()->permitsBlock($type)) {
+                    $e->refusedByPolicy($n, $c, PolicyViolation::BLOCK, $type);
                     return '';
                 }
                 return $widgets->render($type, $params);
