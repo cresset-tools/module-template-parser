@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser;
+namespace Cresset\TemplateParser;
 
-use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\Ast\DirectiveNode as Node;
+use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Ast\DirectiveNode as Node;
 
 /**
  * Registers the directives that need something from the host application.

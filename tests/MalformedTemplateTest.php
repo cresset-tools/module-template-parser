@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\NestingLimitError;
-use MageOS\TemplateParser\SyntaxError;
-use MageOS\TemplateParser\TemplateEngine;
-use MageOS\TemplateParser\UnknownVariableError;
+use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\NestingLimitError;
+use Cresset\TemplateParser\SyntaxError;
+use Cresset\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\UnknownVariableError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -78,7 +78,7 @@ final class MalformedTemplateTest extends TestCase
             return;
         }
 
-        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
         $engine->render($template, ['a' => 1]);
     }
 
@@ -90,7 +90,7 @@ final class MalformedTemplateTest extends TestCase
     public function testPermissiveModeRendersAllOfThem(string $template, string $_expected, bool $_legacyOk): void
     {
         $engine = TemplateEngine::withOptions(
-            \MageOS\TemplateParser\Options::compatible()->withRefuseLegacyIncompatible(false)
+            \Cresset\TemplateParser\Options::compatible()->withRefuseLegacyIncompatible(false)
         );
 
         // The nesting bound is a resource limit, not a compatibility one, so it still applies.
@@ -127,7 +127,7 @@ final class MalformedTemplateTest extends TestCase
         // smuggling shape: a first pass that plants a construct a second pass executes.
         try {
             $engine->render($out, $variables);
-        } catch (\MageOS\TemplateParser\TemplateError) {
+        } catch (\Cresset\TemplateParser\TemplateError) {
             // Refusing to render the output is also "nothing ran" - what is being asserted
             // is the absence of execution, not the presence of a second rendering.
         }

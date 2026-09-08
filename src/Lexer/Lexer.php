@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Lexer;
+namespace Cresset\TemplateParser\Lexer;
 
 /**
  * Splits template source into text and directive tokens.
@@ -22,7 +22,7 @@ final class Lexer
     /** Enough to see any legal directive name plus its delimiter. */
     private const MAX_PEEK = 64;
 
-    public function __construct(private readonly \MageOS\TemplateParser\DirectiveSpec $spec = new \MageOS\TemplateParser\DirectiveSpec())
+    public function __construct(private readonly \Cresset\TemplateParser\DirectiveSpec $spec = new \Cresset\TemplateParser\DirectiveSpec())
     {
     }
 

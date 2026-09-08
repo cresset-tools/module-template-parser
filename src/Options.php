@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser;
+namespace Cresset\TemplateParser;
 
 /**
  * What the engine refuses to guess at.

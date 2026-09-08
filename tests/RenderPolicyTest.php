@@ -1,21 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\Context;
-use MageOS\TemplateParser\Evaluator;
-use MageOS\TemplateParser\HostDirectives;
-use MageOS\TemplateParser\HostServices;
-use MageOS\TemplateParser\Options;
-use MageOS\TemplateParser\Parser;
-use MageOS\TemplateParser\PolicyViolation;
-use MageOS\TemplateParser\PolicyViolationError;
-use MageOS\TemplateParser\Port\BlockRenderer;
-use MageOS\TemplateParser\Port\TemplateLoader;
-use MageOS\TemplateParser\Port\WidgetRenderer;
-use MageOS\TemplateParser\RenderPolicy;
-use MageOS\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\Evaluator;
+use Cresset\TemplateParser\HostDirectives;
+use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\Options;
+use Cresset\TemplateParser\Parser;
+use Cresset\TemplateParser\PolicyViolation;
+use Cresset\TemplateParser\PolicyViolationError;
+use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\TemplateLoader;
+use Cresset\TemplateParser\Port\WidgetRenderer;
+use Cresset\TemplateParser\RenderPolicy;
+use Cresset\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

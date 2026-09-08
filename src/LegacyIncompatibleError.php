@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser;
+namespace Cresset\TemplateParser;
 
 /**
  * Raised instead of rendering, when Options::$refuseLegacyIncompatible is set.

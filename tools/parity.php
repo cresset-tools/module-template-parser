@@ -26,7 +26,7 @@ use Magento\Framework\Filter\DirectiveProcessor\{IfDirective, DependDirective, T
 use Magento\Framework\Filter\DirectiveProcessor\Filter\{FilterApplier, FilterPool};
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use Magento\Framework\Filter\Template\Tokenizer\{VariableFactory, ParameterFactory};
-use MageOS\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\TemplateEngine;
 
 function legacy(array $vars): LegacyTemplate {
     $r = new StrictResolver(new VariableFactory());

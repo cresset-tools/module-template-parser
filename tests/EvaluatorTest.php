@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -66,7 +66,7 @@ final class EvaluatorTest extends TestCase
         );
 
         // Strict: reading it afterwards is a mistake worth reporting.
-        $this->expectException(\MageOS\TemplateParser\UnknownVariableError::class);
+        $this->expectException(\Cresset\TemplateParser\UnknownVariableError::class);
         $this->engine->render('{{for i in xs}}{{var i}}{{/for}}[{{var i}}]', ['xs' => ['a']]);
     }
 }

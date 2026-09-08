@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser;
+namespace Cresset\TemplateParser;
 
 /**
  * A directive that could not be parsed: unclosed, unbalanced or malformed.

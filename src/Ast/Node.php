@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Ast;
+namespace Cresset\TemplateParser\Ast;
 
 interface Node
 {

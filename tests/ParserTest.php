@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\Ast\TextNode;
-use MageOS\TemplateParser\Options;
-use MageOS\TemplateParser\Parser;
-use MageOS\TemplateParser\SyntaxError;
-use MageOS\TemplateParser\UnclosedDirective;
+use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Ast\TextNode;
+use Cresset\TemplateParser\Options;
+use Cresset\TemplateParser\Parser;
+use Cresset\TemplateParser\SyntaxError;
+use Cresset\TemplateParser\UnclosedDirective;
 use PHPUnit\Framework\TestCase;
 
 final class ParserTest extends TestCase

@@ -3,4 +3,4 @@ declare(strict_types=1);
 
 use Magento\Framework\Component\ComponentRegistrar;
 
-ComponentRegistrar::register(ComponentRegistrar::MODULE, 'MageOS_TemplateParser', __DIR__);
+ComponentRegistrar::register(ComponentRegistrar::MODULE, 'Cresset_TemplateParser', __DIR__);

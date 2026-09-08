@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Magento;
+namespace Cresset\TemplateParser\Magento;
 
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use MageOS\TemplateParser\Port\UrlBuilder;
+use Cresset\TemplateParser\Port\UrlBuilder;
 
 /**
  * {{store}}, {{media}}, {{view}} and {{protocol}} through Magento's URL and asset services.

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser;
+namespace Cresset\TemplateParser;
 
 /**
  * Turns a byte offset into a human-readable location and source excerpt.

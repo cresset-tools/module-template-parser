@@ -10,10 +10,10 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
-    <preference for="MageOS\TemplateParser\Port\Translator"
-                type="MageOS\TemplateParser\Magento\PhraseTranslator"/>
+    <preference for="Cresset\TemplateParser\Port\Translator"
+                type="Cresset\TemplateParser\Magento\PhraseTranslator"/>
 
-    <type name="MageOS\TemplateParser\Magento\LayoutBlockRenderer">
+    <type name="Cresset\TemplateParser\Magento\LayoutBlockRenderer">
         <arguments>
             <!-- Only these methods may be named by {{block output="..."}}. -->
             <argument name="allowedOutputMethods" xsi:type="array">
@@ -22,7 +22,7 @@
         </arguments>
     </type>
 
-    <type name="MageOS\TemplateParser\Magento\ConfigTemplateLoader">
+    <type name="Cresset\TemplateParser\Magento\ConfigTemplateLoader">
         <arguments>
             <argument name="allowedPathPrefixes" xsi:type="array">
                 <item name="email" xsi:type="string">design/email/</item>
@@ -30,7 +30,7 @@
         </arguments>
     </type>
 
-    <type name="MageOS\TemplateParser\Magento\ShadowComparator">
+    <type name="Cresset\TemplateParser\Magento\ShadowComparator">
         <arguments>
             <argument name="enabled" xsi:type="boolean">false</argument>
         </arguments>

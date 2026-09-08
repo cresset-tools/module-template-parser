@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser;
+namespace Cresset\TemplateParser;
 
-use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\Ast\Node;
-use MageOS\TemplateParser\Ast\RootNode;
-use MageOS\TemplateParser\Ast\TextNode;
+use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Ast\Node;
+use Cresset\TemplateParser\Ast\RootNode;
+use Cresset\TemplateParser\Ast\TextNode;
 
 /**
  * Renders an AST.

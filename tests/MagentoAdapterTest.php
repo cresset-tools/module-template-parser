@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\LayoutInterface;
-use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
-use MageOS\TemplateParser\Magento\ShadowComparator;
-use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
-use MageOS\TemplateParser\Options;
+use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
+use Cresset\TemplateParser\Magento\ShadowComparator;
+use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
+use Cresset\TemplateParser\Options;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\State;
@@ -11,13 +11,13 @@ use Magento\Framework\View\LayoutFactory;
 use Magento\Framework\View\LayoutInterface;
 use Magento\Variable\Model\Source\Variables;
 use Magento\Widget\Block\BlockInterface as WidgetBlockInterface;
-use MageOS\TemplateParser\Diagnostics;
-use MageOS\TemplateParser\Magento\AllowlistedConfigReader;
-use MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer;
-use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
-use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
-use MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer;
-use MageOS\TemplateParser\ParameterParser;
+use Cresset\TemplateParser\Diagnostics;
+use Cresset\TemplateParser\Magento\AllowlistedConfigReader;
+use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
+use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
+use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
+use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
+use Cresset\TemplateParser\ParameterParser;
 use PHPUnit\Framework\TestCase;
 
 /**

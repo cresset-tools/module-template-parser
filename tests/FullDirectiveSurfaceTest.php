@@ -1,20 +1,20 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\Evaluator;
-use MageOS\TemplateParser\HostDirectives;
-use MageOS\TemplateParser\HostServices;
-use MageOS\TemplateParser\Parser;
-use MageOS\TemplateParser\Port\ConfigReader;
-use MageOS\TemplateParser\Port\CustomVariableReader;
-use MageOS\TemplateParser\Port\LayoutRenderer;
-use MageOS\TemplateParser\Port\StylesheetLoader;
-use MageOS\TemplateParser\Port\UrlBuilder;
-use MageOS\TemplateParser\Port\WidgetRenderer;
-use MageOS\TemplateParser\TemplateEngine;
-use MageOS\TemplateParser\UnknownDirectiveError;
+use Cresset\TemplateParser\Evaluator;
+use Cresset\TemplateParser\HostDirectives;
+use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\Parser;
+use Cresset\TemplateParser\Port\ConfigReader;
+use Cresset\TemplateParser\Port\CustomVariableReader;
+use Cresset\TemplateParser\Port\LayoutRenderer;
+use Cresset\TemplateParser\Port\StylesheetLoader;
+use Cresset\TemplateParser\Port\UrlBuilder;
+use Cresset\TemplateParser\Port\WidgetRenderer;
+use Cresset\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\UnknownDirectiveError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -37,7 +37,7 @@ final class FullDirectiveSurfaceTest extends TestCase
         };
 
         return new HostServices(
-            blocks: new class ($record) implements \MageOS\TemplateParser\Port\BlockRenderer {
+            blocks: new class ($record) implements \Cresset\TemplateParser\Port\BlockRenderer {
                 public function __construct(private $r) {}
                 public function render(string $class, array $data, string $method): string
                 { ($this->r)('block', [$class, $data, $method]); return 'BLOCK:' . $class; }
@@ -97,7 +97,7 @@ final class FullDirectiveSurfaceTest extends TestCase
     public function testDirectiveRendersThroughItsPort(string $template, string $expected, string $port): void
     {
         // block, widget and layout are denied by the default policy, so this grants them.
-        $policy = \MageOS\TemplateParser\RenderPolicy::unrestricted();
+        $policy = \Cresset\TemplateParser\RenderPolicy::unrestricted();
 
         self::assertSame($expected, $this->engine()->render($template, [], null, $policy));
         self::assertArrayHasKey($port, $this->calls, 'the port should have been reached');
@@ -162,7 +162,7 @@ final class FullDirectiveSurfaceTest extends TestCase
     #[DataProvider('rejectedInput')]
     public function testUnsafeInputNeverReachesTheHost(string $template, string $port): void
     {
-        $out = $this->engine()->render($template, [], null, \MageOS\TemplateParser\RenderPolicy::unrestricted());
+        $out = $this->engine()->render($template, [], null, \Cresset\TemplateParser\RenderPolicy::unrestricted());
 
         self::assertArrayNotHasKey($port, $this->calls, 'the host must not have been called at all');
         self::assertStringNotContainsString('..', $out);

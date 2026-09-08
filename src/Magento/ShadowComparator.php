@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Magento;
+namespace Cresset\TemplateParser\Magento;
 
 use Psr\Log\LoggerInterface;
 

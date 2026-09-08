@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\Context;
-use MageOS\TemplateParser\Options;
-use MageOS\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\Options;
+use Cresset\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -122,7 +122,7 @@ final class CompatibilityModeTest extends TestCase
      */
     public function testSameNameNestingIsRefusedLikeLegacy(): void
     {
-        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
         $this->engine->render('{{depend a}}A{{depend b}}B{{/depend}}Z{{/depend}}', ['a' => 1, 'b' => 1]);
     }
 
@@ -137,7 +137,7 @@ final class CompatibilityModeTest extends TestCase
             try {
                 $this->engine->render($template, ['x' => 1]);
                 self::fail('expected refusal for ' . $template);
-            } catch (\MageOS\TemplateParser\LegacyIncompatibleError) {
+            } catch (\Cresset\TemplateParser\LegacyIncompatibleError) {
                 self::assertTrue(true);
             }
         }
@@ -155,7 +155,7 @@ final class CompatibilityModeTest extends TestCase
     public function testNestingLimitStillApplies(): void
     {
         // Legacy incompatibility bites first here, at two levels rather than four.
-        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
         $this->engine->render(
             '{{if a}}{{if a}}{{if a}}{{if a}}X{{/if}}{{/if}}{{/if}}{{/if}}',
             ['a' => 1]
@@ -164,7 +164,7 @@ final class CompatibilityModeTest extends TestCase
         $permissive = TemplateEngine::withOptions(
             Options::compatible()->withRefuseLegacyIncompatible(false)
         );
-        $this->expectException(\MageOS\TemplateParser\NestingLimitError::class);
+        $this->expectException(\Cresset\TemplateParser\NestingLimitError::class);
         $permissive->render('{{if a}}{{if a}}{{if a}}{{if a}}X{{/if}}{{/if}}{{/if}}{{/if}}', ['a' => 1]);
     }
 

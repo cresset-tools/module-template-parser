@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\Context;
-use MageOS\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -81,7 +81,7 @@ final class SecurityTest extends TestCase
             '{{block class=Some\Real\Block}}',
             [],
             null,
-            \MageOS\TemplateParser\RenderPolicy::unrestricted()
+            \Cresset\TemplateParser\RenderPolicy::unrestricted()
         );
         self::assertSame(['Some\Real\Block'], $this->instantiated);
         self::assertSame('[BLOCK]', $out);
@@ -132,7 +132,7 @@ final class SecurityTest extends TestCase
         try {
             $this->engine->render('{{var o.deleteEverything()}}', ['o' => $subject]);
             self::fail('expected the call to be refused');
-        } catch (\MageOS\TemplateParser\UnknownVariableError $e) {
+        } catch (\Cresset\TemplateParser\UnknownVariableError $e) {
             self::assertStringContainsString('deleteEverything()', $e->getMessage());
         }
         self::assertFalse($subject->wiped, 'the method must never have been invoked');

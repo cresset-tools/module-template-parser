@@ -1,5 +1,5 @@
 {
-    "name": "mageos/template-parser",
+    "name": "cresset/template-parser",
     "description": "Parse-to-AST template directive engine for Magento/Mage-OS, installable as a module",
     "type": "magento2-module",
     "license": "OSL-3.0",
@@ -11,7 +11,7 @@
     },
     "autoload": {
         "psr-4": {
-            "MageOS\\TemplateParser\\": "src/"
+            "Cresset\\TemplateParser\\": "src/"
         },
         "files": [
             "registration.php"
@@ -19,7 +19,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "MageOS\\TemplateParser\\Test\\": "tests/"
+            "Cresset\\TemplateParser\\Test\\": "tests/"
         }
     },
     "suggest": {

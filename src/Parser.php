@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser;
+namespace Cresset\TemplateParser;
 
-use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\Ast\Node;
-use MageOS\TemplateParser\Ast\RootNode;
-use MageOS\TemplateParser\Ast\TextNode;
-use MageOS\TemplateParser\Lexer\Lexer;
-use MageOS\TemplateParser\Lexer\Token;
-use MageOS\TemplateParser\Lexer\TokenType;
+use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Ast\Node;
+use Cresset\TemplateParser\Ast\RootNode;
+use Cresset\TemplateParser\Ast\TextNode;
+use Cresset\TemplateParser\Lexer\Lexer;
+use Cresset\TemplateParser\Lexer\Token;
+use Cresset\TemplateParser\Lexer\TokenType;
 
 /**
  * Builds an AST from template source.

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Lexer;
+namespace Cresset\TemplateParser\Lexer;
 
 /**
  * A lexical token. `raw` always holds the exact source text, so any token can be

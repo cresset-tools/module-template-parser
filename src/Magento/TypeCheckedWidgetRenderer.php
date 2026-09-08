@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Magento;
+namespace Cresset\TemplateParser\Magento;
 
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Widget\Block\BlockInterface as WidgetBlockInterface;
-use MageOS\TemplateParser\Port\WidgetRenderer;
+use Cresset\TemplateParser\Port\WidgetRenderer;
 
 /**
  * {{widget}} with the type validated BEFORE instantiation.

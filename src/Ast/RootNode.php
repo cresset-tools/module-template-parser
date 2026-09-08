@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Ast;
+namespace Cresset\TemplateParser\Ast;
 
 final class RootNode implements Node
 {
@@ -13,7 +13,7 @@ final class RootNode implements Node
     ) {
     }
 
-    /** @return \MageOS\TemplateParser\LegacyIncompatibility[] */
+    /** @return \Cresset\TemplateParser\LegacyIncompatibility[] */
     public function incompatibilities(): array
     {
         return $this->incompatibilities;

@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Magento;
+namespace Cresset\TemplateParser\Magento;
 
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\LayoutInterface;
-use MageOS\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\BlockRenderer;
 
 /**
  * Renders {{block}} through Magento's layout, with the two constraints the core factories

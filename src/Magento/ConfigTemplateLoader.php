@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Magento;
+namespace Cresset\TemplateParser\Magento;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use MageOS\TemplateParser\Port\TemplateLoader;
+use Cresset\TemplateParser\Port\TemplateLoader;
 
 /**
  * Resolves {{template config_path="..."}} to template source.

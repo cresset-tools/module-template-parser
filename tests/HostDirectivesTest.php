@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\Context;
-use MageOS\TemplateParser\Evaluator;
-use MageOS\TemplateParser\HostDirectives;
-use MageOS\TemplateParser\Parser;
-use MageOS\TemplateParser\Port\BlockRenderer;
-use MageOS\TemplateParser\Port\TemplateLoader;
-use MageOS\TemplateParser\Port\Translator;
-use MageOS\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\Evaluator;
+use Cresset\TemplateParser\HostDirectives;
+use Cresset\TemplateParser\Parser;
+use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\TemplateLoader;
+use Cresset\TemplateParser\Port\Translator;
+use Cresset\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\TestCase;
 
 final class HostDirectivesTest extends TestCase
@@ -24,7 +24,7 @@ final class HostDirectivesTest extends TestCase
         $evaluator = new Evaluator();
         HostDirectives::register(
             $evaluator,
-            new \MageOS\TemplateParser\HostServices($blocks, $translator, $templates),
+            new \Cresset\TemplateParser\HostServices($blocks, $translator, $templates),
             $parser
         );
         return new TemplateEngine($parser, $evaluator);
@@ -45,7 +45,7 @@ final class HostDirectivesTest extends TestCase
             '{{block class="Some\\Block" output="toHtml" title="Hi"}}',
             [],
             null,
-            \MageOS\TemplateParser\RenderPolicy::unrestricted()
+            \Cresset\TemplateParser\RenderPolicy::unrestricted()
         );
 
         self::assertSame('[rendered]', $out);
@@ -66,7 +66,7 @@ final class HostDirectivesTest extends TestCase
             '{{block class="X"}}',
             [],
             null,
-            \MageOS\TemplateParser\RenderPolicy::unrestricted()
+            \Cresset\TemplateParser\RenderPolicy::unrestricted()
         );
         self::assertSame('toHtml', $renderer->method);
     }
@@ -139,7 +139,7 @@ final class HostDirectivesTest extends TestCase
             '{{template config_path="design/email/header"}}',
             ['payload' => '{{block class="Evil"}}'],
             null,
-            \MageOS\TemplateParser\RenderPolicy::unrestricted()
+            \Cresset\TemplateParser\RenderPolicy::unrestricted()
         );
 
         self::assertSame(0, $renderer->calls, 'a directive from data must never execute');

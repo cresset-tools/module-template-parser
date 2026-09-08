@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Magento;
+namespace Cresset\TemplateParser\Magento;
 
-use MageOS\TemplateParser\Context;
-use MageOS\TemplateParser\Evaluator;
-use MageOS\TemplateParser\HostDirectives;
-use MageOS\TemplateParser\Options;
-use MageOS\TemplateParser\Parser;
-use MageOS\TemplateParser\HostServices;
-use MageOS\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\Evaluator;
+use Cresset\TemplateParser\HostDirectives;
+use Cresset\TemplateParser\Options;
+use Cresset\TemplateParser\Parser;
+use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\TemplateEngine;
 
 /**
  * Presents the engine with the shape Magento's template filter uses.
@@ -35,9 +35,9 @@ final class TemplateFilterAdapter
     ) {
         $parser = new Parser(options: $this->options);
         $evaluator = new Evaluator(
-            new \MageOS\TemplateParser\VariableResolver($this->options->legacyQuirks),
-            new \MageOS\TemplateParser\ParameterParser(),
-            new \MageOS\TemplateParser\DirectiveSpec(),
+            new \Cresset\TemplateParser\VariableResolver($this->options->legacyQuirks),
+            new \Cresset\TemplateParser\ParameterParser(),
+            new \Cresset\TemplateParser\DirectiveSpec(),
             $this->options
         );
         HostDirectives::register($evaluator, $services, $parser);

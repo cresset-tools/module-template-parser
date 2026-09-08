@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Port;
+namespace Cresset\TemplateParser\Port;
 
 /**
  * Reads a custom variable for {{customvar code="..."}}.

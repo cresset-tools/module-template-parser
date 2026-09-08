@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser;
+namespace Cresset\TemplateParser;
 
-use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\Ast\Node;
+use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Ast\Node;
 
 /**
  * A block directive that was never closed. Carries its source so the evaluator can emit it

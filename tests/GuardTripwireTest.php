@@ -1,27 +1,27 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Test;
+namespace Cresset\TemplateParser\Test;
 
-use MageOS\TemplateParser\Context;
-use MageOS\TemplateParser\DirectiveSpec;
-use MageOS\TemplateParser\Evaluator;
-use MageOS\TemplateParser\HostDirectives;
-use MageOS\TemplateParser\HostServices;
-use MageOS\TemplateParser\Lexer\Lexer;
-use MageOS\TemplateParser\Lexer\TokenType;
-use MageOS\TemplateParser\Options;
-use MageOS\TemplateParser\Parser;
-use MageOS\TemplateParser\PathGuard;
-use MageOS\TemplateParser\PolicyViolationError;
-use MageOS\TemplateParser\Port\BlockRenderer;
-use MageOS\TemplateParser\Port\TemplateLoader;
-use MageOS\TemplateParser\RenderPolicy;
-use MageOS\TemplateParser\SyntaxError;
-use MageOS\TemplateParser\TemplateCycleError;
-use MageOS\TemplateParser\TemplateEngine;
-use MageOS\TemplateParser\TemplateError;
-use MageOS\TemplateParser\UnknownVariableError;
+use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\DirectiveSpec;
+use Cresset\TemplateParser\Evaluator;
+use Cresset\TemplateParser\HostDirectives;
+use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\Lexer\Lexer;
+use Cresset\TemplateParser\Lexer\TokenType;
+use Cresset\TemplateParser\Options;
+use Cresset\TemplateParser\Parser;
+use Cresset\TemplateParser\PathGuard;
+use Cresset\TemplateParser\PolicyViolationError;
+use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\TemplateLoader;
+use Cresset\TemplateParser\RenderPolicy;
+use Cresset\TemplateParser\SyntaxError;
+use Cresset\TemplateParser\TemplateCycleError;
+use Cresset\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\TemplateError;
+use Cresset\TemplateParser\UnknownVariableError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

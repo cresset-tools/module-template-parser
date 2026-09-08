@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace MageOS\TemplateParser\Magento;
+namespace Cresset\TemplateParser\Magento;
 
-use MageOS\TemplateParser\Port\StylesheetLoader;
+use Cresset\TemplateParser\Port\StylesheetLoader;
 
 /** {{css}} through Magento's CSS processor. */
 final class AssetStylesheetLoader implements StylesheetLoader
