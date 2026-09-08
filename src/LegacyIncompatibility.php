@@ -17,6 +17,9 @@ final class LegacyIncompatibility
 {
     public const SAME_NAME_NESTING = 'same_name_nesting';
     public const NESTING_DEPTH = 'nesting_depth';
+    public const DEGENERATE_CONSTRUCT = 'degenerate_construct';
+    public const STRAY_CLOSING_TAG = 'stray_closing_tag';
+    public const UNCLOSED_BLOCK = 'unclosed_block';
 
     public function __construct(
         public readonly string $kind,

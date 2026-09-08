@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace MageOS\TemplateParser\Test;
 
+use MageOS\TemplateParser\LegacyIncompatibleError;
+use MageOS\TemplateParser\Options;
 use MageOS\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -86,15 +88,65 @@ final class LegacyParityTest extends TestCase
     }
 
     /**
-     * Where legacy raises a fatal, this engine must still render.
+     * Where legacy raises a fatal, compatible mode refuses.
      *
-     * 64 of the recorded cases crash the stock filter - same-name nesting, empty directive
-     * names, prose containing braces. None of those are behaviour a template can depend on.
+     * This is the bug-for-bug contract: an engine that renders what the old one crashes on
+     * is a better engine, not a compatible one. 64 of the recorded cases crash the stock
+     * filter - degenerate directive names, stray closing tags, unclosed blocks - and
+     * compatible mode declines all of them, with a diagnostic rather than a TypeError.
      */
     #[DataProvider('legacyFatalCases')]
-    public function testLegacyFatalsStillRender(array $case): void
+    public function testCompatibleModeRefusesWhatLegacyCannotRender(array $case): void
     {
-        $actual = TemplateEngine::compatible()->render($case['template'], $case['variables']);
-        self::assertIsString($actual, 'the engine must render where legacy fataled: ' . $case['id']);
+        $this->expectException(LegacyIncompatibleError::class);
+        TemplateEngine::compatible()->render($case['template'], $case['variables']);
+    }
+
+    /**
+     * With the refusal switched off, the same cases render - the improvement, available to
+     * anyone who does not need to keep a rollback to the legacy filter working.
+     */
+    #[DataProvider('legacyFatalCases')]
+    public function testPermissiveModeRendersWhereLegacyFataled(array $case): void
+    {
+        $engine = TemplateEngine::withOptions(
+            Options::compatible()->withRefuseLegacyIncompatible(false)
+        );
+
+        $actual = $engine->render($case['template'], $case['variables']);
+        self::assertIsString($actual, 'permissive mode should render: ' . $case['id']);
+    }
+
+    /**
+     * The claim in one assertion: compatible mode refuses EXACTLY the cases legacy fatals
+     * on - no more, no fewer. Refusing extra cases would be a regression as real as
+     * rendering ones legacy cannot.
+     */
+    public function testRefusalSetMatchesLegacyFatalSetExactly(): void
+    {
+        $engine = TemplateEngine::compatible();
+        $refused = $rendered = [];
+
+        foreach (self::recordedCases() as $id => [$case]) {
+            try {
+                $engine->render($case['template'], $case['variables']);
+                $rendered[] = $id;
+            } catch (LegacyIncompatibleError) {
+                $refused[] = $id;
+            } catch (\Throwable) {
+                $rendered[] = $id;   // some other error is a different question
+            }
+        }
+
+        $legacyFatal = array_keys(self::legacyFatalCases());
+        sort($refused);
+        sort($legacyFatal);
+
+        self::assertSame(
+            $legacyFatal,
+            $refused,
+            'compatible mode should refuse exactly the constructs legacy cannot render'
+        );
+        self::assertNotEmpty($refused);
     }
 }

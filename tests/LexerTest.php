@@ -54,13 +54,48 @@ final class LexerTest extends TestCase
     public static function nonDirectives(): array
     {
         return [
+            // These begin with a letter, so legacy hands them back verbatim too.
             'translation string' => ['{{Forgot Your Password?}}'],
             'sentence'           => ['{{Are you sure you want to delete this "product"?}}'],
-            'empty braces'       => ['{{}}'],
-            'unterminated'       => ['{{var x'],
-            'just braces'        => ['a {{ b }} c'],
             'uppercase word'     => ['{{Password}}'],
+            'unterminated'       => ['{{var x'],
         ];
+    }
+
+    /**
+     * A `{{...}}` not starting with a letter is neither a directive nor plain text: legacy
+     * raises a TypeError on it, so it is tracked separately for compatible mode to refuse.
+     */
+    #[DataProvider('degenerateConstructs')]
+    public function testDegenerateConstructsAreTrackedSeparately(string $source): void
+    {
+        $tokens = $this->lexer->tokenize($source);
+        $types = array_map(static fn ($t) => $t->type, $tokens);
+
+        self::assertContains(TokenType::Degenerate, $types, 'expected a degenerate token: ' . $source);
+        self::assertSame($source, implode('', array_map(static fn ($t) => $t->raw, $tokens)));
+    }
+
+    public static function degenerateConstructs(): array
+    {
+        return [
+            'empty braces'  => ['{{}}'],
+            'leading space' => ['a {{ b }} c'],
+            'digits'        => ['{{100}}'],
+            'punctuation'   => ['{{!!}}'],
+            'underscore'    => ['{{_x}}'],
+            'slash only'    => ['{{/}}'],
+        ];
+    }
+
+    /** A well-formed closing tag is never mistaken for a degenerate construct. */
+    public function testClosingTagsAreNotDegenerate(): void
+    {
+        foreach (['{{/if}}', '{{/depend}}', '{{if a}}x{{/if}}'] as $source) {
+            foreach ($this->lexer->tokenize($source) as $token) {
+                self::assertNotSame(TokenType::Degenerate, $token->type, $source);
+            }
+        }
     }
 
     /** Round-tripping every token must reproduce the source exactly. */

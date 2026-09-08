@@ -126,12 +126,29 @@ final class CompatibilityModeTest extends TestCase
         $this->engine->render('{{depend a}}A{{depend b}}B{{/depend}}Z{{/depend}}', ['a' => 1, 'b' => 1]);
     }
 
-    /** The degenerate fatals - empty directive names - are still rendered, not reproduced. */
-    public function testDegenerateFatalsAreNotReproduced(): void
+    /**
+     * Degenerate constructs - a {{...}} not starting with a letter - are refused too.
+     * Legacy raises a TypeError on those, so a compatible engine must not render them.
+     * See DegenerateConstructTest for the full shape-by-shape mapping.
+     */
+    public function testDegenerateConstructsAreRefused(): void
     {
-        // Legacy raises a TypeError on an empty directive name; this renders it as text.
-        self::assertSame('A{{100}}B', $this->engine->render('A{{100}}B', ['x' => 1]));
-        self::assertSame('{{ var x }}', $this->engine->render('{{ var x }}', ['x' => 1]));
+        foreach (['A{{100}}B', '{{ var x }}', '{{}}'] as $template) {
+            try {
+                $this->engine->render($template, ['x' => 1]);
+                self::fail('expected refusal for ' . $template);
+            } catch (\MageOS\TemplateParser\LegacyIncompatibleError) {
+                self::assertTrue(true);
+            }
+        }
+    }
+
+    /** But prose beginning with a letter is rendered verbatim, exactly as legacy does. */
+    public function testProseBeginningWithALetterIsRenderedVerbatim(): void
+    {
+        foreach (['{{Forgot Your Password?}}', '{{Sign In}}', 'a{{color:red}}b'] as $template) {
+            self::assertSame($template, $this->engine->render($template, ['x' => 1]));
+        }
     }
 
     /** The nesting bound still applies. */

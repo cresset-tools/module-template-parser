@@ -118,7 +118,24 @@ Verified against the unpatched filter, legacy manages **two levels with differin
 `{{depend}}` around `{{if}}`, or the reverse. Same-name nesting at any depth, and three
 levels, both raise a `TypeError` and the mail never sends.
 
-Compatible mode **refuses these**, so its capability matches legacy's exactly:
+Compatible mode **refuses everything legacy cannot render**, so its capability matches
+exactly. Verified against the real filter, that is four conditions:
+
+| condition | example | why legacy dies |
+|---|---|---|
+| same-name nesting | `{{if}}` in `{{if}}` | lazy body hands on an unclosed inner directive |
+| three levels | `{{depend}}>{{if}}>{{depend}}` | same |
+| unclosed block | `a{{if a}}b` | the per-directive re-match finds nothing, passes null on |
+| construct not starting with a letter | `{{100}}`, `{{ var x }}`, `{{}}` | no name captured, `ProcessorPool::get(null)` |
+
+The last one is narrower than it looks. `CONSTRUCTION_PATTERN` is case-**insensitive**, so
+`{{Password}}` and `{{Forgot Your Password?}}` do capture a name, fail to resolve, and come
+back verbatim — those render here too. Only a digit, space, slash, underscore or punctuation
+directly after `{{` produces the fatal.
+
+`LegacyParityTest::testRefusalSetMatchesLegacyFatalSetExactly` asserts the set of refusals
+equals the set of recorded legacy fatals — no more, no fewer. Refusing extra constructs would
+be as much a regression as rendering ones legacy cannot.
 
 ```
 Nesting limit exceeded is not the error here — this one is:

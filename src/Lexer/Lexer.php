@@ -45,7 +45,7 @@ final class Lexer
             $token = $this->classify($inner, substr($source, $open, $close + strlen(self::CLOSE) - $open), $open);
 
             if ($token === null) {
-                // Not a directive. Skip past the opener and keep accumulating text.
+                // Not a directive, and legacy renders it verbatim too. Keep accumulating text.
                 $cursor = $open + strlen(self::OPEN);
                 continue;
             }
@@ -71,21 +71,25 @@ final class Lexer
      */
     private function classify(string $inner, string $raw, int $offset): ?Token
     {
-        if ($inner === '') {
-            return null;
+        // A well-formed closing tag first: legacy consumes it as part of its block, so the
+        // leading slash never reaches the fallback that would choke on it.
+        if ($inner !== '' && $inner[0] === '/') {
+            $name = substr($inner, 1);
+            if (preg_match(self::NAME_PATTERN, $name)) {
+                return new Token(TokenType::DirectiveClose, $raw, $offset, $name);
+            }
+        }
+
+        // Legacy's CONSTRUCTION_PATTERN is case-insensitive, so anything starting with a
+        // letter yields a name and falls back cleanly to verbatim output. Anything else
+        // yields no name, and SimpleDirective is handed null: a TypeError.
+        if ($inner === '' || !preg_match('/^[A-Za-z]/', $inner)) {
+            return new Token(TokenType::Degenerate, $raw, $offset);
         }
 
         // The name must begin immediately after `{{` and be lower-case. Real templates
-        // always write it that way; `{{Forgot Your Password?}}` and `{{ b }}` are prose,
-        // and treating them as directives is how a parser starts executing content that
-        // was never meant to be a directive.
-        if ($inner[0] === '/') {
-            $name = substr($inner, 1);
-            return preg_match(self::NAME_PATTERN, $name)
-                ? new Token(TokenType::DirectiveClose, $raw, $offset, $name)
-                : null;
-        }
-
+        // always write it that way; `{{Forgot Your Password?}}` is prose, and legacy hands
+        // it back verbatim too - so it is text here, not a directive and not degenerate.
         if (!preg_match('/^([a-z][a-z0-9_]*)(\s[\s\S]*)?$/', $inner, $m)) {
             return null;
         }
@@ -96,4 +100,5 @@ final class Lexer
 
         return new Token(TokenType::DirectiveOpen, $raw, $offset, $m[1], trim($m[2] ?? ''));
     }
+
 }

@@ -188,8 +188,12 @@ final class Evaluator
             return $out;
         };
 
-        // {{else}} is consumed by the parser; a stray one renders as nothing.
-        $this->handlers['else'] = static fn (): string => '';
+        // {{else}} is consumed by the parser when it divides an {{if}}. A stray one renders
+        // as nothing - except in compatible mode, where legacy hands it back verbatim: it
+        // starts with a letter, so SimpleDirective captures the name and the resulting
+        // InvalidArgumentException is caught.
+        $this->handlers['else'] = fn (DirectiveNode $n): string =>
+            $this->options->legacyQuirks ? $n->fullRaw() : '';
 
         // Structured deferral: recorded, not emitted. The caller decides what to do.
         $this->handlers['inlinecss'] = function (DirectiveNode $n, Context $c): string {

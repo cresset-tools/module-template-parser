@@ -74,6 +74,20 @@ final class Parser
                 continue;
             }
 
+            if ($token->type === TokenType::Degenerate) {
+                $this->refuseIfLegacyCannotRender(
+                    $token->offset,
+                    LegacyIncompatibility::DEGENERATE_CONSTRUCT,
+                    sprintf(
+                        '%s does not start with a letter - the legacy filter raises a TypeError here',
+                        trim($token->raw)
+                    )
+                );
+                $nodes[] = new TextNode($token->raw);
+                $index++;
+                continue;
+            }
+
             if ($token->type === TokenType::DirectiveClose) {
                 if ($token->name === $closingName) {
                     return $nodes;
@@ -89,6 +103,14 @@ final class Parser
                         $this->closingHint($token->name, $openStack)
                     );
                 }
+                $this->refuseIfLegacyCannotRender(
+                    $token->offset,
+                    LegacyIncompatibility::STRAY_CLOSING_TAG,
+                    sprintf(
+                        '{{/%s}} closes nothing - the legacy filter raises a TypeError here',
+                        $token->name
+                    )
+                );
                 $nodes[] = new TextNode($token->raw);
                 $index++;
                 continue;
@@ -171,7 +193,38 @@ final class Parser
             );
         }
 
+        $this->refuseIfLegacyCannotRender(
+            $token->offset,
+            LegacyIncompatibility::UNCLOSED_BLOCK,
+            sprintf('{{%s}} is never closed - the legacy filter raises a TypeError here', $token->name)
+        );
+
         return new UnclosedDirective($node);
+    }
+
+    /**
+     * Refuses, or records, a construct the legacy filter cannot render.
+     *
+     * Only meaningful in compatible mode: strict already rejects most of these as syntax
+     * errors, and lenient deliberately recovers from them.
+     */
+    private function refuseIfLegacyCannotRender(int $offset, string $kind, string $message): void
+    {
+        if (!$this->options->legacyQuirks) {
+            return;
+        }
+
+        if ($this->options->refuseLegacyIncompatible) {
+            throw LegacyIncompatibleError::at(
+                $this->source,
+                $offset,
+                $message,
+                'this renders here but not on the legacy filter; unset '
+                . 'Options::$refuseLegacyIncompatible to allow it'
+            );
+        }
+
+        $this->incompatibilities[] = LegacyIncompatibility::at($this->source, $offset, $kind, $message);
     }
 
     /**
@@ -219,17 +272,7 @@ final class Parser
             return;
         }
 
-        if ($this->options->refuseLegacyIncompatible) {
-            throw LegacyIncompatibleError::at(
-                $this->source,
-                $token->offset,
-                $incompatibility->message,
-                'this renders here but not on the legacy filter; unset '
-                . 'Options::$refuseLegacyIncompatible to allow it'
-            );
-        }
-
-        $this->incompatibilities[] = $incompatibility;
+        $this->refuseIfLegacyCannotRender($token->offset, $incompatibility->kind, $incompatibility->message);
     }
 
     /**
