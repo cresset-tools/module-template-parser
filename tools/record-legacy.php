@@ -303,7 +303,7 @@ foreach ($constructs as $clabel => $tpl) {
 // the real harvested templates, rendered with a realistic variable set
 $realVars = ['customer_name'=>'Jan Jansen','store_name'=>'Demo','name'=>'Jan','a'=>1,
              'store_phone'=>'123','store_hours'=>'9-5','logo_width'=>'180','logo_height'=>'50'];
-foreach (glob('/m/tests/fixtures/corpus/*') ?: [] as $file) {
+foreach (glob('/m/tests/fixtures/corpus/*.html') ?: [] as $file) {
     $src = (string)file_get_contents($file);
     [$outcome, $value] = record($src, $realVars);
     $cases[] = ['id' => 'real/' . basename($file), 'template' => $src, 'variables' => $realVars,
