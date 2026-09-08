@@ -59,7 +59,7 @@ final class RenderPolicyTest extends TestCase
 
     public function testAnAllowedBlockRenders(): void
     {
-        $policy = RenderPolicy::unrestricted()->withAllowedBlocks('Vendor\\Ok\\Block');
+        $policy = RenderPolicy::unrestricted()->withAllowedBlocks(['Vendor\\Ok\\Block']);
         $out = $this->engine()->render('{{block class="Vendor\\Ok\\Block"}}', [], null, $policy);
 
         self::assertSame('[Vendor\\Ok\\Block]', $out);
@@ -69,7 +69,7 @@ final class RenderPolicyTest extends TestCase
     /** The important half: a refused class never reaches the renderer at all. */
     public function testARefusedBlockIsNeverConstructed(): void
     {
-        $context = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks('Vendor\\Ok\\Block'));
+        $context = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks(['Vendor\\Ok\\Block']));
         $out = $this->engine()->render('{{block class="Magento\\Email\\Block\\Adminhtml\\Template\\Preview"}}', [], $context);
 
         self::assertSame('', $out);
@@ -83,7 +83,7 @@ final class RenderPolicyTest extends TestCase
 
     public function testAnEmptyBlockAllowlistRefusesEverything(): void
     {
-        $context = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks());
+        $context = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks([]));
         $this->engine()->render('{{block class="Anything"}}', [], $context);
 
         self::assertSame([], $this->built);
@@ -92,7 +92,7 @@ final class RenderPolicyTest extends TestCase
 
     public function testWidgetsShareTheBlockAllowlist(): void
     {
-        $context = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks('Vendor\\Ok\\Widget'));
+        $context = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks(['Vendor\\Ok\\Widget']));
         $engine = $this->engine();
 
         self::assertSame('[Vendor\\Ok\\Widget]', $engine->render('{{widget type="Vendor\\Ok\\Widget"}}', [], $context));
@@ -100,9 +100,29 @@ final class RenderPolicyTest extends TestCase
         self::assertSame(['Vendor\\Ok\\Widget'], $this->built);
     }
 
+    public function testAListOfSeveralClassesIsAccepted(): void
+    {
+        $policy = RenderPolicy::unrestricted()->withAllowedBlocks(['A\\One', 'A\\Two']);
+        $engine = $this->engine();
+
+        self::assertSame('[A\\One]', $engine->render('{{block class="A\\One"}}', [], null, $policy));
+        self::assertSame('[A\\Two]', $engine->render('{{block class="A\\Two"}}', [], null, $policy));
+        self::assertSame('', $engine->render('{{block class="A\\Three"}}', [], null, $policy));
+        self::assertSame(['A\\One', 'A\\Two'], $this->built);
+    }
+
+    /** A list with gaps in its keys still works - array_values normalises it. */
+    public function testANonSequentialListIsAccepted(): void
+    {
+        $classes = [3 => 'A\\One', 7 => 'A\\Two'];
+        $policy = RenderPolicy::unrestricted()->withAllowedBlocks($classes);
+
+        self::assertSame('[A\\Two]', $this->engine()->render('{{block class="A\\Two"}}', [], null, $policy));
+    }
+
     public function testLeadingBackslashesAreNormalised(): void
     {
-        $policy = RenderPolicy::unrestricted()->withAllowedBlocks('\\Vendor\\Ok\\Block');
+        $policy = RenderPolicy::unrestricted()->withAllowedBlocks(['\\Vendor\\Ok\\Block']);
         $out = $this->engine()->render('{{block class="Vendor\\Ok\\Block"}}', [], null, $policy);
         self::assertSame('[Vendor\\Ok\\Block]', $out);
     }
@@ -111,7 +131,7 @@ final class RenderPolicyTest extends TestCase
 
     public function testADirectiveAllowlistRestrictsTheSurface(): void
     {
-        $context = new Context(['name' => 'Jan'], RenderPolicy::allowing('var', 'if'));
+        $context = new Context(['name' => 'Jan'], RenderPolicy::allowing(['var', 'if']));
         $out = $this->engine()->render(
             'Hi {{var name}}{{if name}}!{{/if}}{{block class="X"}}',
             [],
@@ -124,16 +144,90 @@ final class RenderPolicyTest extends TestCase
         self::assertSame('block', $context->violations()[0]->name);
     }
 
-    public function testUnrestrictedIsTheDefault(): void
+    /** allowing() and withAllowedDirectives() are the factory and wither for the same thing. */
+    public function testAllowingMatchesWithAllowedDirectives(): void
     {
-        self::assertSame('[X]', $this->engine()->render('{{block class="X"}}'));
+        $viaFactory = RenderPolicy::allowing(['var', 'if']);
+        $viaWither = RenderPolicy::unrestricted()->withAllowedDirectives(['var', 'if']);
+
+        foreach (['var', 'if'] as $permitted) {
+            self::assertTrue($viaFactory->permitsDirective($permitted));
+            self::assertTrue($viaWither->permitsDirective($permitted));
+        }
+        foreach (['block', 'widget', 'config'] as $refused) {
+            self::assertFalse($viaFactory->permitsDirective($refused));
+            self::assertFalse($viaWither->permitsDirective($refused));
+        }
+    }
+
+    /** A non-sequential list works here too. */
+    public function testANonSequentialDirectiveListIsAccepted(): void
+    {
+        $policy = RenderPolicy::allowing([2 => 'var', 5 => 'depend']);
+
+        self::assertTrue($policy->permitsDirective('var'));
+        self::assertTrue($policy->permitsDirective('depend'));
+        self::assertFalse($policy->permitsDirective('if'));
+    }
+
+    /** The default refuses anything that loads and constructs a PHP class. */
+    public function testRestrictedIsTheDefault(): void
+    {
+        $context = new Context();
+        self::assertSame('', $this->engine()->render('{{block class="X"}}', [], $context));
+        self::assertSame([], $this->built, 'nothing may be constructed by default');
+        self::assertCount(1, $context->violations());
+    }
+
+    public function testUnrestrictedOptsBackIn(): void
+    {
+        $out = $this->engine()->render('{{block class="X"}}', [], null, RenderPolicy::unrestricted());
+        self::assertSame('[X]', $out);
         self::assertSame(['X'], $this->built);
+    }
+
+    /** Non-instantiating directives are unaffected by the default. */
+    public function testTheDefaultLeavesOrdinaryDirectivesAlone(): void
+    {
+        self::assertSame('Jan', $this->engine()->render('{{var name}}', ['name' => 'Jan']));
+        self::assertSame('Y', $this->engine()->render('{{if a}}Y{{/if}}', ['a' => 1]));
+    }
+
+    /** alsoAllowing widens the default without discarding the rest of it. */
+    public function testAlsoAllowingGrantsOneCapability(): void
+    {
+        $policy = RenderPolicy::restricted()
+            ->alsoAllowing(['block'])
+            ->withAllowedBlocks(['Vendor\\Ok\\Block']);
+
+        $engine = $this->engine();
+        self::assertSame('[Vendor\\Ok\\Block]', $engine->render('{{block class="Vendor\\Ok\\Block"}}', [], null, $policy));
+        self::assertSame('Jan', $engine->render('{{var n}}', ['n' => 'Jan'], null, $policy));
+        // Widget was not granted.
+        self::assertSame('', $engine->render('{{widget type="Vendor\\Ok\\Block"}}', [], null, $policy));
+    }
+
+    public function testAlsoAllowingOnAnUnrestrictedPolicyIsANoOp(): void
+    {
+        $policy = RenderPolicy::unrestricted()->alsoAllowing(['block']);
+        self::assertTrue($policy->permitsDirective('anything'));
+    }
+
+    public function testTheInstantiatingSetIsExactlyBlockWidgetLayout(): void
+    {
+        self::assertSame(['block', 'widget', 'layout'], RenderPolicy::INSTANTIATING);
+        foreach (RenderPolicy::INSTANTIATING as $name) {
+            self::assertFalse(RenderPolicy::restricted()->permitsDirective($name), $name);
+        }
+        foreach (RenderPolicy::NON_INSTANTIATING as $name) {
+            self::assertTrue(RenderPolicy::restricted()->permitsDirective($name), $name);
+        }
     }
 
     #[DataProvider('restrictedSurfaces')]
     public function testOnlyPermittedDirectivesRun(array $allowed, string $template, string $expected): void
     {
-        $policy = RenderPolicy::allowing(...$allowed);
+        $policy = RenderPolicy::allowing($allowed);
         self::assertSame($expected, $this->engine()->render($template, ['a' => 1, 'b' => 'B'], null, $policy));
     }
 
@@ -159,7 +253,7 @@ final class RenderPolicyTest extends TestCase
                 return 'child:{{block class="Sneaky\\Block"}}';
             }
         };
-        $context = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks('Vendor\\Ok\\Block'));
+        $context = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks(['Vendor\\Ok\\Block']));
 
         $out = $this->engine($loader)->render('{{template config_path="x"}}', [], $context);
 
@@ -170,7 +264,7 @@ final class RenderPolicyTest extends TestCase
 
     public function testViolationsFromAChildAreAbsorbedByTheParent(): void
     {
-        $parent = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks());
+        $parent = new Context([], RenderPolicy::unrestricted()->withAllowedBlocks([]));
         $child = $parent->withVariables([]);
 
         $this->engine()->render('{{block class="X"}}', [], $child);
@@ -190,7 +284,7 @@ final class RenderPolicyTest extends TestCase
         $engine = new TemplateEngine(new Parser(options: $options), $evaluator);
 
         try {
-            $engine->render('{{var a}}', ['a' => 1], new Context(['a' => 1], RenderPolicy::allowing('if')));
+            $engine->render('{{var a}}', ['a' => 1], new Context(['a' => 1], RenderPolicy::allowing(['if'])));
             self::fail('expected a policy violation');
         } catch (PolicyViolationError $e) {
             self::assertStringContainsString('does not permit directive "var"', $e->getMessage());
@@ -200,7 +294,7 @@ final class RenderPolicyTest extends TestCase
 
     public function testViolationsRecordTheirLocation(): void
     {
-        $context = new Context([], RenderPolicy::allowing('var'));
+        $context = new Context([], RenderPolicy::allowing(['var']));
         $this->engine()->render("line one\n{{block class=\"X\"}}", [], $context);
 
         $violation = $context->violations()[0];

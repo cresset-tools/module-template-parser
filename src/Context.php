@@ -34,7 +34,7 @@ final class Context
     public function __construct(array $variables = [], ?RenderPolicy $policy = null)
     {
         $this->variables = $variables;
-        $this->policy = $policy ?? RenderPolicy::unrestricted();
+        $this->policy = $policy ?? RenderPolicy::restricted();
     }
 
     public function policy(): RenderPolicy

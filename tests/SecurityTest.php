@@ -75,7 +75,14 @@ final class SecurityTest extends TestCase
     /** Directives written in the template itself still work - the harness is not over-defending. */
     public function testDirectiveWrittenInTheTemplateIsExecuted(): void
     {
-        $out = $this->engine->render('{{block class=Some\Real\Block}}');
+        // {{block}} is denied by the default policy, so grant it - otherwise this would
+        // pass for the wrong reason and the payload tests above would prove nothing.
+        $out = $this->engine->render(
+            '{{block class=Some\Real\Block}}',
+            [],
+            null,
+            \MageOS\TemplateParser\RenderPolicy::unrestricted()
+        );
         self::assertSame(['Some\Real\Block'], $this->instantiated);
         self::assertSame('[BLOCK]', $out);
     }

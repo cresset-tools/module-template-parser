@@ -23,6 +23,44 @@ final class RenderPolicy
     ) {
     }
 
+    /**
+     * Directives that turn template text into a PHP class being loaded and constructed.
+     *
+     * {{block}} and {{widget}} name a class outright; {{layout}} names a handle, which
+     * decides which blocks get built - the same capability at one remove.
+     */
+    public const INSTANTIATING = ['block', 'widget', 'layout'];
+
+    /**
+     * Everything else the engine implements. Enumerated rather than derived, so a directive
+     * added later defaults to denied - the right direction for a security default.
+     */
+    public const NON_INSTANTIATING = [
+        'var', 'if', 'depend', 'for', 'else', 'trans', 'inlinecss',
+        'template', 'config', 'customvar', 'store', 'media', 'view', 'css', 'protocol',
+    ];
+
+    /**
+     * The default: substitution, conditionals and the host lookups, but nothing that loads
+     * and constructs a PHP class from a name written in template text.
+     *
+     * Grant those deliberately:
+     *
+     *     RenderPolicy::restricted()
+     *         ->alsoAllowing(['block'])
+     *         ->withAllowedBlocks([Order\Items::class]);
+     */
+    public static function restricted(): self
+    {
+        return new self(self::NON_INSTANTIATING, null);
+    }
+
+    /**
+     * No restrictions at all - the legacy filter's posture.
+     *
+     * Every directive whose port the host supplied is reachable from template text,
+     * including the ones that instantiate classes.
+     */
     public static function unrestricted(): self
     {
         return new self();
@@ -31,19 +69,30 @@ final class RenderPolicy
     /**
      * Only these directives may run. Everything else renders as nothing.
      *
-     * `RenderPolicy::allowing('var', 'if', 'depend')` is a reasonable posture for content a
-     * merchant can edit: substitution and conditionals, no capability to reach the host.
+     * `RenderPolicy::allowing(['var', 'if', 'depend'])` is a reasonable posture for content
+     * a merchant can edit: substitution and conditionals, no capability to reach the host.
+     *
+     * An empty list refuses every directive, leaving the template as plain text.
+     *
+     * @param string[] $directives
      */
-    public static function allowing(string ...$directives): self
+    public static function allowing(array $directives): self
     {
         return new self(array_values($directives), null);
     }
 
-    /** Only these classes may be instantiated by {{block}} and {{widget}}. */
-    public function withAllowedBlocks(string ...$classes): self
+    /**
+     * Only these classes may be instantiated by {{block}} and {{widget}}.
+     *
+     * An empty list refuses every block. Leading backslashes are normalised, so
+     * `\Vendor\Block` and `Vendor\Block` are the same entry.
+     *
+     * @param string[] $classes
+     */
+    public function withAllowedBlocks(array $classes): self
     {
         return new self($this->directives, array_map(
-            static fn (string $c): string => ltrim($c, '\\'),
+            static fn (string $class): string => ltrim($class, '\\'),
             array_values($classes)
         ));
     }
@@ -52,6 +101,23 @@ final class RenderPolicy
     public function withAllowedDirectives(array $directives): self
     {
         return new self(array_values($directives), $this->blocks);
+    }
+
+    /**
+     * Widens an existing allowlist.
+     *
+     * @param string[] $directives
+     */
+    public function alsoAllowing(array $directives): self
+    {
+        if ($this->directives === null) {
+            return $this;   // already unrestricted
+        }
+
+        return new self(
+            array_values(array_unique([...$this->directives, ...$directives])),
+            $this->blocks
+        );
     }
 
     public function permitsDirective(string $name): bool

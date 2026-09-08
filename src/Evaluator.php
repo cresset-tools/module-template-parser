@@ -101,12 +101,16 @@ final class Evaluator
             return $node->fullRaw();
         }
 
-        if (!$context->policy()->permitsDirective($node->name())) {
+        $handler = $this->handlers[$node->name()] ?? null;
+
+        // The policy is consulted only once a handler exists. It removes a capability the
+        // host granted; it must not change the output for a directive nobody wired up,
+        // which would silently break compatible mode's parity.
+        if ($handler !== null && !$context->policy()->permitsDirective($node->name())) {
             $this->refusedByPolicy($node, $context, PolicyViolation::DIRECTIVE, $node->name());
             return '';
         }
 
-        $handler = $this->handlers[$node->name()] ?? null;
         if ($handler === null) {
             if ($this->options->strictDirectives) {
                 throw UnknownDirectiveError::at(

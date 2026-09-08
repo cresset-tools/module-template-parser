@@ -37,6 +37,11 @@ final class FullDirectiveSurfaceTest extends TestCase
         };
 
         return new HostServices(
+            blocks: new class ($record) implements \MageOS\TemplateParser\Port\BlockRenderer {
+                public function __construct(private $r) {}
+                public function render(string $class, array $data, string $method): string
+                { ($this->r)('block', [$class, $data, $method]); return 'BLOCK:' . $class; }
+            },
             config: new class ($record) implements ConfigReader {
                 public function __construct(private $r) {}
                 public function value(string $path): ?string
@@ -91,8 +96,28 @@ final class FullDirectiveSurfaceTest extends TestCase
     #[DataProvider('workingDirectives')]
     public function testDirectiveRendersThroughItsPort(string $template, string $expected, string $port): void
     {
-        self::assertSame($expected, $this->engine()->render($template));
+        // block, widget and layout are denied by the default policy, so this grants them.
+        $policy = \MageOS\TemplateParser\RenderPolicy::unrestricted();
+
+        self::assertSame($expected, $this->engine()->render($template, [], null, $policy));
         self::assertArrayHasKey($port, $this->calls, 'the port should have been reached');
+    }
+
+    /** The instantiating directives are refused by the default policy even when wired up. */
+    #[DataProvider('instantiatingDirectives')]
+    public function testInstantiatingDirectivesNeedExplicitGranting(string $template, string $port): void
+    {
+        self::assertSame('', $this->engine()->render($template));
+        self::assertArrayNotHasKey($port, $this->calls, 'the port must not have been reached');
+    }
+
+    public static function instantiatingDirectives(): array
+    {
+        return [
+            'block'  => ['{{block class="Vendor\\Block"}}', 'block'],
+            'widget' => ['{{widget type="Vendor\\Widget"}}', 'widget'],
+            'layout' => ['{{layout handle="some_handle"}}', 'layout'],
+        ];
     }
 
     public static function workingDirectives(): array
@@ -108,6 +133,7 @@ final class FullDirectiveSurfaceTest extends TestCase
                             'LAYOUT:sales_email_order_items@frontend', 'layout'],
             'widget'    => ['{{widget type="Magento\\Cms\\Block\\Widget\\Block"}}',
                             'WIDGET:Magento\\Cms\\Block\\Widget\\Block', 'widget'],
+            'block'     => ['{{block class="Vendor\\Some\\Block"}}', 'BLOCK:Vendor\\Some\\Block', 'block'],
         ];
     }
 
@@ -136,7 +162,7 @@ final class FullDirectiveSurfaceTest extends TestCase
     #[DataProvider('rejectedInput')]
     public function testUnsafeInputNeverReachesTheHost(string $template, string $port): void
     {
-        $out = $this->engine()->render($template);
+        $out = $this->engine()->render($template, [], null, \MageOS\TemplateParser\RenderPolicy::unrestricted());
 
         self::assertArrayNotHasKey($port, $this->calls, 'the host must not have been called at all');
         self::assertStringNotContainsString('..', $out);
@@ -206,7 +232,7 @@ final class FullDirectiveSurfaceTest extends TestCase
         $registered = $this->engine()->evaluator()->registered();
 
         foreach (['var','if','depend','for','else','trans','inlinecss','config','customvar',
-                  'store','media','view','css','layout','widget','protocol'] as $name) {
+                  'store','media','view','css','layout','widget','protocol','block'] as $name) {
             self::assertContains($name, $registered, "{{{$name}}} should be implemented");
         }
     }

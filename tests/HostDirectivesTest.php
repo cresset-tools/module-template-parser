@@ -41,8 +41,12 @@ final class HostDirectivesTest extends TestCase
             }
         };
 
-        $out = $this->engine(blocks: $renderer)
-            ->render('{{block class="Some\\Block" output="toHtml" title="Hi"}}');
+        $out = $this->engine(blocks: $renderer)->render(
+            '{{block class="Some\\Block" output="toHtml" title="Hi"}}',
+            [],
+            null,
+            \MageOS\TemplateParser\RenderPolicy::unrestricted()
+        );
 
         self::assertSame('[rendered]', $out);
         self::assertSame([['Some\\Block', ['title' => 'Hi'], 'toHtml']], $renderer->calls);
@@ -58,7 +62,12 @@ final class HostDirectivesTest extends TestCase
                 return '';
             }
         };
-        $this->engine(blocks: $renderer)->render('{{block class="X"}}');
+        $this->engine(blocks: $renderer)->render(
+            '{{block class="X"}}',
+            [],
+            null,
+            \MageOS\TemplateParser\RenderPolicy::unrestricted()
+        );
         self::assertSame('toHtml', $renderer->method);
     }
 
@@ -128,7 +137,9 @@ final class HostDirectivesTest extends TestCase
 
         $out = $this->engine(blocks: $renderer, templates: $loader)->render(
             '{{template config_path="design/email/header"}}',
-            ['payload' => '{{block class="Evil"}}']
+            ['payload' => '{{block class="Evil"}}'],
+            null,
+            \MageOS\TemplateParser\RenderPolicy::unrestricted()
         );
 
         self::assertSame(0, $renderer->calls, 'a directive from data must never execute');

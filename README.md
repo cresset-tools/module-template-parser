@@ -209,13 +209,22 @@ Capability belongs to the template, not the application. A stock transactional e
 merchant-edited CMS block reach the same filter and deserve different trust — which a
 DI-time allowlist cannot express, because it is fixed for the whole install.
 
-```php
-// Only these classes may be instantiated, for this render.
-$policy = RenderPolicy::unrestricted()
-    ->withAllowedBlocks(\Magento\Cms\Block\Widget\Block::class);
+**The default is restrictive.** `{{block}}`, `{{widget}}` and `{{layout}}` — the directives
+that turn template text into a PHP class being loaded and constructed — are refused unless
+granted, even when the host has wired their ports. The safe set is enumerated rather than
+derived, so a directive added later defaults to *denied*.
 
-// Or cut the surface down entirely: substitution and conditionals, no reach into the host.
-$policy = RenderPolicy::allowing('var', 'if', 'depend');
+```php
+// Grant one capability, narrowed to specific classes.
+$policy = RenderPolicy::restricted()
+    ->alsoAllowing(['block'])
+    ->withAllowedBlocks([\Magento\Sales\Block\Order\Email\Items::class]);
+
+// Cut the surface down further: substitution and conditionals, no reach into the host.
+$policy = RenderPolicy::allowing(['var', 'if', 'depend']);
+
+// Or opt out entirely - the legacy filter's posture.
+$policy = RenderPolicy::unrestricted();
 
 $context = new Context($variables, $policy);
 $html = $engine->render($template, [], $context);
@@ -228,6 +237,10 @@ foreach ($context->violations() as $v) {
 The allowlist is checked **before** the port, so a refused class is never constructed — the
 same discipline as the type check, and for the same reason. `{{widget}}` shares the block
 allowlist, since a widget is a block by another name.
+
+The policy is consulted only once a handler exists, so it removes a capability the host
+granted and never changes the output for a directive nobody wired up — which would otherwise
+have silently broken compatible mode's parity.
 
 A violation renders nothing and is recorded, rather than throwing: a policy violation should
 not take down an order email, but it must not pass unnoticed either. For template validation
