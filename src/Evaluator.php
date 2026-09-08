@@ -28,12 +28,33 @@ final class Evaluator
     /** Position of the {{var}} whose modifiers are being applied, for diagnostics. */
     private int $modifierOffset = 0;
 
+    /*
+     * Nullable, not `= new X()`.
+     *
+     * Magento's DI compiler stores a constructor default verbatim and writes it into
+     * generated/metadata with var_export(), which emits `X::__set_state(...)` for an object.
+     * No class here defines __set_state, so that file - loaded on every request in
+     * production mode - is a fatal. Developer mode consumes the default directly and never
+     * notices, so this shipped green.
+     */
+    private readonly VariableResolver $variables;
+
+    private readonly ParameterParser $parameters;
+
+    private readonly DirectiveSpec $spec;
+
+    private readonly Options $options;
+
     public function __construct(
-        private readonly VariableResolver $variables = new VariableResolver(),
-        private readonly ParameterParser $parameters = new ParameterParser(),
-        private readonly DirectiveSpec $spec = new DirectiveSpec(),
-        private readonly Options $options = new Options()
+        ?VariableResolver $variables = null,
+        ?ParameterParser $parameters = null,
+        ?DirectiveSpec $spec = null,
+        ?Options $options = null
     ) {
+        $this->variables = $variables ?? new VariableResolver();
+        $this->parameters = $parameters ?? new ParameterParser();
+        $this->spec = $spec ?? new DirectiveSpec();
+        $this->options = $options ?? new Options();
         $this->registerDefaults();
     }
 

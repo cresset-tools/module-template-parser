@@ -11,10 +11,23 @@ namespace Cresset\TemplateParser;
  */
 final class TemplateEngine
 {
-    public function __construct(
-        private readonly Parser $parser = new Parser(),
-        private readonly Evaluator $evaluator = new Evaluator()
-    ) {
+    /*
+     * Nullable, not `= new X()`.
+     *
+     * Magento's DI compiler stores a constructor default verbatim and writes it into
+     * generated/metadata with var_export(), which emits `X::__set_state(...)` for an object.
+     * No class here defines __set_state, so that file - loaded on every request in
+     * production mode - is a fatal. Developer mode consumes the default directly and never
+     * notices, so this shipped green.
+     */
+    private readonly Parser $parser;
+
+    private readonly Evaluator $evaluator;
+
+    public function __construct(?Parser $parser = null, ?Evaluator $evaluator = null)
+    {
+        $this->parser = $parser ?? new Parser();
+        $this->evaluator = $evaluator ?? new Evaluator();
     }
 
     /** Builds an engine with a single strictness setting applied to both stages. */

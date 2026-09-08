@@ -29,10 +29,14 @@ final class TemplateFilterAdapter
     /** The scope of the LAST render, rebuilt per filter() call. */
     private Context $context;
 
+    private readonly Options $options;
+
     public function __construct(
-        HostServices $services = new HostServices(),
-        private Options $options = new Options()
+        ?HostServices $services = null,
+        ?Options $options = null
     ) {
+        $services ??= new HostServices();
+        $this->options = $options ?? new Options();
         $parser = new Parser(options: $this->options);
         $evaluator = new Evaluator(
             new \Cresset\TemplateParser\VariableResolver($this->options->legacyQuirks),

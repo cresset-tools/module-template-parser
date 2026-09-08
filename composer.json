@@ -24,5 +24,14 @@
     },
     "suggest": {
         "magento/framework": "Required only for the src/Magento adapters; the engine itself has no Magento dependency"
+    },
+    "archive": {
+        "exclude": [
+            "/tests",
+            "/tools",
+            "/.github",
+            "/phpunit.xml",
+            "/.phpunit.cache"
+        ]
     }
 }

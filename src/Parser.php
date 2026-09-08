@@ -31,12 +31,24 @@ final class Parser
     /** @var LegacyIncompatibility[] */
     private array $incompatibilities = [];
 
-    public function __construct(
-        private readonly DirectiveSpec $spec = new DirectiveSpec(),
-        private readonly Options $options = new Options(),
-        ?Lexer $lexer = null
-    ) {
-        $this->lexer = $lexer ?? new Lexer($spec);
+    /*
+     * Nullable, not `= new X()`.
+     *
+     * Magento's DI compiler stores a constructor default verbatim and writes it into
+     * generated/metadata with var_export(), which emits `X::__set_state(...)` for an object.
+     * No class here defines __set_state, so that file - loaded on every request in
+     * production mode - is a fatal. Developer mode consumes the default directly and never
+     * notices, so this shipped green.
+     */
+    private readonly DirectiveSpec $spec;
+
+    private readonly Options $options;
+
+    public function __construct(?DirectiveSpec $spec = null, ?Options $options = null, ?Lexer $lexer = null)
+    {
+        $this->spec = $spec ?? new DirectiveSpec();
+        $this->options = $options ?? new Options();
+        $this->lexer = $lexer ?? new Lexer($this->spec);
     }
 
     private readonly Lexer $lexer;

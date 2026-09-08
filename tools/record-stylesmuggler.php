@@ -12,6 +12,13 @@
  * nothing, so this never builds the attacker's object.
  */
 declare(strict_types=1);
+// Marks this as a directly-invoked tool. Magento's DI compiler require_once's any
+// file declaring a class it has not loaded, and tools/ is not on its exclusion list,
+// so everything below must be inert when this file is merely included.
+if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
+    return;
+}
+define('CRESSET_TEMPLATE_PARSER_TOOL', true);
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
@@ -34,7 +41,7 @@ use Magento\Framework\Filter\Template\Tokenizer\{VariableFactory, ParameterFacto
 final class Canary { public static array $hits = []; }
 
 /** Email\Model\Template\Filter's blockDirective, with the canary standing in for createBlock. */
-class EmailLikeLegacy extends LegacyTemplate {
+class SmugglerEmailLikeLegacy extends LegacyTemplate {
     protected $_modifiers = ['nl2br' => ''];
     public function __construct(...$a) { parent::__construct(...$a); $this->_modifiers['escape'] = [$this, 'esc']; }
     public function esc($v, $t = 'html') { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
@@ -100,7 +107,7 @@ $hitsAfterAddress = Canary::$hits;
 
 // Stage 2: the email render, taking that output as a variable.
 Canary::$hits = [];
-$email = new EmailLikeLegacy($str, [], $procs(), $resolver, $sig, $depth);
+$email = new SmugglerEmailLikeLegacy($str, [], $procs(), $resolver, $sig, $depth);
 $email->setVariables(['billingAddressHtml' => $addressHtml]);
 $emailOutput = $email->filter($emailTemplate);
 

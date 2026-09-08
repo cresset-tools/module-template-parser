@@ -7,6 +7,13 @@
  * divergence here is real behaviour change, not a missing port.
  */
 declare(strict_types=1);
+// Marks this as a directly-invoked tool. Magento's DI compiler require_once's any
+// file declaring a class it has not loaded, and tools/ is not on its exclusion list,
+// so everything below must be inert when this file is merely included.
+if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
+    return;
+}
+define('CRESSET_TEMPLATE_PARSER_TOOL', true);
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
@@ -28,7 +35,7 @@ use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use Magento\Framework\Filter\Template\Tokenizer\{VariableFactory, ParameterFactory};
 use Cresset\TemplateParser\TemplateEngine;
 
-function legacy(array $vars): LegacyTemplate {
+function parityLegacyFilter(array $vars): LegacyTemplate {
     $r = new StrictResolver(new VariableFactory());
     \Magento\Framework\App\ObjectManager::$registry[VarDirective::class] = new VarDirective($r, new FilterApplier(new FilterPool()));
     $s = new SimpleDirective(new ProcessorPool(), new ParameterFactory(), $r, new FilterApplier(new FilterPool()));
@@ -37,7 +44,7 @@ function legacy(array $vars): LegacyTemplate {
         $r, new SignatureProvider(new Random()), new FilteringDepthMeter());
     $t->setVariables($vars); return $t;
 }
-function attempt(callable $fn): string {
+function parityAttempt(callable $fn): string {
     try { return 'OK:' . $fn(); } catch (\Throwable $e) { return 'THROW:' . get_class($e); }
 }
 
@@ -65,8 +72,8 @@ foreach (['lenient' => TemplateEngine::lenient(), 'compatible' => TemplateEngine
     foreach ($values as $vlabel => $v) {
         foreach ($templates as $tlabel => $tpl) {
             $vars = ['a' => $v];
-            $l = attempt(static fn () => legacy($vars)->filter($tpl));
-            $n = attempt(static fn () => $engine->render($tpl, $vars));
+            $l = parityAttempt(static fn () => parityLegacyFilter($vars)->filter($tpl));
+            $n = parityAttempt(static fn () => $engine->render($tpl, $vars));
             if ($l === $n) { $same++; } else { $diff++; $rows[] = [$tlabel, $vlabel, $l, $n]; }
         }
     }

@@ -30,6 +30,18 @@
         </arguments>
     </type>
 
+    <!--
+        AllowlistedLayoutRenderer takes a REQUIRED array. Without an entry here it compiles
+        clean and then throws BadMethodCallException the first time anything asks for it,
+        because DI has no value to supply. Empty by design: a layout handle decides which
+        blocks get built, so the integrator names the ones they trust.
+    -->
+    <type name="Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer">
+        <arguments>
+            <argument name="allowedHandles" xsi:type="array"/>
+        </arguments>
+    </type>
+
     <type name="Cresset\TemplateParser\Magento\ShadowComparator">
         <arguments>
             <argument name="enabled" xsi:type="boolean">false</argument>
