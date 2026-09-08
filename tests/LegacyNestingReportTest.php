@@ -12,12 +12,16 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Compatible mode renders nesting the legacy filter cannot, and reports it.
+ * Compatible mode refuses nesting the legacy filter cannot render.
  *
- * Legacy manages exactly two levels with differing names; anything else raises a TypeError
- * and the mail never sends. Reproducing that crash would make compatible mode no safer than
- * what it replaces, so the construct renders - but an operator is told, because a template
- * relying on it can no longer run on the old engine.
+ * Legacy manages exactly two levels with differing names; anything else raises a TypeError.
+ * Compatible means bug-for-bug, so the capability matches: an engine that renders what the
+ * old one crashes on is a better engine, not a compatible one, and `lenient` and `strict`
+ * are the modes for wanting that.
+ *
+ * Opting out with withRefuseLegacyIncompatible(false) renders the construct and records it
+ * on the Context instead, for anyone who wants the improvement but still needs to know which
+ * templates have stopped being runnable on the old filter.
  */
 final class LegacyNestingReportTest extends TestCase
 {
@@ -42,14 +46,29 @@ final class LegacyNestingReportTest extends TestCase
         ];
     }
 
-    /** @param string $kind */
+    /** By default, compatible mode is exactly as capable as legacy - so it refuses. */
     #[DataProvider('legacyUnsupported')]
-    public function testUnsupportedNestingRendersButIsReported(string $template, string $kind, string $needle): void
+    public function testUnsupportedNestingIsRefusedByDefault(string $template, string $kind, string $needle): void
+    {
+        try {
+            TemplateEngine::compatible()->render($template, ['a' => 1, 'b' => 1, 'c' => 1]);
+            self::fail('compatible mode should refuse what legacy cannot render');
+        } catch (LegacyIncompatibleError $e) {
+            self::assertStringContainsString($needle, $e->getMessage());
+        }
+    }
+
+    /** Opting out renders it and records the fact instead. */
+    #[DataProvider('legacyUnsupported')]
+    public function testOptingOutRendersAndReports(string $template, string $kind, string $needle): void
     {
         $context = new Context(['a' => 1, 'b' => 1, 'c' => 1]);
-        $out = TemplateEngine::compatible()->render($template, [], $context);
+        $engine = TemplateEngine::withOptions(
+            Options::compatible()->withRefuseLegacyIncompatible(false)
+        );
+        $out = $engine->render($template, [], $context);
 
-        self::assertSame('ABZ', $out, 'it must still render - legacy crashes here');
+        self::assertSame('ABZ', $out);
 
         $found = $context->incompatibilities();
         self::assertCount(1, $found);
@@ -75,17 +94,13 @@ final class LegacyNestingReportTest extends TestCase
     }
 
     /** Three levels exceeds legacy even when the innermost name is new. */
-    public function testThreeLevelsIsReportedAsTooDeep(): void
+    public function testThreeLevelsIsRefused(): void
     {
-        $context = new Context(['a' => 1, 'b' => 1, 'c' => 1]);
+        $this->expectException(LegacyIncompatibleError::class);
         TemplateEngine::compatible()->render(
             '{{depend a}}{{if b}}{{depend c}}X{{/depend}}{{/if}}{{/depend}}',
-            [],
-            $context
+            ['a' => 1, 'b' => 1, 'c' => 1]
         );
-
-        $kinds = array_map(static fn ($i) => $i->kind, $context->incompatibilities());
-        self::assertContains(LegacyIncompatibility::SAME_NAME_NESTING, $kinds);
     }
 
     public function testDepthReportUsesTheLegacyLimitNotTheConfiguredOne(): void
@@ -93,7 +108,7 @@ final class LegacyNestingReportTest extends TestCase
         // maxNestingDepth is 3, so this renders; but legacy manages only 2.
         $context = new Context(['a' => 1, 'b' => 1, 'c' => 1]);
         $engine = TemplateEngine::withOptions(
-            Options::compatible()->withMaxNestingDepth(4)
+            Options::compatible()->withMaxNestingDepth(4)->withRefuseLegacyIncompatible(false)
         );
         $engine->render('{{depend a}}{{if b}}{{for i in xs}}X{{/for}}{{/if}}{{/depend}}',
             ['a' => 1, 'b' => 1, 'xs' => ['q']], $context);
@@ -104,12 +119,10 @@ final class LegacyNestingReportTest extends TestCase
         self::assertStringContainsString('at most 2', $found[0]->message);
     }
 
-    /** Opt-in: refuse what legacy cannot render, so a rollback stays possible. */
-    public function testRefuseModeRejectsInsteadOfRendering(): void
+    /** The refusal message says why, and how to allow it. */
+    public function testRefusalExplainsItself(): void
     {
-        $engine = TemplateEngine::withOptions(
-            Options::compatible()->withRefuseLegacyIncompatible(true)
-        );
+        $engine = TemplateEngine::compatible();
 
         try {
             $engine->render('{{if a}}A{{if b}}B{{/if}}Z{{/if}}', ['a' => 1, 'b' => 1]);
@@ -122,9 +135,7 @@ final class LegacyNestingReportTest extends TestCase
 
     public function testRefuseModeStillAllowsWhatLegacySupports(): void
     {
-        $engine = TemplateEngine::withOptions(
-            Options::compatible()->withRefuseLegacyIncompatible(true)
-        );
+        $engine = TemplateEngine::compatible();
         self::assertSame(
             'ABZ',
             $engine->render('{{depend a}}A{{if b}}B{{/if}}Z{{/depend}}', ['a' => 1, 'b' => 1])
@@ -144,7 +155,7 @@ final class LegacyNestingReportTest extends TestCase
     public function testIncompatibilityDescribesItsLocation(): void
     {
         $context = new Context(['a' => 1, 'b' => 1]);
-        TemplateEngine::compatible()->render(
+        TemplateEngine::withOptions(Options::compatible()->withRefuseLegacyIncompatible(false))->render(
             "line one\n{{if a}}A{{if b}}B{{/if}}Z{{/if}}",
             [],
             $context

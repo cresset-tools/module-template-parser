@@ -115,13 +115,20 @@ final class CompatibilityModeTest extends TestCase
         self::assertStringContainsString('{{block', $out);
     }
 
-    /** Legacy fatals on same-name nesting. A crash is not behaviour worth reproducing. */
-    public function testFatalsAreNotReproduced(): void
+    /**
+     * Same-name nesting is refused, matching legacy's capability. The crash itself is not
+     * reproduced - a refusal with a diagnostic beats a TypeError - but the template is
+     * equally unrenderable either way, which is what bug-for-bug means here.
+     */
+    public function testSameNameNestingIsRefusedLikeLegacy(): void
     {
-        self::assertSame('ABZ', $this->engine->render(
-            '{{depend a}}A{{depend b}}B{{/depend}}Z{{/depend}}',
-            ['a' => 1, 'b' => 1]
-        ));
+        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        $this->engine->render('{{depend a}}A{{depend b}}B{{/depend}}Z{{/depend}}', ['a' => 1, 'b' => 1]);
+    }
+
+    /** The degenerate fatals - empty directive names - are still rendered, not reproduced. */
+    public function testDegenerateFatalsAreNotReproduced(): void
+    {
         // Legacy raises a TypeError on an empty directive name; this renders it as text.
         self::assertSame('A{{100}}B', $this->engine->render('A{{100}}B', ['x' => 1]));
         self::assertSame('{{ var x }}', $this->engine->render('{{ var x }}', ['x' => 1]));
@@ -130,11 +137,18 @@ final class CompatibilityModeTest extends TestCase
     /** The nesting bound still applies. */
     public function testNestingLimitStillApplies(): void
     {
-        $this->expectException(\MageOS\TemplateParser\NestingLimitError::class);
+        // Legacy incompatibility bites first here, at two levels rather than four.
+        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
         $this->engine->render(
             '{{if a}}{{if a}}{{if a}}{{if a}}X{{/if}}{{/if}}{{/if}}{{/if}}',
             ['a' => 1]
         );
+
+        $permissive = TemplateEngine::withOptions(
+            Options::compatible()->withRefuseLegacyIncompatible(false)
+        );
+        $this->expectException(\MageOS\TemplateParser\NestingLimitError::class);
+        $permissive->render('{{if a}}{{if a}}{{if a}}{{if a}}X{{/if}}{{/if}}{{/if}}{{/if}}', ['a' => 1]);
     }
 
     /** Deferral is still structured, not text in the output stream. */

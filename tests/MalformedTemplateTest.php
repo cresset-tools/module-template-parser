@@ -64,9 +64,10 @@ final class MalformedTemplateTest extends TestCase
     #[DataProvider('malformed')]
     public function testCompatibleModeRendersInstead(string $template, string $_expected): void
     {
-        // Deep nesting is a resource bound, not a syntax tolerance, so it still raises.
+        // Deep nesting still raises in compatible mode - though it is the legacy capability
+        // check that bites first, at two levels, rather than the resource bound at three.
         if (str_contains($template, str_repeat('{{if a}}', 5))) {
-            $this->expectException(NestingLimitError::class);
+            $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
         }
 
         $out = TemplateEngine::compatible()->render($template, ['a' => 1]);

@@ -6,10 +6,12 @@ namespace MageOS\TemplateParser;
 /**
  * A construct this engine renders but the legacy filter cannot.
  *
- * Recorded rather than refused. A template using one of these is not broken - it is broken
- * *on legacy*, where it raises a TypeError and the mail never goes out. Rendering it is an
- * improvement; the reason to surface it is that such a template no longer runs on the old
- * engine, so a rollback would stop working.
+ * Compatible mode refuses these by default, because compatible means bug-for-bug and an
+ * engine that renders what the old one crashes on is not compatible with it.
+ *
+ * With Options::withRefuseLegacyIncompatible(false) the construct renders and is recorded
+ * here instead - useful when you want the improvement but still need to know which templates
+ * have stopped being runnable on the legacy filter.
  */
 final class LegacyIncompatibility
 {

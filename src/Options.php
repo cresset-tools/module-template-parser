@@ -44,7 +44,8 @@ final class Options
      *
      * Reproduces the observable quirks real templates may unknowingly depend on:
      * legacy truthiness, partially-resolved variable paths, non-scalar values rendering
-     * empty, and directives passing through verbatim when no variables are set.
+     * empty, directives passing through verbatim when no variables are set, and the nesting
+     * limit (two levels, differing names) beyond which the legacy filter raises a TypeError.
      *
      * It deliberately does NOT reproduce:
      *  - the security behaviour (a value is still never re-parsed as source);
@@ -56,7 +57,7 @@ final class Options
      */
     public static function compatible(): self
     {
-        return new self(false, false, false, self::DEFAULT_MAX_NESTING_DEPTH, true);
+        return new self(false, false, false, self::DEFAULT_MAX_NESTING_DEPTH, true, true);
     }
 
     public function withLegacyQuirks(bool $enabled): self
@@ -68,10 +69,15 @@ final class Options
     /**
      * Refuse constructs the legacy filter cannot render, instead of rendering them.
      *
-     * Off by default: legacy "handles" these by raising a TypeError, and reproducing a crash
-     * makes compatible mode no safer than what it replaces. Turn it on when you need the new
-     * engine to be exactly as capable as the old one - for instance while a rollback to the
-     * legacy filter must remain possible.
+     * On by default in compatible mode. Compatible means bug-for-bug: an engine that renders
+     * what the old one crashes on is not a compatible engine, it is a better one - and the
+     * modes for wanting that are `lenient` and `strict`. Keeping the capability identical
+     * also means a rollback to the legacy filter stays possible.
+     *
+     * Turn it off for a compatible-plus mode, which renders those constructs and records
+     * them on the Context instead:
+     *
+     *     Options::compatible()->withRefuseLegacyIncompatible(false)
      */
     public function withRefuseLegacyIncompatible(bool $refuse): self
     {

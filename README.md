@@ -118,27 +118,35 @@ Verified against the unpatched filter, legacy manages **two levels with differin
 `{{depend}}` around `{{if}}`, or the reverse. Same-name nesting at any depth, and three
 levels, both raise a `TypeError` and the mail never sends.
 
-Compatible mode **renders these and reports them**:
+Compatible mode **refuses these**, so its capability matches legacy's exactly:
+
+```
+Nesting limit exceeded is not the error here — this one is:
+
+  {{if}} nested inside {{if}} - the legacy filter raises a TypeError here
+    on line 2, column 12:
+    ...
+    hint: this renders here but not on the legacy filter; unset
+          Options::$refuseLegacyIncompatible to allow it
+```
+
+Compatible means bug-for-bug. An engine that renders what the old one crashes on is a better
+engine, not a compatible one — and `lenient` and `strict` are the modes for wanting that.
+Keeping the capability identical also means a rollback to the legacy filter stays possible.
+
+To render them anyway and be told which templates did it — the improvement, plus the
+migration signal — opt out:
 
 ```php
 $context = new Context($vars);
-$engine  = TemplateEngine::compatible();
+$engine  = TemplateEngine::withOptions(
+    Options::compatible()->withRefuseLegacyIncompatible(false)
+);
 $engine->render($template, [], $context);
 
 foreach ($context->incompatibilities() as $i) {
-    $logger->info('template uses nesting legacy cannot render: ' . $i->describe());
+    $logger->info('no longer runnable on the legacy filter: ' . $i->describe());
 }
-```
-
-Reproducing the crash would make compatible mode no safer than what it replaces — a template
-that fatals today is already broken, and rendering it is an improvement. The reason to report
-it is different: such a template no longer runs on the old engine, so a rollback would stop
-working. That is a migration fact, not a rendering difference.
-
-If you need exact parity — for instance while a rollback must stay possible — opt in:
-
-```php
-TemplateEngine::withOptions(Options::compatible()->withRefuseLegacyIncompatible(true));
 ```
 
 Quirks it deliberately does **not** reproduce:
