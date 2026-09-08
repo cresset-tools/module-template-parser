@@ -1,0 +1,111 @@
+<?php
+declare(strict_types=1);
+
+namespace MageOS\TemplateParser;
+
+/**
+ * Evaluation scope for one render.
+ *
+ * Deferred work is recorded as structured entries, not as text spliced back into the
+ * output. A child render hands its entries to its caller, so nothing needs to survive in
+ * the output stream and therefore nothing needs to be signed. That removes the mechanism
+ * the signature-smuggling class of bug depends on.
+ */
+final class Context
+{
+    /** @var array<string,mixed> */
+    private array $variables;
+
+    /** @var array<int,array{kind:string,payload:array}> */
+    private array $deferred = [];
+
+    /** @var string[] template paths currently being rendered, outermost first */
+    private array $includeStack = [];
+
+    /** @param array<string,mixed> $variables */
+    public function __construct(array $variables = [])
+    {
+        $this->variables = $variables;
+    }
+
+    public function has(string $name): bool
+    {
+        return array_key_exists($name, $this->variables);
+    }
+
+    /** @return string[] */
+    public function names(): array
+    {
+        return array_keys($this->variables);
+    }
+
+    public function get(string $name): mixed
+    {
+        return $this->variables[$name] ?? null;
+    }
+
+    /** @param array<string,mixed> $variables */
+    public function withVariables(array $variables): self
+    {
+        $clone = new self($this->variables + []);
+        foreach ($variables as $k => $v) {
+            $clone->variables[$k] = $v;
+        }
+        // The include stack is a property of the render, not the scope, so it must survive.
+        $clone->includeStack = $this->includeStack;
+        return $clone;
+    }
+
+    /**
+     * Marks a template include as in progress.
+     *
+     * Returns false when that path is already being rendered further up the stack, which is
+     * a cycle: without this a template that includes itself recurses until the process dies.
+     */
+    public function enterInclude(string $path): bool
+    {
+        if (in_array($path, $this->includeStack, true)) {
+            return false;
+        }
+        $this->includeStack[] = $path;
+        return true;
+    }
+
+    public function leaveInclude(): void
+    {
+        array_pop($this->includeStack);
+    }
+
+    /** @return string[] */
+    public function includeStack(): array
+    {
+        return $this->includeStack;
+    }
+
+    public function includeDepth(): int
+    {
+        return count($this->includeStack);
+    }
+
+    public function defer(string $kind, array $payload): void
+    {
+        $this->deferred[] = ['kind' => $kind, 'payload' => $payload];
+    }
+
+    /** @return array<int,array{kind:string,payload:array}> */
+    public function deferred(): array
+    {
+        return $this->deferred;
+    }
+
+    /**
+     * Merge a child render's deferred work into this scope. Explicit hand-back up one
+     * level; composes recursively without any shared or request-scoped state.
+     */
+    public function absorb(self $child): void
+    {
+        foreach ($child->deferred as $entry) {
+            $this->deferred[] = $entry;
+        }
+    }
+}

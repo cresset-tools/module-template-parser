@@ -1,0 +1,28 @@
+{
+    "name": "mageos/template-parser",
+    "description": "Parse-to-AST template directive engine for Magento/Mage-OS, installable as a module",
+    "type": "magento2-module",
+    "license": "OSL-3.0",
+    "require": {
+        "php": "~8.3.0||~8.4.0||~8.5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MageOS\\TemplateParser\\": "src/"
+        },
+        "files": [
+            "registration.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MageOS\\TemplateParser\\Test\\": "tests/"
+        }
+    },
+    "suggest": {
+        "magento/framework": "Required only for the src/Magento adapters; the engine itself has no Magento dependency"
+    }
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+    Wiring only. Installing this module changes no rendering behaviour by itself:
+    nothing here declares a preference for Magento\Framework\Filter\Template.
+
+    To evaluate the engine against your own content, construct a ShadowComparator with
+    enabled=true and call it from wherever you render templates. To adopt the engine, add
+    your own preference in a project module once shadow mode reports no divergence.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <preference for="MageOS\TemplateParser\Port\Translator"
+                type="MageOS\TemplateParser\Magento\PhraseTranslator"/>
+
+    <type name="MageOS\TemplateParser\Magento\LayoutBlockRenderer">
+        <arguments>
+            <!-- Only these methods may be named by {{block output="..."}}. -->
+            <argument name="allowedOutputMethods" xsi:type="array">
+                <item name="toHtml" xsi:type="string">toHtml</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="MageOS\TemplateParser\Magento\ConfigTemplateLoader">
+        <arguments>
+            <argument name="allowedPathPrefixes" xsi:type="array">
+                <item name="email" xsi:type="string">design/email/</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="MageOS\TemplateParser\Magento\ShadowComparator">
+        <arguments>
+            <argument name="enabled" xsi:type="boolean">false</argument>
+        </arguments>
+    </type>
+</config>

@@ -1,0 +1,34 @@
+{
+    "description": "StyleSmuggler: signature confusion in Framework\\Filter\\Template",
+    "address_format": "{{depend prefix}}{{var prefix}} {{/depend}}{{var firstname}} {{depend middlename}}{{var middlename}} {{/depend}}{{var lastname}}{{depend suffix}} {{var suffix}}{{/depend}}{{depend firstname}}<br />{{/depend}}\n{{depend company}}{{var company}}<br />{{/depend}}\n{{if street1}}{{var street1}}<br />{{/if}}\n{{depend street2}}{{var street2}}<br />{{/depend}}\n{{depend street3}}{{var street3}}<br />{{/depend}}\n{{depend street4}}{{var street4}}<br />{{/depend}}\n{{if city}}{{var city}},  {{/if}}{{if region}}{{var region}}, {{/if}}{{if postcode}}{{var postcode}}{{/if}}<br />\n{{var country}}<br />\n{{depend telephone}}T: <a href=\"tel:{{var telephone}}\">{{var telephone}}</a>{{/depend}}\n{{depend fax}}<br />F: {{var fax}}{{/depend}}\n{{depend vat_id}}<br />VAT: {{var vat_id}}{{/depend}}",
+    "address_variables": {
+        "firstname": "Jan",
+        "lastname": "Jansen",
+        "street1": "{{if postcode}}{{var postcode}}{{/if}}{{/var}}{{if postcode}}{{var postcode}}{{/if}}{{if city}}{{block class=Magento\\Email\\Block\\Adminhtml\\Template\\Preview}}{{/if}}",
+        "city": "Andorra la Vella",
+        "region": "",
+        "postcode": "{{var postcode}}",
+        "country": "Andorra",
+        "telephone": "",
+        "company": "",
+        "fax": "",
+        "vat_id": "",
+        "prefix": "",
+        "middlename": "",
+        "suffix": "",
+        "street2": "",
+        "street3": "",
+        "street4": ""
+    },
+    "email_template": "Billing Address:<br>{{var billingAddressHtml|raw}}",
+    "legacy": {
+        "signature": "JW9xEyXuuUpp9xOQB28RSWFUDUioMFcA",
+        "address_html": "Jan Jansen<br />\n\n{{var postcode}}{{var postcode}}JW9xEyXuuUpp9xOQB28RSWFUDUioMFcA{{block class=Magento\\Email\\Block\\Adminhtml\\Template\\Preview}}JW9xEyXuuUpp9xOQB28RSWFUDUioMFcA<br />\nAndorra<br />\n\n\n",
+        "signature_in_address_html": true,
+        "blocks_during_address": [],
+        "blocks_during_email": [
+            "Magento\\Email\\Block\\Adminhtml\\Template\\Preview"
+        ],
+        "email_output": "Billing Address:<br>Jan Jansen<br />\n\n{{var postcode}}{{var postcode}}[BLOCK-RENDERED]<br />\nAndorra<br />\n\n\n"
+    }
+}

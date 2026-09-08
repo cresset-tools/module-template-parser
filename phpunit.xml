@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<phpunit bootstrap="tests/bootstrap.php" colors="false" cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="template-parser">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include><directory suffix=".php">src</directory></include>
+    </source>
+</phpunit>
