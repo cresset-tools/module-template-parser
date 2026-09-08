@@ -363,4 +363,8 @@ tools/             differential and fixture-recording scripts
 
 ## License
 
-OSL-3.0. The templates in `tests/fixtures/corpus/` are Adobe's, used under OSL-3.0 / AFL-3.0.
+OSL 3.0. See [LICENSE.txt](LICENSE.txt), and [COPYING.txt](COPYING.txt) for the notice.
+
+The templates under `tests/fixtures/corpus/` are not this package's source. They are copied
+from Magento Open Source, remain copyright Magento, Inc., and are licensed OSL 3.0 and AFL
+3.0; see [LICENSE_AFL.txt](LICENSE_AFL.txt).
