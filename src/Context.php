@@ -22,6 +22,9 @@ final class Context
     /** @var string[] template paths currently being rendered, outermost first */
     private array $includeStack = [];
 
+    /** @var \MageOS\TemplateParser\LegacyIncompatibility[] */
+    private array $incompatibilities = [];
+
     /** @param array<string,mixed> $variables */
     public function __construct(array $variables = [])
     {
@@ -87,6 +90,24 @@ final class Context
         return count($this->includeStack);
     }
 
+    /**
+     * Records a construct that renders here but not on the legacy filter.
+     *
+     * @param \MageOS\TemplateParser\LegacyIncompatibility[] $found
+     */
+    public function noteIncompatibilities(array $found): void
+    {
+        foreach ($found as $item) {
+            $this->incompatibilities[] = $item;
+        }
+    }
+
+    /** @return \MageOS\TemplateParser\LegacyIncompatibility[] */
+    public function incompatibilities(): array
+    {
+        return $this->incompatibilities;
+    }
+
     public function defer(string $kind, array $payload): void
     {
         $this->deferred[] = ['kind' => $kind, 'payload' => $payload];
@@ -106,6 +127,9 @@ final class Context
     {
         foreach ($child->deferred as $entry) {
             $this->deferred[] = $entry;
+        }
+        foreach ($child->incompatibilities as $item) {
+            $this->incompatibilities[] = $item;
         }
     }
 }

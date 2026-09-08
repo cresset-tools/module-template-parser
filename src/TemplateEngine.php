@@ -41,7 +41,10 @@ final class TemplateEngine
     public function render(string $source, array $variables = [], ?Context $context = null): string
     {
         $context ??= new Context($variables);
-        return $this->evaluator->evaluate($this->parser->parse($source), $context);
+        $ast = $this->parser->parse($source);
+        $context->noteIncompatibilities($ast->incompatibilities());
+
+        return $this->evaluator->evaluate($ast, $context);
     }
 
     public function evaluator(): Evaluator

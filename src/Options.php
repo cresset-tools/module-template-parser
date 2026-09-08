@@ -21,7 +21,8 @@ final class Options
         public readonly bool $strictDirectives = true,
         public readonly bool $strictVariables = true,
         public readonly int $maxNestingDepth = self::DEFAULT_MAX_NESTING_DEPTH,
-        public readonly bool $legacyQuirks = false
+        public readonly bool $legacyQuirks = false,
+        public readonly bool $refuseLegacyIncompatible = false
     ) {
         if ($this->maxNestingDepth < 1) {
             throw new \InvalidArgumentException('maxNestingDepth must be at least 1');
@@ -60,32 +61,41 @@ final class Options
 
     public function withLegacyQuirks(bool $enabled): self
     {
-        return new self(
-            $this->strictSyntax,
-            $this->strictDirectives,
-            $this->strictVariables,
-            $this->maxNestingDepth,
-            $enabled
-        );
+        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
+            $this->maxNestingDepth, $enabled, $this->refuseLegacyIncompatible);
+    }
+
+    /**
+     * Refuse constructs the legacy filter cannot render, instead of rendering them.
+     *
+     * Off by default: legacy "handles" these by raising a TypeError, and reproducing a crash
+     * makes compatible mode no safer than what it replaces. Turn it on when you need the new
+     * engine to be exactly as capable as the old one - for instance while a rollback to the
+     * legacy filter must remain possible.
+     */
+    public function withRefuseLegacyIncompatible(bool $refuse): self
+    {
+        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
+            $this->maxNestingDepth, $this->legacyQuirks, $refuse);
     }
 
     public function withMaxNestingDepth(int $depth): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables, $depth, $this->legacyQuirks);
+        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables, $depth, $this->legacyQuirks, $this->refuseLegacyIncompatible);
     }
 
     public function withSyntax(bool $strict): self
     {
-        return new self($strict, $this->strictDirectives, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks);
+        return new self($strict, $this->strictDirectives, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible);
     }
 
     public function withDirectives(bool $strict): self
     {
-        return new self($this->strictSyntax, $strict, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks);
+        return new self($this->strictSyntax, $strict, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible);
     }
 
     public function withVariables(bool $strict): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $strict, $this->maxNestingDepth, $this->legacyQuirks);
+        return new self($this->strictSyntax, $this->strictDirectives, $strict, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible);
     }
 }

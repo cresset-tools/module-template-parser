@@ -20,7 +20,13 @@ use MageOS\TemplateParser\Lexer\TokenType;
  */
 final class Parser
 {
+    /** The deepest nesting the legacy filter can render: two levels, with differing names. */
+    private const LEGACY_MAX_NESTING = 2;
+
     private string $source = '';
+
+    /** @var LegacyIncompatibility[] */
+    private array $incompatibilities = [];
 
     public function __construct(
         private readonly DirectiveSpec $spec = new DirectiveSpec(),
@@ -32,6 +38,7 @@ final class Parser
     public function parse(string $source): RootNode
     {
         $this->source = $source;
+        $this->incompatibilities = [];
         $tokens = $this->lexer->tokenize($source);
         $index = 0;
         $children = $this->parseUntil($tokens, $index, null, []);
@@ -45,7 +52,7 @@ final class Parser
 
         $this->assertNoStrayElse($children);
 
-        return new RootNode($children, $source);
+        return new RootNode($children, $source, $this->incompatibilities);
     }
 
     /**
@@ -110,6 +117,8 @@ final class Parser
             return new DirectiveNode($token->name, $token->params, $token->raw, $token->offset);
         }
 
+        $this->noteLegacyNesting($token, $openStack);
+
         if (count($openStack) >= $this->options->maxNestingDepth) {
             throw NestingLimitError::at(
                 $this->source,
@@ -163,6 +172,64 @@ final class Parser
         }
 
         return new UnclosedDirective($node);
+    }
+
+    /**
+     * Records nesting the legacy filter cannot render.
+     *
+     * Its per-directive regexes use a lazy body, so an outer {{depend}} stops at the FIRST
+     * {{/depend}} and the fragment it hands on carries an unclosed inner one - which ends in
+     * a TypeError. In practice that means: two levels maximum, and the two names must differ.
+     *
+     * @param string[] $openStack
+     */
+    private function noteLegacyNesting(Token $token, array $openStack): void
+    {
+        if (!$this->options->legacyQuirks || $openStack === []) {
+            return;
+        }
+
+        $incompatibility = null;
+        if (in_array($token->name, $openStack, true)) {
+            $incompatibility = LegacyIncompatibility::at(
+                $this->source,
+                $token->offset,
+                LegacyIncompatibility::SAME_NAME_NESTING,
+                sprintf(
+                    '{{%s}} nested inside {{%s}} - the legacy filter raises a TypeError here',
+                    $token->name,
+                    $token->name
+                )
+            );
+        } elseif (count($openStack) >= self::LEGACY_MAX_NESTING) {
+            $incompatibility = LegacyIncompatibility::at(
+                $this->source,
+                $token->offset,
+                LegacyIncompatibility::NESTING_DEPTH,
+                sprintf(
+                    '{{%s}} is %d levels deep - the legacy filter manages at most %d',
+                    $token->name,
+                    count($openStack) + 1,
+                    self::LEGACY_MAX_NESTING
+                )
+            );
+        }
+
+        if ($incompatibility === null) {
+            return;
+        }
+
+        if ($this->options->refuseLegacyIncompatible) {
+            throw LegacyIncompatibleError::at(
+                $this->source,
+                $token->offset,
+                $incompatibility->message,
+                'this renders here but not on the legacy filter; unset '
+                . 'Options::$refuseLegacyIncompatible to allow it'
+            );
+        }
+
+        $this->incompatibilities[] = $incompatibility;
     }
 
     /**

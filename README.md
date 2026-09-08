@@ -112,6 +112,35 @@ Quirks it reproduces:
 | arrays | cast to the literal string `Array` |
 | no variables | directives pass through verbatim (the template-validation path) |
 
+#### Nesting the legacy filter cannot do
+
+Verified against the unpatched filter, legacy manages **two levels with differing names** —
+`{{depend}}` around `{{if}}`, or the reverse. Same-name nesting at any depth, and three
+levels, both raise a `TypeError` and the mail never sends.
+
+Compatible mode **renders these and reports them**:
+
+```php
+$context = new Context($vars);
+$engine  = TemplateEngine::compatible();
+$engine->render($template, [], $context);
+
+foreach ($context->incompatibilities() as $i) {
+    $logger->info('template uses nesting legacy cannot render: ' . $i->describe());
+}
+```
+
+Reproducing the crash would make compatible mode no safer than what it replaces — a template
+that fatals today is already broken, and rendering it is an improvement. The reason to report
+it is different: such a template no longer runs on the old engine, so a rollback would stop
+working. That is a migration fact, not a rendering difference.
+
+If you need exact parity — for instance while a rollback must stay possible — opt in:
+
+```php
+TemplateEngine::withOptions(Options::compatible()->withRefuseLegacyIncompatible(true));
+```
+
 Quirks it deliberately does **not** reproduce:
 
 - the security behaviour — a value is still never re-parsed as source, in any mode;

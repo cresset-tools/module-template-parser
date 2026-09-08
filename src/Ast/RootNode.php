@@ -8,8 +8,15 @@ final class RootNode implements Node
     /** @param Node[] $children */
     public function __construct(
         private readonly array $children = [],
-        private readonly string $source = ''
+        private readonly string $source = '',
+        private readonly array $incompatibilities = []
     ) {
+    }
+
+    /** @return \MageOS\TemplateParser\LegacyIncompatibility[] */
+    public function incompatibilities(): array
+    {
+        return $this->incompatibilities;
     }
 
     public function source(): string
