@@ -17,7 +17,7 @@ require MROOT . '/lib/internal/Magento/Framework/Escaper.php';
 foreach (['/DirectiveProcessorInterface.php','/VariableResolverInterface.php','/Template/FilteringDepthMeter.php',
  '/Template/SignatureProvider.php','/Template/Tokenizer/AbstractTokenizer.php','/Template/Tokenizer/Parameter.php',
  '/Template/Tokenizer/Variable.php','/VariableResolver/StrictResolver.php','/DirectiveProcessor/Filter/FilterApplier.php',
- '/DirectiveProcessor/Filter/FilterPool.php','/DirectiveProcessor/VarDirective.php','/DirectiveProcessor/IfDirective.php',
+ '/DirectiveProcessor/Filter/FilterPool.php','/DirectiveProcessor/VarDirective.php','/DirectiveProcessor/IfDirective.php','/DirectiveProcessor/ForDirective.php',
  '/DirectiveProcessor/DependDirective.php','/DirectiveProcessor/SimpleDirective.php','/DirectiveProcessor/LegacyDirective.php',
  '/DirectiveProcessor/TemplateDirective.php','/SimpleDirective/ProcessorPool.php','/Template.php'] as $f) { require $base . $f; }
 
@@ -25,7 +25,7 @@ use Magento\Framework\Stdlib\StringUtils; use Magento\Framework\Math\Random;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 use Magento\Framework\Filter\Template\{FilteringDepthMeter, SignatureProvider};
 use Magento\Framework\Filter\VariableResolver\StrictResolver;
-use Magento\Framework\Filter\DirectiveProcessor\{IfDirective, DependDirective, TemplateDirective, SimpleDirective, LegacyDirective, VarDirective};
+use Magento\Framework\Filter\DirectiveProcessor\{IfDirective, DependDirective, TemplateDirective, SimpleDirective, LegacyDirective, VarDirective, ForDirective};
 use Magento\Framework\Filter\DirectiveProcessor\Filter\{FilterApplier, FilterPool};
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use Magento\Framework\Filter\Template\Tokenizer\{VariableFactory, ParameterFactory};
@@ -102,6 +102,10 @@ class EmailLikeLegacy extends LegacyTemplate {
 function legacy(array $vars): LegacyTemplate {
     $r = new StrictResolver(new VariableFactory());
     \Magento\Framework\App\ObjectManager::$registry[VarDirective::class] = new VarDirective($r, new FilterApplier(new FilterPool()));
+    // Template::forDirective resolves this through the global ObjectManager. Leaving it
+    // unbound made every {{for}} case record as a RuntimeException - a legacy fatal legacy
+    // does not have - so the corpus simply had no {{for}} cases at all.
+    \Magento\Framework\App\ObjectManager::$registry[ForDirective::class] = new ForDirective($r);
     $s = new SimpleDirective(new ProcessorPool(), new ParameterFactory(), $r, new FilterApplier(new FilterPool()));
     $t = new EmailLikeLegacy(new StringUtils(), [], ['depend'=>new DependDirective($r),'if'=>new IfDirective($r),
         'template'=>new TemplateDirective($r,new ParameterFactory()),'legacy'=>new LegacyDirective($s)],
@@ -116,7 +120,22 @@ function legacy(array $vars): LegacyTemplate {
  * the ports. Cases touching these are recorded but excluded from strict parity.
  */
 const SURFACE_DIVERGENT = ['trans','template','inlinecss','css','store','block','widget',
-                           'media','config','customvar','protocol','view','filter'];
+                           'media','config','customvar','protocol','view','filter','for'];
+
+/*
+ * `for` is on that list for a different reason from the rest, and a deliberate one.
+ *
+ * Legacy's ForDirective does not render its body: it runs preg_match_all over the raw text,
+ * resolves each match as a variable name and str_replace()s the result in. So the body is
+ * never escaped, a nested {{if}} is resolved as if it were a variable, `|raw` becomes part
+ * of a property name, an item that is not an array is skipped, and a non-iterable collection
+ * makes the whole construct come back verbatim.
+ *
+ * Reproducing that faithfully would mean not escaping loop variables, which is the exact
+ * class of defect this package exists to remove. So {{for}} is a deliberate divergence: the
+ * cases are still recorded, and still have to render safely, but they are not held to
+ * rendering-equality with legacy.
+ */
 
 function parityEligible(string $tpl): bool {
     foreach (SURFACE_DIVERGENT as $name) {
@@ -221,6 +240,40 @@ $constructs = [
     // Case-insensitive directive names, which legacy's /i patterns accept.
     'upper_var'       => '[{{VAR a}}]',
     'mixed_if'        => '[{{If a}}Y{{/if}}]',
+    // Loops. Legacy's surface differs (see SURFACE_DIVERGENT) but the cases are recorded so
+    // the divergence is measured rather than assumed.
+    'for'             => '[{{for i in a}}X{{/for}}]',
+    'for_var'         => '[{{for i in a}}{{var i}}{{/for}}]',
+    'for_path'        => '[{{for i in a}}{{var i.b}}{{/for}}]',
+    'for_loop_index'  => '[{{for i in a}}{{var loop.index}}{{/for}}]',
+    'for_close_space' => '[{{for i in a}}X{{/for }}]',
+    // Closing tags with trailing whitespace: CONSTRUCTION_IF_PATTERN accepts these but the
+    // backreference in CONSTRUCTION_PATTERN does not, so legacy raises a TypeError.
+    'if_close_space'  => '[{{if a}}Y{{/if }}]',
+    'dep_close_space' => '[{{depend a}}Y{{/depend }}]',
+    // The name is captured as [a-z]{0,10}, so a non-letter after it still dispatches.
+    'var_dot'         => '[{{var.a}}]',
+    'var_underscore'  => '[{{var_a}}]',
+    'var_digit'       => '[{{var2 a}}]',
+    'if_underscore'   => '[{{if_a}}]',
+    'depend_dot'      => '[{{depend.a}}Y{{/depend}}]',
+    // Same-name nesting is only fatal when the parameters are not both empty.
+    'nest_empty_if'   => '{{if}}{{if}}{{/if}}',
+    'nest_empty_dep'  => '{{depend}}{{depend}}{{/depend}}',
+    'cross_unclosed'  => '{{if}}{{depend}}x{{/if}}',
+    'unknown_paired'  => '{{foo}}x{{/foo}}',
+    'var_paired'      => '{{var a}}Y{{/var}}',
+    // Modifier arguments reaching an internal function, and escape types on non-strings.
+    'nl2br_param'     => '[{{var a|nl2br:x}}]',
+    'esc_htmlent'     => '[{{var a|escape:htmlentities}}]',
+    'esc_url'         => '[{{var a|escape:url}}]',
+    'esc_unknown'     => '[{{var a|escape:none}}]',
+    'esc_empty_type'  => '[{{var a|escape:}}]',
+    // Member access shapes: a getter on an array parent, whitespace, a leading dot, args.
+    'getter_call'     => '[{{var a.getB()}}]',
+    'getter_args'     => '[{{var a.getB("x")}}]',
+    'var_ws_path'     => '[{{var a . b}}]',
+    'var_lead_dot'    => '[{{var .a}}]',
 ];
 
 $cases = [];

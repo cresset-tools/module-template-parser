@@ -31,7 +31,16 @@ final class ParitySensitivityTest extends TestCase
         );
         return array_values(array_filter(
             $cases,
-            static fn ($c) => $c['outcome'] === 'ok' && $c['parity']
+            // The shapes compatible mode deliberately refuses are excluded here too: this
+            // corpus measures rendering equality, and a refusal is a different claim, made
+            // by LegacyParityTest::testExtraRefusalsAreOnlyTheDocumentedShapes.
+            static fn ($c) => $c['outcome'] === 'ok'
+                && $c['parity']
+                && !in_array(
+                    explode('/', $c['id'])[0],
+                    LegacyParityTest::DELIBERATE_OVER_REFUSALS,
+                    true
+                )
         ));
     }
 

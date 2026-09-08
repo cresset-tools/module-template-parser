@@ -163,6 +163,16 @@ final class VariableResolver
     {
         $label = $method . '()';
 
+        if ($this->legacyQuirks && is_array($value)) {
+            // StrictResolver::handleDataAccess calls ->getData() on the parent whenever the
+            // access is a method, without checking that the parent is an object first, so an
+            // array parent is "Call to a member function getData() on array".
+            throw new LegacyFatalShape(sprintf(
+                'the legacy filter calls %s on an array, which is a fatal Error there',
+                $label
+            ));
+        }
+
         if (!is_object($value)) {
             return Resolution::missing($label);
         }

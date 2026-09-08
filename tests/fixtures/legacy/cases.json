@@ -396,6 +396,292 @@
         "parity": true
     },
     {
+        "id": "for/true",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/true",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/true",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/true",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/true",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/true",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/true",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/true",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/true",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/true",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/true",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/true",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/true",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/true",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/true",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/true",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/true",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "1",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/true",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/true",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/true",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/true",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/true",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/true",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/true",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/true",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/true",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
         "id": "text/false",
         "template": "plain text only",
         "variables": {
@@ -783,6 +1069,292 @@
     {
         "id": "mixed_if/false",
         "template": "[{{If a}}Y{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "for/false",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/false",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/false",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/false",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/false",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/false",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/false",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/false",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/false",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/false",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/false",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/false",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/false",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/false",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/false",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/false",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/false",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/false",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/false",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/false",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/false",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/false",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/false",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/false",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/false",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/false",
+        "template": "[{{var .a}}]",
         "variables": {
             "a": false
         },
@@ -1188,6 +1760,292 @@
         "parity": true
     },
     {
+        "id": "for/zero",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/zero",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/zero",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/zero",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/zero",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/zero",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/zero",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/zero",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/zero",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/zero",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/zero",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/zero",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/zero",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/zero",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/zero",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/zero",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/zero",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "0",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/zero",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/zero",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/zero",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/zero",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/zero",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/zero",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/zero",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/zero",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/zero",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "text/one",
         "template": "plain text only",
         "variables": {
@@ -1581,6 +2439,292 @@
         "object": null,
         "outcome": "ok",
         "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "for/one",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/one",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/one",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/one",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/one",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/one",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/one",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/one",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/one",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/one",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/one",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/one",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/one",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/one",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/one",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/one",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/one",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "1",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/one",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/one",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/one",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/one",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/one",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/one",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/one",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/one",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/one",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
         "parity": true
     },
     {
@@ -1980,6 +3124,292 @@
         "parity": true
     },
     {
+        "id": "for/answer",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/answer",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/answer",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/answer",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/answer",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/answer",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/answer",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/answer",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/answer",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/answer",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/answer",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/answer",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/answer",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/answer",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/answer",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/answer",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/answer",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "42",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/answer",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/answer",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/answer",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/answer",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/answer",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/answer",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/answer",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/answer",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/answer",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
         "id": "text/strzero",
         "template": "plain text only",
         "variables": {
@@ -2376,6 +3806,292 @@
         "parity": true
     },
     {
+        "id": "for/strzero",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/strzero",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/strzero",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/strzero",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/strzero",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/strzero",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/strzero",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/strzero",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/strzero",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/strzero",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/strzero",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/strzero",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/strzero",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/strzero",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/strzero",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/strzero",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/strzero",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "0",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/strzero",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/strzero",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/strzero",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/strzero",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/strzero",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/strzero",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/strzero",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/strzero",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/strzero",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "text/emptystr",
         "template": "plain text only",
         "variables": {
@@ -2763,6 +4479,292 @@
     {
         "id": "mixed_if/emptystr",
         "template": "[{{If a}}Y{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "for/emptystr",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/emptystr",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/emptystr",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/emptystr",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/emptystr",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/emptystr",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/emptystr",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/emptystr",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/emptystr",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/emptystr",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/emptystr",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/emptystr",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/emptystr",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/emptystr",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/emptystr",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/emptystr",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/emptystr",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/emptystr",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/emptystr",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/emptystr",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/emptystr",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/emptystr",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/emptystr",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/emptystr",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/emptystr",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/emptystr",
+        "template": "[{{var .a}}]",
         "variables": {
             "a": ""
         },
@@ -3168,6 +5170,292 @@
         "parity": true
     },
     {
+        "id": "for/word",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/word",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/word",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/word",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/word",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/word",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/word",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/word",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/word",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/word",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/word",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/word",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/word",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/word",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/word",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/word",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/word",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "x",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/word",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/word",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/word",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/word",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/word",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/word",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/word",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/word",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/word",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
         "id": "text/null",
         "template": "plain text only",
         "variables": {
@@ -3555,6 +5843,292 @@
     {
         "id": "mixed_if/null",
         "template": "[{{If a}}Y{{/if}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "for/null",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/null",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/null",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/null",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/null",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/null",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/null",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/null",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/null",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/null",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/null",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/null",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/null",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/null",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/null",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/null",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/null",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/null",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/null",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/null",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/null",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/null",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/null",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/null",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/null",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/null",
+        "template": "[{{var .a}}]",
         "variables": {
             "a": null
         },
@@ -3960,6 +6534,292 @@
         "parity": true
     },
     {
+        "id": "for/floatzero",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/floatzero",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/floatzero",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/floatzero",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/floatzero",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/floatzero",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/floatzero",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/floatzero",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/floatzero",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/floatzero",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/floatzero",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/floatzero",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/floatzero",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/floatzero",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/floatzero",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/floatzero",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/floatzero",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "0",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/floatzero",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/floatzero",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/floatzero",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/floatzero",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/floatzero",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/floatzero",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/floatzero",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/floatzero",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/floatzero",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "text/float",
         "template": "plain text only",
         "variables": {
@@ -4356,6 +7216,292 @@
         "parity": true
     },
     {
+        "id": "for/float",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/float",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/float",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/float",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/float",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/float",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/float",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/float",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/float",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/float",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/float",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/float",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/float",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/float",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/float",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/float",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/float",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "1.5",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/float",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/float",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/float",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/float",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/float",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/float",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/float",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/float",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/float",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
         "id": "text/emptyarr",
         "template": "plain text only",
         "variables": {
@@ -4749,6 +7895,292 @@
         "object": null,
         "outcome": "ok",
         "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "for/emptyarr",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_var/emptyarr",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_path/emptyarr",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/emptyarr",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/emptyarr",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/emptyarr",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/emptyarr",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/emptyarr",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/emptyarr",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/emptyarr",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/emptyarr",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/emptyarr",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/emptyarr",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/emptyarr",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/emptyarr",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/emptyarr",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/emptyarr",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "Array",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/emptyarr",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/emptyarr",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/emptyarr",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/emptyarr",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/emptyarr",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/emptyarr",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "getter_args/emptyarr",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/emptyarr",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/emptyarr",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
         "parity": true
     },
     {
@@ -5256,6 +8688,370 @@
         "parity": true
     },
     {
+        "id": "for/list",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_var/list",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_path/list",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/list",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/list",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/list",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/list",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/list",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/list",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/list",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/list",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/list",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/list",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/list",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/list",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/list",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/list",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "Array",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/list",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/list",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/list",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/list",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/list",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/list",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "getter_args/list",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/list",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/list",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
         "id": "text/assoc",
         "template": "plain text only",
         "variables": {
@@ -5721,6 +9517,344 @@
         "object": null,
         "outcome": "ok",
         "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "for/assoc",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_var/assoc",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_path/assoc",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/assoc",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/assoc",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/assoc",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/assoc",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/assoc",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/assoc",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/assoc",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/assoc",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/assoc",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/assoc",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/assoc",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/assoc",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/assoc",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/assoc",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "Array",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/assoc",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/assoc",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/assoc",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/assoc",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/assoc",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/assoc",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "getter_args/assoc",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/assoc",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[deep]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/assoc",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
         "parity": true
     },
     {
@@ -6192,6 +10326,344 @@
         "parity": true
     },
     {
+        "id": "for/assocempty",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_var/assocempty",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_path/assocempty",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/assocempty",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/assocempty",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/assocempty",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/assocempty",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/assocempty",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/assocempty",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/assocempty",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/assocempty",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/assocempty",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/assocempty",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/assocempty",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/assocempty",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/assocempty",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/assocempty",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "Array",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/assocempty",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/assocempty",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/assocempty",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/assocempty",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/assocempty",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/assocempty",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "getter_args/assocempty",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/assocempty",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/assocempty",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
         "id": "text/html",
         "template": "plain text only",
         "variables": {
@@ -6585,6 +11057,292 @@
         "object": null,
         "outcome": "ok",
         "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "for/html",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/html",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/html",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/html",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/html",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/html",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/html",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/html",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/html",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/html",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/html",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/html",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/html",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/html",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/html",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/html",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/html",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/html",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/html",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/html",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[%3Cb%3E%26%22x%22%3C%2Fb%3E]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/html",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<b>&\"x\"</b>]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/html",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<b>&\"x\"</b>]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/html",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/html",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/html",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/html",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
         "parity": true
     },
     {
@@ -6984,6 +11742,292 @@
         "parity": true
     },
     {
+        "id": "for/directive",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/directive",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/directive",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/directive",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/directive",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/directive",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/directive",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/directive",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/directive",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/directive",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/directive",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/directive",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/directive",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/directive",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/directive",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/directive",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/directive",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{var a}}",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/directive",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/directive",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/directive",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[%7B%7Bvar%20a%7D%7D]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/directive",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/directive",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/directive",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/directive",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/directive",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/directive",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
         "id": "text/blockpayload",
         "template": "plain text only",
         "variables": {
@@ -7377,6 +12421,292 @@
         "object": null,
         "outcome": "ok",
         "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "for/blockpayload",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/blockpayload",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/blockpayload",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/blockpayload",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/blockpayload",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/blockpayload",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/blockpayload",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/blockpayload",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/blockpayload",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/blockpayload",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/blockpayload",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/blockpayload",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/blockpayload",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/blockpayload",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/blockpayload",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/blockpayload",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/blockpayload",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{block class=Evil}}",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/blockpayload",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/blockpayload",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/blockpayload",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[%7B%7Bblock%20class%3DEvil%7D%7D]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/blockpayload",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/blockpayload",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/blockpayload",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/blockpayload",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/blockpayload",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/blockpayload",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
         "parity": true
     },
     {
@@ -7776,6 +13106,292 @@
         "parity": true
     },
     {
+        "id": "for/longstr",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/longstr",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/longstr",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/longstr",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/longstr",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/longstr",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/longstr",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/longstr",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/longstr",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/longstr",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/longstr",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/longstr",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/longstr",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/longstr",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/longstr",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/longstr",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/longstr",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "abababababababababababababababababababababababababababababababababababababababab",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/longstr",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/longstr",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/longstr",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/longstr",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/longstr",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/longstr",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/longstr",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/longstr",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/longstr",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
         "id": "text/spaces",
         "template": "plain text only",
         "variables": {
@@ -8169,6 +13785,292 @@
         "object": null,
         "outcome": "ok",
         "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "for/spaces",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/spaces",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/spaces",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/spaces",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/spaces",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/spaces",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/spaces",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/spaces",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/spaces",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/spaces",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/spaces",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/spaces",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/spaces",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/spaces",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/spaces",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/spaces",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/spaces",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "  padded  ",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/spaces",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/spaces",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/spaces",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[%20%20padded%20%20]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/spaces",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/spaces",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/spaces",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/spaces",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/spaces",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/spaces",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
         "parity": true
     },
     {
@@ -8568,6 +14470,292 @@
         "parity": true
     },
     {
+        "id": "for/entities",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/entities",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/entities",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/entities",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/entities",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/entities",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/entities",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/entities",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/entities",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/entities",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/entities",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/entities",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/entities",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/entities",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/entities",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/entities",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/entities",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "Tom &amp; Jerry &nbsp;",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/entities",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/entities",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp;amp; Jerry &amp;nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/entities",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom%20%26amp%3B%20Jerry%20%26nbsp%3B]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/entities",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/entities",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/entities",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/entities",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/entities",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/entities",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
         "id": "text/newlines",
         "template": "plain text only",
         "variables": {
@@ -8964,6 +15152,292 @@
         "parity": true
     },
     {
+        "id": "for/newlines",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/newlines",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/newlines",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/newlines",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/newlines",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/newlines",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/newlines",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/newlines",
+        "template": "[{{var.a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/newlines",
+        "template": "[{{var_a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/newlines",
+        "template": "[{{var2 a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/newlines",
+        "template": "[{{if_a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/newlines",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/newlines",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/newlines",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/newlines",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/newlines",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/newlines",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "a\nb\nc",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/newlines",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/newlines",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/newlines",
+        "template": "[{{var a|escape:url}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a%0Ab%0Ac]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/newlines",
+        "template": "[{{var a|escape:none}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/newlines",
+        "template": "[{{var a|escape:}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/newlines",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/newlines",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/newlines",
+        "template": "[{{var a . b}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/newlines",
+        "template": "[{{var .a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
         "id": "text/@dataobject",
         "template": "plain text only",
         "variables": [],
@@ -9281,6 +15755,240 @@
     {
         "id": "mixed_if/@dataobject",
         "template": "[{{If a}}Y{{/if}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "for/@dataobject",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/@dataobject",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/@dataobject",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/@dataobject",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/@dataobject",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/@dataobject",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/@dataobject",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/@dataobject",
+        "template": "[{{var.a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/@dataobject",
+        "template": "[{{var_a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/@dataobject",
+        "template": "[{{var2 a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/@dataobject",
+        "template": "[{{if_a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/@dataobject",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/@dataobject",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/@dataobject",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/@dataobject",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/@dataobject",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/@dataobject",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/@dataobject",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/@dataobject",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/@dataobject",
+        "template": "[{{var a|escape:url}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/@dataobject",
+        "template": "[{{var a|escape:none}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/@dataobject",
+        "template": "[{{var a|escape:}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/@dataobject",
+        "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[deep]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/@dataobject",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[deep]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/@dataobject",
+        "template": "[{{var a . b}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[deep]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/@dataobject",
+        "template": "[{{var .a}}]",
         "variables": [],
         "object": "dataobject",
         "outcome": "ok",
@@ -9612,6 +16320,240 @@
         "parity": true
     },
     {
+        "id": "for/@stringable",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/@stringable",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/@stringable",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/@stringable",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/@stringable",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/@stringable",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/@stringable",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/@stringable",
+        "template": "[{{var.a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/@stringable",
+        "template": "[{{var_a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/@stringable",
+        "template": "[{{var2 a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/@stringable",
+        "template": "[{{if_a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/@stringable",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/@stringable",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/@stringable",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/@stringable",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/@stringable",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/@stringable",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/@stringable",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/@stringable",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/@stringable",
+        "template": "[{{var a|escape:url}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/@stringable",
+        "template": "[{{var a|escape:none}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/@stringable",
+        "template": "[{{var a|escape:}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/@stringable",
+        "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/@stringable",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/@stringable",
+        "template": "[{{var a . b}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/@stringable",
+        "template": "[{{var .a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "text/@plainobject",
         "template": "plain text only",
         "variables": [],
@@ -9929,6 +16871,240 @@
     {
         "id": "mixed_if/@plainobject",
         "template": "[{{If a}}Y{{/if}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "for/@plainobject",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/@plainobject",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/@plainobject",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/@plainobject",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/@plainobject",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/@plainobject",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/@plainobject",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/@plainobject",
+        "template": "[{{var.a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/@plainobject",
+        "template": "[{{var_a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/@plainobject",
+        "template": "[{{var2 a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/@plainobject",
+        "template": "[{{if_a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/@plainobject",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/@plainobject",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/@plainobject",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/@plainobject",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/@plainobject",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/@plainobject",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/@plainobject",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/@plainobject",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/@plainobject",
+        "template": "[{{var a|escape:url}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/@plainobject",
+        "template": "[{{var a|escape:none}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/@plainobject",
+        "template": "[{{var a|escape:}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/@plainobject",
+        "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/@plainobject",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/@plainobject",
+        "template": "[{{var a . b}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/@plainobject",
+        "template": "[{{var .a}}]",
         "variables": [],
         "object": "plainobject",
         "outcome": "ok",
@@ -10257,6 +17433,240 @@
         "object": null,
         "outcome": "ok",
         "expected": "[{{If a}}Y{{/if}}]",
+        "parity": true
+    },
+    {
+        "id": "for/novars",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}X{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_var/novars",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_path/novars",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/novars",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/novars",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/novars",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/novars",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/novars",
+        "template": "[{{var.a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var.a}}]",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/novars",
+        "template": "[{{var_a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var_a}}]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/novars",
+        "template": "[{{var2 a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var2 a}}]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/novars",
+        "template": "[{{if_a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/novars",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{depend.a}}Y{{/depend}}]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/novars",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{if}}{{if}}{{/if}}",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/novars",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{depend}}{{depend}}{{/depend}}",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/novars",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{if}}{{depend}}x{{/if}}",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/novars",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/novars",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{var a}}Y{{/var}}",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/novars",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a|nl2br:x}}]",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/novars",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a|escape:htmlentities}}]",
+        "parity": true
+    },
+    {
+        "id": "esc_url/novars",
+        "template": "[{{var a|escape:url}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a|escape:url}}]",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/novars",
+        "template": "[{{var a|escape:none}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a|escape:none}}]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/novars",
+        "template": "[{{var a|escape:}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a|escape:}}]",
+        "parity": true
+    },
+    {
+        "id": "getter_call/novars",
+        "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a.getB()}}]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/novars",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a.getB(\"x\")}}]",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/novars",
+        "template": "[{{var a . b}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a . b}}]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/novars",
+        "template": "[{{var .a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var .a}}]",
         "parity": true
     },
     {

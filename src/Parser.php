@@ -53,6 +53,8 @@ final class Parser
         $this->source = $source;
         $this->maxNestingDepth = $maxNestingDepth ?? $this->options->maxNestingDepth;
         $this->incompatibilities = [];
+        $this->refuseLegacyParsingDifferences($source);
+
         $tokens = $this->lexer->tokenize($source);
         $index = 0;
         $children = $this->parseUntil($tokens, $index, null, []);
@@ -225,6 +227,67 @@ final class Parser
      * Only meaningful in compatible mode: strict already rejects most of these as syntax
      * errors, and lenient deliberately recovers from them.
      */
+    /**
+     * Constructs the legacy filter reads differently from this parser.
+     *
+     * Both cases come from CONSTRUCTION_PATTERN, `/\{\{([a-z]{0,10})(.*?)\}\}.../si`:
+     *
+     *  - The name is a greedy run of letters, so it ends at the first non-letter rather than
+     *    at whitespace. `{{if_a}}` is therefore `if` with the parameter `_a`, which reaches
+     *    IfDirective and raises a TypeError; `{{var.a}}` is `var` with `.a`, which is a live
+     *    variable read. This parser requires whitespace or `}` after a name, so it sees
+     *    neither - it hands the whole thing back as text, which is safe but is not what the
+     *    old filter did.
+     *  - The closing group is a backreference, `\{\{\/(?:\1)\}\}`, with no allowance for
+     *    whitespace - while CONSTRUCTION_IF_PATTERN does allow it. So `{{/if }}` matches one
+     *    pattern and not the other, and IfDirective is handed an empty match: a TypeError.
+     *
+     * Refused rather than reproduced. Emitting them as text is already the safe behaviour;
+     * what compatible mode must not do is stay quiet about a template whose meaning changes.
+     */
+    private function refuseLegacyParsingDifferences(string $source): void
+    {
+        if (!$this->options->legacyQuirks) {
+            return;
+        }
+
+        if (preg_match_all('/\{\{([a-z]{1,10})([^\s}])/', $source, $found, PREG_OFFSET_CAPTURE)) {
+            foreach ($found[1] as $i => [$name, $offset]) {
+                if (!$this->spec->isKnown($name)) {
+                    continue;               // legacy would not dispatch it either
+                }
+                $this->refuseIfLegacyCannotRender(
+                    $offset - 2,
+                    LegacyIncompatibility::NAME_PREFIX_SPLIT,
+                    sprintf(
+                        '{{%s%s...}} - the legacy filter reads the name as "%s" and the rest as '
+                        . 'its parameters, which is a different construct from this one',
+                        $name,
+                        $found[2][$i][0],
+                        $name
+                    )
+                );
+            }
+        }
+
+        if (preg_match_all('/\{\{\/([a-zA-Z]{1,10})\s+\}\}/', $source, $found, PREG_OFFSET_CAPTURE)) {
+            foreach ($found[1] as $i => [$name, $offset]) {
+                if (!$this->spec->isKnown(strtolower($name))) {
+                    continue;
+                }
+                $this->refuseIfLegacyCannotRender(
+                    $offset - 3,
+                    LegacyIncompatibility::PADDED_CLOSING_TAG,
+                    sprintf(
+                        '{{/%s }} has whitespace before the braces - the legacy filter\'s closing '
+                        . 'backreference does not allow it and raises a TypeError',
+                        $name
+                    )
+                );
+            }
+        }
+    }
+
     private function refuseIfLegacyCannotRender(int $offset, string $kind, string $message): void
     {
         if (!$this->options->legacyQuirks) {

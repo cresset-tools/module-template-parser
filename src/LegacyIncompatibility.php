@@ -20,6 +20,10 @@ final class LegacyIncompatibility
     public const DEGENERATE_CONSTRUCT = 'degenerate_construct';
     public const STRAY_CLOSING_TAG = 'stray_closing_tag';
     public const UNCLOSED_BLOCK = 'unclosed_block';
+    public const NAME_PREFIX_SPLIT = 'name_prefix_split';
+    public const PADDED_CLOSING_TAG = 'padded_closing_tag';
+    public const MODIFIER_ARGUMENTS = 'modifier_arguments';
+    public const MEMBER_ON_ARRAY = 'member_on_array';
 
     public function __construct(
         public readonly string $kind,

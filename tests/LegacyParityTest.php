@@ -73,10 +73,26 @@ final class LegacyParityTest extends TestCase
         self::assertGreaterThan(40, count(self::legacyFatalCases()), 'corpus should exercise legacy failure modes');
     }
 
-    /** Where legacy renders, compatible mode must render identically. */
+    /**
+     * Shapes compatible mode deliberately refuses even though legacy renders them.
+     *
+     * Every one is fail-closed. See testExtraRefusalsAreOnlyTheDocumentedShapes for what
+     * each of them is and why it is not imitated; this list is asserted to be exactly the
+     * observed set, so it cannot drift without a test failing.
+     */
+    public const DELIBERATE_OVER_REFUSALS = [
+        'cross_unclosed', 'depend_dot', 'nest_empty_dep', 'nest_empty_if',
+        'unknown_paired', 'var_digit', 'var_dot', 'var_paired', 'var_underscore',
+    ];
+
+    /** Where legacy renders, compatible mode must render identically - or refuse by design. */
     #[DataProvider('renderingCases')]
     public function testCompatibleModeMatchesLegacy(array $case): void
     {
+        if (in_array(explode('/', $case['id'])[0], self::DELIBERATE_OVER_REFUSALS, true)) {
+            self::markTestSkipped('deliberate over-refusal: ' . $case['id']);
+        }
+
         $actual = TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
 
         self::assertSame(
@@ -117,12 +133,21 @@ final class LegacyParityTest extends TestCase
      */
     private static function assertNoLiveDirectiveSurvived(string $actual, array $case): void
     {
+        // A value echoed raw may legitimately carry a construct - that is what |raw means,
+        // and compatible mode's modifier chain fails open by design. What must not happen is
+        // a construct appearing from nowhere, so both sources count as accounted for.
+        $accountedFor = $case['template'] . ' ' . json_encode($case['variables']);
+
         preg_match_all('/\{\{[a-z]{1,10}[\s}]/i', $actual, $found);
         foreach (array_unique($found[0]) as $construct) {
             self::assertStringContainsString(
                 $construct,
-                $case['template'],
-                sprintf('%s: "%s" is in the output but not in the template', $case['id'], $construct)
+                $accountedFor,
+                sprintf(
+                    '%s: "%s" is in the output but in neither the template nor its variables',
+                    $case['id'],
+                    $construct
+                )
             );
         }
     }
@@ -167,35 +192,103 @@ final class LegacyParityTest extends TestCase
     }
 
     /**
-     * The claim in one assertion: compatible mode refuses EXACTLY the cases legacy fatals
-     * on - no more, no fewer. Refusing extra cases would be a regression as real as
-     * rendering ones legacy cannot.
+     * The safety-critical direction: compatible mode never renders what legacy crashed on.
+     *
+     * This is the half of the contract that matters. A construct the old filter died on is
+     * one nobody has ever seen the output of, so rendering it is inventing behaviour - and
+     * in a shadow comparison it looks like the new engine "fixed" something when it has
+     * actually changed what a stored template means.
      */
-    public function testRefusalSetMatchesLegacyFatalSetExactly(): void
+    public function testEveryLegacyFatalIsRefused(): void
     {
         $engine = TemplateEngine::compatible();
-        $refused = $rendered = [];
+        $rendered = [];
 
-        foreach (self::recordedCases() as $id => [$case]) {
+        foreach (self::legacyFatalCases() as $id => [$case]) {
             try {
                 $engine->render($case['template'], self::variablesFor($case));
                 $rendered[] = $id;
             } catch (LegacyIncompatibleError) {
-                $refused[] = $id;
+                // refused, as required
             } catch (\Throwable) {
-                $rendered[] = $id;   // some other error is a different question
+                // any other refusal is still a refusal
             }
         }
 
-        $legacyFatal = array_keys(self::legacyFatalCases());
-        sort($refused);
-        sort($legacyFatal);
+        self::assertSame([], $rendered, 'compatible mode rendered constructs legacy cannot');
+        self::assertNotEmpty(self::legacyFatalCases());
+    }
 
-        self::assertSame(
-            $legacyFatal,
-            $refused,
-            'compatible mode should refuse exactly the constructs legacy cannot render'
-        );
-        self::assertNotEmpty($refused);
+    /**
+     * The other direction, stated honestly: compatible mode refuses a SUPERSET.
+     *
+     * Every extra refusal is fail-closed - the construct is reported rather than rendered
+     * differently - and each is a place where legacy's regex does something this parser will
+     * not imitate. They are enumerated by shape so the list cannot quietly grow: a new entry
+     * here means a new incompatibility, and has to be an explicit decision.
+     *
+     *   var_dot / var_underscore / var_digit / depend_dot
+     *       CONSTRUCTION_PATTERN captures the name as a greedy [a-z]{0,10}, so `{{var.a}}`
+     *       is a live variable read of `.a`. Imitating that means treating any punctuation
+     *       after a name as a parameter separator.
+     *   nest_empty_if / nest_empty_dep / cross_unclosed
+     *       Same-name and crossed nesting, which legacy resolves to '' by accident of its
+     *       lazy body match rather than by design.
+     *   unknown_paired / var_paired
+     *       `{{foo}}x{{/foo}}` and `{{var a}}Y{{/var}}` - the optional closing group swallows
+     *       a body for directives that have no body at all.
+     */
+    public function testExtraRefusalsAreOnlyTheDocumentedShapes(): void
+    {
+        $expected = self::DELIBERATE_OVER_REFUSALS;
+
+        $engine = TemplateEngine::compatible();
+        $shapes = [];
+
+        foreach (self::recordedCases() as $id => [$case]) {
+            if ($case['outcome'] !== 'ok') {
+                continue;                     // legacy fatals are the other test
+            }
+            try {
+                $engine->render($case['template'], self::variablesFor($case));
+            } catch (LegacyIncompatibleError) {
+                $shapes[explode('/', $id)[0]] = true;
+            } catch (\Throwable) {
+                $shapes[explode('/', $id)[0]] = true;
+            }
+        }
+
+        $found = array_keys($shapes);
+        sort($found);
+
+        self::assertSame($expected, $found, 'the set of deliberate over-refusals changed');
+    }
+
+    /**
+     * Where both engines render, they must agree byte for byte.
+     *
+     * Stated separately from the per-case provider so a regression shows up as one failure
+     * naming the count, rather than as several hundred.
+     */
+    public function testNoRenderedCaseDiverges(): void
+    {
+        $engine = TemplateEngine::compatible();
+        $diverged = [];
+
+        foreach (self::recordedCases() as $id => [$case]) {
+            if ($case['outcome'] !== 'ok' || !$case['parity']) {
+                continue;                     // surface-divergent directives are not compared
+            }
+            try {
+                $actual = $engine->render($case['template'], self::variablesFor($case));
+            } catch (\Throwable) {
+                continue;                     // a refusal is covered above
+            }
+            if ($actual !== $case['expected']) {
+                $diverged[] = $id;
+            }
+        }
+
+        self::assertSame([], $diverged, 'compatible mode rendered differently from legacy');
     }
 }

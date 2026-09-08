@@ -365,12 +365,14 @@ final class Evaluator
      *
      * Mirrors the parser's handling, so `refuseLegacyIncompatible` governs both.
      */
-    private function noteLegacyIncompatible(Context $context, string $message): void
+    private function noteLegacyIncompatible(Context $context, string $message, ?int $offset = null): void
     {
+        $offset ??= $this->modifierOffset;
+
         if ($this->options->refuseLegacyIncompatible) {
             throw LegacyIncompatibleError::at(
                 $this->source,
-                $this->modifierOffset,
+                $offset,
                 $message,
                 'this renders here but not on the legacy filter; unset '
                 . 'Options::$refuseLegacyIncompatible to allow it'
@@ -380,7 +382,7 @@ final class Evaluator
         $context->noteIncompatibilities([
             LegacyIncompatibility::at(
                 $this->source,
-                $this->modifierOffset,
+                $offset,
                 LegacyIncompatibility::DEGENERATE_CONSTRUCT,
                 $message
             ),
@@ -438,6 +440,9 @@ final class Evaluator
             return $this->variables->resolve($expression, $context);
         } catch (AccessorError $e) {
             throw AccessorError::at($this->source, $node->offset(), $e->problem, $e->hint);
+        } catch (LegacyFatalShape $e) {
+            $this->noteLegacyIncompatible($context, $e->getMessage(), $node->offset());
+            return Resolution::of(null);
         }
     }
 
@@ -547,6 +552,16 @@ final class Evaluator
         foreach ($parsed as [$name, $params]) {
             // Legacy looks the modifier up case-sensitively; nothing else should.
             $lookup = $this->options->legacyQuirks ? $name : strtolower($name);
+
+            if ($this->options->legacyQuirks && $lookup === 'nl2br' && $params !== []) {
+                // applyModifiers passes the modifier's arguments straight through, so
+                // nl2br($value, 'x') is a TypeError on $use_xhtml.
+                $this->noteLegacyIncompatible(
+                    $context,
+                    'the |nl2br modifier is given arguments - the legacy filter passes them '
+                    . 'to nl2br() and raises a TypeError here'
+                );
+            }
 
             if ($this->options->legacyQuirks && $lookup === 'nl2br' && !is_string($value)) {
                 // Email\Model\Template\Filter declares strict_types, so nl2br() receives
