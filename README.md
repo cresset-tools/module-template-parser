@@ -1,4 +1,4 @@
-# cresset/template-parser
+# cresset-tools/module-template-parser
 
 A parser for Magento's `{{...}}` template directives. It builds an AST and evaluates it once,
 instead of matching regexes against its own output the way `Magento\Framework\Filter\Template`

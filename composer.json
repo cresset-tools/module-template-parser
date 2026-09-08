@@ -1,5 +1,5 @@
 {
-    "name": "cresset/template-parser",
+    "name": "cresset-tools/module-template-parser",
     "description": "Parse-to-AST template directive engine for Magento/Mage-OS, installable as a module",
     "type": "magento2-module",
     "license": "OSL-3.0",
