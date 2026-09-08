@@ -183,14 +183,40 @@ The package is a `magento2-module` with `registration.php` and `etc/`. **Install
 changes no rendering behaviour** — `etc/di.xml` declares no preference for
 `Magento\Framework\Filter\Template`.
 
-Host-backed directives are wired through narrow ports, so the engine itself has no Magento
-dependency and stays unit-testable:
+### Directive surface
 
-| Port | Magento implementation | Notes |
-|---|---|---|
-| `BlockRenderer` | `Magento\LayoutBlockRenderer` | validates the type **before** instantiation, resolving DI preferences and virtual types; `output=` is an allowlist |
-| `Translator` | `Magento\PhraseTranslator` | |
-| `TemplateLoader` | `Magento\ConfigTemplateLoader` | only config paths under an allowed prefix are readable |
+The whole stock surface is implemented. Directives needing nothing from the host are built
+in; the rest go through narrow ports, so the engine itself has no Magento dependency and
+stays unit-testable.
+
+| Directive | Port | Magento implementation | Guard |
+|---|---|---|---|
+| `var` `if` `depend` `for` `else` | — | built in | — |
+| `inlinecss` | — | built in | structured deferral, never emitted as text |
+| `trans` | `Translator` | `PhraseTranslator` | |
+| `block` | `BlockRenderer` | `LayoutBlockRenderer` | type checked **before** instantiation, resolving DI preferences and virtual types; `output=` is an allowlist |
+| `widget` | `WidgetRenderer` | `TypeCheckedWidgetRenderer` | same, against `Widget\Block\BlockInterface`; optional type allowlist |
+| `template` | `TemplateLoader` | `ConfigTemplateLoader` | config-path prefix allowlist; include cycles refused |
+| `layout` | `LayoutRenderer` | `AllowlistedLayoutRenderer` | handle allowlist **required**, area restricted to frontend/adminhtml |
+| `config` | `ConfigReader` | `AllowlistedConfigReader` | Magento's `Variables::getAvailableVars()` allowlist, failing **closed** |
+| `customvar` | `CustomVariableReader` | `VariableCustomVariableReader` | identifier-shaped codes only |
+| `store` `media` `view` `protocol` | `UrlBuilder` | `StoreUrlBuilder` | `PathGuard` — no traversal, scheme, absolute or protocol-relative path |
+| `css` | `StylesheetLoader` | `AssetStylesheetLoader` | `PathGuard` |
+
+Two things are deliberate here.
+
+**A capability not granted is not available.** A directive whose port is absent stays
+unregistered, so it is reported in strict mode and rendered verbatim otherwise. The host
+grants capabilities one at a time rather than inheriting the whole surface.
+
+**Guards run in the handler, before the port.** `PathGuard` and the identifier checks are
+applied by the directive handlers, not left to each implementation, so a host cannot forget
+one. `FullDirectiveSurfaceTest` asserts the port is *never reached* for rejected input —
+refusing after the fact is the mistake that made `BlockFactory` exploitable.
+
+Legacy has no such guards: `mediaDirective` is literally
+`getBaseUrl(MEDIA) . $params['url']`, and `protocolDirective` is
+`$protocol . '://' . $params['url']`.
 
 `Magento\ShadowComparator` runs the new engine alongside the legacy filter and logs
 divergence. It always returns the **legacy** result, so enabling it changes nothing a

@@ -124,7 +124,7 @@ final class NestingLimitTest extends TestCase
         };
         $parser = new Parser();
         $evaluator = new Evaluator();
-        HostDirectives::register($evaluator, null, null, $loader, $parser);
+        HostDirectives::register($evaluator, new \MageOS\TemplateParser\HostServices(templates: $loader), $parser);
         $engine = new TemplateEngine($parser, $evaluator);
 
         $this->expectException(TemplateCycleError::class);
@@ -140,7 +140,7 @@ final class NestingLimitTest extends TestCase
         };
         $parser = new Parser();
         $evaluator = new Evaluator();
-        HostDirectives::register($evaluator, null, null, $loader, $parser);
+        HostDirectives::register($evaluator, new \MageOS\TemplateParser\HostServices(templates: $loader), $parser);
         $engine = new TemplateEngine($parser, $evaluator);
 
         $out = $engine->render(

@@ -4,9 +4,7 @@ declare(strict_types=1);
 namespace MageOS\TemplateParser;
 
 use MageOS\TemplateParser\Ast\DirectiveNode;
-use MageOS\TemplateParser\Port\BlockRenderer;
-use MageOS\TemplateParser\Port\TemplateLoader;
-use MageOS\TemplateParser\Port\Translator;
+use MageOS\TemplateParser\Ast\DirectiveNode as Node;
 
 /**
  * Registers the directives that need something from the host application.
@@ -19,11 +17,13 @@ final class HostDirectives
 {
     public static function register(
         Evaluator $evaluator,
-        ?BlockRenderer $blocks = null,
-        ?Translator $translator = null,
-        ?TemplateLoader $templates = null,
+        HostServices $services,
         ?Parser $parser = null
     ): void {
+        $blocks = $services->blocks;
+        $translator = $services->translator;
+        $templates = $services->templates;
+
         if ($blocks !== null) {
             $evaluator->register('block', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($blocks): string {
                 $params = $e->params($n);
@@ -80,6 +80,112 @@ final class HostDirectives
                 }
 
                 return $rendered;
+            });
+        }
+
+        if ($services->config !== null) {
+            $config = $services->config;
+            $evaluator->register('config', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($config): string {
+                $path = $e->params($n)['path'] ?? '';
+                if (!PathGuard::isSafeConfigPath($path)) {
+                    return '';
+                }
+                return (string)($config->value($path) ?? '');
+            });
+        }
+
+        if ($services->customVariables !== null) {
+            $vars = $services->customVariables;
+            $evaluator->register('customvar', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($vars): string {
+                $code = $e->params($n)['code'] ?? '';
+                if (!PathGuard::isSafeIdentifier($code)) {
+                    return '';
+                }
+                return (string)($vars->value($code, false) ?? '');
+            });
+        }
+
+        if ($services->urls !== null) {
+            $urls = $services->urls;
+
+            $evaluator->register('store', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
+                $params = $e->params($n);
+                $path = $params['url'] ?? ($params['direct_url'] ?? '');
+                unset($params['url'], $params['direct_url']);
+                if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
+                    return '';
+                }
+                return $urls->storeUrl($path, $params);
+            });
+
+            $evaluator->register('media', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
+                $path = html_entity_decode($e->params($n)['url'] ?? '', ENT_QUOTES);
+                // Legacy concatenates this straight onto the media base URL.
+                return PathGuard::isSafeRelativePath($path) ? $urls->mediaUrl($path) : '';
+            });
+
+            $evaluator->register('view', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
+                $params = $e->params($n);
+                $path = $params['url'] ?? '';
+                unset($params['url']);
+                return PathGuard::isSafeRelativePath($path) ? $urls->viewUrl($path, $params) : '';
+            });
+
+            $evaluator->register('protocol', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
+                $params = $e->params($n);
+                $scheme = $urls->isSecure() ? 'https' : 'http';
+
+                if (isset($params['http'], $params['https'])) {
+                    $chosen = $urls->isSecure() ? $params['https'] : $params['http'];
+                    return PathGuard::isSafeRelativePath($chosen) ? $chosen : '';
+                }
+
+                $host = $params['url'] ?? '';
+                // Legacy does `$protocol . '://' . $params['url']` with no checking at all.
+                if ($host === '' || !preg_match('#^[a-zA-Z0-9.-]+(/[^\s]*)?$#', $host)) {
+                    return '';
+                }
+                return $scheme . '://' . $host;
+            });
+        }
+
+        if ($services->stylesheets !== null) {
+            $stylesheets = $services->stylesheets;
+            $evaluator->register('css', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($stylesheets): string {
+                $file = $e->params($n)['file'] ?? '';
+                if (!PathGuard::isSafeRelativePath($file)) {
+                    return '/* invalid file parameter */';
+                }
+                return (string)($stylesheets->load($file) ?? '');
+            });
+        }
+
+        if ($services->layouts !== null) {
+            $layouts = $services->layouts;
+            $evaluator->register('layout', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($layouts): string {
+                $params = $e->params($n);
+                $handle = $params['handle'] ?? '';
+                $area = $params['area'] ?? 'frontend';
+                unset($params['handle'], $params['area']);
+
+                if (!PathGuard::isSafeIdentifier($handle) || !in_array($area, ['frontend', 'adminhtml'], true)) {
+                    return '';
+                }
+                return $layouts->render($handle, $area, $params);
+            });
+        }
+
+        if ($services->widgets !== null) {
+            $widgets = $services->widgets;
+            $evaluator->register('widget', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($widgets): string {
+                $params = $e->params($n);
+                $type = $params['type'] ?? '';
+                unset($params['type']);
+
+                if (!PathGuard::isSafeIdentifier($type)) {
+                    return '';
+                }
+                return $widgets->render($type, $params);
             });
         }
     }

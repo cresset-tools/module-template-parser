@@ -8,9 +8,7 @@ use MageOS\TemplateParser\Evaluator;
 use MageOS\TemplateParser\HostDirectives;
 use MageOS\TemplateParser\Options;
 use MageOS\TemplateParser\Parser;
-use MageOS\TemplateParser\Port\BlockRenderer;
-use MageOS\TemplateParser\Port\TemplateLoader;
-use MageOS\TemplateParser\Port\Translator;
+use MageOS\TemplateParser\HostServices;
 use MageOS\TemplateParser\TemplateEngine;
 
 /**
@@ -27,14 +25,17 @@ final class TemplateFilterAdapter
     private Context $context;
 
     public function __construct(
-        ?BlockRenderer $blocks = null,
-        ?Translator $translator = null,
-        ?TemplateLoader $templates = null,
+        HostServices $services = new HostServices(),
         private Options $options = new Options()
     ) {
         $parser = new Parser(options: $this->options);
-        $evaluator = new Evaluator(options: $this->options);
-        HostDirectives::register($evaluator, $blocks, $translator, $templates, $parser);
+        $evaluator = new Evaluator(
+            new \MageOS\TemplateParser\VariableResolver($this->options->legacyQuirks),
+            new \MageOS\TemplateParser\ParameterParser(),
+            new \MageOS\TemplateParser\DirectiveSpec(),
+            $this->options
+        );
+        HostDirectives::register($evaluator, $services, $parser);
 
         $this->engine = new TemplateEngine($parser, $evaluator);
         $this->context = new Context();

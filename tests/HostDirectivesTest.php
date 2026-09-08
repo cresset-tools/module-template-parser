@@ -22,7 +22,11 @@ final class HostDirectivesTest extends TestCase
     ): TemplateEngine {
         $parser = new Parser();
         $evaluator = new Evaluator();
-        HostDirectives::register($evaluator, $blocks, $translator, $templates, $parser);
+        HostDirectives::register(
+            $evaluator,
+            new \MageOS\TemplateParser\HostServices($blocks, $translator, $templates),
+            $parser
+        );
         return new TemplateEngine($parser, $evaluator);
     }
 
