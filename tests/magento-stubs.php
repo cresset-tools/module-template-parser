@@ -60,6 +60,50 @@ namespace Magento\Framework\View {
         class LayoutFactory { public function create(array $data = []) { return null; } }
     }
 }
+namespace Magento\Framework {
+    if (!interface_exists(UrlInterface::class)) {
+        interface UrlInterface {
+            public const URL_TYPE_LINK = 'link';
+            public const URL_TYPE_DIRECT_LINK = 'direct_link';
+            public const URL_TYPE_WEB = 'web';
+            public const URL_TYPE_MEDIA = 'media';
+            public const URL_TYPE_STATIC = 'static';
+            public function getUrl($routePath = null, $routeParams = null);
+        }
+    }
+}
+namespace Magento\Framework\View\Asset {
+    if (!class_exists(Repository::class)) {
+        class Repository {
+            public function createAsset($fileId, array $params = []) { return null; }
+            public function getUrlWithParams($fileId, array $params) { return ''; }
+        }
+    }
+}
+namespace Magento\Store\Model {
+    if (!interface_exists(StoreManagerInterface::class)) {
+        interface StoreManagerInterface { public function getStore($storeId = null); }
+    }
+}
+namespace Magento\Email\Model\Template\Css {
+    if (!class_exists(Processor::class)) {
+        class Processor { public function process($css) { return $css; } }
+    }
+}
+namespace Magento\Variable\Model {
+    if (!class_exists(Variable::class)) {
+        class Variable {
+            public const TYPE_TEXT = 'text';
+            public const TYPE_HTML = 'html';
+            public function setStoreId($storeId) { return $this; }
+            public function loadByCode($code) { return $this; }
+            public function getValue($type = null) { return ''; }
+        }
+    }
+    if (!class_exists(VariableFactory::class)) {
+        class VariableFactory { public function create(array $data = []) { return new Variable(); } }
+    }
+}
 namespace Psr\Log {
     if (!interface_exists(LoggerInterface::class)) {
         interface LoggerInterface {

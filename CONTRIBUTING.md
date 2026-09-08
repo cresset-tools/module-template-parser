@@ -75,6 +75,7 @@ re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 | `MalformedTemplateTest` | 15 broken templates asserted to raise a specific error in strict mode and to render in compatible mode, plus 10 hostile inputs asserted inert |
 | `CorpusTest` | the parser never throws, never loses content, and never executes anything absent from the template |
 | `GuardTripwireTest`, `MagentoGuardTest` | one test per security guard, each written against a mutation that removed it |
+| `MagentoUrlAdapterTest` | the adapters behind `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}` and `{{customvar}}` - the directives that carry merchant-authored content rather than shipped templates |
 | `KnownDivergenceTest` | the deliberate behavioural differences from the legacy filter |
 
 ### The sensitivity canary
