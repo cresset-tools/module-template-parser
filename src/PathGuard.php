@@ -66,7 +66,10 @@ final class PathGuard
 
             // Traversal, in either separator. `....//` collapses to `../` on some
             // normalisers, so any run of dots bounded by separators is refused.
-            if (preg_match('#(^|[/\\\\])\.{2,}([/\\\\]|$)#', $candidate)) {
+            // Separators include the ones that END a path as far as a consumer is concerned:
+            // `?` and `#` terminate a URL path, and `::` is Magento's module separator in
+            // Asset\Repository, so `Magento_Email::../secret.css` is a traversal too.
+            if (preg_match('#(^|[/\\\\:?\#])\.{2,}([/\\\\:?\#]|$)#', $candidate)) {
                 return false;
             }
         }

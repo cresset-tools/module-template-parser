@@ -268,12 +268,15 @@ final class VariableResolver
     {
         if (method_exists($value, 'hasData')) {
             $reflection = new \ReflectionMethod($value, 'hasData');
+            // Same shape check getData() gets. Without acceptsStringKey() a
+            // `hasData(int $key = 0)` raises a TypeError from inside the resolver.
             if ($reflection->isPublic()
                 && !$reflection->isStatic()
                 && $reflection->getNumberOfRequiredParameters() === 0
                 && $reflection->getNumberOfParameters() >= 1
+                && $this->acceptsStringKey($reflection)
             ) {
-                return (bool)$value->hasData($key);
+                return (bool)$this->callHost($value, 'hasData', $key);
             }
         }
 
@@ -282,7 +285,29 @@ final class VariableResolver
 
     private function readBag(object $value, string $key): mixed
     {
-        return $value->getData($key);
+        return $this->callHost($value, 'getData', $key);
+    }
+
+    /**
+     * Calls a host data-bag method, converting anything it raises into an AccessorError.
+     *
+     * getData() and hasData() are host code as much as a real accessor is - Magento models
+     * routinely override getData() with lazy loading - so they need the same treatment
+     * invokeAccessor() gives, or a template can take the render down with a host exception
+     * and surface its message.
+     */
+    private function callHost(object $value, string $method, string $key): mixed
+    {
+        try {
+            return $value->{$method}($key);
+        } catch (\Throwable $e) {
+            throw AccessorError::at(
+                '',
+                0,
+                sprintf('reading %s() on the host object raised %s', $method, $e::class),
+                'the template cannot be responsible for this - it is a defect in the host object'
+            );
+        }
     }
 
     /** first_name -> FirstName */

@@ -218,6 +218,18 @@ final class Evaluator
         return $this->toStringValue($value);
     }
 
+    /**
+     * Stringify and html-escape a value, for handlers that insert one into their output.
+     *
+     * {{var}} gets this through applyModifiers; any other directive that emits a resolved
+     * value needs it explicitly, or that directive becomes the way to get an unescaped value
+     * into the page.
+     */
+    public function escapeValue(mixed $value): string
+    {
+        return $this->escape($this->toStringValue($value));
+    }
+
     private function registerDefaults(): void
     {
         $this->handlers['var'] = function (DirectiveNode $n, Context $c): string {
@@ -298,17 +310,19 @@ final class Evaluator
             // been consumed - two {{for}} loops over the same variable is all it takes. The
             // bare \Exception PHP raises is not a TemplateError, so it escapes lenient mode
             // and takes the render with it.
-            if ($values instanceof \Generator) {
+            if (is_object($values)) {
+                // Not just Generator. Any Traversable is host code: an IteratorAggregate
+                // whose getIterator() throws, or an Iterator whose current() throws, raises
+                // something that is not a TemplateError and so escapes even lenient mode.
+                // A Magento collection that fails to load is exactly this shape.
                 try {
-                    // rewind() is what foreach does first, and what actually raises on a
-                    // generator that has already been walked.
-                    $values->rewind();
+                    $values = iterator_to_array($values, false);
                 } catch (\Throwable $x) {
                     throw TemplateTypeError::at(
                         $this->source,
                         $n->offset(),
                         sprintf('{{for %s in %s}} cannot iterate: %s', $item, $collection, $x->getMessage()),
-                        'a Generator can only be walked once - give the template an array'
+                        'a Generator can only be walked once; any other collection here failed to load'
                     );
                 }
             }
@@ -335,8 +349,12 @@ final class Evaluator
         // Structured deferral: recorded, not emitted. The caller decides what to do.
         $this->handlers['inlinecss'] = function (DirectiveNode $n, Context $c): string {
             $params = $this->parameters->parse($n->params());
-            if (isset($params['file']) && $params['file'] !== '') {
-                $c->defer('inlinecss', ['file' => $params['file']]);
+            $file = $params['file'] ?? '';
+            // Guarded like {{css file=}} is. Deferring is still handing a path to the host,
+            // and PathGuard's own contract is that the handlers apply it "so a host cannot
+            // forget it" - this was the one handler that passed a path outward without it.
+            if ($file !== '' && PathGuard::isSafeRelativePath($file)) {
+                $c->defer('inlinecss', ['file' => $file]);
             }
             return '';
         };
@@ -350,10 +368,18 @@ final class Evaluator
             // later argument - which would make a variable's value template syntax again,
             // the one thing this engine exists to prevent. strtr() takes the longest
             // matching key at each position and never re-scans what it has written.
+            //
+            // The substituted VALUES are escaped. They are variable content arriving in a
+            // directive that emits its result unmodified, which made {{trans}} the one path
+            // that still put a raw value in the output when {{var}} would not:
+            //   {{var x}}              -> &lt;img src=x onerror=...&gt;
+            //   {{trans "Hi %n" n=$x}} -> Hi <img src=x onerror=...>
+            // The translation text itself is template-authored and is left alone; legacy
+            // escapes the whole rendered result instead, which also escapes the text.
             $map = [];
             foreach ($args as $k => $v) {
                 $resolved = $this->resolveAt(ltrim($v, '$'), $c, $n)->value;
-                $map['%' . $k] = $this->toStringValue($resolved ?? $v);
+                $map['%' . $k] = $this->escapeValue($resolved ?? $v);
             }
 
             return $map === [] ? $text : strtr($text, $map);

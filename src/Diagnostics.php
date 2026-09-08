@@ -10,16 +10,67 @@ final class Diagnostics
 {
     private const CONTEXT_LINES = 2;
 
-    /** @return array{line:int,column:int} */
+    /** Line-start offsets for the most recently located source. */
+    private static ?string $indexedSource = null;
+
+    /** @var int[] */
+    private static array $lineStarts = [];
+
+    /**
+     * @return array{line:int,column:int}
+     *
+     * Indexed rather than scanned. The obvious implementation copies the prefix with
+     * substr() and counts newlines in it, which is O(offset) per call - fine for one error,
+     * quadratic for a template that reports many. A policy-refused directive repeated
+     * thousands of times is an ordinary shape, and it made a 2.7 MB template take ten
+     * seconds in the shipped adapter's default configuration.
+     */
     public static function locate(string $source, int $offset): array
     {
         $offset = max(0, min($offset, strlen($source)));
-        $before = substr($source, 0, $offset);
-        $line = substr_count($before, "\n") + 1;
-        $lastNewline = strrpos($before, "\n");
-        $column = $lastNewline === false ? $offset + 1 : $offset - $lastNewline;
+        $starts = self::lineStarts($source);
 
-        return ['line' => $line, 'column' => $column];
+        // Binary search for the last line starting at or before the offset.
+        $low = 0;
+        $high = count($starts) - 1;
+        while ($low < $high) {
+            $mid = intdiv($low + $high + 1, 2);
+            if ($starts[$mid] <= $offset) {
+                $low = $mid;
+            } else {
+                $high = $mid - 1;
+            }
+        }
+
+        return ['line' => $low + 1, 'column' => $offset - $starts[$low] + 1];
+    }
+
+    /**
+     * @return int[]
+     *
+     * Memoised for one source at a time, which is all a single render needs. The identity
+     * check is a pointer comparison in PHP when the same string is passed back, so the
+     * common case costs nothing.
+     */
+    private static function lineStarts(string $source): array
+    {
+        if (self::$indexedSource !== null
+            && strlen(self::$indexedSource) === strlen($source)
+            && self::$indexedSource === $source
+        ) {
+            return self::$lineStarts;
+        }
+
+        $starts = [0];
+        $at = 0;
+        while (($at = strpos($source, "\n", $at)) !== false) {
+            $starts[] = ++$at;
+        }
+
+        self::$indexedSource = $source;
+        self::$lineStarts = $starts;
+
+        return $starts;
     }
 
     /**

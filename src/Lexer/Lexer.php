@@ -115,8 +115,15 @@ final class Lexer
             // A closing tag carries nothing but its name, so whatever follows must be the
             // closing delimiter. Deciding that here rather than in build() is what keeps
             // `{{/a}x{{/a}x...` linear - see the note on the open-directive case below.
+            //
+            // ltrim() alone is not enough: a window that is ALL whitespace after the name
+            // leaves $rest empty, the guard passes, and build() then rejects the construct
+            // only after copying the whole span - the same quadratic shape this check exists
+            // to prevent, reached with `{{/a` plus 62 spaces. A window that runs out of
+            // whitespace without reaching `}}` cannot be a closing tag either, because a
+            // legal one is at most a name plus the delimiter and both fit.
             $rest = ltrim(substr($window, 1 + strlen($m[1])));
-            if ($rest !== '' && !str_starts_with($rest, self::CLOSE)) {
+            if (!str_starts_with($rest, self::CLOSE)) {
                 return null;
             }
             return [TokenType::DirectiveClose, $name];

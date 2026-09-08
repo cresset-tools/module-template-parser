@@ -14,9 +14,20 @@ final class PhraseTranslator implements Translator
     public function translate(string $text, array $arguments): string
     {
         $translated = (string)__($text);
-        foreach ($arguments as $key => $value) {
-            $translated = str_replace('%' . $key, $value, $translated);
+        if ($arguments === []) {
+            return $translated;
         }
-        return $translated;
+
+        // One pass, not a str_replace per argument. Substituting in sequence has two faults:
+        // `%name` rewrites the front of `%name_long` before its own turn comes, and a value
+        // containing `%b` becomes a live placeholder for a later argument - a variable's
+        // value turning back into template syntax. strtr() takes the longest matching key at
+        // each position and never re-scans what it has written.
+        $map = [];
+        foreach ($arguments as $key => $value) {
+            $map['%' . $key] = $value;
+        }
+
+        return strtr($translated, $map);
     }
 }

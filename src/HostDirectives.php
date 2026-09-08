@@ -23,6 +23,27 @@ final class HostDirectives
      * well as ENT_QUOTES: the default HTML 4.01 table has no `&period;`, so `&period;&period;/x`
      * would survive a decode that only asked for ENT_QUOTES.
      */
+    /**
+     * Parameters forwarded to a UrlBuilder that Magento treats as path fragments.
+     *
+     * `_direct` is the one that matters: Url::getRouteUrl() concatenates it onto the base
+     * URL unfiltered. The rest are checked because they are forwarded verbatim and an
+     * implementation is entitled to assume the handler already looked.
+     *
+     * @param array<string,string> $parameters
+     */
+    private static function pathParametersAreSafe(array $parameters): bool
+    {
+        foreach (['_direct', '_fragment', '_escape_params'] as $key) {
+            $value = $parameters[$key] ?? null;
+            if (is_string($value) && $value !== '' && !PathGuard::isSafeRelativePath(self::decodeEntities($value))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private static function decodeEntities(string $value): string
     {
         return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -66,7 +87,9 @@ final class HostDirectives
                     $value = $e->resolver()->value(ltrim($expression, '$'), $c);
                     // stringify(), not a bare cast - an object with no __toString is a
                     // perfectly ordinary template variable and must not be a fatal.
-                    $resolved[$key] = $value === null ? $expression : $e->stringify($value);
+                    // Escaped, for the same reason the built-in {{trans}} escapes: these are
+                    // variable values going into output the directive does not escape later.
+                    $resolved[$key] = $value === null ? $expression : $e->escapeValue($value);
                 }
                 return $translator->translate($text, $resolved);
             });
@@ -174,6 +197,12 @@ final class HostDirectives
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
                     return '';
                 }
+                // Magento\Framework\Url::getRouteUrl() returns getBaseUrl() . $params['_direct']
+                // with no filtering of its own, so a guard on `url=` alone is not a guard.
+                // Any remaining parameter that names a path gets the same check.
+                if (!self::pathParametersAreSafe($params)) {
+                    return '';
+                }
                 return $urls->storeUrl($path, $params);
             });
 
@@ -187,7 +216,10 @@ final class HostDirectives
                 $params = $e->params($n);
                 $path = self::decodeEntities($params['url'] ?? '');
                 unset($params['url']);
-                return PathGuard::isSafeRelativePath($path) ? $urls->viewUrl($path, $params) : '';
+                if (!PathGuard::isSafeRelativePath($path) || !self::pathParametersAreSafe($params)) {
+                    return '';
+                }
+                return $urls->viewUrl($path, $params);
             });
 
             $evaluator->register('protocol', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
