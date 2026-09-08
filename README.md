@@ -112,8 +112,13 @@ for anything being authored or validated.
 be switched on without changing what customers see — while keeping the safety properties,
 which are structural and apply in every mode.
 
-Measured parity over the directive surface both engines implement (`tools/parity.php`):
-**138/138 identical**, across a matrix of value shapes × template shapes.
+Measured against the real filter, recorded from an unpatched Magento tree by
+`tools/record-legacy.php` (which calls Magento's own `Escaper` rather than reimplementing it —
+reimplementing it once made the whole measurement circular):
+
+**1658 recorded cases, 253 of them constructs the legacy filter cannot render at all.** Over
+every parity-eligible case where legacy renders, compatible mode renders **byte for byte
+identically**.
 
 Quirks it reproduces:
 
@@ -124,6 +129,12 @@ Quirks it reproduces:
 | missing keys | an array parent with a missing key yields nothing, *not* the parent |
 | arrays | cast to the literal string `Array` |
 | no variables | directives pass through verbatim (the template-validation path) |
+| getter keys | `getAddress1()` reads `address_1` — a run of digits is its own segment |
+| member access | only through `getData()`; a real getter is never called |
+| unknown modifiers | skipped, so `{{var x|typo}}` renders raw |
+| unknown escape types | `escape:none` returns the value unescaped |
+
+The last two are reproduced **only** in compatible mode. Everywhere else they fail closed.
 
 #### Nesting the legacy filter cannot do
 
@@ -131,8 +142,14 @@ Verified against the unpatched filter, legacy manages **two levels with differin
 `{{depend}}` around `{{if}}`, or the reverse. Same-name nesting at any depth, and three
 levels, both raise a `TypeError` and the mail never sends.
 
-Compatible mode **refuses everything legacy cannot render**, so its capability matches
-exactly. Verified against the real filter, that is four conditions:
+#### What compatible mode refuses
+
+The contract is a **superset**, and it is worth being exact about which direction is which.
+
+**Every construct legacy cannot render is refused.** This is the half that matters: a
+construct the old filter died on is one nobody has ever seen the output of, so rendering it
+is not compatibility, it is invention. Eight conditions, each verified against the real
+filter:
 
 | condition | example | why legacy dies |
 |---|---|---|
@@ -140,15 +157,39 @@ exactly. Verified against the real filter, that is four conditions:
 | three levels | `{{depend}}>{{if}}>{{depend}}` | same |
 | unclosed block | `a{{if a}}b` | the per-directive re-match finds nothing, passes null on |
 | construct not starting with a letter | `{{100}}`, `{{ var x }}`, `{{}}` | no name captured, `ProcessorPool::get(null)` |
+| name split by punctuation | `{{if_a}}` | the name is a greedy `[a-z]{0,10}`, so this is `if` with the parameter `_a` |
+| padded closing tag | `{{/if }}` | `CONSTRUCTION_IF_PATTERN` allows the space, the closing backreference does not |
+| modifier arguments | `{{var a\|nl2br:x}}` | passed through to `nl2br()`, a `TypeError` on `$use_xhtml` |
+| member call on an array | `{{var a.getB()}}` where `a` is an array | `->getData()` on an array |
 
-The last one is narrower than it looks. `CONSTRUCTION_PATTERN` is case-**insensitive**, so
+The fourth is narrower than it looks. `CONSTRUCTION_PATTERN` is case-**insensitive**, so
 `{{Password}}` and `{{Forgot Your Password?}}` do capture a name, fail to resolve, and come
-back verbatim — those render here too. Only a digit, space, slash, underscore or punctuation
-directly after `{{` produces the fatal.
+back verbatim — those render here too.
 
-`LegacyParityTest::testRefusalSetMatchesLegacyFatalSetExactly` asserts the set of refusals
-equals the set of recorded legacy fatals — no more, no fewer. Refusing extra constructs would
-be as much a regression as rendering ones legacy cannot.
+**Nine shapes are refused that legacy does render.** Every one is fail-closed, and each is a
+place where legacy's regex does something by accident that this parser will not build in:
+`{{var.a}}` and `{{var_a}}` and `{{var2 a}}` and `{{depend.a}}` (punctuation after a name
+read as a parameter separator, which makes `{{var.a}}` a live variable read); `{{if}}{{if}}{{/if}}`
+and its `{{depend}}` twin and `{{if}}{{depend}}x{{/if}}` (nesting that collapses to `''` by
+accident of the lazy body match); `{{foo}}x{{/foo}}` and `{{var a}}Y{{/var}}` (the optional
+closing group swallowing a body for a directive that has none).
+
+`LegacyParityTest` asserts both halves separately, because they are different claims:
+`testEveryLegacyFatalIsRefused` allows no exceptions, and
+`testExtraRefusalsAreOnlyTheDocumentedShapes` pins the nine so the list cannot grow without a
+test failing.
+
+#### `{{for}}` is a deliberate divergence
+
+Legacy's `ForDirective` does not render its body. It runs `preg_match_all` over the raw text,
+resolves each match as a variable name and `str_replace`s the result in. So the body is never
+escaped, a nested `{{if}}` is resolved as if it were a variable name, `|raw` becomes part of a
+property name, an item that is not an array is skipped, and a non-iterable collection makes
+the whole construct come back verbatim.
+
+Reproducing that faithfully would mean not escaping loop variables, which is the exact class
+of defect this package exists to remove. `{{for}}` is therefore recorded and required to
+render safely, but is not held to rendering-equality with legacy.
 
 ```
 Nesting limit exceeded is not the error here — this one is:
