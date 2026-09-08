@@ -277,8 +277,24 @@ $constructs = [
     'esc_url'         => '[{{var a|escape:url}}]',
     'esc_unknown'     => '[{{var a|escape:none}}]',
     'esc_empty_type'  => '[{{var a|escape:}}]',
+    // Three distinct names nested three deep. Legacy renders all six orderings; a depth
+    // bound of two refused them, which is why none of these were ever in the corpus.
+    'nest3_ifdepfor'  => '{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}',
+    'nest3_ifforedep' => '{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}',
+    'nest3_depiffor'  => '{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}',
+    'nest3_depforif'  => '{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}',
+    'nest3_forifdep'  => '{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}',
+    'nest3_fordepif'  => '{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}',
+    // A directive name plus exactly one more letter: the shape the prefix-split regex
+    // used to backtrack on and refuse.
+    'name_plus_one'   => '[{{ifx a}}]',
+    'name_plural'     => '[{{vars}}]',
+    'name_plural_blk' => '[{{blocks}}]',
+    // Upper case, which legacy's /i patterns and reflection dispatch both accept.
+    'upper_var_dot'   => '[{{VAR.a}}]',
     // Member access shapes: a getter on an array parent, whitespace, a leading dot, args.
     'getter_call'     => '[{{var a.getB()}}]',
+    'nonget_call'     => '[{{var a.foo()}}]',
     'getter_args'     => '[{{var a.getB("x")}}]',
     'var_ws_path'     => '[{{var a . b}}]',
     'var_lead_dot'    => '[{{var .a}}]',

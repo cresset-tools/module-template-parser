@@ -575,7 +575,11 @@ final class Evaluator
     private function applyModifiers(mixed $value, array $modifiers, Context $context): string
     {
         if ($modifiers === []) {
-            return $this->escape($this->toStringValue($value));
+            // Through applyEscapeModifier, not straight to escape(): `escape` is what
+            // varDirective defaults to, so the no-modifier path has to behave exactly like
+            // an explicit one - including recursing into an array, which is where legacy
+            // dies on an element it cannot cast.
+            return $this->toStringValue($this->applyEscapeModifier($value, 'html', $context));
         }
 
         /** @var list<array{0:string,1:string[]}> $parsed */
@@ -680,6 +684,14 @@ final class Evaluator
 
         if ($type === 'html') {
             if (is_array($value)) {
+                if ($this->options->legacyQuirks) {
+                    // Escaper::escapeHtml recurses and casts each element, so an element that
+                    // is an object without __toString is an Error there - and `escape` is
+                    // varDirective's DEFAULT modifier, so plain `{{var a}}` over such an
+                    // array is a legacy fatal with no modifier written at all.
+                    $this->refuseUnstringableElements($value, $context);
+                }
+
                 return array_map(
                     fn (mixed $item): mixed => $this->applyEscapeModifier($item, 'html', $context),
                     $value
@@ -701,6 +713,32 @@ final class Evaluator
         }
 
         return $this->escape($this->toStringValue($value), $type);
+    }
+
+    /**
+     * Notes an array element the legacy escaper could not have cast to a string.
+     *
+     * @param array<mixed> $value
+     */
+    private function refuseUnstringableElements(array $value, Context $context): void
+    {
+        foreach ($value as $item) {
+            if (is_array($item)) {
+                $this->refuseUnstringableElements($item, $context);
+                continue;
+            }
+            if (is_object($item) && !method_exists($item, '__toString')) {
+                $this->noteLegacyIncompatible(
+                    $context,
+                    sprintf(
+                        'the value is an array holding a %s, which the legacy escaper casts '
+                        . 'to string and dies on',
+                        $item::class
+                    )
+                );
+                return;
+            }
+        }
     }
 
     private function toStringValue(mixed $value): string

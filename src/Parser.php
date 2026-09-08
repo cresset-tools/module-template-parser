@@ -20,9 +20,6 @@ use Cresset\TemplateParser\Lexer\TokenType;
  */
 final class Parser
 {
-    /** The deepest nesting the legacy filter can render: two levels, with differing names. */
-    private const LEGACY_MAX_NESTING = 2;
-
     private string $source = '';
 
     /** Effective bound for the parse in progress; the Options value unless overridden. */
@@ -263,9 +260,19 @@ final class Parser
             return;
         }
 
-        if (preg_match_all('/\{\{([a-z]{1,10})([^\s}])/', $source, $found, PREG_OFFSET_CAPTURE)) {
+        // (?![a-zA-Z]) stops the name capture backtracking. `[a-z]{1,10}` is greedy, so on
+        // `{{ifx a}}` it gave up the `x` and reported an `if`-prefix split that legacy never
+        // performs - legacy's own capture is greedy too, and its name there really is `ifx`.
+        // The bug fired for exactly one extra letter, so `{{vars}}` and `{{blocks}}` were
+        // refused while `{{variable}}` was not.
+        //
+        // [a-zA-Z], not [a-z]: CONSTRUCTION_PATTERN carries /si and LegacyDirective
+        // dispatches by reflection, which resolves case-insensitively, so `{{VAR.x}}` is a
+        // live variable read on the legacy filter. Matching only lower case made compatible
+        // mode MORE permissive than the filter it reproduces.
+        if (preg_match_all('/\{\{([a-zA-Z]{1,10})(?![a-zA-Z])([^\s}])/', $source, $found, PREG_OFFSET_CAPTURE)) {
             foreach ($found[1] as $i => [$name, $offset]) {
-                if (!$this->spec->isKnown($name)) {
+                if (!$this->spec->isKnown(strtolower($name))) {
                     continue;               // legacy would not dispatch it either
                 }
                 $this->refuseIfLegacyCannotRender(
@@ -324,7 +331,14 @@ final class Parser
      *
      * Its per-directive regexes use a lazy body, so an outer {{depend}} stops at the FIRST
      * {{/depend}} and the fragment it hands on carries an unclosed inner one - which ends in
-     * a TypeError. In practice that means: two levels maximum, and the two names must differ.
+     * a TypeError. The constraint that follows is about REPEATED NAMES, not depth: a
+     * directive cannot contain itself, at any distance.
+     *
+     * This used to refuse anything three levels deep, which was simply wrong. Verified
+     * against the real filter, all six orderings of {{if}}, {{depend}} and {{for}} render
+     * three deep without a fatal, and {{for}} in particular re-matches its own construction
+     * rather than inheriting the lazy-body problem. Three is only the practical ceiling
+     * because there are three body-taking directives to choose from.
      *
      * @param string[] $openStack
      */
@@ -344,18 +358,6 @@ final class Parser
                     '{{%s}} nested inside {{%s}} - the legacy filter raises a TypeError here',
                     $token->name,
                     $token->name
-                )
-            );
-        } elseif (count($openStack) >= self::LEGACY_MAX_NESTING) {
-            $incompatibility = LegacyIncompatibility::at(
-                $this->source,
-                $token->offset,
-                LegacyIncompatibility::NESTING_DEPTH,
-                sprintf(
-                    '{{%s}} is %d levels deep - the legacy filter manages at most %d',
-                    $token->name,
-                    count($openStack) + 1,
-                    self::LEGACY_MAX_NESTING
                 )
             );
         }

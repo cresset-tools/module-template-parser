@@ -163,10 +163,11 @@ final class VariableResolver
     {
         $label = $method . '()';
 
-        if ($this->legacyQuirks && is_array($value)) {
-            // StrictResolver::handleDataAccess calls ->getData() on the parent whenever the
-            // access is a method, without checking that the parent is an object first, so an
-            // array parent is "Call to a member function getData() on array".
+        if ($this->legacyQuirks && is_array($value) && str_starts_with($method, 'get')) {
+            // StrictResolver::handleDataAccess calls ->getData() on the parent - but only
+            // when the method name starts with `get`. Anything else leaves the variable
+            // unset and resolves to nothing, so refusing every method call on an array
+            // refused `{{var a.foo()}}`, which legacy renders as ''.
             throw new LegacyFatalShape(sprintf(
                 'the legacy filter calls %s on an array, which is a fatal Error there',
                 $label

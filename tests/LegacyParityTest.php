@@ -82,7 +82,8 @@ final class LegacyParityTest extends TestCase
      */
     public const DELIBERATE_OVER_REFUSALS = [
         'cross_unclosed', 'depend_dot', 'nest_empty_dep', 'nest_empty_if',
-        'unknown_paired', 'var_digit', 'var_dot', 'var_paired', 'var_underscore',
+        'unknown_paired', 'upper_var_dot', 'var_digit', 'var_dot', 'var_paired',
+        'var_underscore',
     ];
 
     /** Where legacy renders, compatible mode must render identically - or refuse by design. */
@@ -240,7 +241,7 @@ final class LegacyParityTest extends TestCase
      */
     public function testExtraRefusalsAreOnlyTheDocumentedShapes(): void
     {
-        $expected = self::DELIBERATE_OVER_REFUSALS;
+        $expected = self::DELIBERATE_OVER_REFUSALS;   // ten shapes; see the constant
 
         $engine = TemplateEngine::compatible();
         $shapes = [];

@@ -638,8 +638,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/true",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/true",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/true",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/true",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/true",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/true",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/true",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/true",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/true",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/true",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
         "id": "getter_call/true",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/true",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": true
         },
@@ -1320,8 +1441,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/false",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/false",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/false",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/false",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/false",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/false",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/false",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/false",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/false",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/false",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "getter_call/false",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/false",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": false
         },
@@ -2002,8 +2244,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/zero",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/zero",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/zero",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/zero",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/zero",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/zero",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/zero",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/zero",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/zero",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/zero",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "getter_call/zero",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/zero",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": 0
         },
@@ -2684,8 +3047,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/one",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/one",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/one",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/one",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/one",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/one",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/one",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/one",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/one",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/one",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
         "id": "getter_call/one",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/one",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": 1
         },
@@ -3366,8 +3850,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/answer",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/answer",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/answer",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/answer",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/answer",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/answer",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/answer",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/answer",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/answer",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/answer",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
         "id": "getter_call/answer",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/answer",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": 42
         },
@@ -4048,8 +4653,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/strzero",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/strzero",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/strzero",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/strzero",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/strzero",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/strzero",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/strzero",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/strzero",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/strzero",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/strzero",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "getter_call/strzero",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/strzero",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "0"
         },
@@ -4730,8 +5456,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/emptystr",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/emptystr",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/emptystr",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/emptystr",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/emptystr",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/emptystr",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/emptystr",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/emptystr",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/emptystr",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/emptystr",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "getter_call/emptystr",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/emptystr",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": ""
         },
@@ -5412,8 +6259,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/word",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/word",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/word",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/word",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/word",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/word",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/word",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/word",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/word",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/word",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
         "id": "getter_call/word",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/word",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "x"
         },
@@ -6094,8 +7062,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/null",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/null",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/null",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/null",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/null",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/null",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/null",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/null",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/null",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/null",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "getter_call/null",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/null",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": null
         },
@@ -6776,8 +7865,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/floatzero",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/floatzero",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/floatzero",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/floatzero",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/floatzero",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/floatzero",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/floatzero",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/floatzero",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/floatzero",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/floatzero",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "getter_call/floatzero",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/floatzero",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": 0
         },
@@ -7458,8 +8668,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/float",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/float",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/float",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/float",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/float",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/float",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/float",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/float",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/float",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/float",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
         "id": "getter_call/float",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/float",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": 1.5
         },
@@ -8140,6 +9471,116 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/emptyarr",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/emptyarr",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/emptyarr",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/emptyarr",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/emptyarr",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/emptyarr",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/emptyarr",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/emptyarr",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/emptyarr",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/emptyarr",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
         "id": "getter_call/emptyarr",
         "template": "[{{var a.getB()}}]",
         "variables": {
@@ -8148,6 +9589,17 @@
         "object": null,
         "outcome": "throw",
         "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/emptyarr",
+        "template": "[{{var a.foo()}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -8996,6 +10448,146 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/list",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/list",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/list",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/list",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/list",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/list",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/list",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/list",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/list",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/list",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
         "id": "getter_call/list",
         "template": "[{{var a.getB()}}]",
         "variables": {
@@ -9007,6 +10599,20 @@
         "object": null,
         "outcome": "throw",
         "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/list",
+        "template": "[{{var a.foo()}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -9806,6 +11412,136 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/assoc",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/assoc",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/assoc",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/assoc",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/assoc",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/assoc",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/assoc",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/assoc",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/assoc",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/assoc",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
         "id": "getter_call/assoc",
         "template": "[{{var a.getB()}}]",
         "variables": {
@@ -9816,6 +11552,19 @@
         "object": null,
         "outcome": "throw",
         "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/assoc",
+        "template": "[{{var a.foo()}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -10612,6 +12361,136 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/assocempty",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/assocempty",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/assocempty",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/assocempty",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/assocempty",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/assocempty",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/assocempty",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/assocempty",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/assocempty",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/assocempty",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
         "id": "getter_call/assocempty",
         "template": "[{{var a.getB()}}]",
         "variables": {
@@ -10622,6 +12501,19 @@
         "object": null,
         "outcome": "throw",
         "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/assocempty",
+        "template": "[{{var a.foo()}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -11302,8 +13194,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/html",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/html",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/html",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/html",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/html",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/html",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/html",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/html",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/html",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/html",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
         "id": "getter_call/html",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/html",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "<b>&\"x\"</b>"
         },
@@ -11984,8 +13997,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/directive",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/directive",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/directive",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/directive",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/directive",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/directive",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/directive",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/directive",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/directive",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/directive",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
         "id": "getter_call/directive",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a}}]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/directive",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "{{var a}}"
         },
@@ -12666,8 +14800,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/blockpayload",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/blockpayload",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/blockpayload",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/blockpayload",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/blockpayload",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/blockpayload",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/blockpayload",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/blockpayload",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/blockpayload",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/blockpayload",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
         "id": "getter_call/blockpayload",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{block class=Evil}}]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/blockpayload",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "{{block class=Evil}}"
         },
@@ -13348,8 +15603,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/longstr",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/longstr",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/longstr",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/longstr",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/longstr",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/longstr",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/longstr",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/longstr",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/longstr",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/longstr",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
         "id": "getter_call/longstr",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/longstr",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "abababababababababababababababababababababababababababababababababababababababab"
         },
@@ -14030,8 +16406,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/spaces",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/spaces",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/spaces",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/spaces",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/spaces",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/spaces",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/spaces",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/spaces",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/spaces",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/spaces",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
         "id": "getter_call/spaces",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/spaces",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "  padded  "
         },
@@ -14712,8 +17209,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/entities",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/entities",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/entities",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/entities",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/entities",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/entities",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/entities",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/entities",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/entities",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/entities",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
         "id": "getter_call/entities",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/entities",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "Tom &amp; Jerry &nbsp;"
         },
@@ -15394,8 +18012,129 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/newlines",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/newlines",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}X{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/newlines",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/newlines",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}X{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/newlines",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/newlines",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/newlines",
+        "template": "[{{ifx a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/newlines",
+        "template": "[{{vars}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/newlines",
+        "template": "[{{blocks}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/newlines",
+        "template": "[{{VAR.a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
         "id": "getter_call/newlines",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/newlines",
+        "template": "[{{var a.foo()}}]",
         "variables": {
             "a": "a\nb\nc"
         },
@@ -15960,12 +18699,111 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/@dataobject",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/@dataobject",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/@dataobject",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/@dataobject",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/@dataobject",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/@dataobject",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/@dataobject",
+        "template": "[{{ifx a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/@dataobject",
+        "template": "[{{vars}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/@dataobject",
+        "template": "[{{blocks}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/@dataobject",
+        "template": "[{{VAR.a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "getter_call/@dataobject",
         "template": "[{{var a.getB()}}]",
         "variables": [],
         "object": "dataobject",
         "outcome": "ok",
         "expected": "[deep]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/@dataobject",
+        "template": "[{{var a.foo()}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -16518,8 +19356,107 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/@stringable",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/@stringable",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/@stringable",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/@stringable",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/@stringable",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/@stringable",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/@stringable",
+        "template": "[{{ifx a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/@stringable",
+        "template": "[{{vars}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/@stringable",
+        "template": "[{{blocks}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/@stringable",
+        "template": "[{{VAR.a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "getter_call/@stringable",
         "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/@stringable",
+        "template": "[{{var a.foo()}}]",
         "variables": [],
         "object": "stringable",
         "outcome": "ok",
@@ -17076,8 +20013,107 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/@plainobject",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/@plainobject",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/@plainobject",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/@plainobject",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/@plainobject",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/@plainobject",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/@plainobject",
+        "template": "[{{ifx a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/@plainobject",
+        "template": "[{{vars}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/@plainobject",
+        "template": "[{{blocks}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/@plainobject",
+        "template": "[{{VAR.a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "getter_call/@plainobject",
         "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/@plainobject",
+        "template": "[{{var a.foo()}}]",
         "variables": [],
         "object": "plainobject",
         "outcome": "ok",
@@ -17109,6 +20145,663 @@
         "object": "plainobject",
         "outcome": "ok",
         "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "text/@arrayofobject",
+        "template": "plain text only",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "plain text only",
+        "parity": true
+    },
+    {
+        "id": "var/@arrayofobject",
+        "template": "[{{var a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_path/@arrayofobject",
+        "template": "[{{var a.b}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_path_miss/@arrayofobject",
+        "template": "[{{var a.zzz}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_deep_miss/@arrayofobject",
+        "template": "[{{var a.b.c.d}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if/@arrayofobject",
+        "template": "[{{if a}}Y{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "if_else/@arrayofobject",
+        "template": "[{{if a}}Y{{else}}N{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "depend/@arrayofobject",
+        "template": "[{{depend a}}Y{{/depend}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "if_var/@arrayofobject",
+        "template": "[{{if a}}{{var a}}{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "depend_var/@arrayofobject",
+        "template": "[{{depend a}}{{var a}}{{/depend}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "depend_if/@arrayofobject",
+        "template": "[{{depend a}}{{if a}}Y{{/if}}{{/depend}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "if_depend/@arrayofobject",
+        "template": "[{{if a}}{{depend a}}Y{{/depend}}{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "two_vars/@arrayofobject",
+        "template": "[{{var a}}|{{var a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_missing/@arrayofobject",
+        "template": "[{{var nosuchvar}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_missing/@arrayofobject",
+        "template": "[{{if nosuchvar}}Y{{else}}N{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[N]",
+        "parity": true
+    },
+    {
+        "id": "surrounding/@arrayofobject",
+        "template": "pre {{var a}} post",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "multiline/@arrayofobject",
+        "template": "line1\n{{if a}}\nline2\n{{/if}}\nline3",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "line1\n\nline2\n\nline3",
+        "parity": true
+    },
+    {
+        "id": "adjacent/@arrayofobject",
+        "template": "{{var a}}{{if a}}Y{{/if}}{{var a}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "unknown_dir/@arrayofobject",
+        "template": "[{{nosuchdirective x=1}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[{{nosuchdirective x=1}}]",
+        "parity": true
+    },
+    {
+        "id": "known_unimpl/@arrayofobject",
+        "template": "[{{layout handle=x}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[{{layout handle=x}}]",
+        "parity": true
+    },
+    {
+        "id": "prose/@arrayofobject",
+        "template": "{{Forgot Your Password?}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "{{Forgot Your Password?}}",
+        "parity": true
+    },
+    {
+        "id": "css_like/@arrayofobject",
+        "template": "a{{color:red}}b",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "a{{color:red}}b",
+        "parity": true
+    },
+    {
+        "id": "stray_close/@arrayofobject",
+        "template": "a{{/if}}b",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "unclosed/@arrayofobject",
+        "template": "a{{if a}}b",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "empty_braces/@arrayofobject",
+        "template": "a{{}}b",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "html_around/@arrayofobject",
+        "template": "<p class=\"x\">{{var a}}</p>",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_raw/@arrayofobject",
+        "template": "[{{var a|raw}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_escape/@arrayofobject",
+        "template": "[{{var a|escape}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_nl2br/@arrayofobject",
+        "template": "[{{var a|nl2br}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_escape_html/@arrayofobject",
+        "template": "[{{var a|escape:html}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_esc_nl2br/@arrayofobject",
+        "template": "[{{var a|escape|nl2br}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_unknown_mod/@arrayofobject",
+        "template": "[{{var a|zzz}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_empty_mod/@arrayofobject",
+        "template": "[{{var a|}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_path_mod/@arrayofobject",
+        "template": "[{{var a.b|raw}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "upper_var/@arrayofobject",
+        "template": "[{{VAR a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "mixed_if/@arrayofobject",
+        "template": "[{{If a}}Y{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "for/@arrayofobject",
+        "template": "[{{for i in a}}X{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_var/@arrayofobject",
+        "template": "[{{for i in a}}{{var i}}{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_path/@arrayofobject",
+        "template": "[{{for i in a}}{{var i.b}}{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_loop_index/@arrayofobject",
+        "template": "[{{for i in a}}{{var loop.index}}{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "for_close_space/@arrayofobject",
+        "template": "[{{for i in a}}X{{/for }}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "if_close_space/@arrayofobject",
+        "template": "[{{if a}}Y{{/if }}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "dep_close_space/@arrayofobject",
+        "template": "[{{depend a}}Y{{/depend }}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "var_dot/@arrayofobject",
+        "template": "[{{var.a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_underscore/@arrayofobject",
+        "template": "[{{var_a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_digit/@arrayofobject",
+        "template": "[{{var2 a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "if_underscore/@arrayofobject",
+        "template": "[{{if_a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "depend_dot/@arrayofobject",
+        "template": "[{{depend.a}}Y{{/depend}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y]",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_if/@arrayofobject",
+        "template": "{{if}}{{if}}{{/if}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "nest_empty_dep/@arrayofobject",
+        "template": "{{depend}}{{depend}}{{/depend}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "cross_unclosed/@arrayofobject",
+        "template": "{{if}}{{depend}}x{{/if}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": true
+    },
+    {
+        "id": "unknown_paired/@arrayofobject",
+        "template": "{{foo}}x{{/foo}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "var_paired/@arrayofobject",
+        "template": "{{var a}}Y{{/var}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "nl2br_param/@arrayofobject",
+        "template": "[{{var a|nl2br:x}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_htmlent/@arrayofobject",
+        "template": "[{{var a|escape:htmlentities}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_url/@arrayofobject",
+        "template": "[{{var a|escape:url}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "esc_unknown/@arrayofobject",
+        "template": "[{{var a|escape:none}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "esc_empty_type/@arrayofobject",
+        "template": "[{{var a|escape:}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "nest3_ifdepfor/@arrayofobject",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/@arrayofobject",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/@arrayofobject",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/@arrayofobject",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/@arrayofobject",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/@arrayofobject",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/@arrayofobject",
+        "template": "[{{ifx a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/@arrayofobject",
+        "template": "[{{vars}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/@arrayofobject",
+        "template": "[{{blocks}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/@arrayofobject",
+        "template": "[{{VAR.a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "getter_call/@arrayofobject",
+        "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/@arrayofobject",
+        "template": "[{{var a.foo()}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "getter_args/@arrayofobject",
+        "template": "[{{var a.getB(\"x\")}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_ws_path/@arrayofobject",
+        "template": "[{{var a . b}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_lead_dot/@arrayofobject",
+        "template": "[{{var .a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
         "parity": true
     },
     {
@@ -17634,12 +21327,111 @@
         "parity": true
     },
     {
+        "id": "nest3_ifdepfor/novars",
+        "template": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{if a}}{{depend a}}{{for i in a}}X{{/for}}{{/depend}}{{/if}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_ifforedep/novars",
+        "template": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{if a}}{{for i in a}}{{depend a}}X{{/depend}}{{/for}}{{/if}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depiffor/novars",
+        "template": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{depend a}}{{if a}}{{for i in a}}X{{/for}}{{/if}}{{/depend}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_depforif/novars",
+        "template": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{depend a}}{{for i in a}}{{if a}}X{{/if}}{{/for}}{{/depend}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_forifdep/novars",
+        "template": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{if a}}{{depend a}}X{{/depend}}{{/if}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "nest3_fordepif/novars",
+        "template": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{for i in a}}{{depend a}}{{if a}}X{{/if}}{{/depend}}{{/for}}",
+        "parity": false
+    },
+    {
+        "id": "name_plus_one/novars",
+        "template": "[{{ifx a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{ifx a}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural/novars",
+        "template": "[{{vars}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{vars}}]",
+        "parity": true
+    },
+    {
+        "id": "name_plural_blk/novars",
+        "template": "[{{blocks}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{blocks}}]",
+        "parity": true
+    },
+    {
+        "id": "upper_var_dot/novars",
+        "template": "[{{VAR.a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{VAR.a}}]",
+        "parity": true
+    },
+    {
         "id": "getter_call/novars",
         "template": "[{{var a.getB()}}]",
         "variables": [],
         "object": null,
         "outcome": "ok",
         "expected": "[{{var a.getB()}}]",
+        "parity": true
+    },
+    {
+        "id": "nonget_call/novars",
+        "template": "[{{var a.foo()}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a.foo()}}]",
         "parity": true
     },
     {

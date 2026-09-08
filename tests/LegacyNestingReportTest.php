@@ -14,7 +14,12 @@ use PHPUnit\Framework\TestCase;
 /**
  * Compatible mode refuses nesting the legacy filter cannot render.
  *
- * Legacy manages exactly two levels with differing names; anything else raises a TypeError.
+ * The legacy constraint is about REPEATED NAMES, not depth: a directive cannot contain
+ * itself, at any distance, because its regex body is lazy and the fragment it hands on
+ * carries an unclosed copy. Distinct names nest fine - verified against the real filter,
+ * all six orderings of {{if}}, {{depend}} and {{for}} render three deep. Three is the
+ * practical ceiling only because there are three body-taking directives to choose from.
+ *
  * Compatible means bug-for-bug, so the capability matches: an engine that renders what the
  * old one crashes on is a better engine, not a compatible one, and `lenient` and `strict`
  * are the modes for wanting that.
@@ -103,21 +108,46 @@ final class LegacyNestingReportTest extends TestCase
         );
     }
 
-    public function testDepthReportUsesTheLegacyLimitNotTheConfiguredOne(): void
+    /**
+     * Three levels of DISTINCT names is not a legacy failure, and must not be reported as one.
+     *
+     * This test previously asserted the opposite, because the engine had a depth bound of
+     * two that the legacy filter does not have. All six orderings render on the real filter;
+     * refusing them made compatible mode reject templates that work in production today.
+     */
+    #[DataProvider('distinctThreeLevelNestings')]
+    public function testThreeDistinctLevelsAreNotAnIncompatibility(string $template): void
     {
-        // maxNestingDepth is 3, so this renders; but legacy manages only 2.
-        // Every variable goes in the context: render() refuses a context AND a variables
-        // array, which is how this test used to render with `xs` silently out of scope.
-        $context = new Context(['a' => 1, 'b' => 1, 'c' => 1, 'xs' => ['q']]);
+        $context = new Context(['a' => 1, 'b' => 1, 'xs' => [['n' => 1]]]);
+        TemplateEngine::compatible()->render($template, context: $context);
+
+        self::assertSame([], $context->incompatibilities(), $template . ' was reported as incompatible');
+    }
+
+    public static function distinctThreeLevelNestings(): array
+    {
+        return [
+            'if>depend>for' => ['{{if a}}{{depend b}}{{for i in xs}}X{{/for}}{{/depend}}{{/if}}'],
+            'if>for>depend' => ['{{if a}}{{for i in xs}}{{depend b}}X{{/depend}}{{/for}}{{/if}}'],
+            'depend>if>for' => ['{{depend a}}{{if b}}{{for i in xs}}X{{/for}}{{/if}}{{/depend}}'],
+            'depend>for>if' => ['{{depend a}}{{for i in xs}}{{if b}}X{{/if}}{{/for}}{{/depend}}'],
+            'for>if>depend' => ['{{for i in xs}}{{if a}}{{depend b}}X{{/depend}}{{/if}}{{/for}}'],
+            'for>depend>if' => ['{{for i in xs}}{{depend a}}{{if b}}X{{/if}}{{/depend}}{{/for}}'],
+        ];
+    }
+
+    /** A repeated name still is one, however far apart. */
+    public function testARepeatedNameIsStillRefusedAtAnyDistance(): void
+    {
+        $context = new Context(['a' => 1, 'b' => 1, 'xs' => [['n' => 1]]]);
         $engine = TemplateEngine::withOptions(
-            Options::compatible()->withMaxNestingDepth(4)->withRefuseLegacyIncompatible(false)
+            Options::compatible()->withMaxNestingDepth(5)->withRefuseLegacyIncompatible(false)
         );
-        $engine->render('{{depend a}}{{if b}}{{for i in xs}}X{{/for}}{{/if}}{{/depend}}', context: $context);
+        $engine->render('{{depend a}}{{if b}}{{depend a}}X{{/depend}}{{/if}}{{/depend}}', context: $context);
 
         $found = $context->incompatibilities();
         self::assertCount(1, $found);
-        self::assertSame(LegacyIncompatibility::NESTING_DEPTH, $found[0]->kind);
-        self::assertStringContainsString('at most 2', $found[0]->message);
+        self::assertSame(LegacyIncompatibility::SAME_NAME_NESTING, $found[0]->kind);
     }
 
     /** The refusal message says why, and how to allow it. */

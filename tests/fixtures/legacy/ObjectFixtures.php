@@ -17,7 +17,7 @@ declare(strict_types=1);
  */
 final class ObjectFixtures
 {
-    public const TAGS = ['dataobject', 'stringable', 'plainobject'];
+    public const TAGS = ['dataobject', 'stringable', 'plainobject', 'arrayofobject'];
 
     public static function make(string $tag): mixed
     {
@@ -28,6 +28,10 @@ final class ObjectFixtures
             'stringable' => new class {
                 public function __toString(): string { return 'STR'; }
             },
+            // An array holding a non-Stringable object. Escaper::escapeHtml recurses and
+            // casts each element, so this is a legacy fatal - reachable with no modifier at
+            // all, since `escape` is varDirective's default.
+            'arrayofobject' => ['o' => new \stdClass()],
             'plainobject' => new class {
                 public $b = 'pub';
                 public function getB(): string { return 'getter'; }
