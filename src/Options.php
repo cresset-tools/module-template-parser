@@ -61,15 +61,20 @@ final class Options
     /**
      * Bug-for-bug rendering compatibility with the legacy filter.
      *
-     * Reproduces the observable quirks real templates may unknowingly depend on:
-     * legacy truthiness, partially-resolved variable paths, non-scalar values rendering
-     * empty, directives passing through verbatim when no variables are set, and the nesting
-     * limit (two levels, differing names) beyond which the legacy filter raises a TypeError.
+     * Reproduces the observable quirks real templates may unknowingly depend on: legacy
+     * truthiness, partially-resolved variable paths, arrays rendering as the literal string
+     * "Array", directives passing through verbatim when no variables are set, member access
+     * only through getData(), and fail-open unknown modifiers and escape types.
+     *
+     * It REFUSES what the legacy filter cannot render rather than reproducing the crash -
+     * see refuseLegacyIncompatible, which this mode turns on. Same-name nesting, a name not
+     * starting with a letter, a modifier given arguments and the rest all raise a
+     * LegacyIncompatibleError with a diagnostic instead of a TypeError. Nesting is bounded
+     * by repeated names, not by depth: three distinct names nest fine on the real filter.
      *
      * It deliberately does NOT reproduce:
-     *  - the security behaviour (a value is still never re-parsed as source);
-     *  - the fatals (same-name nesting, empty directive names) — no template can depend
-     *    on crashing;
+     *  - the security behaviour (a value is still never re-parsed as source, and {{trans}}
+     *    arguments are still escaped);
      *  - reflection-based dispatch of arbitrary filter methods.
      *
      * This is the mode to run in production first: same output, fewer ways to be exploited.

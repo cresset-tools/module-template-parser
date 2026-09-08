@@ -11,8 +11,7 @@ declare(strict_types=1);
  *
  * The recorder runs with Magento on the include path and uses the REAL DataObject; the test
  * run does not, and uses FakeDataObject. That split is only sound while the two behave
- * alike, so record-legacy.php asserts they agree before it writes anything - see
- * assertFakeMatchesReal(). Getting this wrong records one object's behaviour and replays
+ * alike, so record-legacy.php asserts they agree before it writes anything. Getting this wrong records one object's behaviour and replays
  * another's, which is a parity measurement of nothing.
  */
 final class ObjectFixtures

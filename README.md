@@ -5,11 +5,16 @@ instead of matching regexes against its own output the way `Magento\Framework\Fi
 does.
 
 ```php
+use Cresset\TemplateParser\TemplateEngine;
+
 $engine = new TemplateEngine();
 
 echo $engine->render('Dear {{var name}},', ['name' => 'Ada']);
 // Dear Ada,
 ```
+
+Everything in this README lives under `Cresset\TemplateParser\`; later snippets leave the
+`use` lines out.
 
 Requires PHP 8.3, 8.4 or 8.5. The engine is plain PHP with no Magento dependency; the Magento
 bindings sit behind ports in `src/Magento/`.
@@ -63,9 +68,23 @@ The package is a `magento2-module` with `registration.php` and `etc/`.
 **Installing it changes no rendering behaviour**: `etc/di.xml` declares no preference for
 `Magento\Framework\Filter\Template`.
 
-To adopt it, run `Magento\ShadowComparator` first. It renders through both engines and logs
-where they differ, and always returns the *legacy* result, so enabling it changes nothing a
-customer sees. Declare your own preference once shadow mode is quiet.
+Adoption goes through a plugin, not a preference. Emails render through
+`Magento\Email\Model\Template\Filter`, CMS extends that, and Newsletter extends
+`Widget\Model\Template\FilterEmulate` — all concrete classes DI instantiates directly, so a
+preference for the framework base class never applies. Declare the shipped plugin in a
+project module against whichever filter you want to cover:
+
+```xml
+<type name="Magento\Email\Model\Template\Filter">
+    <plugin name="cresset_template_parser" sortOrder="10"
+            type="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin"/>
+</type>
+```
+
+That is still inert until you enable `Magento\ShadowComparator`, which renders the template
+through this engine, logs where it differs from the legacy output it was handed, and returns
+the *legacy* result — so switching it on changes nothing a customer sees. It logs the policy
+violations and legacy incompatibilities behind a divergence, not just a byte offset.
 
 ### Directive surface
 
@@ -76,15 +95,16 @@ and unit-testable.
 | Directive | Port | Magento implementation | Guard |
 |---|---|---|---|
 | `var`, `if`, `depend`, `for`, `else` | — | built in | — |
-| `inlinecss` | — | built in | structured deferral, never emitted as text |
-| `trans` | `Translator` | `PhraseTranslator` | |
+| `inlinecss` | — | built in | `PathGuard`; structured deferral, never emitted as text |
+| `trans` | `Translator` *(optional)* | `PhraseTranslator` | arguments are escaped; a built-in handler renders it even with no port wired |
 | `block` | `BlockRenderer` | `LayoutBlockRenderer` | type checked before instantiation, resolving DI preferences and virtual types; `output=` is an allowlist |
 | `widget` | `WidgetRenderer` | `TypeCheckedWidgetRenderer` | same, against `Widget\Block\BlockInterface`; optional type allowlist |
 | `template` | `TemplateLoader` | `ConfigTemplateLoader` | config-path allowlist; include cycles, depth and total count all bounded |
 | `layout` | `LayoutRenderer` | `AllowlistedLayoutRenderer` | handle allowlist required, area restricted to frontend/adminhtml |
 | `config` | `ConfigReader` | `AllowlistedConfigReader` | Magento's `Variables::getAvailableVars()` allowlist, failing closed |
 | `customvar` | `CustomVariableReader` | `VariableCustomVariableReader` | identifier-shaped codes only |
-| `store`, `media`, `view`, `protocol` | `UrlBuilder` | `StoreUrlBuilder` | `PathGuard`: no traversal, scheme, absolute or protocol-relative path |
+| `store`, `media`, `view` | `UrlBuilder` | `StoreUrlBuilder` | `PathGuard` on the path and on forwarded parameters like `_direct`: no traversal, scheme, absolute or protocol-relative path |
+| `protocol` | `UrlBuilder` | `StoreUrlBuilder` | a host/path shape check, not `PathGuard` — it blocks schemes and protocol-relative URLs but permits `..`, which cannot escape a host |
 | `css` | `StylesheetLoader` | `AssetStylesheetLoader` | `PathGuard` |
 
 ## Per-render capability policy
@@ -130,8 +150,10 @@ take down an order email, but it must not pass unnoticed either. For template va
 CI, `Options::withFailOnPolicyViolation(true)` makes it fatal. A nested `{{template}}` inherits
 the policy, so an include cannot widen it.
 
-Two further properties are deliberate. A directive whose port is absent stays unregistered, so
-the host grants capabilities one at a time rather than inheriting the whole surface. And
+Two further properties are deliberate. A directive that needs a port and has none stays
+unregistered, so the host grants capabilities one at a time rather than inheriting the whole
+surface. (`{{trans}}` is the exception: it has a built-in handler and renders with or without
+a `Translator`, since substitution needs nothing from the host.) And
 `PathGuard` and the identifier checks are applied by the directive handlers rather than left
 to each implementation, so a host cannot forget one; `FullDirectiveSurfaceTest` asserts the
 port is never reached for rejected input. Refusing after the fact is the mistake that made
@@ -149,8 +171,24 @@ be switched on without changing what customers see.
 Parity is measured against the real filter. `tools/record-legacy.php` runs an unpatched
 Magento tree over a corpus and records what it produced; it calls Magento's own `Escaper`
 rather than reimplementing it, because reimplementing the escaper once made the measurement
-circular. 1657 cases are recorded, 253 of them constructs the legacy filter cannot render at
-all. Wherever legacy renders, compatible mode produces byte-identical output.
+circular.
+
+**2016 cases recorded, 281 of them constructs the legacy filter cannot render at all. Over
+the 1154 cases where both engines render and the surfaces are comparable, output is
+byte-identical.**
+
+Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
+class of divergence, and the honest reading is that the corpus bounds what is known rather
+than what is true. Two properties are asserted absolutely and are worth more than the
+headline number:
+
+- **Nothing the legacy filter crashes on is rendered here.** A construct the old filter died
+  on is one nobody has ever seen the output of, so rendering it would be inventing behaviour,
+  not reproducing it.
+- **Where both render, they agree byte for byte** — for every case in the corpus.
+
+Everything else is a superset of refusals, enumerated below. Before switching a store over,
+run `Magento\ShadowComparator` against your own templates; the corpus cannot contain them.
 
 Quirks it reproduces:
 
@@ -182,20 +220,27 @@ Quirks it does not reproduce:
 
 The relationship is a superset, and the direction matters.
 
-**Every construct the legacy filter cannot render is refused.** A construct the old filter died
-on is one nobody has ever seen the output of, so rendering it would not be compatibility. Eight
-conditions, each verified against the real filter:
+**Every construct the legacy filter cannot render is refused.** Twelve conditions, each
+verified against the real filter:
 
 | Condition | Example | Why legacy dies |
 |---|---|---|
 | same-name nesting | `{{if}}` in `{{if}}` | lazy body hands on an unclosed inner directive |
-| three levels | `{{depend}}` > `{{if}}` > `{{depend}}` | same |
 | unclosed block | `a{{if a}}b` | the per-directive re-match finds nothing, passes null on |
+| stray closing tag | `a{{/if}}b` | same |
 | name not starting with a letter | `{{100}}`, `{{ var x }}`, `{{}}` | no name captured, `ProcessorPool::get(null)` |
 | name split by punctuation | `{{if_a}}` | the name is a greedy `[a-z]{0,10}`, so this is `if` with the parameter `_a` |
 | padded closing tag | `{{/if }}` | `CONSTRUCTION_IF_PATTERN` allows the space, the closing backreference does not |
 | modifier arguments | `{{var a\|nl2br:x}}` | passed through to `nl2br()`, a `TypeError` on `$use_xhtml` |
 | member call on an array | `{{var a.getB()}}` where `a` is an array | `->getData()` on an array |
+| `\|nl2br` on a non-string | `{{var a\|nl2br}}`, `a=0` | `nl2br()` under `strict_types` |
+| `\|escape:htmlentities` on a non-string | `{{var a\|escape:htmlentities}}`, `a=0` | `htmlentities()` under `strict_types` |
+| `\|escape:url` on a non-string | `{{var a\|escape:url}}`, `a=0` | `rawurlencode()` under `strict_types` |
+| an array holding a non-`Stringable` object | `{{var a}}`, `a=['o'=>new stdClass]` | `Escaper::escapeHtml` recurses and casts each element — and `escape` is the default modifier, so no modifier need be written |
+
+Nesting is bounded by repeated names, not depth. A directive cannot contain itself at any
+distance, but three distinct names nest fine: all six orderings of `{{if}}`, `{{depend}}` and
+`{{for}}` render three deep on the real filter.
 
 The `{{100}}` row is narrower than it looks. `CONSTRUCTION_PATTERN` is case-insensitive, so
 `{{Password}}` and `{{Forgot Your Password?}}` do capture a name, fail to resolve, and come
@@ -212,18 +257,18 @@ back verbatim. Those render here too.
         Options::$refuseLegacyIncompatible to allow it
 ```
 
-**Nine shapes are refused that legacy does render.** Each is a place where legacy's regex does
+**Ten shapes are refused that legacy does render.** Each is a place where legacy's regex does
 something by accident that this parser will not build in:
 
 | Shape | What legacy does |
 |---|---|
-| `{{var.a}}`, `{{var_a}}`, `{{var2 a}}`, `{{depend.a}}` | punctuation after a name is read as a parameter separator, which makes `{{var.a}}` a live variable read |
+| `{{var.a}}`, `{{var_a}}`, `{{var2 a}}`, `{{depend.a}}`, `{{VAR.a}}` | punctuation after a name is read as a parameter separator, which makes `{{var.a}}` a live variable read — case-insensitively, so `{{VAR.a}}` too |
 | `{{if}}{{if}}{{/if}}`, its `{{depend}}` twin, `{{if}}{{depend}}x{{/if}}` | nesting collapses to `''` by accident of the lazy body match |
 | `{{foo}}x{{/foo}}`, `{{var a}}Y{{/var}}` | the optional closing group swallows a body for a directive that has none |
 
 `LegacyParityTest` asserts the two halves separately, because they are different claims:
 `testEveryLegacyFatalIsRefused` allows no exceptions, and
-`testExtraRefusalsAreOnlyTheDocumentedShapes` pins the nine so the list cannot grow without a
+`testExtraRefusalsAreOnlyTheDocumentedShapes` pins the ten so the list cannot grow without a
 test failing.
 
 Compatible means bug-for-bug; `lenient` and `strict` are the modes for wanting the
@@ -325,8 +370,11 @@ and against total count, since five levels of fan-out is not five renders.
 
 Pre-1.0, not yet used in production, and the API may change.
 
-Merchant templates live in databases and cannot be audited ahead of time. Run
-`tools/differential.php` over your own content before switching anything.
+Merchant templates live in databases and cannot be audited ahead of time, and the parity
+corpus bounds what is known rather than what is true — each round of adversarial fuzzing has
+found a further class of divergence. Run shadow mode over your own content before switching
+anything, and read [what compatible mode refuses](#what-it-refuses) first: it is a superset,
+and ten shapes that render on the legacy filter are refused here by design.
 
 ## Testing
 
@@ -335,10 +383,10 @@ composer install
 vendor/bin/phpunit
 ```
 
-2544 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+2993 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
-- `LegacyParityTest` replays the 1657 recorded cases, so the differential runs anywhere with
+- `LegacyParityTest` replays the 2016 recorded cases, so the differential runs anywhere with
   no Magento installation, and drift in compatible mode shows up as a failing case rather than
   a surprise in production.
 - `StyleSmugglerDifferentialTest` asserts both halves of the vulnerability: that the recording

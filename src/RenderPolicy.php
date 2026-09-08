@@ -11,8 +11,13 @@ namespace Cresset\TemplateParser;
  * different trust. A DI-time allowlist cannot express that, because it is fixed for the
  * whole application.
  *
- * Unrestricted by default, so adding a policy is opt-in and nothing changes for callers that
- * do not set one.
+ * RESTRICTED by default: `new Context()` with no policy refuses {{block}}, {{widget}} and
+ * {{layout}}, the directives that turn template text into a PHP class being constructed. The
+ * safe set is enumerated rather than derived, so a directive added later defaults to denied.
+ *
+ * The Magento adapter is the deliberate exception - it replaces a filter that has no policy
+ * at all, so imposing one silently would empty the item table of every stock order email.
+ * See TemplateFilterAdapter.
  */
 final class RenderPolicy
 {

@@ -15,7 +15,7 @@ docker run --rm -v "$PWD":/m php:8.3-cli sh -c \
    cd /m && php /tmp/phpunit.phar'
 ```
 
-2544 tests. 234 are skipped by design: they are the shapes compatible mode deliberately
+2993 tests. 267 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ## The parity corpus
@@ -27,7 +27,7 @@ recordings, so the differential runs anywhere with no Magento installation.
 The corpus is a matrix of value shapes against construct shapes, plus a no-variables pass and
 the 45 real templates in `tests/fixtures/corpus/`. Those templates are harvested from the
 Magento/Mage-OS tree and include `.html` files whose `{{` sequences are not directives at all,
-such as translation strings and JS templates. 1657 cases in total, 253 of which crash the
+such as translation strings and JS templates. 2016 cases in total, 281 of which crash the
 stock filter.
 
 ### Re-recording
@@ -72,23 +72,24 @@ re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 | `LegacyParityTest` | the recorded corpus, in both directions: every legacy fatal is refused, and the extra refusals are exactly the nine documented shapes |
 | `ParitySensitivityTest` | the canary. It mis-configures the engine and asserts the same corpus then *fails* |
 | `StyleSmugglerDifferentialTest` | the vulnerability, as a paired differential |
-| `MalformedTemplateTest` | 15 broken templates asserted to raise a specific error in strict mode and to render in compatible mode, plus 10 hostile inputs asserted inert |
+| `MalformedTemplateTest` | 15 broken templates asserted to raise a specific error in strict mode; 9 of them are refused in compatible mode and 6 render, and 10 hostile inputs are asserted inert |
 | `CorpusTest` | the parser never throws, never loses content, and never executes anything absent from the template |
-| `GuardTripwireTest`, `MagentoGuardTest` | one test per security guard, each written against a mutation that removed it |
+| `GuardTripwireTest`, `MagentoGuardTest`, `SecurityRegressionTest` | one test per security guard, each written against a mutation that removed it |
+| `MagentoIntegrationTest` | the adoption path: the plugin, the adapter's policy, and shadow mode |
 | `MagentoUrlAdapterTest` | the adapters behind `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}` and `{{customvar}}` - the directives that carry merchant-authored content rather than shipped templates |
 | `KnownDivergenceTest` | the deliberate behavioural differences from the legacy filter |
 
 ### The sensitivity canary
 
 Green assertions mean nothing if the corpus cannot tell a correct engine from a broken one, so
-each deliberate mis-configuration must produce divergences over the 1022 rendering-comparable
+each deliberate mis-configuration must produce divergences over the 1154 rendering-comparable
 cases:
 
 | Engine | Divergences |
 |---|---|
 | compatible (control) | 0 |
-| lenient (legacy quirks off) | 298 |
-| strict (default) | 444 |
+| lenient (legacy quirks off) | 319 |
+| strict (default) | 566 |
 
 ## Guards and tests
 

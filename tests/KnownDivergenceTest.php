@@ -126,8 +126,11 @@ final class KnownDivergenceTest extends TestCase
     /**
      * DIVERGENCE 6 - directive names must be lower-case and start immediately after `{{`.
      *
-     * Legacy `[a-z]{0,10}` matched an empty name, so `{{Forgot Your Password?}}` was
-     * treated as a construction with no name. Prose stays prose here.
+     * CONSTRUCTION_PATTERN carries /si, so `[a-z]{0,10}` matches upper case too:
+     * `{{Forgot Your Password?}}` captures the name `Forgot`, fails to resolve, and comes
+     * back verbatim on the legacy filter. An EMPTY name is the fatal case, and needs a
+     * non-letter immediately after the braces - `{{100}}`, `{{ var x }}`, `{{}}`.
+     * Either way, prose stays prose here.
      */
     public function testProseIsNotADirective(): void
     {

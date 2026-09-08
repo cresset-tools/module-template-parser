@@ -6,7 +6,7 @@
  * databases ahead of time, so the only honest way to size a migration is to run both
  * engines over real content and measure where they differ.
  *
- * Usage: php tools/differential.php   (expects the Magento tree mounted at /repo)
+ * Usage: php tools/differential.php   (set MAGENTO_ROOT to a Magento checkout)
  */
 declare(strict_types=1);
 
