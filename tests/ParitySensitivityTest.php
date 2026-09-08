@@ -35,13 +35,24 @@ final class ParitySensitivityTest extends TestCase
         ));
     }
 
+    /** @return array<string,mixed> */
+    private static function variablesFor(array $case): array
+    {
+        $variables = $case['variables'];
+        if (($case['object'] ?? null) !== null) {
+            require_once __DIR__ . '/fixtures/legacy/ObjectFixtures.php';
+            $variables['a'] = \ObjectFixtures::make($case['object']);
+        }
+        return $variables;
+    }
+
     /** Renders every parity case with $engine and counts how many stop matching. */
     private function divergences(TemplateEngine $engine): int
     {
         $count = 0;
         foreach (self::parityCases() as $case) {
             try {
-                $actual = $engine->render($case['template'], $case['variables']);
+                $actual = $engine->render($case['template'], self::variablesFor($case));
             } catch (\Throwable) {
                 $count++;
                 continue;

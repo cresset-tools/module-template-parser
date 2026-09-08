@@ -45,6 +45,7 @@ final class ParameterParser
                 continue;
             }
             $i++;                          // consume '='
+            // Magento's Tokenizer\Parameter skips whitespace anywhere, so `a = 1` is a=1.
             while ($i < $len && ctype_space($params[$i])) {
                 $i++;
             }
@@ -62,10 +63,15 @@ final class ParameterParser
             $i++;
             $buf = '';
             while ($i < $len) {
-                if ($s[$i] === '\\' && $i + 1 < $len && $s[$i + 1] === $quote) {
-                    $buf .= $quote;
-                    $i += 2;
-                    continue;
+                if ($s[$i] === '\\' && $i + 1 < $len) {
+                    // A backslash escapes the quote or another backslash; without the second
+                    // rule a value ending in `\` consumes its own terminator and runs on
+                    // into the following parameters.
+                    if ($s[$i + 1] === $quote || $s[$i + 1] === '\\') {
+                        $buf .= $s[$i + 1];
+                        $i += 2;
+                        continue;
+                    }
                 }
                 if ($s[$i] === $quote) {
                     $i++;

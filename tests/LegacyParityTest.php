@@ -21,6 +21,17 @@ final class LegacyParityTest extends TestCase
 {
     private const FIXTURE = __DIR__ . '/fixtures/legacy/cases.json';
 
+    /** @return array<string,mixed> */
+    private static function variablesFor(array $case): array
+    {
+        $variables = $case['variables'];
+        if (($case['object'] ?? null) !== null) {
+            require_once __DIR__ . '/fixtures/legacy/ObjectFixtures.php';
+            $variables['a'] = \ObjectFixtures::make($case['object']);
+        }
+        return $variables;
+    }
+
     /** @return array<string,array{0:array}> */
     public static function recordedCases(): array
     {
@@ -66,7 +77,7 @@ final class LegacyParityTest extends TestCase
     #[DataProvider('renderingCases')]
     public function testCompatibleModeMatchesLegacy(array $case): void
     {
-        $actual = TemplateEngine::compatible()->render($case['template'], $case['variables']);
+        $actual = TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
 
         self::assertSame(
             $case['expected'],
@@ -82,7 +93,7 @@ final class LegacyParityTest extends TestCase
     #[DataProvider('surfaceDivergentCases')]
     public function testSurfaceDivergentCasesStillRenderSafely(array $case): void
     {
-        $actual = TemplateEngine::compatible()->render($case['template'], $case['variables']);
+        $actual = TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
         self::assertIsString($actual);
         self::assertStringNotContainsString('<?php', $actual);
     }
@@ -99,7 +110,7 @@ final class LegacyParityTest extends TestCase
     public function testCompatibleModeRefusesWhatLegacyCannotRender(array $case): void
     {
         $this->expectException(LegacyIncompatibleError::class);
-        TemplateEngine::compatible()->render($case['template'], $case['variables']);
+        TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
     }
 
     /**
@@ -113,7 +124,7 @@ final class LegacyParityTest extends TestCase
             Options::compatible()->withRefuseLegacyIncompatible(false)
         );
 
-        $actual = $engine->render($case['template'], $case['variables']);
+        $actual = $engine->render($case['template'], self::variablesFor($case));
         self::assertIsString($actual, 'permissive mode should render: ' . $case['id']);
     }
 
@@ -129,7 +140,7 @@ final class LegacyParityTest extends TestCase
 
         foreach (self::recordedCases() as $id => [$case]) {
             try {
-                $engine->render($case['template'], $case['variables']);
+                $engine->render($case['template'], self::variablesFor($case));
                 $rendered[] = $id;
             } catch (LegacyIncompatibleError) {
                 $refused[] = $id;

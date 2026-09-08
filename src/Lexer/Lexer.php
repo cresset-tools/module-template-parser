@@ -19,6 +19,13 @@ final class Lexer
     /** Directive names Magento accepts: lower-case, bounded length. */
     private const NAME_PATTERN = '/^[a-z][a-z0-9_]{0,31}$/';
 
+    /** Enough to see any legal directive name plus its delimiter. */
+    private const MAX_PEEK = 64;
+
+    public function __construct(private readonly \MageOS\TemplateParser\DirectiveSpec $spec = new \MageOS\TemplateParser\DirectiveSpec())
+    {
+    }
+
     /**
      * @return Token[]
      */
@@ -28,25 +35,41 @@ final class Lexer
         $length = strlen($source);
         $cursor = 0;
         $textStart = 0;
+        $knownClose = -1;
 
         while ($cursor < $length) {
             $open = strpos($source, self::OPEN, $cursor);
             if ($open === false) {
                 break;
             }
+            $afterOpen = $open + strlen(self::OPEN);
 
-            $close = strpos($source, self::CLOSE, $open + strlen(self::OPEN));
-            if ($close === false) {
-                // Unterminated: the remainder is text.
-                break;
+            // Decide from a bounded window first. Materialising the whole `{{`..`}}` span
+            // just to discover it is not a directive makes a brace-dense document
+            // quadratic: `{{A{{A{{A...` copies to the same distant closer every time.
+            $candidate = $this->peek(substr($source, $afterOpen, self::MAX_PEEK));
+            if ($candidate === null) {
+                $cursor = $afterOpen;
+                continue;
             }
 
-            $inner = substr($source, $open + strlen(self::OPEN), $close - $open - strlen(self::OPEN));
-            $token = $this->classify($inner, substr($source, $open, $close + strlen(self::CLOSE) - $open), $open);
+            // Only a plausible construct needs the closer located.
+            if ($knownClose <= $open) {
+                $found = strpos($source, self::CLOSE, $afterOpen);
+                $knownClose = $found === false ? -1 : $found;
+            }
+            if ($knownClose === -1) {
+                break;                       // unterminated: the remainder is text
+            }
+            $close = $knownClose;
 
+            [$type, $name] = $candidate;
+            $raw = substr($source, $open, $close + strlen(self::CLOSE) - $open);
+            $inner = substr($source, $afterOpen, $close - $afterOpen);
+
+            $token = $this->build($type, $name, $inner, $raw, $open);
             if ($token === null) {
-                // Not a directive, and legacy renders it verbatim too. Keep accumulating text.
-                $cursor = $open + strlen(self::OPEN);
+                $cursor = $afterOpen;
                 continue;
             }
 
@@ -57,6 +80,7 @@ final class Lexer
 
             $cursor = $close + strlen(self::CLOSE);
             $textStart = $cursor;
+            $knownClose = -1;
         }
 
         if ($textStart < $length) {
@@ -67,38 +91,76 @@ final class Lexer
     }
 
     /**
-     * Returns a directive token, or null when the construct is not a directive.
+     * Cheap pre-classification from the first few bytes after `{{`.
+     *
+     * @return array{0:TokenType,1:string}|null null when this is certainly not a construct
      */
-    private function classify(string $inner, string $raw, int $offset): ?Token
+    private function peek(string $window): ?array
     {
-        // A well-formed closing tag first: legacy consumes it as part of its block, so the
-        // leading slash never reaches the fallback that would choke on it.
-        if ($inner !== '' && $inner[0] === '/') {
-            $name = substr($inner, 1);
-            if (preg_match(self::NAME_PATTERN, $name)) {
-                return new Token(TokenType::DirectiveClose, $raw, $offset, $name);
-            }
+        if ($window === '') {
+            return null;
         }
 
-        // Legacy's CONSTRUCTION_PATTERN is case-insensitive, so anything starting with a
-        // letter yields a name and falls back cleanly to verbatim output. Anything else
-        // yields no name, and SimpleDirective is handed null: a TypeError.
-        if ($inner === '' || !preg_match('/^[A-Za-z]/', $inner)) {
+        if ($window[0] === '/') {
+            if (!preg_match('#^/([A-Za-z][A-Za-z0-9_]*)\s*\}?#', $window, $m)) {
+                return [TokenType::Degenerate, ''];
+            }
+            $name = strtolower($m[1]);
+            // Legacy's patterns all carry /i, so {{/IF}} closes an {{if}}.
+            if (!preg_match(self::NAME_PATTERN, $name)
+                || ($name !== $m[1] && !$this->spec->isKnown($name))
+            ) {
+                return null;
+            }
+            return [TokenType::DirectiveClose, $name];
+        }
+
+        // Anything not starting with a letter is what legacy chokes on.
+        if (!preg_match('/^[A-Za-z]/', $window)) {
+            return [TokenType::Degenerate, ''];
+        }
+
+        if (!preg_match('/^([A-Za-z][A-Za-z0-9_]*)([\s}]|$)/', $window, $m)) {
+            return null;                    // e.g. `{{A{{A` - a name run into more braces
+        }
+
+        $name = strtolower($m[1]);
+        if (!preg_match(self::NAME_PATTERN, $name)) {
+            return null;
+        }
+
+        // A lower-case name reads as an intended directive even when unknown, so strict mode
+        // can report the typo. An upper-case one is usually prose - `{{Forgot Your
+        // Password?}}`, which legacy also hands back verbatim - so it is a directive only
+        // when the name is unmistakably one. Legacy's reflection is case-insensitive, so
+        // {{VAR name}} does resolve there.
+        if ($name !== $m[1] && !$this->spec->isKnown($name)) {
+            return null;
+        }
+
+        return [TokenType::DirectiveOpen, $name];
+    }
+
+    /** Builds the token now that the full span is known, re-checking what the window could not. */
+    private function build(TokenType $type, string $name, string $inner, string $raw, int $offset): ?Token
+    {
+        if ($type === TokenType::Degenerate) {
             return new Token(TokenType::Degenerate, $raw, $offset);
         }
 
-        // The name must begin immediately after `{{` and be lower-case. Real templates
-        // always write it that way; `{{Forgot Your Password?}}` is prose, and legacy hands
-        // it back verbatim too - so it is text here, not a directive and not degenerate.
-        if (!preg_match('/^([a-z][a-z0-9_]*)(\s[\s\S]*)?$/', $inner, $m)) {
-            return null;
+        if ($type === TokenType::DirectiveClose) {
+            // The window saw `/name`; the full inner must be exactly that.
+            return strtolower(rtrim($inner)) === '/' . $name
+                ? new Token(TokenType::DirectiveClose, $raw, $offset, $name)
+                : null;
         }
 
-        if (!preg_match(self::NAME_PATTERN, $m[1])) {
-            return null;
+        $params = substr($inner, strlen($name));
+        if ($params !== '' && !preg_match('/^\s/', $params)) {
+            return null;                    // the name did not end where the window thought
         }
 
-        return new Token(TokenType::DirectiveOpen, $raw, $offset, $m[1], trim($m[2] ?? ''));
+        return new Token(TokenType::DirectiveOpen, $raw, $offset, $name, trim($params));
     }
 
 }

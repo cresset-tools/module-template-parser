@@ -51,20 +51,36 @@ final class HostDirectives
                 $resolved = [];
                 foreach ($args as $key => $expression) {
                     $value = $e->resolver()->value(ltrim($expression, '$'), $c);
-                    $resolved[$key] = $value === null ? $expression : (string)$value;
+                    // stringify(), not a bare cast - an object with no __toString is a
+                    // perfectly ordinary template variable and must not be a fatal.
+                    $resolved[$key] = $value === null ? $expression : $e->stringify($value);
                 }
                 return $translator->translate($text, $resolved);
             });
         }
 
         if ($templates !== null) {
-            $parser ??= new Parser();
+            // Inherit the evaluator's configuration; a default Parser is fully strict and
+            // would throw on an included template a lenient engine handles fine.
+            $parser ??= new Parser(options: $evaluator->options());
             $evaluator->register('template', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($templates, $parser): string {
                 $params = $e->params($n);
                 $path = $params['config_path'] ?? '';
                 $source = $path === '' ? null : $templates->load($path);
                 if ($source === null) {
                     return '';
+                }
+
+                if ($c->includeDepth() >= Options::DEFAULT_MAX_INCLUDE_DEPTH) {
+                    throw TemplateCycleError::at(
+                        '',
+                        $n->offset(),
+                        sprintf(
+                            'Template includes nested more than %d deep',
+                            Options::DEFAULT_MAX_INCLUDE_DEPTH
+                        ),
+                        'include chain: ' . implode(' > ', [...$c->includeStack(), $path])
+                    );
                 }
 
                 if (!$c->enterInclude($path)) {
@@ -80,7 +96,9 @@ final class HostDirectives
                     // Child scope. Its deferred work is handed back up explicitly - no
                     // shared state, and nothing survives in the output stream.
                     $child = $c->withVariables([]);
-                    $rendered = $e->evaluate($parser->parse($source, $c->policy()->maxNestingDepth()), $child);
+                    $ast = $parser->parse($source, $c->policy()->maxNestingDepth());
+                    $child->noteIncompatibilities($ast->incompatibilities());
+                    $rendered = $e->evaluate($ast, $child);
                     $c->absorb($child);
                 } finally {
                     $c->leaveInclude();

@@ -34,9 +34,12 @@ final class Parser
     public function __construct(
         private readonly DirectiveSpec $spec = new DirectiveSpec(),
         private readonly Options $options = new Options(),
-        private readonly Lexer $lexer = new Lexer()
+        ?Lexer $lexer = null
     ) {
+        $this->lexer = $lexer ?? new Lexer($spec);
     }
+
+    private readonly Lexer $lexer;
 
     /**
      * @param int|null $maxNestingDepth per-render override; null uses the engine default

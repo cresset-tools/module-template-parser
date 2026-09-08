@@ -22,6 +22,9 @@ final class Evaluator
 
     private string $source = '';
 
+    /** Position of the {{var}} whose modifiers are being applied, for diagnostics. */
+    private int $modifierOffset = 0;
+
     public function __construct(
         private readonly VariableResolver $variables = new VariableResolver(),
         private readonly ParameterParser $parameters = new ParameterParser(),
@@ -159,6 +162,17 @@ final class Evaluator
         return $this->variables;
     }
 
+    public function options(): Options
+    {
+        return $this->options;
+    }
+
+    /** Safe string conversion - an object with no __toString yields '' rather than a fatal. */
+    public function stringify(mixed $value): string
+    {
+        return $this->toStringValue($value);
+    }
+
     private function registerDefaults(): void
     {
         $this->handlers['var'] = function (DirectiveNode $n, Context $c): string {
@@ -169,7 +183,16 @@ final class Evaluator
                 $this->requireVariable($resolution, $n, $c, $expr);
             }
 
-            return $this->applyModifiers($this->stringify($resolution->value), $modifiers);
+            $this->modifierOffset = $n->offset();
+
+            // Legacy hands the RAW resolved value to the modifier chain, so the type each
+            // function sees depends on what ran before it. Elsewhere the value is stringified
+            // up front, which is safer and simpler.
+            $carried = $this->options->legacyQuirks
+                ? ($resolution->value ?? '')     // getVariable(..., '') defaults null to ''
+                : $this->toStringValue($resolution->value);
+
+            return $this->applyModifiers($carried, $modifiers, $c);
         };
 
         $this->handlers['if'] = function (DirectiveNode $n, Context $c, self $e): string {
@@ -214,7 +237,12 @@ final class Evaluator
             $values = $resolution->value;
             $out = '';
             foreach ($values as $value) {
-                $out .= $e->renderNodes($n->children(), $c->withVariables([$item => $value]));
+                // The body gets its own scope for the loop variable, but its deferred work
+                // and policy violations belong to the render - without absorbing them a
+                // violation could be hidden simply by wrapping it in a loop.
+                $iteration = $c->withVariables([$item => $value]);
+                $out .= $e->renderNodes($n->children(), $iteration);
+                $c->absorb($iteration);
             }
             return $out;
         };
@@ -239,10 +267,37 @@ final class Evaluator
             [$text, $args] = $this->splitTransParams($n->params());
             foreach ($args as $k => $v) {
                 $resolved = $this->variables->value(ltrim($v, '$'), $c);
-                $text = str_replace('%' . $k, $this->stringify($resolved ?? $v), $text);
+                $text = str_replace('%' . $k, $this->toStringValue($resolved ?? $v), $text);
             }
             return $text;
         };
+    }
+
+    /**
+     * Refuses - or records - a construct the legacy filter could not have rendered.
+     *
+     * Mirrors the parser's handling, so `refuseLegacyIncompatible` governs both.
+     */
+    private function noteLegacyIncompatible(Context $context, string $message): void
+    {
+        if ($this->options->refuseLegacyIncompatible) {
+            throw LegacyIncompatibleError::at(
+                $this->source,
+                $this->modifierOffset,
+                $message,
+                'this renders here but not on the legacy filter; unset '
+                . 'Options::$refuseLegacyIncompatible to allow it'
+            );
+        }
+
+        $context->noteIncompatibilities([
+            LegacyIncompatibility::at(
+                $this->source,
+                $this->modifierOffset,
+                LegacyIncompatibility::DEGENERATE_CONSTRUCT,
+                $message
+            ),
+        ]);
     }
 
     /**
@@ -351,24 +406,85 @@ final class Evaluator
         return [$expr, array_map('trim', $parts)];
     }
 
-    /** @param string[] $modifiers */
-    private function applyModifiers(string $value, array $modifiers): string
+    /**
+     * Applies {{var}} modifiers.
+     *
+     * Legacy semantics (Email\Model\Template\Filter::applyModifiers): a modifier list
+     * REPLACES the default escaping, empty parts are skipped, and an unrecognised name is
+     * skipped too - so `{{var x|typo}}` renders raw. That is reproduced faithfully in
+     * compatible mode.
+     *
+     * Everywhere else it fails closed: unless `raw` or an explicit `escape` was asked for,
+     * the value is escaped BEFORE the listed modifiers run, so `{{var x|nl2br}}` escapes the
+     * value and then inserts real <br /> tags, and a typo cannot silently disable escaping.
+     *
+     * @param string[] $modifiers
+     */
+    private function applyModifiers(mixed $value, array $modifiers, Context $context): string
     {
         if ($modifiers === []) {
-            return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            return $this->escape($this->toStringValue($value));
         }
+
+        /** @var list<array{0:string,1:string[]}> $parsed */
+        $parsed = [];
         foreach ($modifiers as $modifier) {
-            $value = match (strtolower($modifier)) {
+            if ($modifier === '') {
+                continue;               // legacy: if (empty($part)) { continue; }
+            }
+            $params = explode(':', $modifier);
+            $parsed[] = [(string)array_shift($params), $params];
+        }
+
+        if (!$this->options->legacyQuirks) {
+            $names = array_column($parsed, 0);
+            $optsOut = array_intersect(['raw', 'escape'], array_map('strtolower', $names)) !== [];
+            if (!$optsOut) {
+                $value = $this->escape($this->toStringValue($value));
+            }
+        }
+
+        foreach ($parsed as [$name, $params]) {
+            // Legacy looks the modifier up case-sensitively; nothing else should.
+            $lookup = $this->options->legacyQuirks ? $name : strtolower($name);
+
+            if ($this->options->legacyQuirks && $lookup === 'nl2br' && !is_string($value)) {
+                // Email\Model\Template\Filter declares strict_types, so nl2br() receives
+                // whatever the previous modifier left and a non-string is a TypeError there.
+                $this->noteLegacyIncompatible(
+                    $context,
+                    'the |nl2br modifier receives a non-string value - '
+                    . 'the legacy filter raises a TypeError here'
+                );
+            }
+            $value = match ($lookup) {
                 'raw' => $value,
-                'nl2br' => nl2br($value),
-                'escape' => htmlspecialchars($value, ENT_QUOTES, 'UTF-8'),
-                default => $value,
+                'nl2br' => nl2br(is_string($value) ? $value : $this->toStringValue($value)),
+                'escape' => $this->escape($this->toStringValue($value), $params[0] ?? 'html'),
+                default => $value,      // legacy skips an unknown modifier
             };
         }
-        return $value;
+
+        return $this->toStringValue($value);
     }
 
-    private function stringify(mixed $value): string
+    /**
+     * Mirrors Email\Model\Template\Filter::modifierEscape, whose 'html' case goes through
+     * Magento's Escaper: ENT_QUOTES|ENT_SUBSTITUTE and double_encode disabled. Without
+     * ENT_SUBSTITUTE an invalid UTF-8 byte makes htmlspecialchars return the empty string,
+     * silently deleting the whole value.
+     */
+    private function escape(string $value, string $type = 'html'): string
+    {
+        return match ($type) {
+            'htmlentities' => htmlentities($value, ENT_QUOTES),
+            'url' => rawurlencode($value),
+            'html' => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false),
+            default => $value,
+        };
+    }
+
+    private function toStringValue(mixed $value): string
     {
         if (is_array($value)) {
             // Legacy casts the array, emitting the literal string "Array" into the output
@@ -401,6 +517,9 @@ final class Evaluator
 
         if (is_array($value)) {
             return $value !== [];
+        }
+        if (is_float($value)) {
+            return $value != 0.0;      // in_array(..., true) never matches a float
         }
         return !in_array($value, [null, false, '', '0', 0], true);
     }

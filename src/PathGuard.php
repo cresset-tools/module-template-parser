@@ -20,23 +20,36 @@ final class PathGuard
             return false;
         }
 
-        // Null bytes and control characters.
-        if (preg_match('/[\x00-\x1F\x7F]/', $path)) {
-            return false;
+        // Decode repeatedly: a single pass leaves %252e%252e ('..' double-encoded) intact,
+        // and percent-encoded control bytes slip past a check applied only to the raw form.
+        $forms = [$path];
+        $decoded = $path;
+        for ($i = 0; $i < 3; $i++) {
+            $next = rawurldecode($decoded);
+            if ($next === $decoded) {
+                break;
+            }
+            $decoded = $next;
+            $forms[] = $decoded;
         }
 
-        // Absolute paths, protocol-relative URLs and anything carrying a scheme.
-        if (str_starts_with($path, '/') || str_starts_with($path, '\\') || str_starts_with($path, '//')) {
-            return false;
-        }
-        if (preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*:#', $path)) {
-            return false;
-        }
+        foreach ($forms as $candidate) {
+            // Null bytes and control characters.
+            if (preg_match('/[\x00-\x1F\x7F]/', $candidate)) {
+                return false;
+            }
 
-        // Traversal, in either separator, before or after decoding.
-        $decoded = rawurldecode($path);
-        foreach ([$path, $decoded] as $candidate) {
-            if (preg_match('#(^|[/\\\\])\.\.([/\\\\]|$)#', $candidate)) {
+            // Absolute paths, protocol-relative URLs and anything carrying a scheme.
+            if (str_starts_with($candidate, '/') || str_starts_with($candidate, '\\')) {
+                return false;
+            }
+            if (preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*:#', $candidate)) {
+                return false;
+            }
+
+            // Traversal, in either separator. `....//` collapses to `../` on some
+            // normalisers, so any run of dots bounded by separators is refused.
+            if (preg_match('#(^|[/\\\\])\.{2,}([/\\\\]|$)#', $candidate)) {
                 return false;
             }
         }

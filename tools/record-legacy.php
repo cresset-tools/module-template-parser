@@ -12,6 +12,7 @@ declare(strict_types=1);
 require '/h/bootstrap_realrandom.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
+require MROOT . '/lib/internal/Magento/Framework/DataObject.php';
 foreach (['/DirectiveProcessorInterface.php','/VariableResolverInterface.php','/Template/FilteringDepthMeter.php',
  '/Template/SignatureProvider.php','/Template/Tokenizer/AbstractTokenizer.php','/Template/Tokenizer/Parameter.php',
  '/Template/Tokenizer/Variable.php','/VariableResolver/StrictResolver.php','/DirectiveProcessor/Filter/FilterApplier.php',
@@ -43,10 +44,18 @@ class EmailLikeLegacy extends LegacyTemplate {
         parent::__construct(...$args);
         $this->_modifiers['escape'] = [$this, 'modifierEscape'];
     }
+    /**
+     * Email\Model\Template\Filter::modifierEscape, whose 'html' case goes through
+     * Magento's Escaper: ENT_QUOTES|ENT_SUBSTITUTE with double_encode disabled
+     * (lib/internal/Magento/Framework/Escaper.php:24 and :60).
+     *
+     * Getting these flags wrong makes the recording agree with a buggy engine instead of
+     * with Magento, which turns the whole parity measurement circular.
+     */
     public function modifierEscape($value, $type = 'html') {
         return match ($type) {
-            'html' => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'),
-            'htmlentities' => htmlentities((string)$value, ENT_QUOTES, 'UTF-8'),
+            'html' => htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false),
+            'htmlentities' => htmlentities((string)$value, ENT_QUOTES),
             'url' => rawurlencode((string)$value),
             default => (string)$value,
         };
@@ -120,7 +129,19 @@ $values = [
     'assoc' => ['b' => 'deep'], 'assocempty' => ['b' => ''], 'html' => '<b>&</b>',
     'directive' => '{{var a}}', 'blockpayload' => '{{block class=Evil}}',
     'longstr' => str_repeat('ab', 40), 'spaces' => '  padded  ',
+    'html' => '<b>&"x"</b>', 'entities' => 'Tom &amp; Jerry &nbsp;',
+    // NOTE: invalid UTF-8 is deliberately absent - json_encode() cannot represent it, and
+    // it is pinned directly in CompatibilityModeTest instead.
+    'newlines' => "a\nb\nc",
 ];
+
+// Objects cannot be serialised into the fixture, so they are recorded by tag and rebuilt
+// from the same factory on replay. The first corpus had none at all, which is why the
+// DataObject resolution failure was invisible.
+require '/m/tests/fixtures/legacy/ObjectFixtures.php';
+foreach (ObjectFixtures::TAGS as $tag) {
+    $values['@' . $tag] = ObjectFixtures::make($tag);
+}
 $constructs = [
     'text'            => 'plain text only',
     'var'             => '[{{var a}}]',
@@ -148,6 +169,18 @@ $constructs = [
     'unclosed'        => 'a{{if a}}b',
     'empty_braces'    => 'a{{}}b',
     'html_around'     => '<p class="x">{{var a}}</p>',
+    // Modifiers - the first corpus had none, which is why the escaping bugs hid.
+    'var_raw'         => '[{{var a|raw}}]',
+    'var_escape'      => '[{{var a|escape}}]',
+    'var_nl2br'       => '[{{var a|nl2br}}]',
+    'var_escape_html' => '[{{var a|escape:html}}]',
+    'var_esc_nl2br'   => '[{{var a|escape|nl2br}}]',
+    'var_unknown_mod' => '[{{var a|zzz}}]',
+    'var_empty_mod'   => '[{{var a|}}]',
+    'var_path_mod'    => '[{{var a.b|raw}}]',
+    // Case-insensitive directive names, which legacy's /i patterns accept.
+    'upper_var'       => '[{{VAR a}}]',
+    'mixed_if'        => '[{{If a}}Y{{/if}}]',
 ];
 
 $cases = [];
@@ -155,15 +188,24 @@ foreach ($values as $vlabel => $v) {
     foreach ($constructs as $clabel => $tpl) {
         $vars = ['a' => $v];
         [$outcome, $value] = record($tpl, $vars);
-        $cases[] = ['id' => "$clabel/$vlabel", 'template' => $tpl, 'variables' => ['a' => $v],
-                    'outcome' => $outcome, 'expected' => $value, 'parity' => parityEligible($tpl)];
+        $isObject = str_starts_with($vlabel, '@');
+        $cases[] = [
+            'id' => "$clabel/$vlabel",
+            'template' => $tpl,
+            'variables' => $isObject ? [] : ['a' => $v],
+            'object' => $isObject ? substr($vlabel, 1) : null,
+            'outcome' => $outcome,
+            'expected' => $value,
+            'parity' => parityEligible($tpl),
+        ];
     }
 }
 // no-variables path, which legacy treats specially
 foreach ($constructs as $clabel => $tpl) {
     [$outcome, $value] = record($tpl, []);
     $cases[] = ['id' => "$clabel/novars", 'template' => $tpl, 'variables' => [],
-                'outcome' => $outcome, 'expected' => $value, 'parity' => parityEligible($tpl)];
+                'object' => null, 'outcome' => $outcome, 'expected' => $value,
+                'parity' => parityEligible($tpl)];
 }
 // the real harvested templates, rendered with a realistic variable set
 $realVars = ['customer_name'=>'Jan Jansen','store_name'=>'Demo','name'=>'Jan','a'=>1,
@@ -172,11 +214,17 @@ foreach (glob('/m/tests/fixtures/corpus/*') ?: [] as $file) {
     $src = (string)file_get_contents($file);
     [$outcome, $value] = record($src, $realVars);
     $cases[] = ['id' => 'real/' . basename($file), 'template' => $src, 'variables' => $realVars,
-                'outcome' => $outcome, 'expected' => $value, 'parity' => parityEligible($src)];
+                'object' => null, 'outcome' => $outcome, 'expected' => $value,
+                'parity' => parityEligible($src)];
 }
 
-file_put_contents('/m/tests/fixtures/legacy/cases.json',
-    json_encode($cases, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+$json = json_encode($cases, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+if ($json === false) {
+    // Silently writing an empty fixture would make the parity suite pass vacuously.
+    fwrite(STDERR, 'FATAL: json_encode failed: ' . json_last_error_msg() . PHP_EOL);
+    exit(1);
+}
+file_put_contents('/m/tests/fixtures/legacy/cases.json', $json);
 
 $throws = count(array_filter($cases, static fn ($c) => $c['outcome'] === 'throw'));
 $parity = count(array_filter($cases, static fn ($c) => $c['parity']));

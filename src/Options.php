@@ -16,6 +16,15 @@ final class Options
     /** Stock Magento templates reach depth 2; 3 leaves headroom without allowing abuse. */
     public const DEFAULT_MAX_NESTING_DEPTH = 3;
 
+    /**
+     * How deep {{template}} includes may go.
+     *
+     * Cycle detection alone is not a bound: a chain of DISTINCT paths never repeats, and a
+     * fan-out of distinct paths multiplies. Stock templates include a header and a footer,
+     * one level deep.
+     */
+    public const DEFAULT_MAX_INCLUDE_DEPTH = 5;
+
     public function __construct(
         public readonly bool $strictSyntax = true,
         public readonly bool $strictDirectives = true,
@@ -64,7 +73,8 @@ final class Options
     public function withLegacyQuirks(bool $enabled): self
     {
         return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
-            $this->maxNestingDepth, $enabled, $this->refuseLegacyIncompatible);
+            $this->maxNestingDepth, $enabled, $this->refuseLegacyIncompatible,
+            $this->failOnPolicyViolation);
     }
 
     /**
