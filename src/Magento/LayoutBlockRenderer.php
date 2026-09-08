@@ -18,7 +18,7 @@ use Cresset\TemplateParser\Port\BlockRenderer;
  * 2. The method the template may invoke is an allowlist. The legacy `output=` parameter
  *    accepted any public no-argument method on the block.
  */
-final class LayoutBlockRenderer implements BlockRenderer
+class LayoutBlockRenderer implements BlockRenderer
 {
     private const DEFAULT_OUTPUT_METHODS = ['toHtml', 'toString'];
 

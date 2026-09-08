@@ -104,6 +104,15 @@ namespace Magento\Variable\Model {
         class VariableFactory { public function create(array $data = []) { return new Variable(); } }
     }
 }
+namespace Magento\Framework\Filter {
+    if (!class_exists(Template::class)) {
+        class Template {
+            protected $templateVars = [];
+            public function setVariables(array $variables) { $this->templateVars = $variables; return $this; }
+            public function filter($value) { return $value; }
+        }
+    }
+}
 namespace Psr\Log {
     if (!interface_exists(LoggerInterface::class)) {
         interface LoggerInterface {

@@ -6,7 +6,7 @@ namespace Cresset\TemplateParser\Magento;
 use Cresset\TemplateParser\Port\StylesheetLoader;
 
 /** {{css}} through Magento's CSS processor. */
-final class AssetStylesheetLoader implements StylesheetLoader
+class AssetStylesheetLoader implements StylesheetLoader
 {
     public function __construct(
         private readonly \Magento\Email\Model\Template\Css\Processor $cssProcessor,

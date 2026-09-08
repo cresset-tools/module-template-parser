@@ -8,7 +8,7 @@ use Magento\Variable\Model\VariableFactory;
 use Cresset\TemplateParser\Port\CustomVariableReader;
 
 /** {{customvar}} through Magento's custom variable model. */
-final class VariableCustomVariableReader implements CustomVariableReader
+class VariableCustomVariableReader implements CustomVariableReader
 {
     public function __construct(
         private readonly VariableFactory $variableFactory,

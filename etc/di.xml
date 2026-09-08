@@ -13,6 +13,23 @@
     <preference for="Cresset\TemplateParser\Port\Translator"
                 type="Cresset\TemplateParser\Magento\PhraseTranslator"/>
 
+    <preference for="Cresset\TemplateParser\Magento\TemplateFilterInterface"
+                type="Cresset\TemplateParser\Magento\TemplateFilterAdapter"/>
+
+    <!--
+        The plugin is NOT registered here. Adopting this engine is a decision for the
+        integrator, taken after running shadow mode over real content, so it is declared in
+        a project module against whichever filter you want to cover:
+
+            <type name="Magento\Email\Model\Template\Filter">
+                <plugin name="cresset_template_parser" sortOrder="10"
+                        type="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin"/>
+            </type>
+
+        Even then nothing changes until ShadowComparator below is enabled, and while it is
+        enabled the LEGACY result is what gets returned.
+    -->
+
     <type name="Cresset\TemplateParser\Magento\LayoutBlockRenderer">
         <arguments>
             <!-- Only these methods may be named by {{block output="..."}}. -->

@@ -17,7 +17,7 @@ use Cresset\TemplateParser\Port\WidgetRenderer;
  *
  * @see LayoutBlockRenderer
  */
-final class TypeCheckedWidgetRenderer implements WidgetRenderer
+class TypeCheckedWidgetRenderer implements WidgetRenderer
 {
     /** @param string[]|null $allowedTypes */
     public function __construct(

@@ -14,7 +14,7 @@ use Cresset\TemplateParser\Port\LayoutRenderer;
  * not a trustworthy source for one. The allowlist is required rather than optional: passing
  * null would mean any handle in the application is reachable from a template.
  */
-final class AllowlistedLayoutRenderer implements LayoutRenderer
+class AllowlistedLayoutRenderer implements LayoutRenderer
 {
     /** @param string[] $allowedHandles */
     public function __construct(

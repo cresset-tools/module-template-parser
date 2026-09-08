@@ -16,7 +16,7 @@ use Cresset\TemplateParser\Port\ConfigReader;
  * Variables::getAvailableVars(); the same gate is applied here, plus a fallback deny if the
  * list cannot be obtained - failing closed rather than open.
  */
-final class AllowlistedConfigReader implements ConfigReader
+class AllowlistedConfigReader implements ConfigReader
 {
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,

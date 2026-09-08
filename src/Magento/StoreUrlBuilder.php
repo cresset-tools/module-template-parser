@@ -13,7 +13,7 @@ use Cresset\TemplateParser\Port\UrlBuilder;
  * Paths reaching these have already been through PathGuard, so no traversal, scheme or
  * absolute path arrives here.
  */
-final class StoreUrlBuilder implements UrlBuilder
+class StoreUrlBuilder implements UrlBuilder
 {
     public function __construct(
         private readonly UrlInterface $urlModel,

@@ -8,7 +8,7 @@ use Cresset\TemplateParser\Port\Translator;
 /**
  * {{trans}} via Magento's translation layer.
  */
-final class PhraseTranslator implements Translator
+class PhraseTranslator implements Translator
 {
     /** @param array<string,string> $arguments */
     public function translate(string $text, array $arguments): string

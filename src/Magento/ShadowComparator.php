@@ -13,10 +13,10 @@ use Psr\Log\LoggerInterface;
  * into measured data: legacy output is always what gets returned, so enabling this changes
  * nothing a customer sees.
  */
-final class ShadowComparator
+class ShadowComparator
 {
     public function __construct(
-        private readonly TemplateFilterAdapter $adapter,
+        private readonly TemplateFilterInterface $adapter,
         private readonly LoggerInterface $logger,
         private readonly bool $enabled = false
     ) {
@@ -43,11 +43,22 @@ final class ShadowComparator
         }
 
         if ($candidate !== $legacyResult) {
+            // The causes, not just the fact. A byte offset alone tells an integrator
+            // nothing actionable; a refused directive or a construct the legacy filter
+            // could not have rendered names what to look at.
             $this->logger->info('template-parser shadow: divergence', [
                 'template_hash' => hash('sha256', $source),
                 'legacy_length' => strlen($legacyResult),
                 'candidate_length' => strlen($candidate),
                 'first_difference_at' => $this->firstDifference($legacyResult, $candidate),
+                'policy_violations' => array_map(
+                    static fn ($violation): string => $violation->describe(),
+                    $this->adapter->violations()
+                ),
+                'legacy_incompatibilities' => array_map(
+                    static fn ($incompatibility): string => $incompatibility->describe(),
+                    $this->adapter->incompatibilities()
+                ),
             ]);
         }
 

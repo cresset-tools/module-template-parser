@@ -8,6 +8,7 @@ use Cresset\TemplateParser\Evaluator;
 use Cresset\TemplateParser\HostDirectives;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\Parser;
+use Cresset\TemplateParser\RenderPolicy;
 use Cresset\TemplateParser\HostServices;
 use Cresset\TemplateParser\TemplateEngine;
 
@@ -19,7 +20,7 @@ use Cresset\TemplateParser\TemplateEngine;
  * after running ShadowComparator over real content - not a side effect of installing this
  * module.
  */
-final class TemplateFilterAdapter
+class TemplateFilterAdapter implements TemplateFilterInterface
 {
     private TemplateEngine $engine;
 
@@ -31,12 +32,27 @@ final class TemplateFilterAdapter
 
     private readonly Options $options;
 
+    private readonly RenderPolicy $defaultPolicy;
+
+    private ?RenderPolicy $policy = null;
+
+    /**
+     * @param RenderPolicy|null $policy what a render may do, when the caller does not say.
+     *
+     * Defaults to unrestricted, unlike Context, and deliberately: this class replaces
+     * Magento\Framework\Filter\Template, which has no policy at all. Defaulting to
+     * RenderPolicy::restricted() here would refuse {{block}} and {{layout}} - the item table
+     * of every stock order, invoice, shipment and creditmemo email - and do it silently.
+     * Tightening it is an explicit decision, made in di.xml or per render via setPolicy().
+     */
     public function __construct(
         ?HostServices $services = null,
-        ?Options $options = null
+        ?Options $options = null,
+        ?RenderPolicy $policy = null
     ) {
         $services ??= new HostServices();
         $this->options = $options ?? new Options();
+        $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
         $parser = new Parser(options: $this->options);
         $evaluator = new Evaluator(
             new \Cresset\TemplateParser\VariableResolver($this->options->legacyQuirks),
@@ -51,10 +67,16 @@ final class TemplateFilterAdapter
     }
 
     /** @param array<string,mixed> $variables */
-    public function setVariables(array $variables): self
+    public function setVariables(array $variables): static
     {
         $this->variables = $variables;
-        $this->context = new Context($variables);
+        $this->context = new Context($variables, $this->policy ?? $this->defaultPolicy);
+        return $this;
+    }
+
+    public function setPolicy(?RenderPolicy $policy): static
+    {
+        $this->policy = $policy;
         return $this;
     }
 
@@ -63,7 +85,7 @@ final class TemplateFilterAdapter
         // A fresh scope per call. Reusing one context makes deferred(), violations() and
         // incompatibilities() cumulative across every template this adapter has ever
         // filtered, so a caller acting on "the last render" acts on all of them.
-        $this->context = new Context($this->variables);
+        $this->context = new Context($this->variables, $this->policy ?? $this->defaultPolicy);
 
         return $this->engine->render($value, context: $this->context);
     }

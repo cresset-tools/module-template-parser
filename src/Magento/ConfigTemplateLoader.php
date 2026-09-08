@@ -12,7 +12,7 @@ use Cresset\TemplateParser\Port\TemplateLoader;
  * Only paths under a configured prefix are readable, so a template cannot name an arbitrary
  * configuration path.
  */
-final class ConfigTemplateLoader implements TemplateLoader
+class ConfigTemplateLoader implements TemplateLoader
 {
     /** @param string[] $allowedPathPrefixes */
     public function __construct(
