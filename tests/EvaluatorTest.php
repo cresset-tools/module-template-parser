@@ -29,7 +29,10 @@ final class EvaluatorTest extends TestCase
             'var'                => ['{{var x}}', ['x' => 'v'], 'v'],
             'var escaped'        => ['{{var x}}', ['x' => '<i>'], '&lt;i&gt;'],
             'var raw'            => ['{{var x|raw}}', ['x' => '<i>'], '<i>'],
-            'var nl2br'          => ["{{var x|nl2br}}", ['x' => "a\nb"], "a<br />\nb"],
+            // The value carries a character escaping WOULD change, so this case also pins
+            // down that a known modifier still escapes first; "a\nb" alone passed against a
+            // renderer that had stopped escaping entirely.
+            'var nl2br'          => ["{{var x|nl2br}}", ['x' => "<b>\nx"], "&lt;b&gt;<br />\nx"],
             'if true'            => ['{{if a}}Y{{/if}}', ['a' => 1], 'Y'],
             'if false'           => ['{{if a}}Y{{/if}}', ['a' => 0], ''],
             'if else true'       => ['{{if a}}Y{{else}}N{{/if}}', ['a' => 1], 'Y'],

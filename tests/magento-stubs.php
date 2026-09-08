@@ -32,6 +32,34 @@ namespace Magento\Framework\App\Config {
         }
     }
 }
+namespace Magento\Widget\Block {
+    if (!interface_exists(BlockInterface::class)) {
+        interface BlockInterface { public function toHtml(); }
+    }
+}
+namespace Magento\Store\Model {
+    if (!interface_exists(ScopeInterface::class)) {
+        interface ScopeInterface { public const SCOPE_STORE = 'store'; }
+    }
+}
+namespace Magento\Variable\Model\Source {
+    if (!class_exists(Variables::class)) {
+        class Variables { public function getAvailableVars() { return []; } }
+    }
+}
+namespace Magento\Framework\App {
+    if (!class_exists(State::class)) {
+        class State {
+            public function getAreaCode() { return 'frontend'; }
+            public function emulateAreaCode($area, $callback) { return $callback(); }
+        }
+    }
+}
+namespace Magento\Framework\View {
+    if (!class_exists(LayoutFactory::class)) {
+        class LayoutFactory { public function create(array $data = []) { return null; } }
+    }
+}
 namespace Psr\Log {
     if (!interface_exists(LoggerInterface::class)) {
         interface LoggerInterface {

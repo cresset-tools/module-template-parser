@@ -93,9 +93,38 @@ final class LegacyParityTest extends TestCase
     #[DataProvider('surfaceDivergentCases')]
     public function testSurfaceDivergentCasesStillRenderSafely(array $case): void
     {
-        $actual = TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
-        self::assertIsString($actual);
+        $engine = TemplateEngine::compatible();
+        $actual = $engine->render($case['template'], self::variablesFor($case));
+
         self::assertStringNotContainsString('<?php', $actual);
+        self::assertSame(
+            $actual,
+            $engine->render($case['template'], self::variablesFor($case)),
+            'rendering is not deterministic: ' . $case['id']
+        );
+        // The engine may legitimately differ from legacy here, but it may not invent a
+        // directive: whatever comes out must contain no construct legacy would have run.
+        self::assertNoLiveDirectiveSurvived($actual, $case);
+    }
+
+    /**
+     * Nothing in the output may be a construct the legacy filter would execute.
+     *
+     * A directive can legitimately survive verbatim - lenient pass-through and `|raw` both
+     * do that - but only if it was in the TEMPLATE. One that appears in the output without
+     * being in the template came from a variable's value, which is the smuggling this
+     * engine exists to prevent.
+     */
+    private static function assertNoLiveDirectiveSurvived(string $actual, array $case): void
+    {
+        preg_match_all('/\{\{[a-z]{1,10}[\s}]/i', $actual, $found);
+        foreach (array_unique($found[0]) as $construct) {
+            self::assertStringContainsString(
+                $construct,
+                $case['template'],
+                sprintf('%s: "%s" is in the output but not in the template', $case['id'], $construct)
+            );
+        }
     }
 
     /**
@@ -125,7 +154,16 @@ final class LegacyParityTest extends TestCase
         );
 
         $actual = $engine->render($case['template'], self::variablesFor($case));
-        self::assertIsString($actual, 'permissive mode should render: ' . $case['id']);
+
+        // assertIsString() on a `: string` return can never fail. What is actually being
+        // claimed is that these render rather than raise, and that the result is inert.
+        self::assertStringNotContainsString('<?php', $actual, $case['id']);
+        self::assertNoLiveDirectiveSurvived($actual, $case);
+        self::assertSame(
+            $actual,
+            $engine->render($case['template'], self::variablesFor($case)),
+            'rendering is not deterministic: ' . $case['id']
+        );
     }
 
     /**

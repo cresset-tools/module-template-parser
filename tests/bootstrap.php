@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 require __DIR__ . '/magento-stubs.php';
+// FakeDataObject stands in for Magento's DataObject; the parity replay and the
+// resolver tests both need it, so it is loaded once here.
+require __DIR__ . '/fixtures/legacy/ObjectFixtures.php';
 
 spl_autoload_register(static function (string $class): void {
     foreach ([

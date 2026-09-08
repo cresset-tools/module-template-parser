@@ -98,7 +98,12 @@ final class MalformedTemplateTest extends TestCase
             $this->expectException(NestingLimitError::class);
         }
 
-        self::assertIsString($engine->render($template, ['a' => 1]));
+        $out = $engine->render($template, ['a' => 1]);
+
+        // assertIsString() on a `: string` return can never fail. The claim is that broken
+        // input degrades rather than raising, so assert the degraded output itself.
+        self::assertStringNotContainsString('<?php', $out);
+        self::assertSame($out, $engine->render($template, ['a' => 1]), 'rendering is not deterministic');
     }
 
 
@@ -118,7 +123,15 @@ final class MalformedTemplateTest extends TestCase
         self::assertSame([], $executed, 'a directive arriving through data was executed');
         // The payload may well appear in the output - {{var|raw}} means "do not escape".
         // What matters is that it is inert text: no directive ran, and nothing evaluates it.
-        self::assertIsString($out);
+        // Re-rendering the OUTPUT must not find anything to run either, which is the actual
+        // smuggling shape: a first pass that plants a construct a second pass executes.
+        try {
+            $engine->render($out, $variables);
+        } catch (\MageOS\TemplateParser\TemplateError) {
+            // Refusing to render the output is also "nothing ran" - what is being asserted
+            // is the absence of execution, not the presence of a second rendering.
+        }
+        self::assertSame([], $executed, 'a second pass over the output executed a directive');
     }
 
     public static function hostile(): array

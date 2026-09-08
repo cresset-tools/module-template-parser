@@ -300,7 +300,9 @@ final class Evaluator
             // and takes the render with it.
             if ($values instanceof \Generator) {
                 try {
-                    $values->current();
+                    // rewind() is what foreach does first, and what actually raises on a
+                    // generator that has already been walked.
+                    $values->rewind();
                 } catch (\Throwable $x) {
                     throw TemplateTypeError::at(
                         $this->source,
