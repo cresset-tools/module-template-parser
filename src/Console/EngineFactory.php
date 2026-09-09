@@ -10,6 +10,7 @@ use Cresset\TemplateParser\HostServices;
 use Cresset\TemplateParser\Magento\AllowlistedConfigReader;
 use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
 use Cresset\TemplateParser\Magento\AssetStylesheetLoader;
+use Cresset\TemplateParser\Magento\TemplateModelUrlBuilder;
 use Cresset\TemplateParser\Magento\ConfigTemplateLoader;
 use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
 use Cresset\TemplateParser\Magento\PhraseTranslator;
@@ -89,10 +90,18 @@ class EngineFactory
                     && ($assets = $m->get(\Magento\Framework\View\Asset\Repository::class))
                     ? new StoreUrlBuilder($url, $stores, $assets)
                     : null),
+            // Design and Filesystem are optional only in the sense that the loader still
+            // works without them; with them it resolves the asset against the store's own
+            // theme and prefers the deployed file, which is what the store's filter does.
             stylesheets: $this->build(static fn (MagentoContext $m): ?object
                 => ($css = $m->get(\Magento\Email\Model\Template\Css\Processor::class))
                     && ($assets = $m->get(\Magento\Framework\View\Asset\Repository::class))
-                    ? new AssetStylesheetLoader($css, $assets)
+                    ? new AssetStylesheetLoader(
+                        $css,
+                        $assets,
+                        $m->get(\Magento\Framework\View\DesignInterface::class),
+                        $m->get(\Magento\Framework\Filesystem::class),
+                    )
                     : null),
             config: $this->build(fn (MagentoContext $m): ?object
                 => ($scope = $m->get(\Magento\Framework\App\Config\ScopeConfigInterface::class))
@@ -108,6 +117,9 @@ class EngineFactory
                     && ($config = $m->get(\Magento\Framework\ObjectManager\ConfigInterface::class))
                     ? new TypeCheckedWidgetRenderer($layout, $config)
                     : null),
+            // No dependencies of its own: it calls getUrl() on the template model already
+            // in scope, which is exactly what the legacy resolver does.
+            templateUrls: new TemplateModelUrlBuilder(),
             layouts: $this->build(fn (MagentoContext $m): ?object
                 => $this->allowedLayoutHandles !== []
                     && ($factory = $m->get(\Magento\Framework\View\LayoutFactory::class))

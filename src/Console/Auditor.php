@@ -97,7 +97,7 @@ class Auditor
      * Renders each subject through both engines and reports where they differ.
      *
      * @param iterable<TemplateSubject> $subjects
-     * @param callable(TemplateSubject):?string $legacy renders the legacy result, or null if it cannot
+     * @param callable(TemplateSubject):?LegacyRender $legacy renders the legacy result, or null if it cannot
      * @return Divergence[]
      */
     public function diff(iterable $subjects, Mode $mode, callable $legacy, ?int $storeId = null): array
@@ -110,15 +110,25 @@ class Auditor
                 $engine = $this->engines->create($mode, $store);
 
                 try {
-                    $legacyOutput = $legacy($subject);
+                    $legacyRender = $legacy($subject);
                 } catch (\Throwable $e) {
-                    $legacyOutput = null;
+                    $legacyRender = null;
                 }
+
+                $legacyOutput = $legacyRender?->output;
+                // The variables Magento built for the legacy render, not the ones this tool
+                // was handed: an email template model adds a dozen store variables of its
+                // own, and rendering our side without them compares two different inputs.
+                $variables = $legacyRender?->variables ?: $subject->variables;
 
                 $ours = null;
                 $ourFailure = null;
                 try {
-                    $ours = $engine->render($subject->content, context: new Context($subject->variables, RenderPolicy::unrestricted()));
+                    $ours = $engine->render($subject->content, context: new Context($variables, RenderPolicy::unrestricted()));
+                    // Whatever the host does to a finished render, it does to both.
+                    if ($legacyRender?->finish !== null) {
+                        $ours = ($legacyRender->finish)($ours);
+                    }
                 } catch (\Throwable $e) {
                     $ourFailure = (new \ReflectionClass($e))->getShortName() . ': ' . $this->firstLine($e->getMessage());
                 }

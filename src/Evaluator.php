@@ -20,6 +20,16 @@ final class Evaluator
     /** The escape types Email\Model\Template\Filter::modifierEscape actually implements. */
     private const ESCAPE_TYPES = ['html', 'htmlentities', 'url'];
 
+    /**
+     * Email\Model\Template\Filter::TRANS_DIRECTIVE_REGEX, verbatim but for the pointless /i.
+     *
+     * `[^\1]` is not a backreference - inside a character class `\1` is the octal escape for
+     * chr(1) - so it reads "any character except chr(1)", which under /s is every character
+     * a template will ever hold. Kept as legacy writes it so the one input it does refuse is
+     * refused here too.
+     */
+    private const TRANS_BODY_PATTERN = '/^\s*([\'"])([^\1]*?)(?<!\\\)\1(\s.*)?$/s';
+
     /** @var array<string,callable(DirectiveNode, Context, self):string> */
     private array $handlers = [];
 
@@ -51,10 +61,15 @@ final class Evaluator
         ?DirectiveSpec $spec = null,
         ?Options $options = null
     ) {
-        $this->variables = $variables ?? new VariableResolver();
-        $this->parameters = $parameters ?? new ParameterParser();
-        $this->spec = $spec ?? new DirectiveSpec();
         $this->options = $options ?? new Options();
+        // Derived from the options, not defaulted on their own. An Evaluator built with
+        // compatible options and a default resolver is a compatible evaluator with a strict
+        // resolver inside it - which is neither mode, and is exactly what the CLI was
+        // building: `--mode=compatible` reproduced the directive quirks and none of the
+        // variable or parameter ones.
+        $this->variables = $variables ?? new VariableResolver($this->options->legacyQuirks);
+        $this->parameters = $parameters ?? new ParameterParser($this->options->legacyQuirks);
+        $this->spec = $spec ?? new DirectiveSpec();
         $this->registerDefaults();
     }
 
@@ -251,9 +266,60 @@ final class Evaluator
         $context->recordViolation(new PolicyViolation($kind, $name, $line, $column));
     }
 
-    public function params(DirectiveNode $node): array
+    /**
+     * Parses a directive's parameters, resolving `$name` values against the scope.
+     *
+     * Legacy does this in Template::getParameters(), which every parameterised directive
+     * goes through - so `{{css file=$f}}`, `{{block class=$c}}` and the rest all read a
+     * variable, and a value that does NOT start with `$` is a literal and stays one.
+     * Both halves of that matter: this engine used to resolve every value, which made
+     * `{{trans "Hi %n" n="Acme"}}` emit the contents of a variable called `Acme`.
+     *
+     * Pass the context to get that resolution. Without one the values come back raw, which
+     * is what the callers that only inspect a directive - rather than render it - want.
+     */
+    public function params(DirectiveNode $node, ?Context $context = null): array
     {
-        return $this->parameters->parse($node->params());
+        $params = $this->parameters->parse($node->params());
+
+        return $context === null ? $params : $this->resolveParameterValues($params, $context, $node);
+    }
+
+    /**
+     * Applies legacy's `$name` rule to an already-parsed parameter list.
+     *
+     * An unresolved name becomes null, as it does there, and that is observable rather than
+     * tidy: `{{store url='...' _query_id=$user.user_id}}` with no `user` in scope reaches
+     * http_build_query() as null, which drops the parameter, where '' would have produced
+     * `?id=`. Call sites read their parameters with `?? ''`, so null and '' are the same to
+     * them; only the ones that pass a parameter list onward can tell.
+     *
+     * @param array<string,mixed> $params
+     * @return array<string,mixed>
+     */
+    public function resolveParameterValues(array $params, Context $context, DirectiveNode $node): array
+    {
+        foreach ($params as $key => $value) {
+            if (!is_string($value) || !str_starts_with($value, '$')) {
+                continue;
+            }
+
+            $expression = substr($value, 1);
+            $resolution = $this->resolveAt($expression, $context, $node);
+
+            if ($resolution->value === null) {
+                // Legacy renders a parameter it cannot resolve as nothing, silently. Strict
+                // mode says so instead: a subject line reading "Welcome to " because
+                // `$store` was never passed is the exact bug this mode exists to surface.
+                $this->requireVariable($resolution, $node, $context, $expression, $node->name());
+                $params[$key] = null;
+                continue;
+            }
+
+            $params[$key] = $this->stringify($resolution->value);
+        }
+
+        return $params;
     }
 
     public function resolver(): VariableResolver
@@ -418,31 +484,17 @@ final class Evaluator
             return '';
         };
 
-        $this->handlers['trans'] = function (DirectiveNode $n, Context $c): string {
-            [$text, $args] = $this->splitTransParams($n->params());
-
+        $this->handlers['trans'] = fn (DirectiveNode $n, Context $c): string => $this->renderTrans(
+            $n,
+            $c,
             // One pass, not a str_replace per argument. Substituting in sequence has two
             // faults: `%name` rewrites the front of `%name_long` before its own turn comes,
             // and a value that happens to contain `%b` becomes a live placeholder for a
             // later argument - which would make a variable's value template syntax again,
             // the one thing this engine exists to prevent. strtr() takes the longest
             // matching key at each position and never re-scans what it has written.
-            //
-            // The substituted VALUES are escaped. They are variable content arriving in a
-            // directive that emits its result unmodified, which made {{trans}} the one path
-            // that still put a raw value in the output when {{var}} would not:
-            //   {{var x}}              -> &lt;img src=x onerror=...&gt;
-            //   {{trans "Hi %n" n=$x}} -> Hi <img src=x onerror=...>
-            // The translation text itself is template-authored and is left alone; legacy
-            // escapes the whole rendered result instead, which also escapes the text.
-            $map = [];
-            foreach ($args as $k => $v) {
-                $resolved = $this->resolveAt(ltrim($v, '$'), $c, $n)->value;
-                $map['%' . $k] = $this->escapeValue($resolved ?? $v);
-            }
-
-            return $map === [] ? $text : strtr($text, $map);
-        };
+            static fn (string $text, array $args): string => $args === [] ? $text : strtr($text, $args)
+        );
     }
 
     /**
@@ -475,24 +527,99 @@ final class Evaluator
     }
 
     /**
+     * The placeholder an argument key stands for.
+     *
+     * Phrase\Renderer\Placeholder::keyToPlaceholder() adds one to an INTEGER key, because
+     * `__('%1', $a)` numbers its positional arguments from one while PHP numbers the array
+     * it collects them into from zero. A template's arguments go through the same code, and
+     * PHP has already turned the tokenizer's '1' into int 1 by the time they get there - so
+     * `{{trans "%1" 1=$x}}` fills in %2 and leaves %1 standing, and `{{trans "%2" 1=$x}}` is
+     * the one that works. Named arguments are unaffected.
+     */
+    private static function placeholderFor(string|int $key): string
+    {
+        return '%' . (is_int($key) ? $key + 1 : $key);
+    }
+
+    /**
+     * Renders a {{trans}} directive - body, modifiers, arguments and all.
+     *
+     * The translation step is the caller's, because the built-in handler has no translator
+     * and a host that does substitutes through its own; everything around it is identical
+     * and belongs in one place.
+     *
+     * Modifiers apply to the whole translated result and default to `escape`, which is
+     * where {{trans}}'s escaping comes from - for the substituted values AND for the text:
+     *   {{var x}}              -> &lt;img src=x onerror=...&gt;
+     *   {{trans "Hi %n" n=$x}} -> Hi &lt;img src=x onerror=...&gt;
+     * Escaping only the values would be the smaller change but leaves the text raw, and the
+     * text is not always written by whoever wrote the template - it is the msgid, so what
+     * reaches the page is a translation out of the i18n files or the translation table.
+     *
+     * @param callable(string,array<string,string>):string $translate keyed by placeholder
+     */
+    public function renderTrans(DirectiveNode $node, Context $context, callable $translate): string
+    {
+        [$body, $modifiers] = $this->splitTransModifiers($node->params());
+        [$text, $args] = $this->splitTransParams($body);
+
+        // legacy: `if (empty($text)) { return ''; }`, so {{trans "0"}} renders nothing.
+        if (empty($text)) {
+            return '';
+        }
+
+        $resolved = [];
+        foreach ($this->resolveParameterValues($args, $context, $node) as $key => $value) {
+            // toStringValue(), not a cast - an object with no __toString is a perfectly
+            // ordinary template variable and must not be a fatal.
+            $resolved[self::placeholderFor($key)] = $this->toStringValue($value);
+        }
+
+        return $this->applyModifiers($translate($text, $resolved), $modifiers, $context);
+    }
+
+    /**
+     * Splits a {{trans}} body from its modifiers, the way explodeModifiers() does.
+     *
+     * On the FIRST `|` anywhere in the body - including one inside the quoted text, which
+     * then leaves the text unterminated and makes the whole directive render nothing.
+     * Reproduced rather than corrected: it decides output, and splitting anywhere else
+     * would make `{{trans "a|b"}}` render differently here than on the filter this engine
+     * is measured against.
+     *
+     * Legacy's default modifier for {{trans}} is `escape`, which is where an unmodified
+     * {{trans}}'s escaping comes from.
+     *
+     * @return array{0:string,1:string[]}
+     */
+    private function splitTransModifiers(string $body): array
+    {
+        $parts = explode('|', $body, 2);
+
+        return count($parts) === 2 ? [$parts[0], explode('|', $parts[1])] : [$body, ['escape']];
+    }
+
+    /**
      * Splits `"some text" arg=$expr` into the literal and its arguments.
+     *
+     * Mirrors Email\Model\Template\Filter::getTransParameters(), refusals included: the
+     * body has to be a quoted string and its arguments have to be separated from it by
+     * whitespace. Anything else is not treated as the text - it renders nothing at all.
      *
      * @return array{0:string,1:array<string,string>}
      */
     public function splitTransParams(string $params): array
     {
-        $raw = trim($params);
-        if ($raw === '' || ($raw[0] !== '"' && $raw[0] !== "'")) {
-            return [$raw, []];
+        if (preg_match(self::TRANS_BODY_PATTERN, $params, $matches) !== 1) {
+            return ['', []];
         }
 
-        $quote = $raw[0];
-        $end = $this->findClosingQuote($raw, $quote);
-        $text = $end === null ? substr($raw, 1) : substr($raw, 1, $end - 1);
-        $text = str_replace('\\' . $quote, $quote, $text);
-        $rest = $end === null ? '' : substr($raw, $end + 1);
+        // stripslashes(), not just unescaping the quote: legacy runs the whole literal
+        // through it, so a `\n` written in a template renders as the letter n.
+        $text = stripslashes($matches[2]);
+        $rest = trim($matches[3] ?? '');
 
-        return [$text, $this->parameters->parse(trim($rest))];
+        return [$text, $rest === '' ? [] : $this->parameters->parse($rest)];
     }
 
     /**
@@ -571,21 +698,6 @@ final class Evaluator
             ? 'no variables are in scope here'
             : 'variables in scope: ' . implode(', ', array_slice($available, 0, 12))
                 . (count($available) > 12 ? ', …' : '');
-    }
-
-    private function findClosingQuote(string $s, string $quote): ?int
-    {
-        $len = strlen($s);
-        for ($i = 1; $i < $len; $i++) {
-            if ($s[$i] === '\\') {
-                $i++;
-                continue;
-            }
-            if ($s[$i] === $quote) {
-                return $i;
-            }
-        }
-        return null;
     }
 
     /** @return array{0:string,1:string[]} */

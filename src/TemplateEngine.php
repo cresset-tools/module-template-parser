@@ -35,7 +35,7 @@ final class TemplateEngine
     {
         return new self(
             new Parser($spec, $options),
-            new Evaluator(new VariableResolver($options->legacyQuirks), new ParameterParser(), $spec, $options)
+            new Evaluator(spec: $spec, options: $options)
         );
     }
 

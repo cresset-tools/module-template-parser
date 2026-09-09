@@ -70,7 +70,7 @@ function legacy(array $vars, bool $neutralize = true): LegacyTemplate {
  * processor but does have `template`; this engine is the other way round until a host wires
  * the ports. Cases touching these are recorded but excluded from strict parity.
  */
-const SURFACE_DIVERGENT = ['trans','template','inlinecss','css','store','block','widget',
+const SURFACE_DIVERGENT = ['template','inlinecss','css','store','block','widget',
                            'media','config','customvar','protocol','view','filter','for'];
 
 /*
@@ -271,6 +271,47 @@ $constructs = [
     'getter_args'     => '[{{var a.getB("x")}}]',
     'var_ws_path'     => '[{{var a . b}}]',
     'var_lead_dot'    => '[{{var .a}}]',
+    // {{trans}}. Excluded from parity until the recorder grew a transDirective, so none of
+    // these rules were ever measured - and four of them were wrong here.
+    'trans'           => '[{{trans "T"}}]',
+    'trans_arg'       => '[{{trans "T %a" a=$a}}]',
+    // No `$`, so `a` is a literal and stays the letter a, even though a variable `a` exists.
+    'trans_arg_lit'   => '[{{trans "T %a" a=a}}]',
+    'trans_arg_quot'  => '[{{trans "T %a" a="a"}}]',
+    'trans_arg_miss'  => '[{{trans "T %a" a=$nosuchvar}}]',
+    // An integer argument key stands for the NEXT placeholder up.
+    'trans_num_key'   => '[{{trans "T %1 %2" 1=$a}}]',
+    'trans_zero_key'  => '[{{trans "T %0 %1" 0=$a}}]',
+    // The default modifier is escape, and it applies to the text as well as the arguments.
+    'trans_amp'       => '[{{trans "Tom & Jerry %a" a=$a}}]',
+    'trans_raw'       => '[{{trans "T %a" a=$a|raw}}]',
+    'trans_esc_url'   => '[{{trans "T %a" a=$a|escape:url}}]',
+    'trans_unknown'   => '[{{trans "T & %a" a=$a|zzz}}]',
+    // Malformed bodies, all of which render nothing rather than being treated as the text.
+    'trans_pipe_text' => '[{{trans "a|b"}}]',
+    'trans_unquoted'  => '[{{trans T %a}}]',
+    'trans_unterm'    => '[{{trans "T}}]',
+    'trans_no_space'  => '[{{trans "T %a"a=$a}}]',
+    'trans_backslash' => '[{{trans "a\b \"q\" %a" a=$a}}]',
+    'trans_empty'     => '[{{trans ""}}]',
+    'trans_zero_text' => '[{{trans "0"}}]',
+    'trans_in_if'     => '[{{if a}}{{trans "T %a" a=$a}}{{/if}}]',
+    // Parameter tokenizing. getValue() stops on the whitespace after '=', tokenize() records
+    // nothing for a word with no '=' at all, and at the end of the blob the cursor cannot
+    // advance so the '=' itself becomes the value.
+    'trans_empty_arg' => '[{{trans "T %a %b" a= b=$a}}]',
+    'trans_arg_eof'   => '[{{trans "T %a" a=}}]',
+    'trans_arg_word'  => '[{{trans "T %a" a=$a b}}]',
+    'trans_arg_space' => '[{{trans "T %a" a = $a}}]',
+    // AbstractTokenizer::setString() rawurldecodes, before tokenizing and before the
+    // variable path is split - so an encoded '=' makes a parameter and an encoded '.' makes
+    // a path segment.
+    'trans_enc_eq'    => '[{{trans "T %a" a%3D$a}}]',
+    'var_enc_dot'     => '[{{var a%2Eb}}]',
+    'var_enc_val'     => '[{{trans "T %a" a=%24a}}]',
+    // Dots inside a method's arguments are not path separators.
+    'getter_arg_path' => '[{{var a.getB($a.b)}}]',
+    'getter_arg_arr'  => '[{{var a.getUrl($a,\'x/y/\',[_query:[id:$a.b],_nosid:1])}}]',
 ];
 
 $cases = [];

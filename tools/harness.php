@@ -64,6 +64,26 @@ if (is_file($optional)) {
     require $optional;
 }
 
+/*
+ * Phrase and __() come from the tree, not from a stub.
+ *
+ * {{trans}} renders through Phrase\Renderer\Placeholder, and its keyToPlaceholder() adds
+ * one to an integer argument key - so `{{trans "%1" 1=$x}}` fills in %2 and leaves %1
+ * standing. A stub that returned the text and substituted the obvious way would record a
+ * corpus that agreed with any engine, which is the same trap the reimplemented Escaper was.
+ *
+ * Phrase::getRenderer() installs Placeholder itself when none is set, so there is nothing
+ * to configure. The stub below is guarded on class_exists and stands down.
+ */
+foreach ([
+    '/lib/internal/Magento/Framework/Phrase/RendererInterface.php',
+    '/lib/internal/Magento/Framework/Phrase/Renderer/Placeholder.php',
+    '/lib/internal/Magento/Framework/Phrase.php',
+    '/lib/internal/Magento/Framework/Phrase/__.php',
+] as $phrase) {
+    require MROOT . $phrase;
+}
+
 // The stubs carry the .php.stub extension so that Magento's DI scanners - which walk every
 // *.php under an installed module - never see a class declaration in tools/ at all. A module
 // installed from git ships this directory, and playing whack-a-mole with each scanner in turn

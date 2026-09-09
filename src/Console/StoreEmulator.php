@@ -12,7 +12,11 @@ namespace Cresset\TemplateParser\Console;
  * Store\Model\App\Emulation, which swaps locale, design and translations together; doing it
  * by hand with setCurrentStore gets the config right and the translations wrong.
  *
- * Without a store, or without an emulation service, the callback simply runs.
+ * With no store named, the current one is emulated rather than nothing being emulated. A CLI
+ * process has a store but no design - Bootstrap loads neither a theme nor a locale - so
+ * {{css}} and {{view}} resolve their assets against a theme whose code is the empty string
+ * and come back as LESS compilation errors. Emulating is what gives the process the design
+ * a request would have had.
  */
 class StoreEmulator
 {
@@ -27,12 +31,13 @@ class StoreEmulator
      */
     public function around(?int $storeId, callable $work): mixed
     {
-        if ($storeId === null || !$this->magento->isAvailable()) {
+        if (!$this->magento->isAvailable()) {
             return $work();
         }
 
         $emulation = $this->magento->get(\Magento\Store\Model\App\Emulation::class);
-        if ($emulation === null) {
+        $storeId ??= $this->currentStoreId();
+        if ($emulation === null || $storeId === null) {
             return $work();
         }
 
@@ -50,6 +55,17 @@ class StoreEmulator
             } catch (\Throwable) {
                 // nothing useful to do; the process is about to end either way
             }
+        }
+    }
+
+    private function currentStoreId(): ?int
+    {
+        $manager = $this->magento->get(\Magento\Store\Model\StoreManagerInterface::class);
+
+        try {
+            return $manager === null ? null : (int)$manager->getStore()->getId();
+        } catch (\Throwable) {
+            return null;
         }
     }
 

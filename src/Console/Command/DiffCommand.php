@@ -6,6 +6,7 @@ namespace Cresset\TemplateParser\Console\Command;
 use Cresset\TemplateParser\Console\Auditor;
 use Cresset\TemplateParser\Console\Divergence;
 use Cresset\TemplateParser\Console\EngineFactory;
+use Cresset\TemplateParser\Console\LegacyRender;
 use Cresset\TemplateParser\Console\LegacyRenderer;
 use Cresset\TemplateParser\Console\Mode;
 use Cresset\TemplateParser\Console\StoreEmulator;
@@ -25,6 +26,7 @@ class DiffCommand extends Command
     protected function configure(): void
     {
         $this->addModeOption()
+            ->addLayoutOption()
             ->addSourceOptions()
             ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store id to render in')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'text or json', 'text')
@@ -60,9 +62,13 @@ HELP);
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
         $width = max(20, (int)$input->getOption('show'));
 
-        $auditor = new Auditor(new EngineFactory($magento), new StoreEmulator($magento));
-        $render = static fn (TemplateSubject $subject): ?string
-            => $legacy->render($subject->content, $subject->variables, $subject->storeId ?? $storeId);
+        $auditor = new Auditor(new EngineFactory($magento, $this->layoutHandles($input)), new StoreEmulator($magento));
+        $render = static fn (TemplateSubject $subject): ?LegacyRender => $legacy->render(
+            $subject->content,
+            $subject->variables,
+            $subject->storeId ?? $storeId,
+            $subject->kind,
+        );
 
         $divergences = [];
         $examined = 0;

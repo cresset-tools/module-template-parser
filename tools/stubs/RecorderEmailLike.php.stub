@@ -14,6 +14,10 @@ class EmailLikeLegacy extends LegacyTemplate {
     public function __construct(...$args) {
         parent::__construct(...$args);
         $this->_modifiers['escape'] = [$this, 'modifierEscape'];
+        $this->inlineTranslationState = new class {
+            public function disable() {}
+            public function enable() {}
+        };
     }
     private ?\Magento\Framework\Escaper $realEscaper = null;
     /**
@@ -42,6 +46,49 @@ class EmailLikeLegacy extends LegacyTemplate {
                 return rawurlencode($value);
         }
         return $value;
+    }
+    /**
+     * Inline translation is a no-op here: transDirective toggles it around the __() call,
+     * and the real state object would drag the whole translate/inline stack in for a
+     * setting that cannot change the rendered string.
+     */
+    private $inlineTranslationState;
+
+    public const TRANS_DIRECTIVE_REGEX = '/^\s*([\'"])([^\1]*?)(?<!\\\)\1(\s.*)?$/si';
+
+    /**
+     * Email\Model\Template\Filter::transDirective and getTransParameters, copied verbatim.
+     *
+     * __() is the real one, and so is the Phrase renderer behind it, for the same reason
+     * modifierEscape calls the real Escaper: the rules worth recording are the ones nobody
+     * would think to reimplement. Placeholder::keyToPlaceholder() adds one to an integer
+     * argument key, so `{{trans "%1" 1=$x}}` fills in %2 - a stub returning the text would
+     * have recorded a corpus that agreed with any engine.
+     */
+    public function transDirective($construction) {
+        list($directive, $modifiers) = $this->explodeModifiers($construction[2], 'escape');
+
+        list($text, $params) = $this->getTransParameters($directive);
+        if (empty($text)) {
+            return '';
+        }
+        $this->inlineTranslationState->disable();
+        $text = __($text, $params)->render();
+        $this->inlineTranslationState->enable();
+        return $this->applyModifiers($text, $modifiers);
+    }
+    protected function getTransParameters($value) {
+        if ($value === null || preg_match(self::TRANS_DIRECTIVE_REGEX, $value, $matches) !== 1) {
+            return ['', []];  // malformed directive body; return without breaking list
+        }
+        $text = stripslashes($matches[2]);
+
+        $params = [];
+        if (!empty($matches[3])) {
+            $params = $this->getParameters($matches[3]);
+        }
+
+        return [$text, $params];
     }
     public function varDirective($construction) {
         if (count($this->templateVars) == 0) { return $construction[0]; }

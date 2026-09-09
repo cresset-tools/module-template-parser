@@ -777,8 +777,11 @@ final class GuardTripwireTest extends TestCase
                 ['x' => 'AAA', 'y' => 'BBB'],
                 'AAA and BBB',
             ],
+            // Written to fill %2 and %11, because an integer argument key stands for the
+            // next placeholder up - see Evaluator::placeholderFor(). The point of the case
+            // is still that %2 does not eat the front of %11.
             'numeric prefix' => [
-                '{{trans "%1 %10" 1=$x 10=$y}}',
+                '{{trans "%2 %11" 1=$x 10=$y}}',
                 ['x' => 'ONE', 'y' => 'TEN'],
                 'ONE TEN',
             ],

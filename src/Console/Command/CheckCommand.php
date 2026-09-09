@@ -28,6 +28,7 @@ class CheckCommand extends Command
     protected function configure(): void
     {
         $this->addModeOption()
+            ->addLayoutOption()
             ->addSourceOptions()
             ->addArgument('path', InputArgument::OPTIONAL, 'A single template file to check instead of a source')
             ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store id to render in')
@@ -51,7 +52,7 @@ HELP);
         $mode = Mode::parse((string)$input->getOption('mode'));
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
 
-        $auditor = new Auditor(new EngineFactory($magento), new StoreEmulator($magento));
+        $auditor = new Auditor(new EngineFactory($magento, $this->layoutHandles($input)), new StoreEmulator($magento));
 
         $path = $input->getArgument('path');
         if ($path !== null) {

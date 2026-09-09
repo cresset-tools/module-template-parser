@@ -11,9 +11,20 @@ namespace Cresset\TemplateParser;
  */
 final class ParameterParser
 {
+    public function __construct(private readonly bool $legacyQuirks = false)
+    {
+    }
+
     /** @return array<string,string> */
     public function parse(string $params): array
     {
+        // Tokenizer\AbstractTokenizer::setString() rawurldecodes before it tokenizes, so the
+        // decoding happens BEFORE the blob is cut into parameters and can therefore create
+        // parameters: `a%3D$x` is `a=$x`. Decoding here rather than per value keeps that, and
+        // means the path guards downstream see the string the host will actually be given -
+        // `%2e%2e%2f` reaches them as `../`, which is the form they refuse.
+        $params = rawurldecode($params);
+
         $out = [];
         $len = strlen($params);
         $i = 0;
@@ -41,15 +52,22 @@ final class ParameterParser
             }
 
             if ($i >= $len || $params[$i] !== '=') {
-                $out[$key] = '';           // bare flag
+                // Dropped, not stored as a flag. tokenize() only ever writes a parameter when
+                // it reaches an '=', so `{{block class=X foo}}` has one parameter there and
+                // `foo` is not reachable at all - inventing `foo => ''` was this engine's own
+                // idea, and it changed what a directive saw.
                 continue;
             }
-            $i++;                          // consume '='
-            // Magento's Tokenizer\Parameter skips whitespace anywhere, so `a = 1` is a=1.
-            while ($i < $len && ctype_space($params[$i])) {
+            // next() refuses to step past the last character, so at the end of the blob the
+            // cursor stays on the '=' and getValue() reads it as the value: `{{trans "%s" s=}}`
+            // renders "=". Nonsense, and reproduced only where reproducing it is the point.
+            if ($i + 1 >= $len) {
+                $out[$key] = $this->legacyQuirks ? '=' : '';
                 $i++;
+                continue;
             }
 
+            $i++;                          // consume '='
             $out[$key] = $this->readValue($params, $i, $len);
         }
 
@@ -83,10 +101,15 @@ final class ParameterParser
             return $buf;                   // unterminated quote: take the rest
         }
 
+        // No whitespace skip before this. getValue() steps past the '=' and returns
+        // immediately if what it lands on is whitespace, so `a= b=$x` is a='' and b='$x',
+        // not a='b=$x'. Starting on a space here takes no characters and yields '', which is
+        // the same answer, and leaves `b=$x` for the caller's next pass.
         $start = $i;
         while ($i < $len && !ctype_space($s[$i])) {
             $i++;
         }
+
         return substr($s, $start, $i - $start);
     }
 }

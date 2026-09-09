@@ -15,7 +15,7 @@ docker run --rm -v "$PWD":/m php:8.3-cli sh -c \
    cd /m && php /tmp/phpunit.phar'
 ```
 
-3475 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
+4499 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ## The parity corpus
@@ -27,8 +27,8 @@ recordings, so the differential runs anywhere with no Magento installation.
 The corpus is a matrix of value shapes against construct shapes, plus a no-variables pass and
 the 45 real templates in `tests/fixtures/corpus/`. Those templates are harvested from the
 Magento/Mage-OS tree and include `.html` files whose `{{` sequences are not directives at all,
-such as translation strings and JS templates. 2308 cases in total, 313 of which crash the
-stock filter. 288 carry a second expectation for the filter as it was before the
+such as translation strings and JS templates. 3176 cases in total, 323 of which crash the
+stock filter. 364 carry a second expectation for the filter as it was before the
 September 2026 StyleSmuggler hardening, which compatible mode can target with
 `Options::withOutputNeutralizer(false)`.
 
@@ -71,7 +71,7 @@ re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 
 | Test | Covers |
 |---|---|
-| `LegacyParityTest` | the recorded corpus, in both directions: every legacy fatal is refused, and the extra refusals are exactly the nine documented shapes |
+| `LegacyParityTest` | the recorded corpus, in both directions: every legacy fatal is refused, and the extra refusals are exactly the ten documented shapes |
 | `ParitySensitivityTest` | the canary. It mis-configures the engine and asserts the same corpus then *fails* |
 | `StyleSmugglerDifferentialTest` | the vulnerability, as a paired differential |
 | `MalformedTemplateTest` | 15 broken templates asserted to raise a specific error in strict mode; 9 of them are refused in compatible mode and 6 render, and 10 hostile inputs are asserted inert |

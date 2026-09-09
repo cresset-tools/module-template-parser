@@ -26,6 +26,7 @@ class DatabaseTemplates implements TemplateSource
         private readonly string $nameColumn,
         private readonly string $bodyColumn,
         private readonly ?string $storeColumn = null,
+        private readonly string $kind = TemplateSubject::KIND_EMAIL,
     ) {
     }
 
@@ -36,17 +37,17 @@ class DatabaseTemplates implements TemplateSource
 
     public static function cmsBlocks(MagentoContext $magento): self
     {
-        return new self($magento, 'CMS blocks', 'cms_block', 'block_id', 'identifier', 'content');
+        return new self($magento, 'CMS blocks', 'cms_block', 'block_id', 'identifier', 'content', null, TemplateSubject::KIND_CMS);
     }
 
     public static function cmsPages(MagentoContext $magento): self
     {
-        return new self($magento, 'CMS pages', 'cms_page', 'page_id', 'identifier', 'content');
+        return new self($magento, 'CMS pages', 'cms_page', 'page_id', 'identifier', 'content', null, TemplateSubject::KIND_CMS);
     }
 
     public static function newsletterTemplates(MagentoContext $magento): self
     {
-        return new self($magento, 'newsletter templates', 'newsletter_template', 'template_id', 'template_code', 'template_text');
+        return new self($magento, 'newsletter templates', 'newsletter_template', 'template_id', 'template_code', 'template_text', null, TemplateSubject::KIND_NEWSLETTER);
     }
 
     public function name(): string
@@ -88,6 +89,7 @@ class DatabaseTemplates implements TemplateSource
                 label: sprintf('%s (%s #%s)', $row[$this->nameColumn] ?? '(unnamed)', $this->table, $row[$this->idColumn] ?? '?'),
                 origin: 'database',
                 content: $body,
+                kind: $this->kind,
             );
         }
     }

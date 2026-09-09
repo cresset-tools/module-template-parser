@@ -96,7 +96,7 @@ and unit-testable.
 |---|---|---|---|
 | `var`, `if`, `depend`, `for`, `else` | — | built in | — |
 | `inlinecss` | — | built in | `PathGuard`; structured deferral, never emitted as text |
-| `trans` | `Translator` *(optional)* | `PhraseTranslator` | arguments are escaped; a built-in handler renders it even with no port wired |
+| `trans` | `Translator` *(optional)* | `PhraseTranslator` | the result is escaped, text included; a built-in handler renders it even with no port wired |
 | `block` | `BlockRenderer` | `LayoutBlockRenderer` | type checked before instantiation, resolving DI preferences and virtual types; `output=` is an allowlist |
 | `widget` | `WidgetRenderer` | `TypeCheckedWidgetRenderer` | same, against `Widget\Block\BlockInterface`; optional type allowlist |
 | `template` | `TemplateLoader` | `ConfigTemplateLoader` | config-path allowlist; include cycles, depth and total count all bounded |
@@ -106,6 +106,13 @@ and unit-testable.
 | `store`, `media`, `view` | `UrlBuilder` | `StoreUrlBuilder` | `PathGuard` on the path and on forwarded parameters like `_direct`: no traversal, scheme, absolute or protocol-relative path |
 | `protocol` | `UrlBuilder` | `StoreUrlBuilder` | a host/path shape check, not `PathGuard` — it blocks schemes and protocol-relative URLs but permits `..`, which cannot escape a host |
 | `css` | `StylesheetLoader` | `AssetStylesheetLoader` | `PathGuard` |
+| `{{var this.getUrl(...)}}` | `TemplateUrlBuilder` *(optional)* | `TemplateModelUrlBuilder` | the receiver has to be a template model, and the store argument comes from the scope rather than the template; `PathGuard` on the route |
+
+The last row is not a directive. `StrictResolver` maps every `getFoo()` to `getData('foo')`
+except one: `getUrl` on an `AbstractTemplate` is really invoked, with its arguments parsed
+and its `$store` argument overwritten by the scope's. That single exception is where every
+"log into your account" link in every stock Magento email comes from, so it is reproduced —
+as a port, so a host that does not want it simply does not wire it and gets `getData('url')`.
 
 ## Per-render capability policy
 
@@ -173,8 +180,8 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**2308 cases recorded, 313 of them constructs the legacy filter cannot render at all. Over
-the 1334 cases where both engines render and the surfaces are comparable, output is
+**3176 cases recorded, 323 of them constructs the legacy filter cannot render at all. Over
+the 2506 cases where both engines render and the surfaces are comparable, output is
 byte-identical.**
 
 Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
@@ -200,9 +207,14 @@ Quirks it reproduces:
 | arrays | cast to the literal string `Array` |
 | no variables | directives pass through verbatim, which is the template-validation path |
 | getter keys | `getAddress1()` reads `address_1`, because a run of digits is its own segment |
-| member access | only through `getData()`; a real getter is never called |
+| member access | only through `getData()`; a real getter is never called, bar the one exception below |
 | unknown modifiers | skipped, so `{{var x\|typo}}` renders raw |
 | unknown escape types | `escape:none` returns the value unescaped |
+| percent decoding | variable paths and parameter blobs are `rawurldecode`d before being parsed, so `{{var a%2Eb}}` is `{{var a.b}}` and `a%3D1` is a parameter |
+| parameter values | a value is a literal unless it starts with `$`; a word with no `=` is dropped; `key=` at the very end of a directive has the value `=` |
+| trans arguments | an integer key stands for the NEXT placeholder, so `{{trans "%1" 1=$x}}` fills in `%2` and leaves `%1` standing |
+| trans escaping | the default modifier is `escape` and it applies to the whole result, translated text included; `\|raw` turns it off |
+| trans bodies | the body must be a quoted string with whitespace before its arguments, and the split on `\|` happens first — so `{{trans "a\|b"}}` renders nothing at all |
 
 Unknown modifiers and unknown escape types are reproduced only in compatible mode. Everywhere
 else they fail closed.
@@ -226,7 +238,7 @@ by default; for a tree from before the hardening:
 TemplateEngine::withOptions(Options::compatible()->withOutputNeutralizer(false));
 ```
 
-The corpus records both, and 288 cases carry a second expectation for the older behaviour.
+The corpus records both, and 364 cases carry a second expectation for the older behaviour.
 This engine needs none of it — a value is never re-parsed here whatever the setting — so the
 flag does nothing outside compatible mode.
 
@@ -234,6 +246,8 @@ Quirks it does not reproduce:
 
 - the security behaviour, which is structural: a value is never re-parsed as source, in any mode;
 - reflection dispatch of arbitrary filter methods;
+- `{{layout}}` without an allowlist. A layout handle decides which blocks get built, so the
+  `LayoutRenderer` port takes the handles it may render and refuses the rest;
 - `{{var x|modifier}}` rendering empty. That is a defect in `Framework\Filter\Template`, whose
   `varDirective` hands `VarDirective` a legacy-shaped construction so the expression resolved
   is `" x|raw"`. `Email\Model\Template\Filter` overrides `varDirective` and handles modifiers
@@ -463,7 +477,24 @@ template-parser diff --source=all --format=json --fail-on-divergence
 
 `--store` sets the store context, so `{{trans}}` resolves in that store view's language and
 `{{config}}` in its scope. It emulates rather than just switching the store id, because
-translations and design follow the emulation and not the id.
+translations and design follow the emulation and not the id. Left out, the current store is
+emulated anyway: a CLI process has a store but no theme, and without one `{{css}}` comes back
+as a LESS compilation error on both sides.
+
+Both sides are rendered the way Magento renders them — through the email template model for
+email and newsletter templates, through the CMS filter provider for CMS content — so the
+comparison is of the two engines and not of two harnesses. The variables Magento builds for
+the legacy render (`store`, `logo_url`, `this` and the rest) are the variables this engine is
+given, and the CSS inlining that runs after a render runs after both.
+
+`{{layout}}` is the exception, because a layout handle decides which blocks get built and
+template text is not a trustworthy source for one. Nothing is allowed by default, which makes
+every stock sales email report as a difference. `--allow-layout-handle` names the ones a run
+may render, and `stock-email` is shorthand for the four the stock sales emails use:
+
+```sh
+template-parser diff --source=codebase --allow-layout-handle=stock-email
+```
 
 ### Inside n98-magerun2
 
@@ -550,10 +581,10 @@ composer install
 vendor/bin/phpunit
 ```
 
-3475 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+4499 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
-- `LegacyParityTest` replays the 2308 recorded cases, so the differential runs anywhere with
+- `LegacyParityTest` replays the 3176 recorded cases, so the differential runs anywhere with
   no Magento installation, and drift in compatible mode shows up as a failing case rather than
   a surprise in production.
 - `StyleSmugglerDifferentialTest` asserts both halves of the vulnerability: that the recording

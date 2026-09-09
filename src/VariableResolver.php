@@ -29,19 +29,38 @@ final class VariableResolver
     /** `getBar()`, and also `getBar("x")` - legacy parses arguments and then ignores them. */
     private const METHOD_CALL = '/^([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)$/s';
 
+    /** @var ?\Closure(object,string,list<mixed>,Context):?Resolution */
+    private ?\Closure $methodCallServer = null;
+
     public function __construct(private readonly bool $legacyQuirks = false)
     {
     }
 
+    /**
+     * Lets a host serve a method call that carries arguments.
+     *
+     * There is exactly one of those in the legacy filter - `getUrl` on a template model -
+     * and this is how it gets served without the resolver knowing what a template model is.
+     * The server returns null to decline, and declining is the default: with no server
+     * installed every method call goes through the ordinary getData() mapping, arguments
+     * parsed and dropped, as it always did.
+     *
+     * A registration method rather than a constructor argument for the same reason
+     * Evaluator::register() is one: the ports are wired after the engine is built.
+     *
+     * @param \Closure(object,string,list<mixed>,Context):?Resolution $server
+     */
+    public function serveMethodCalls(\Closure $server): void
+    {
+        $this->methodCallServer = $server;
+    }
+
     public function resolve(string $expression, Context $context): Resolution
     {
-        // Legacy's Variable tokenizer skips whitespace anywhere and treats a leading `.` as
-        // no action at all, so `a . b`, `.a` and `a..b` all resolve like `a.b`. Dropping the
-        // empty segments here also means `{{var o.}}` cannot reach a member named ''.
-        $parts = array_values(array_filter(
-            array_map('trim', explode('.', $expression)),
-            static fn (string $part): bool => $part !== ''
-        ));
+        // Tokenizer\AbstractTokenizer::setString() rawurldecodes, so `{{var a%2Eb}}` is
+        // `{{var a.b}}` - the decoding happens before the path is split and can therefore
+        // create segments.
+        $parts = $this->splitPath(rawurldecode($expression));
         if ($parts === []) {
             return Resolution::missing();
         }
@@ -63,7 +82,7 @@ final class VariableResolver
                 return $this->result($value);
             }
 
-            $step = $this->step($value, $part);
+            $step = $this->step($value, $part, $context);
             if (!$step->found) {
                 // The access WAS attempted and produced nothing.
                 return $this->legacyQuirks ? Resolution::of(null) : $step;
@@ -78,6 +97,66 @@ final class VariableResolver
     public function value(string $expression, Context $context): mixed
     {
         return $this->resolve($expression, $context)->value;
+    }
+
+    /**
+     * Splits an expression into its segments, on the dots that actually separate them.
+     *
+     * Not explode('.'). A method call carries its own arguments and those contain dots:
+     * `this.getUrl($store,'x',[_query:[id:$customer.id]])` is two segments, not four, and
+     * splitting it naively left the second one unmatchable and the whole expression
+     * unresolvable - which is every "set your password" link in every stock account email.
+     * Legacy never sees those dots because getMethodArgs() takes the argument list as one
+     * token; tracking the nesting here has the same effect.
+     *
+     * Legacy's tokenizer also skips whitespace anywhere and treats a leading `.` as no
+     * action at all, so `a . b`, `.a` and `a..b` all resolve like `a.b`. Dropping the empty
+     * segments keeps that, and means `{{var o.}}` cannot reach a member named ''.
+     *
+     * @return list<string>
+     */
+    private function splitPath(string $expression): array
+    {
+        $parts = [];
+        $current = '';
+        $depth = 0;
+        $quote = null;
+        $length = strlen($expression);
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $expression[$i];
+
+            if ($quote !== null) {
+                $current .= $char;
+                if ($char === '\\' && $i + 1 < $length) {
+                    $current .= $expression[++$i];
+                } elseif ($char === $quote) {
+                    $quote = null;
+                }
+                continue;
+            }
+
+            if ($char === '"' || $char === "'") {
+                $quote = $char;
+            } elseif ($char === '(' || $char === '[') {
+                $depth++;
+            } elseif ($char === ')' || $char === ']') {
+                $depth = max(0, $depth - 1);
+            } elseif ($char === '.' && $depth === 0) {
+                $parts[] = $current;
+                $current = '';
+                continue;
+            }
+
+            $current .= $char;
+        }
+
+        $parts[] = $current;
+
+        return array_values(array_filter(
+            array_map('trim', $parts),
+            static fn (string $part): bool => $part !== ''
+        ));
     }
 
     /**
@@ -99,10 +178,10 @@ final class VariableResolver
         return Resolution::of($value);
     }
 
-    private function step(mixed $value, string $part): Resolution
+    private function step(mixed $value, string $part, Context $context): Resolution
     {
         return preg_match(self::METHOD_CALL, $part, $m) === 1
-            ? $this->callAccessor($value, $m[1])
+            ? $this->callAccessor($value, $m[1], $m[2], $context)
             : $this->member($value, $part);
     }
 
@@ -159,9 +238,22 @@ final class VariableResolver
     }
 
     /** `foo.getBar()` - a data bag entry under the mapped name, or a real method. */
-    private function callAccessor(mixed $value, string $method): Resolution
+    private function callAccessor(mixed $value, string $method, string $arguments, Context $context): Resolution
     {
         $label = $method . '()';
+
+        // Before the getData() mapping, because that is where legacy checks it too.
+        if ($this->methodCallServer !== null && is_object($value)) {
+            $served = ($this->methodCallServer)(
+                $value,
+                $method,
+                $this->parseArguments($arguments, $context),
+                $context
+            );
+            if ($served !== null) {
+                return $served;
+            }
+        }
 
         if ($this->legacyQuirks && is_array($value) && str_starts_with($method, 'get')) {
             // StrictResolver::handleDataAccess calls ->getData() on the parent - but only
@@ -201,6 +293,174 @@ final class VariableResolver
         }
 
         return $this->invokeAccessor($value, $method) ?? Resolution::missing($label);
+    }
+
+    /**
+     * Parses a method call's arguments, the way Tokenizer\Variable::getMethodArgs() does.
+     *
+     * Only reached once a host has installed a method-call server. Without one, legacy's own
+     * behaviour is to parse these and throw them away - and so is this engine's, so the work
+     * is not done at all.
+     *
+     * The grammar is small and all of it is legacy's: values separated by commas or
+     * whitespace; a run of digits and dots is a float; `[` opens an array whose members may
+     * carry a `key:` prefix; anything else is a string, either quoted with backslash escapes
+     * or bare up to the next separator. A `$name` value resolves against the scope, as
+     * getStackArgs() does, so `getUrl($store, ...)` is handed the store and not the word.
+     *
+     * @return list<mixed>
+     */
+    private function parseArguments(string $arguments, Context $context): array
+    {
+        $offset = 0;
+
+        /** @var list<mixed> $parsed */
+        $parsed = $this->parseValues($arguments, $offset, $context, null);
+
+        return $parsed;
+    }
+
+    /**
+     * Values up to $terminator, or to the end of the string when there is none.
+     *
+     * @return array<array-key,mixed>
+     */
+    private function parseValues(string $source, int &$offset, Context $context, ?string $terminator): array
+    {
+        $values = [];
+        $length = strlen($source);
+
+        while ($offset < $length) {
+            $char = $source[$offset];
+            if ($char === $terminator) {
+                $offset++;
+                break;
+            }
+            if ($char === ',' || trim($char) === '') {
+                $offset++;
+                continue;
+            }
+
+            // Keys exist inside an array and nowhere else: getMethodArgs() never reads one.
+            $key = $terminator === null ? null : $this->parseMemberKey($source, $offset);
+            $value = $this->parseValue($source, $offset, $context, $terminator !== null);
+
+            if ($key === null || $key === '') {
+                $values[] = $value;
+            } else {
+                $values[$key] = $value;
+            }
+        }
+
+        return $values;
+    }
+
+    private function parseValue(string $source, int &$offset, Context $context, bool $inArray): mixed
+    {
+        $char = $source[$offset];
+
+        if ($char >= '0' && $char <= '9') {
+            return $this->parseNumber($source, $offset);
+        }
+        if ($char === '[') {
+            $offset++;
+
+            return $this->parseValues($source, $offset, $context, ']');
+        }
+
+        $raw = $this->parseString($source, $offset, $inArray);
+
+        return str_starts_with($raw, '$') ? $this->resolve(substr($raw, 1), $context)->value : $raw;
+    }
+
+    /** getNumber(): digits and dots, cast to float - so `1` arrives as 1.0, as it does there. */
+    private function parseNumber(string $source, int &$offset): float
+    {
+        $start = $offset;
+        $length = strlen($source);
+        while ($offset < $length
+            && (($source[$offset] >= '0' && $source[$offset] <= '9') || $source[$offset] === '.')) {
+            $offset++;
+        }
+
+        return (float)substr($source, $start, $offset - $start);
+    }
+
+    /** getString(): a quoted run with backslash escapes, or a bare run up to a separator. */
+    private function parseString(string $source, int &$offset, bool $inArray): string
+    {
+        $length = strlen($source);
+        $quote = ($source[$offset] === '"' || $source[$offset] === "'") ? $source[$offset] : null;
+        $value = '';
+
+        if ($quote !== null) {
+            $offset++;
+            while ($offset < $length) {
+                if ($source[$offset] === '\\' && $offset + 1 < $length) {
+                    $value .= $source[++$offset];
+                } elseif ($source[$offset] === $quote) {
+                    $offset++;
+
+                    return $value;
+                } else {
+                    $value .= $source[$offset];
+                }
+                $offset++;
+            }
+
+            return $value;
+        }
+
+        while ($offset < $length && !$this->isStringBreak($source[$offset], $inArray)) {
+            $value .= $source[$offset++];
+        }
+
+        return $value;
+    }
+
+    /** isStringBreak(): what ends a bare value depends on whether an array is open. */
+    private function isStringBreak(string $char, bool $inArray): bool
+    {
+        return $inArray
+            ? $char === ',' || $char === ']'
+            : trim($char) === '' || $char === ',' || $char === ')';
+    }
+
+    /**
+     * getMemberKey(): a `key:` prefix inside an array, or null when the member has none.
+     *
+     * Looks ahead rather than consuming, because legacy rewinds when it finds no colon.
+     */
+    private function parseMemberKey(string $source, int &$offset): ?string
+    {
+        $probe = $offset;
+        $length = strlen($source);
+        $quote = ($source[$probe] === '"' || $source[$probe] === "'") ? $source[$probe] : null;
+        $key = '';
+
+        if ($quote !== null) {
+            $probe++;
+            while ($probe < $length && $source[$probe] !== $quote) {
+                $key .= $source[$probe++];
+            }
+            $probe++;
+        } else {
+            // A colon ends a key and nothing else does, which is why this cannot reuse
+            // parseString(): there, a colon is an ordinary character in a value.
+            while ($probe < $length
+                && $source[$probe] !== ':'
+                && !$this->isStringBreak($source[$probe], true)) {
+                $key .= $source[$probe++];
+            }
+        }
+
+        if ($probe >= $length || $source[$probe] !== ':') {
+            return null;                // no colon: an unkeyed member, and $offset stays put
+        }
+
+        $offset = $probe + 1;
+
+        return $key;
     }
 
     /** Invokes a public, non-static, argument-less method, or null if it is not one. */

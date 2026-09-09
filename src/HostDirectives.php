@@ -96,25 +96,6 @@ final class HostDirectives
         return $evaluator->options()->legacyQuirks ? '{Error in template processing}' : '';
     }
 
-    /**
-     * Resolves `$name` parameter values against the scope, as legacy's directives do.
-     *
-     * @param array<string,string> $parameters
-     * @return array<string,string>
-     */
-    private static function resolveDollarParameters(array $parameters, Context $context, Evaluator $evaluator): array
-    {
-        foreach ($parameters as $key => $value) {
-            if (!is_string($value) || !str_starts_with($value, '$')) {
-                continue;
-            }
-            $resolved = $evaluator->resolver()->value(substr($value, 1), $context);
-            $parameters[$key] = $resolved === null ? $value : $evaluator->stringify($resolved);
-        }
-
-        return $parameters;
-    }
-
     private static function decodeEntities(string $value): string
     {
         return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -131,7 +112,7 @@ final class HostDirectives
 
         if ($blocks !== null) {
             $evaluator->register('block', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($blocks): string {
-                $params = $e->params($n);
+                $params = $e->params($n, $c);
                 $class = $params['class'] ?? '';
                 if ($class === '') {
                     return '';
@@ -150,20 +131,40 @@ final class HostDirectives
             });
         }
 
-        if ($translator !== null) {
-            $evaluator->register('trans', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($translator): string {
-                [$text, $args] = $e->splitTransParams($n->params());
-                $resolved = [];
-                foreach ($args as $key => $expression) {
-                    $value = $e->resolver()->value(ltrim($expression, '$'), $c);
-                    // stringify(), not a bare cast - an object with no __toString is a
-                    // perfectly ordinary template variable and must not be a fatal.
-                    // Escaped, for the same reason the built-in {{trans}} escapes: these are
-                    // variable values going into output the directive does not escape later.
-                    $resolved[$key] = $value === null ? $expression : $e->escapeValue($value);
+        if ($services->templateUrls !== null) {
+            $templateUrls = $services->templateUrls;
+            // `getUrl`, and only `getUrl`: StrictResolver names the method literally, and so
+            // does this. Everything else keeps going through the getData() mapping.
+            $evaluator->resolver()->serveMethodCalls(
+                static function (object $target, string $method, array $args, Context $c) use ($templateUrls): ?Resolution {
+                    if ($method !== 'getUrl') {
+                        return null;
+                    }
+
+                    // StrictResolver overwrites the first argument with the scope's `store`
+                    // before it calls anything, so a template cannot aim getUrl() at a store
+                    // of its own choosing. The same overwrite, for the same reason.
+                    $args[0] = $c->has('store') ? $c->get('store') : null;
+
+                    $url = $templateUrls->urlFor($target, $args);
+
+                    return $url === null ? null : Resolution::of($url);
                 }
-                return $translator->translate($text, $resolved);
-            });
+            );
+        }
+
+        if ($translator !== null) {
+            // Body, modifiers, arguments and escaping are Evaluator::renderTrans()'s, exactly
+            // as for the built-in {{trans}}. All this adds is the translation itself, which
+            // is the only part a host does differently.
+            $evaluator->register(
+                'trans',
+                static fn (DirectiveNode $n, Context $c, Evaluator $e): string => $e->renderTrans(
+                    $n,
+                    $c,
+                    static fn (string $text, array $args): string => $translator->translate($text, $args)
+                )
+            );
         }
 
         if ($templates !== null) {
@@ -175,7 +176,7 @@ final class HostDirectives
             $evaluator->register('template', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($templates, $parser): string {
                 // Legacy resolves any $-prefixed parameter against the scope before using
                 // it, so `{{template config_path=$b}}` is an include of whatever `b` holds.
-                $params = self::resolveDollarParameters($e->params($n), $c, $e);
+                $params = $e->params($n, $c);
                 $path = $params['config_path'] ?? '';
                 // No config_path at all is legacy's own error case, and it says so in the
                 // output rather than rendering nothing.
@@ -250,7 +251,7 @@ final class HostDirectives
         if ($services->config !== null) {
             $config = $services->config;
             $evaluator->register('config', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($config): string {
-                $path = $e->params($n)['path'] ?? '';
+                $path = $e->params($n, $c)['path'] ?? '';
                 if (!PathGuard::isSafeConfigPath($path)) {
                     return '';
                 }
@@ -261,7 +262,7 @@ final class HostDirectives
         if ($services->customVariables !== null) {
             $vars = $services->customVariables;
             $evaluator->register('customvar', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($vars): string {
-                $code = $e->params($n)['code'] ?? '';
+                $code = $e->params($n, $c)['code'] ?? '';
                 if (!PathGuard::isSafeIdentifier($code)) {
                     return '';
                 }
@@ -273,7 +274,7 @@ final class HostDirectives
             $urls = $services->urls;
 
             $evaluator->register('store', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
-                $params = $e->params($n);
+                $params = $e->params($n, $c);
                 $path = self::decodeEntities($params['url'] ?? ($params['direct_url'] ?? ''));
                 unset($params['url'], $params['direct_url']);
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
@@ -289,13 +290,13 @@ final class HostDirectives
             });
 
             $evaluator->register('media', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
-                $path = self::decodeEntities($e->params($n)['url'] ?? '');
+                $path = self::decodeEntities($e->params($n, $c)['url'] ?? '');
                 // Legacy concatenates this straight onto the media base URL.
                 return PathGuard::isSafeRelativePath($path) ? $urls->mediaUrl($path) : '';
             });
 
             $evaluator->register('view', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
-                $params = $e->params($n);
+                $params = $e->params($n, $c);
                 $path = self::decodeEntities($params['url'] ?? '');
                 unset($params['url']);
                 if (!PathGuard::isSafeRelativePath($path) || !self::pathParametersAreSafe($params)) {
@@ -305,7 +306,7 @@ final class HostDirectives
             });
 
             $evaluator->register('protocol', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
-                $params = $e->params($n);
+                $params = $e->params($n, $c);
                 $scheme = $urls->isSecure() ? 'https' : 'http';
 
                 if (isset($params['http'], $params['https'])) {
@@ -325,7 +326,7 @@ final class HostDirectives
         if ($services->stylesheets !== null) {
             $stylesheets = $services->stylesheets;
             $evaluator->register('css', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($stylesheets): string {
-                $file = $e->params($n)['file'] ?? '';
+                $file = $e->params($n, $c)['file'] ?? '';
                 if (!PathGuard::isSafeRelativePath($file)) {
                     return '/* invalid file parameter */';
                 }
@@ -336,7 +337,7 @@ final class HostDirectives
         if ($services->layouts !== null) {
             $layouts = $services->layouts;
             $evaluator->register('layout', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($layouts): string {
-                $params = $e->params($n);
+                $params = $e->params($n, $c);
                 $handle = $params['handle'] ?? '';
                 $area = $params['area'] ?? 'frontend';
                 unset($params['handle'], $params['area']);
@@ -351,7 +352,7 @@ final class HostDirectives
         if ($services->widgets !== null) {
             $widgets = $services->widgets;
             $evaluator->register('widget', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($widgets): string {
-                $params = $e->params($n);
+                $params = $e->params($n, $c);
                 $type = $params['type'] ?? '';
                 unset($params['type']);
 

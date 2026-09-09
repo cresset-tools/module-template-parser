@@ -80,9 +80,7 @@ final class HostDirectivesTest extends TestCase
         $translator = new class implements Translator {
             public function translate(string $text, array $arguments): string
             {
-                foreach ($arguments as $k => $v) {
-                    $text = str_replace('%' . $k, $v, $text);
-                }
+                $text = strtr($text, $arguments);
                 return '[' . $text . ']';
             }
         };

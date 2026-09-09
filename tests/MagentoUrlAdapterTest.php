@@ -209,8 +209,13 @@ final class MagentoUrlAdapterTest extends TestCase
         self::assertNull($loader->load('css/missing.css'));
     }
 
-    /** Empty CSS is null, not '', so the directive renders nothing rather than an empty tag. */
-    public function testEmptyStylesheetContentYieldsNull(): void
+    /**
+     * Empty CSS renders the same comment the store's filter renders.
+     *
+     * Not null and not '': cssDirective() returns "Contents of the specified CSS file could
+     * not be loaded or is empty" as a CSS comment, and that comment goes out in the email.
+     */
+    public function testEmptyStylesheetContentYieldsTheFiltersComment(): void
     {
         $repository = new class extends Repository {
             public function createAsset($fileId, array $params = [])
@@ -222,7 +227,10 @@ final class MagentoUrlAdapterTest extends TestCase
             public function process($css) { return ''; }
         };
 
-        self::assertNull((new AssetStylesheetLoader($processor, $repository))->load('css/empty.css'));
+        self::assertSame(
+            '/* Contents of the specified CSS file could not be loaded or is empty */',
+            (new AssetStylesheetLoader($processor, $repository))->load('css/empty.css')
+        );
     }
 
     // ------------------------------------------------------------ {{customvar}}

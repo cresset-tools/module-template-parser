@@ -12,6 +12,17 @@ namespace Cresset\TemplateParser\Console;
  */
 class TemplateSubject
 {
+    /**
+     * Which pipeline renders this in production.
+     *
+     * Not decoration: an email goes through a template model that adds store variables and
+     * design params, a CMS block through a filter that has neither. Rendering one as the
+     * other is how a comparison ends up measuring the harness.
+     */
+    public const KIND_EMAIL = 'email';
+    public const KIND_NEWSLETTER = 'newsletter';
+    public const KIND_CMS = 'cms';
+
     /** @param array<string,mixed> $variables */
     public function __construct(
         public readonly string $id,
@@ -20,6 +31,7 @@ class TemplateSubject
         public readonly string $content,
         public readonly array $variables = [],
         public readonly ?int $storeId = null,
+        public readonly string $kind = self::KIND_EMAIL,
     ) {
     }
 }

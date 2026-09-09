@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Cresset\TemplateParser\Test;
 
+use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\UnknownVariableError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -44,9 +46,44 @@ final class EvaluatorTest extends TestCase
             'for loop'           => ['{{for i in xs}}[{{var i}}]{{/for}}', ['xs' => ['a', 'b']], '[a][b]'],
             'for empty'          => ['{{for i in xs}}x{{/for}}', ['xs' => []], ''],
             'trans literal'      => ['{{trans "Hello"}}', [], 'Hello'],
-            'trans placeholder'  => ['{{trans "Hi %n" n=who}}', ['who' => 'Jan'], 'Hi Jan'],
+            // A `$` makes a parameter a variable. Without one it is a literal, even when a
+            // variable of that name exists - which is why the second case is not 'Hi Jan'.
+            'trans placeholder'  => ['{{trans "Hi %n" n=$who}}', ['who' => 'Jan'], 'Hi Jan'],
+            'trans literal arg'  => ['{{trans "Hi %n" n=who}}', ['who' => 'Jan'], 'Hi who'],
             'non-directive text' => ['{{Forgot Your Password?}}', [], '{{Forgot Your Password?}}'],
         ];
+    }
+
+    /**
+     * Legacy renders a parameter it cannot resolve as nothing and says nothing about it,
+     * which is how a subject line comes out reading "Welcome to ". Strict mode names it.
+     */
+    public function testUnresolvedDollarParameterIsEmptyExceptInStrictMode(): void
+    {
+        self::assertSame('Hi ', TemplateEngine::compatible()->render('{{trans "Hi %n" n=$nope}}'));
+        self::assertSame('Hi ', TemplateEngine::lenient()->render('{{trans "Hi %n" n=$nope}}'));
+
+        $this->expectException(UnknownVariableError::class);
+        $this->engine->render('{{trans "Hi %n" n=$nope}}');
+    }
+
+    /**
+     * An Evaluator built from options alone is built consistently.
+     *
+     * The CLI constructs one that way, and while the collaborators defaulted independently
+     * `--mode=compatible` got the directive quirks with a strict resolver underneath: no
+     * `{{var a%2Eb}}` decoding, no scalar-parent rule, none of it.
+     */
+    public function testOptionsAloneConfigureTheCollaboratorsToo(): void
+    {
+        $engine = new TemplateEngine(
+            new \Cresset\TemplateParser\Parser(options: Options::compatible()),
+            new \Cresset\TemplateParser\Evaluator(options: Options::compatible())
+        );
+
+        // rawurldecode in the resolver, and the trailing-'=' quirk in the parameter parser.
+        self::assertSame('DEEP', $engine->render('{{var a%2Eb}}', ['a' => ['b' => 'DEEP']]));
+        self::assertSame('T =', $engine->render('{{trans "T %s" s=}}'));
     }
 
     public function testUnknownDirectiveIsEmittedVerbatimInLenientMode(): void

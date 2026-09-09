@@ -9,6 +9,7 @@ use Cresset\TemplateParser\Port\CustomVariableReader;
 use Cresset\TemplateParser\Port\LayoutRenderer;
 use Cresset\TemplateParser\Port\StylesheetLoader;
 use Cresset\TemplateParser\Port\TemplateLoader;
+use Cresset\TemplateParser\Port\TemplateUrlBuilder;
 use Cresset\TemplateParser\Port\Translator;
 use Cresset\TemplateParser\Port\UrlBuilder;
 use Cresset\TemplateParser\Port\WidgetRenderer;
@@ -31,7 +32,8 @@ final class HostServices
         public readonly ?UrlBuilder $urls = null,
         public readonly ?StylesheetLoader $stylesheets = null,
         public readonly ?LayoutRenderer $layouts = null,
-        public readonly ?WidgetRenderer $widgets = null
+        public readonly ?WidgetRenderer $widgets = null,
+        public readonly ?TemplateUrlBuilder $templateUrls = null
     ) {
     }
 }

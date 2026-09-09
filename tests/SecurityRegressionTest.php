@@ -77,8 +77,11 @@ final class SecurityRegressionTest extends TestCase
     {
         $translator = new PhraseTranslator();
 
-        self::assertSame('%b-SECRET', $translator->translate('%a-%b', ['a' => '%b', 'b' => 'SECRET']));
-        self::assertSame('N NL', $translator->translate('%name %name_long', ['name' => 'N', 'name_long' => 'NL']));
+        self::assertSame('%b-SECRET', $translator->translate('%a-%b', ['%a' => '%b', '%b' => 'SECRET']));
+        self::assertSame(
+            'N NL',
+            $translator->translate('%name %name_long', ['%name' => 'N', '%name_long' => 'NL'])
+        );
     }
 
     // ---------------------------------------------------------------- resource bounds
