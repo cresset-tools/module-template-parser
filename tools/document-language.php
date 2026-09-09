@@ -199,6 +199,8 @@ $sections = [
     example('{{var a|escape:htmlentities}}', ['a' => '<b>&"x"']),
     example('{{var a|escape:url}}', ['a' => 'a b/c']),
     example('{{var a|escape:none}}', ['a' => '<b>'], 'an unrecognised escape type disables escaping'),
+    example('{{var a|escape }}', ['a' => '<b>'], 'WHITESPACE in a modifier name makes it unrecognised too - so this does not escape, though it looks like it does'),
+    example('{{var a| escape}}', ['a' => '<b>'], 'either side of the name'),
     example('{{var a|}}', ['a' => '<b>'], 'an empty modifier is skipped, and so is the default with it'),
 ],
 'if' => [

@@ -96,6 +96,9 @@ renders the store when `store` is a string.
   already gone.
 - `{{var x|}}` is unescaped, for the same reason.
 - `{{var x|escape:none}}` is unescaped, because an unrecognised escape *type* falls through.
+- **`{{var x|escape }}` is unescaped**, because the modifier is looked up as `escape ` — with
+  the space — and that is not a modifier the filter knows. A space on either side of the name
+  does it, and the template looks entirely correct.
 
 To get escaping and something else, ask for both: `{{var x|escape|nl2br}}`.
 
@@ -114,6 +117,8 @@ compatible mode and fails closed everywhere else, which is what the `strict:` co
 {{var a|escape:htmlentities}}   a="<b>&\"x\""   → &lt;b&gt;&amp;&quot;x&quot;
 {{var a|escape:url}}            a="a b/c"       → a%20b%2Fc
 {{var a|escape:none}}           a="<b>"         → <b>                         # strict: &lt;b&gt;; an unrecognised escape type disables escaping
+{{var a|escape }}               a="<b>"         → <b>                         # strict: &lt;b&gt;; WHITESPACE in a modifier name makes it unrecognised too - so this does not escape, though it looks like it does
+{{var a| escape}}               a="<b>"         → <b>                         # strict: &lt;b&gt;; either side of the name
 {{var a|}}                      a="<b>"         → <b>                         # strict: &lt;b&gt;; an empty modifier is skipped, and so is the default with it
 ```
 <!-- /generated -->

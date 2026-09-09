@@ -30,7 +30,9 @@ final class LexerTest extends TestCase
         self::assertCount(1, $tokens);
         self::assertSame(TokenType::DirectiveOpen, $tokens[0]->type);
         self::assertSame('block', $tokens[0]->name);
-        self::assertSame('class="A\\B" id=x', $tokens[0]->params);
+        // Untrimmed, leading space and all: legacy's $construction[2] is the raw remainder,
+        // and whitespace at the edges decides whether a modifier is recognised.
+        self::assertSame(' class="A\\B" id=x', $tokens[0]->params);
     }
 
     public function testClosingTag(): void

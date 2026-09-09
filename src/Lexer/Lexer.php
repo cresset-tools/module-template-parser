@@ -194,7 +194,13 @@ final class Lexer
             return null;                    // the name did not end where the window thought
         }
 
-        return new Token(TokenType::DirectiveOpen, $raw, $offset, $name, trim($params));
+        // NOT trimmed. Legacy's `$construction[2]` is the raw remainder, and the whitespace
+        // at its edges is load-bearing: `{{var x|escape }}` has the modifier `escape ` there,
+        // which is not a modifier it knows, so the value goes out UNESCAPED. Trimming here
+        // quietly repaired that - safer, but it made compatible mode disagree with the filter
+        // on a template that looks like it escapes. Everything downstream skips leading and
+        // trailing whitespace the way the tokenizers do.
+        return new Token(TokenType::DirectiveOpen, $raw, $offset, $name, $params);
     }
 
 }

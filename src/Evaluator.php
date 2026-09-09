@@ -628,9 +628,13 @@ final class Evaluator
         // stripslashes(), not just unescaping the quote: legacy runs the whole literal
         // through it, so a `\n` written in a template renders as the letter n.
         $text = stripslashes($matches[2]);
-        $rest = trim($matches[3] ?? '');
 
-        return [$text, $rest === '' ? [] : $this->parameters->parse($rest)];
+        // Untrimmed, and `empty()` rather than a comparison, both as getTransParameters() has
+        // them: the argument blob keeps the whitespace the regex captured, so `a= ` ends the
+        // value at the space instead of leaving `=` as the last character.
+        $rest = $matches[3] ?? '';
+
+        return [$text, empty($rest) ? [] : $this->parameters->parse($rest)];
     }
 
     /**
@@ -712,11 +716,23 @@ final class Evaluator
     }
 
     /** @return array{0:string,1:string[]} */
+    /**
+     * Splits `expr|mod|mod` the way explodeModifiers() plus applyModifiers() do.
+     *
+     * The expression is trimmed because the variable tokenizer skips whitespace anywhere in a
+     * path. The modifier NAMES are not, in compatible mode: applyModifiers() looks each one up
+     * with `isset($this->_modifiers[$part])`, so `escape ` is not found and is silently
+     * skipped - taking the escaping with it. Outside compatible mode they are trimmed, so a
+     * stray space cannot cost a template its escaping here.
+     *
+     * @return array{0:string,1:string[]}
+     */
     private function splitModifiers(string $params): array
     {
         $parts = explode('|', $params);
         $expr = trim(array_shift($parts) ?? '');
-        return [$expr, array_map('trim', $parts)];
+
+        return [$expr, $this->options->legacyQuirks ? $parts : array_map('trim', $parts)];
     }
 
     /**
