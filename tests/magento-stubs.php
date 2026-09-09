@@ -41,6 +41,23 @@ namespace Magento\Store\Model {
     if (!interface_exists(ScopeInterface::class)) {
         interface ScopeInterface { public const SCOPE_STORE = 'store'; }
     }
+    // TemplateModelUrlBuilder checks the receiver and the store by class, so exercising the
+    // shipped implementation rather than a fake needs both to exist.
+    if (!class_exists(Store::class)) {
+        class Store {}
+    }
+}
+namespace Magento\Email\Model {
+    if (!class_exists(AbstractTemplate::class)) {
+        abstract class AbstractTemplate
+        {
+            /** Url::getRouteUrl() concatenates _direct onto the base URL with no filtering. */
+            public function getUrl($store, $route = '', $params = [])
+            {
+                return 'https://shop.example/' . ($params['_direct'] ?? $route);
+            }
+        }
+    }
 }
 namespace Magento\Variable\Model\Source {
     if (!class_exists(Variables::class)) {

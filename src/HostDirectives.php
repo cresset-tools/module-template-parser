@@ -15,14 +15,15 @@ use Cresset\TemplateParser\Ast\DirectiveNode as Node;
  */
 final class HostDirectives
 {
-    /**
-     * Decodes HTML entities before guarding a path.
-     *
-     * Handler output is inserted unescaped, so a browser decodes `&#46;&#46;/x` back to
-     * `../x` - the guard has to see the same string the browser will. ENT_HTML5 matters as
-     * well as ENT_QUOTES: the default HTML 4.01 table has no `&period;`, so `&period;&period;/x`
-     * would survive a decode that only asked for ENT_QUOTES.
-     */
+/**
+ * Guards take the value as written and PathGuard does the decoding.
+ *
+ * It decodes percent-escapes AND HTML entities, repeatedly, because a browser will:
+ * decoding once here instead made the guard see `&#46;&#46;/x` as safe while the browser
+ * still saw `../x`, so a value encoded twice walked through. Doing it inside the guard
+ * also means the ORIGINAL value is what reaches the port, which is what legacy emits -
+ * `a&amp;b` used to arrive as `a&b`.
+ */
     /**
      * Parameters forwarded to a UrlBuilder that Magento treats as path fragments.
      *
@@ -36,7 +37,7 @@ final class HostDirectives
     {
         foreach (['_direct', '_fragment', '_escape_params'] as $key) {
             $value = $parameters[$key] ?? null;
-            if (is_string($value) && $value !== '' && !PathGuard::isSafeRelativePath(self::decodeEntities($value))) {
+            if (is_string($value) && $value !== '' && !PathGuard::isSafeRelativePath($value)) {
                 return false;
             }
         }
@@ -94,11 +95,6 @@ final class HostDirectives
     private static function unresolvedInclude(Evaluator $evaluator): string
     {
         return $evaluator->options()->legacyQuirks ? '{Error in template processing}' : '';
-    }
-
-    private static function decodeEntities(string $value): string
-    {
-        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     public static function register(
@@ -275,7 +271,7 @@ final class HostDirectives
 
             $evaluator->register('store', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $params = $e->params($n, $c);
-                $path = self::decodeEntities($params['url'] ?? ($params['direct_url'] ?? ''));
+                $path = $params['url'] ?? ($params['direct_url'] ?? '');
                 unset($params['url'], $params['direct_url']);
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
                     return '';
@@ -290,14 +286,14 @@ final class HostDirectives
             });
 
             $evaluator->register('media', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
-                $path = self::decodeEntities($e->params($n, $c)['url'] ?? '');
+                $path = $e->params($n, $c)['url'] ?? '';
                 // Legacy concatenates this straight onto the media base URL.
                 return PathGuard::isSafeRelativePath($path) ? $urls->mediaUrl($path) : '';
             });
 
             $evaluator->register('view', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $params = $e->params($n, $c);
-                $path = self::decodeEntities($params['url'] ?? '');
+                $path = $params['url'] ?? '';
                 unset($params['url']);
                 if (!PathGuard::isSafeRelativePath($path) || !self::pathParametersAreSafe($params)) {
                     return '';

@@ -107,10 +107,10 @@ and unit-testable.
 | `layout` | `LayoutRenderer` | `AllowlistedLayoutRenderer` | handle allowlist required, area restricted to frontend/adminhtml |
 | `config` | `ConfigReader` | `AllowlistedConfigReader` | Magento's `Variables::getAvailableVars()` allowlist, failing closed |
 | `customvar` | `CustomVariableReader` | `VariableCustomVariableReader` | identifier-shaped codes only |
-| `store`, `media`, `view` | `UrlBuilder` | `StoreUrlBuilder` | `PathGuard` on the path and on forwarded parameters like `_direct`: no traversal, scheme, absolute or protocol-relative path |
+| `store`, `media`, `view` | `UrlBuilder` | `StoreUrlBuilder` | `PathGuard` on the path and on forwarded parameters like `_direct`: no traversal, scheme, absolute or protocol-relative path, and no markup delimiter |
 | `protocol` | `UrlBuilder` | `StoreUrlBuilder` | a host/path shape check, not `PathGuard` — it blocks schemes and protocol-relative URLs but permits `..`, which cannot escape a host |
 | `css` | `StylesheetLoader` | `AssetStylesheetLoader` | `PathGuard` |
-| `{{var this.getUrl(...)}}` | `TemplateUrlBuilder` *(optional)* | `TemplateModelUrlBuilder` | the receiver has to be a template model, and the store argument comes from the scope rather than the template; `PathGuard` on the route |
+| `{{var this.getUrl(...)}}` | `TemplateUrlBuilder` *(optional)* | `TemplateModelUrlBuilder` | the receiver has to be a template model, and the store argument comes from the scope rather than the template; `PathGuard` on the route AND on `_direct`, which reaches the base URL unfiltered |
 
 The last row is not a directive. `StrictResolver` maps every `getFoo()` to `getData('foo')`
 except one: `getUrl` on an `AbstractTemplate` is really invoked, with its arguments parsed

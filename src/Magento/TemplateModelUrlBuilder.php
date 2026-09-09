@@ -38,6 +38,17 @@ class TemplateModelUrlBuilder implements TemplateUrlBuilder
             return '';
         }
 
+        // The route is not the only thing that reaches a URL. Url::getRouteUrl() returns
+        // `getBaseUrl() . $routeParams['_direct']` with no filtering at all, so `_direct`
+        // is a second route wearing a different name - the same sink HostDirectives guards
+        // for {{store}}. Guarding only $route left `[_direct:'../../../admin/']` open.
+        foreach (['_direct', '_fragment', '_escape_params'] as $key) {
+            $value = $parameters[$key] ?? null;
+            if (is_string($value) && $value !== '' && !PathGuard::isSafeRelativePath($value)) {
+                return '';
+            }
+        }
+
         try {
             return (string)$target->getUrl($store, $route, $parameters);
         } catch (\Throwable) {

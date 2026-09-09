@@ -20,12 +20,17 @@ final class PathGuard
             return false;
         }
 
-        // Decode repeatedly: a single pass leaves %252e%252e ('..' double-encoded) intact,
-        // and percent-encoded control bytes slip past a check applied only to the raw form.
+        // Decode repeatedly, and BOTH encodings: a single pass leaves %252e%252e ('..'
+        // double-encoded) intact, percent-encoded control bytes slip past a check applied
+        // only to the raw form, and HTML entities are decoded by the browser after this
+        // engine is done. One entity pass was worse than none: it made the guard see
+        // `&#46;&#46;/x` as safe while the browser still saw `../x`, so a value encoded twice
+        // walked straight through. Decoding here rather than in the caller also means the
+        // ORIGINAL value is what gets shipped, which is what legacy emits.
         $forms = [$path];
         $decoded = $path;
-        for ($i = 0; $i < 3; $i++) {
-            $next = rawurldecode($decoded);
+        for ($i = 0; $i < 6; $i++) {
+            $next = html_entity_decode(rawurldecode($decoded), ENT_QUOTES | ENT_HTML5, 'UTF-8');
             if ($next === $decoded) {
                 break;
             }
@@ -53,6 +58,15 @@ final class PathGuard
         foreach ($candidates as $candidate) {
             // Null bytes and control characters.
             if (preg_match('/[\x00-\x1F\x7F]/', $candidate)) {
+                return false;
+            }
+
+            // Markup delimiters. A relative path has no business carrying one, and every
+            // directive that takes a path emits its result UNESCAPED - so `x"><script>`
+            // in `<img src="{{media url=$p}}">` closes the attribute and opens a tag.
+            // Refused rather than escaped, so a legitimate URL still renders byte-for-byte
+            // as the filter renders it.
+            if (preg_match('/["\'<>`]/', $candidate)) {
                 return false;
             }
 
