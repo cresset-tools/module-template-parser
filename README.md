@@ -400,30 +400,36 @@ templates where one side is doing less work is not a speed number.
 
 ```
                                          legacy  compatible   ratio
-Sitemap...generate_warnings              2.29ms      1.84ms   0.80x
-User...new_user_notification             9.07ms      4.47ms   0.49x
-synthetic: loop                        165.23ms    116.09ms   0.70x
-synthetic: variables                    88.98ms     56.68ms   0.64x
-synthetic: conditionals                117.26ms     73.36ms   0.63x
-synthetic: plain text                    0.51ms      0.31ms   0.61x
+ProductAlert...price_alert               2.84ms      2.61ms   0.92x
+Newsletter...unsub_success               2.03ms      1.81ms   0.89x
+Customer...password_new                 12.65ms      4.15ms   0.33x
+Customer...account_new_confirmation     12.20ms      3.46ms   0.28x
+synthetic: loop                        165.85ms    116.45ms   0.70x
+synthetic: variables                    87.70ms     57.11ms   0.65x
+synthetic: conditionals                117.23ms     74.09ms   0.63x
+synthetic: plain text                    0.51ms      0.32ms   0.62x
 
-TOTAL (13 templates, identical output) 747.49ms    476.82ms   0.64x
-per render: legacy 115us, compatible 73us
+TOTAL (48 templates, identical output) 981.14ms    543.67ms   0.55x
+per render: legacy 68us, compatible 38us
 ```
 
-About **1.5x faster**, and the reason is structural rather than clever: the legacy filter runs
-a regex pass per directive processor over the whole string and re-runs the entire engine over
+About **1.8x faster**, and the reason is structural rather than clever: the legacy filter runs
+a regex pass per directive processor over the whole string, and re-runs the entire engine over
 substrings to handle nesting, so a template with a nested directive is scanned several times.
-This lexes and parses once, then walks the tree.
+This lexes and parses once, then walks the tree. The spread is the tell — a flat template like
+`unsub_success` is 0.89x, while `password_new`, which nests, is 0.33x.
 
-45% of the remaining time is parsing, and that half is cacheable — an AST keyed by template
+58% of the remaining time is parsing, and that half is cacheable — an AST keyed by template
 hash would remove it. The legacy filter's regex work is not cacheable in the same way, since
 it interleaves matching with resolution.
 
-Caveats worth stating: 35 corpus templates are excluded because they use host-port directives
-(`{{template}}`, `{{css}}`) that a standalone benchmark has nothing to wire, and one because
-the legacy filter crashes on it. Both engines are timed on the same machine, same PHP, same
-run. Reproduce with `MAGENTO_ROOT=/path/to/magento php tools/benchmark.php`.
+Caveats worth stating. Both engines are timed on the same machine, same PHP, same run. One
+corpus template is excluded because the legacy filter crashes on it. Neither side resolves
+`{{template}}` includes — legacy needs Magento's config and this engine needs a
+`TemplateLoader` port — so legacy's include processor is stubbed to leave the construct
+alone, matching an unregistered directive here; without that the two fail differently and 35
+of the 48 templates, including every Sales order and invoice email, drop out of the
+comparison. Reproduce with `MAGENTO_ROOT=/path/to/magento php tools/benchmark.php`.
 
 ## Status
 

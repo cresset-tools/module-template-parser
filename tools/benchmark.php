@@ -111,8 +111,20 @@ $resolver = new StrictResolver(new VariableFactory());
 \Magento\Framework\App\ObjectManager::$registry[VarDirective::class] =
     new VarDirective($resolver, new FilterApplier(new FilterPool()));
 \Magento\Framework\App\ObjectManager::$registry[ForDirective::class] = new ForDirective($resolver);
+// A {{template}} include cannot be resolved by either side here: legacy needs Magento's
+// config, and this engine needs a TemplateLoader port. Left to their own devices they fail
+// DIFFERENTLY - legacy emits "{Error in template processing}", this engine leaves the
+// directive verbatim - which excluded 35 of 49 templates from the comparison, including
+// every Sales order, invoice and shipment email. Neither side implementing it is the like
+// for like arrangement, so legacy's processor is stubbed to hand the construct back
+// unchanged, matching an unregistered directive here.
 \Magento\Framework\App\ObjectManager::$registry[TemplateDirective::class] =
-    new TemplateDirective($resolver, new ParameterFactory());
+    new class ($resolver, new ParameterFactory()) extends TemplateDirective {
+        public function process(array $construction, LegacyTemplate $filter, array $templateVariables): string
+        {
+            return $construction[0];
+        }
+    };
 $simple = new SimpleDirective(new ProcessorPool(), new ParameterFactory(), $resolver, new FilterApplier(new FilterPool()));
 // No 'template' processor: this engine has no TemplateLoader port wired here, so including
 // it would time legacy resolving an include against this engine leaving it verbatim.
@@ -163,6 +175,7 @@ printf("%s\n", str_repeat('-', 96));
 $totals = ['legacy' => 0.0, 'compatible' => 0.0, 'lenient' => 0.0];
 $rows = [];
 $skipped = [];
+$divergent = [];
 
 // Legacy emits notices for the same constructs it records as quirks; they are not part of
 // what is being timed, and printing thousands of them would dominate the run.
@@ -189,6 +202,7 @@ foreach ($corpus as $label => $source) {
     // has nothing to wire them to.
     if ($legacyOut !== $ourOut) {
         $skipped['output differs'][] = $label;
+        $divergent[$label] = [$legacyOut, $ourOut];
         continue;
     }
 
@@ -246,6 +260,32 @@ printf("peak memory: %.1f MB\n", memory_get_peak_usage(true) / 1048576);
 printf("\nexcluded from timing:\n");
 foreach ($skipped as $reason => $labels) {
     printf("  %-18s %d\n", $reason, count($labels));
+}
+
+if (getenv('LIST_DIFF')) {
+    printf("\n%-54s %s\n", 'template', 'first differing construct');
+    printf("%s\n", str_repeat('-', 96));
+    $byCause = [];
+    foreach ($divergent as $label => [$l, $c]) {
+        $limit = min(strlen($l), strlen($c));
+        for ($i = 0; $i < $limit && $l[$i] === $c[$i]; $i++) {}
+        // Walk back to the directive that produced the divergence.
+        $before = substr($l, 0, $i);
+        $open = strrpos($before, '{{');
+        $cause = $open === false ? '(before any directive)' : substr($l, $open, 30);
+        if ($open !== false && preg_match('/\{\{\s*([a-zA-Z_]+)/', substr($l, $open), $m)) {
+            $cause = '{{' . $m[1] . '}}';
+        }
+        // Legacy's own error strings are the clearer signal when present.
+        foreach (['{Error in template processing}' => '{{template}} unresolved',
+                  '&#123;Error in template processing}' => '{{template}} unresolved'] as $needle => $name) {
+            if (str_contains(substr($l, max(0, $i - 40), 80), $needle)) { $cause = $name; }
+        }
+        $byCause[$cause][] = $label;
+        printf("%-54s %s\n", substr($label, 0, 54), $cause);
+    }
+    printf("\nby cause:\n");
+    foreach ($byCause as $cause => $ls) { printf("  %-28s %d\n", $cause, count($ls)); }
 }
 
 if (getenv('SHOW_DIFF')) {
