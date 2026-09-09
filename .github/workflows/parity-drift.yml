@@ -94,6 +94,15 @@ jobs:
           MAGENTO_ROOT: ${{ github.workspace }}/.mageos
         run: bougie run -- php tools/document-language.php
 
+      # Five iterations, so this is a smoke test rather than a measurement: it exists
+      # because the benchmark harness reports a template that RAISED as "excluded", and a
+      # broken stub therefore looked exactly like a corpus the filter chokes on. It was
+      # broken for a month and the README carried the resulting numbers.
+      - name: Check the benchmark harness still times the whole corpus
+        env:
+          MAGENTO_ROOT: ${{ github.workspace }}/.mageos
+        run: bougie run -- php tools/benchmark.php 5
+
       - name: Fail if the reference drifted
         run: |
           if ! git diff --quiet -- docs/directives.md; then

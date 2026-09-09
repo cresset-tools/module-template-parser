@@ -11,14 +11,19 @@ use Magento\Framework\Filter\Template as LegacyTemplate;
 
 class BenchmarkEmailLikeLegacy extends LegacyTemplate {
     protected $_modifiers = ['nl2br' => ''];
-    private ?Escaper $escaper = null;
+    // Fully qualified. This file has no namespace and benchmark.php's `use` line does not
+    // reach it, so an unqualified Escaper here resolved to \Escaper and every template using
+    // |escape died with "Class not found" - silently, because the harness counts a raising
+    // template as excluded rather than failing. That took the benchmark from 48 templates to
+    // 27 without saying so.
+    private ?\Magento\Framework\Escaper $escaper = null;
     public function __construct(...$args) {
         parent::__construct(...$args);
         $this->_modifiers['escape'] = [$this, 'modifierEscape'];
     }
     public function modifierEscape($value, $type = 'html') {
         switch ($type) {
-            case 'html': return ($this->escaper ??= new Escaper())->escapeHtml($value);
+            case 'html': return ($this->escaper ??= new \Magento\Framework\Escaper())->escapeHtml($value);
             case 'htmlentities': return htmlentities($value, ENT_QUOTES);
             case 'url': return rawurlencode($value);
         }

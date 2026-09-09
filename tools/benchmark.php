@@ -228,6 +228,28 @@ foreach ($skipped as $reason => $labels) {
     printf("  %-18s %d\n", $reason, count($labels));
 }
 
+/*
+ * A floor, because "excluded" is how this harness reports a template that RAISED, and a
+ * raising template looks the same whether the legacy filter genuinely crashes on it or this
+ * harness is broken.
+ *
+ * It was broken, for a month, and said nothing: a stub referenced an unqualified `Escaper`
+ * that resolved to no class, so every template using |escape raised and was quietly counted
+ * as excluded. 27 templates were timed instead of 48, and the README carried the resulting
+ * numbers as though they measured the corpus.
+ */
+const EXPECTED_TIMED_TEMPLATES = 48;
+
+if (count($rows) < EXPECTED_TIMED_TEMPLATES) {
+    fwrite(STDERR, sprintf(
+        "\nonly %d of an expected %d templates were timed - the harness is broken, not the corpus.\n"
+        . "Run with LIST_DIFF=1 to see which, and check the stubs load the classes they name.\n",
+        count($rows),
+        EXPECTED_TIMED_TEMPLATES
+    ));
+    exit(1);
+}
+
 if (getenv('LIST_DIFF')) {
     printf("\n%-54s %s\n", 'template', 'first differing construct');
     printf("%s\n", str_repeat('-', 96));

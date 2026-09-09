@@ -535,35 +535,45 @@ times **only** templates where the two produce byte-identical output — a speed
 templates where one side is doing less work is not a speed number.
 
 ```
-300 iterations per template, PHP 8.5, 48 of 48 templates byte-identical output
+300 iterations per template, PHP 8.4, 48 of 48 templates byte-identical output
 
                                          legacy  compatible   ratio
-Newsletter...unsub_success               2.03ms      1.88ms   0.93x   flat
-ProductAlert...price_alert               2.86ms      2.66ms   0.93x   flat
-Customer...password_new                 12.68ms      4.20ms   0.33x   nested
-Customer...account_new_confirmation     12.27ms      3.65ms   0.30x   nested
-synthetic: loop                        168.90ms    118.39ms   0.70x
-synthetic: conditionals                117.66ms     74.66ms   0.63x
-synthetic: variables                    88.81ms     55.91ms   0.63x
-synthetic: plain text                    0.52ms      0.32ms   0.62x
+ProductAlert...price_alert               3.13ms      3.18ms   1.02x   flat
+Wishlist...share_notification            6.82ms      6.61ms   0.97x   flat
+Customer...password_new                 14.51ms      7.02ms   0.48x   nested
+Customer...account_new_confirmation     13.67ms      6.54ms   0.48x   nested
+synthetic: variables                    99.78ms     83.09ms   0.83x
+synthetic: loop                        188.02ms    148.05ms   0.79x
+synthetic: plain text                    0.61ms      0.41ms   0.68x
+synthetic: conditionals                135.55ms     90.55ms   0.67x
 
-TOTAL                                  984.94ms    547.74ms   0.56x
-per render: legacy 68us, compatible 38us      peak memory 2.0 MB
+TOTAL                                 1091.57ms    700.72ms   0.64x
+per render: legacy 76us, compatible 49us      peak memory 2.0 MB
 ```
 
-The total is stable across runs at 0.55–0.56x. Individual flat templates are within noise of
-each other, so their relative order shifts between runs; the flat-versus-nested gap does not.
+The total is stable across runs at 0.64x. Individual flat templates are within noise of each
+other, so their relative order shifts between runs and the fastest of them lands either side
+of 1.00x; the flat-versus-nested gap does not move.
 
-About **1.8x faster**, and the reason is structural rather than clever: the legacy filter runs
+About **1.6x faster**, and the reason is structural rather than clever: the legacy filter runs
 a regex pass per directive processor over the whole string, and re-runs the entire engine over
 substrings to handle nesting, so a template with a nested directive is scanned several times.
 This lexes and parses once, then walks the tree. The spread is the tell — a flat template like
-`unsub_success` is 0.93x, barely a win, while `password_new`, which nests, is 0.33x. The win
-is proportional to how much re-scanning the old engine was doing.
+`price_alert` is 1.02x, no win at all, while `password_new`, which nests, is 0.48x. The win is
+proportional to how much re-scanning the old engine was doing.
 
-59% of the remaining time is parsing, and that half is cacheable — an AST keyed by template
+51% of the remaining time is parsing, and that half is cacheable — an AST keyed by template
 hash would remove it. The legacy filter's regex work is not cacheable in the same way, since
 it interleaves matching with resolution.
+
+These numbers are worse than the ones this section carried until September 2026, which read
+0.56x and 1.8x. That was not drift: `tools/benchmark.php` had been broken since the tools were
+restructured, and its stub referenced an unqualified `Escaper` that resolved to nothing, so
+every template using `|escape` raised and was silently counted as excluded — 27 templates
+timed instead of 48. With it repaired the engine really is slower than it was, by about 15%,
+which is the price of the fidelity work: two hand-written scanners replaced by faithful ports
+of Magento's tokenizers, `$name` parameter resolution on every directive rather than one, and
+percent-decoding on every variable path.
 
 Caveats worth stating. Both engines are timed on the same machine, same PHP, same run. One
 corpus template is excluded because the legacy filter crashes on it. Neither side resolves
