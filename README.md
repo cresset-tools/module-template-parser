@@ -403,27 +403,33 @@ times **only** templates where the two produce byte-identical output — a speed
 templates where one side is doing less work is not a speed number.
 
 ```
-                                         legacy  compatible   ratio
-ProductAlert...price_alert               2.84ms      2.61ms   0.92x
-Newsletter...unsub_success               2.03ms      1.81ms   0.89x
-Customer...password_new                 12.65ms      4.15ms   0.33x
-Customer...account_new_confirmation     12.20ms      3.46ms   0.28x
-synthetic: loop                        165.85ms    116.45ms   0.70x
-synthetic: variables                    87.70ms     57.11ms   0.65x
-synthetic: conditionals                117.23ms     74.09ms   0.63x
-synthetic: plain text                    0.51ms      0.32ms   0.62x
+300 iterations per template, PHP 8.5, 48 of 48 templates byte-identical output
 
-TOTAL (48 templates, identical output) 981.14ms    543.67ms   0.55x
-per render: legacy 68us, compatible 38us
+                                         legacy  compatible   ratio
+Newsletter...unsub_success               2.03ms      1.88ms   0.93x   flat
+ProductAlert...price_alert               2.86ms      2.66ms   0.93x   flat
+Customer...password_new                 12.68ms      4.20ms   0.33x   nested
+Customer...account_new_confirmation     12.27ms      3.65ms   0.30x   nested
+synthetic: loop                        168.90ms    118.39ms   0.70x
+synthetic: conditionals                117.66ms     74.66ms   0.63x
+synthetic: variables                    88.81ms     55.91ms   0.63x
+synthetic: plain text                    0.52ms      0.32ms   0.62x
+
+TOTAL                                  984.94ms    547.74ms   0.56x
+per render: legacy 68us, compatible 38us      peak memory 2.0 MB
 ```
+
+The total is stable across runs at 0.55–0.56x. Individual flat templates are within noise of
+each other, so their relative order shifts between runs; the flat-versus-nested gap does not.
 
 About **1.8x faster**, and the reason is structural rather than clever: the legacy filter runs
 a regex pass per directive processor over the whole string, and re-runs the entire engine over
 substrings to handle nesting, so a template with a nested directive is scanned several times.
 This lexes and parses once, then walks the tree. The spread is the tell — a flat template like
-`unsub_success` is 0.89x, while `password_new`, which nests, is 0.33x.
+`unsub_success` is 0.93x, barely a win, while `password_new`, which nests, is 0.33x. The win
+is proportional to how much re-scanning the old engine was doing.
 
-58% of the remaining time is parsing, and that half is cacheable — an AST keyed by template
+59% of the remaining time is parsing, and that half is cacheable — an AST keyed by template
 hash would remove it. The legacy filter's regex work is not cacheable in the same way, since
 it interleaves matching with resolution.
 
