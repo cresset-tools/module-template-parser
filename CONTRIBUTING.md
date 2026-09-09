@@ -78,6 +78,7 @@ re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 | `CorpusTest` | the parser never throws, never loses content, and never executes anything absent from the template |
 | `GuardTripwireTest`, `MagentoGuardTest`, `SecurityRegressionTest` | one test per security guard, each written against a mutation that removed it |
 | `MagentoIntegrationTest` | the adoption path: the plugin, the adapter's policy, and shadow mode |
+| `TemplateIncludeTest` | `{{template}}` semantics: scope, parameters, nesting, cycles, inheritance and output |
 | `MagentoUrlAdapterTest` | the adapters behind `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}` and `{{customvar}}` - the directives that carry merchant-authored content rather than shipped templates |
 | `KnownDivergenceTest` | the deliberate behavioural differences from the legacy filter |
 

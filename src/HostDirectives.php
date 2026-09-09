@@ -45,6 +45,45 @@ final class HostDirectives
     }
 
     /**
+     * The variables an included template can see.
+     *
+     * Legacy hands the processor `array_merge_recursive($directiveParameters,
+     * $templateVariables)` with config_path removed - so the directive's own parameters
+     * become variables inside the include, on top of everything the parent had. Without this
+     * a template written as
+     *
+     *     {{template config_path="design/email/footer" store_hours="9-5"}}
+     *
+     * renders the include with store_hours unset.
+     *
+     * array_merge_recursive is not array_merge: on a key both sides define, it produces an
+     * ARRAY of both values rather than letting one win, so a parameter named after an
+     * existing variable makes that variable render as "Array". Reproduced in compatible mode
+     * only; elsewhere the parameter simply wins, which is what anyone writing one expects.
+     *
+     * @param array<string,string> $parameters already $-resolved, config_path included
+     * @return array<string,mixed>
+     */
+    private static function includeScope(array $parameters, Context $context, Evaluator $evaluator): array
+    {
+        unset($parameters['config_path']);
+        if ($parameters === []) {
+            return [];
+        }
+
+        if (!$evaluator->options()->legacyQuirks) {
+            return $parameters;
+        }
+
+        $scope = [];
+        foreach ($parameters as $key => $value) {
+            $scope[$key] = $context->has($key) ? [$value, $context->get($key)] : $value;
+        }
+
+        return $scope;
+    }
+
+    /**
      * What legacy emits for an include it cannot process.
      *
      * TemplateDirective::process returns this literal string when config_path is absent or
@@ -195,7 +234,7 @@ final class HostDirectives
                 try {
                     // Child scope. Its deferred work is handed back up explicitly - no
                     // shared state, and nothing survives in the output stream.
-                    $child = $c->withVariables([]);
+                    $child = $c->withVariables(self::includeScope($params, $c, $e));
                     $ast = $parser->parse($source, $c->policy()->maxNestingDepth());
                     $child->noteIncompatibilities($ast->incompatibilities());
                     $rendered = $e->evaluate($ast, $child);
