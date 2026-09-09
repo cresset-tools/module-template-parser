@@ -93,6 +93,18 @@ cases:
 | lenient (legacy quirks off) | 460 |
 | strict (default) | 735 |
 
+## Benchmarking
+
+```sh
+MAGENTO_ROOT=/tmp/mageos php tools/benchmark.php [iterations]
+```
+
+Times both engines over the same templates. It compares output first and times only the
+templates that match byte for byte, because a template one side renders differently is one
+side doing different work. The legacy side reproduces `Email\Model\Template\Filter`'s
+`varDirective` rather than using the base `Framework\Filter\Template`, whose
+`{{var x|modifier}}` defect would otherwise show up as free speed.
+
 ## Guards and tests
 
 Every security guard needs a test that fails when the guard is deleted. A mutation pass over

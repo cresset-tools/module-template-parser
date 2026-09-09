@@ -389,6 +389,42 @@ mode too: it limits input complexity rather than syntax tolerance, so deeply nes
 refused rather than recovered. Includes are separately bounded against cycles, against depth,
 and against total count, since five levels of fan-out is not five renders.
 
+## Speed
+
+Faster than the legacy filter, which was not the expected result.
+
+`tools/benchmark.php` renders the same templates through both engines, each constructed once
+outside the timing loop, since in Magento both are DI instances reused across a request. It
+times **only** templates where the two produce byte-identical output — a speed number over
+templates where one side is doing less work is not a speed number.
+
+```
+                                         legacy  compatible   ratio
+Sitemap...generate_warnings              2.29ms      1.84ms   0.80x
+User...new_user_notification             9.07ms      4.47ms   0.49x
+synthetic: loop                        165.23ms    116.09ms   0.70x
+synthetic: variables                    88.98ms     56.68ms   0.64x
+synthetic: conditionals                117.26ms     73.36ms   0.63x
+synthetic: plain text                    0.51ms      0.31ms   0.61x
+
+TOTAL (13 templates, identical output) 747.49ms    476.82ms   0.64x
+per render: legacy 115us, compatible 73us
+```
+
+About **1.5x faster**, and the reason is structural rather than clever: the legacy filter runs
+a regex pass per directive processor over the whole string and re-runs the entire engine over
+substrings to handle nesting, so a template with a nested directive is scanned several times.
+This lexes and parses once, then walks the tree.
+
+45% of the remaining time is parsing, and that half is cacheable — an AST keyed by template
+hash would remove it. The legacy filter's regex work is not cacheable in the same way, since
+it interleaves matching with resolution.
+
+Caveats worth stating: 35 corpus templates are excluded because they use host-port directives
+(`{{template}}`, `{{css}}`) that a standalone benchmark has nothing to wire, and one because
+the legacy filter crashes on it. Both engines are timed on the same machine, same PHP, same
+run. Reproduce with `MAGENTO_ROOT=/path/to/magento php tools/benchmark.php`.
+
 ## Status
 
 Pre-1.0, not yet used in production, and the API may change.
@@ -429,7 +465,7 @@ src/Parser.php     tokens -> AST, lenient (recover) or strict (reject)
 src/Evaluator.php  AST -> string, explicit handler table
 src/Context.php    scope, policy and structured deferral
 src/Magento/       adapters binding the ports to Magento
-tools/             differential and fixture-recording scripts
+tools/             differential, benchmark and fixture-recording scripts
 ```
 
 ## License
