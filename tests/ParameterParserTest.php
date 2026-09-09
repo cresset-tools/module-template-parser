@@ -31,7 +31,20 @@ final class ParameterParserTest extends TestCase
             'empty then next' => ['a= b=$x', ['a' => '', 'b' => '$x']],
             // rawurldecode() runs before tokenizing, so an encoded '=' becomes a separator.
             'percent encoded' => ['a%3Db', ['a' => 'b']],
-            'escaped quote'   => ['t="say \\"hi\\""', ['t' => 'say "hi"']],
+            // getValue() keeps the backslash unless what follows is another backslash, so an
+            // escaped quote arrives WITH its backslash. Verified against Tokenizer\Parameter.
+            'escaped quote'   => ['t="say \\"hi\\""', ['t' => 'say \\"hi\\"']],
+            // The backslash rule applies to unquoted values too, which is the one that is
+            // easiest to miss: the escaped space does not end the value, so `a` swallows the
+            // rest of the blob and `template` is never a parameter at all.
+            'escaped space'   => ['class=Foo\\ template=evil.phtml', ['class' => 'Foo\\ template=evil.phtml']],
+            // A name accumulates across whitespace, because tokenize() does not reset it.
+            'split name'      => ['a b=1', ['ab' => '1']],
+            // trim()'s charlist, not ctype_space()'s: NUL separates, form feed does not.
+            'nul separates'   => ["a=1\0b=2", ['a' => '1', 'b' => '2']],
+            'form feed does not' => ["a=1\x0Cb=2", ['a' => "1\x0Cb=2"]],
+            // An empty key becomes the placeholder `%`, which then matches every `%`.
+            'empty key'       => ['=x', ['' => 'x']],
             'empty'           => ['', []],
             'unterminated'    => ['a="unclosed', ['a' => 'unclosed']],
         ];

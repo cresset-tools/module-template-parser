@@ -68,7 +68,11 @@ final class Evaluator
         // building: `--mode=compatible` reproduced the directive quirks and none of the
         // variable or parameter ones.
         $this->variables = $variables ?? new VariableResolver($this->options->legacyQuirks);
-        $this->parameters = $parameters ?? new ParameterParser($this->options->legacyQuirks);
+        // ParameterParser takes no mode: how a blob splits into parameters is structure, not
+        // policy, and it is the filter's structure in every mode. It used to take the flag,
+        // and TemplateFilterAdapter - the class that actually ships inside Magento - forgot
+        // to pass it, so the drop-in was the one place compatible mode was not compatible.
+        $this->parameters = $parameters ?? new ParameterParser();
         $this->spec = $spec ?? new DirectiveSpec();
         $this->registerDefaults();
     }

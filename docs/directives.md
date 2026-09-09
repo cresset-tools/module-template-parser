@@ -279,18 +279,37 @@ particular:
 - A value starting with `$` is a **variable path**, resolved before the directive runs.
   Anything else is a literal — even when a variable of that name exists.
 - A value may be quoted to contain spaces.
+- A backslash escapes the next character — in **unquoted** values as well as quoted ones. So
+  `a=1\ b=2` is *one* parameter whose value is `1\ b=2`: the escaped space does not end it,
+  and `b` never becomes a parameter at all. The backslash is kept unless what follows is
+  another backslash, so `a="x\"y"` holds a backslash and a quote.
 - Whitespace immediately after `=` ends the value. `a= b=$x` is two parameters, not one.
-- A word with no `=` is **dropped entirely**. It does not become a flag.
+- Whitespace here means `trim()`'s set, which **includes NUL and excludes form feed** — so
+  `a=1\0b=2` is two parameters and `a=1\fb=2` is one.
+- A **trailing** word with no `=` is dropped. One that comes before another parameter is not:
+  the name accumulates across the whitespace, so `a b=1` is the single parameter `ab`.
+- An empty key is the placeholder `%` itself, so `{{trans "50% off" =X}}` rewrites every `%`
+  in the text.
 - At the very end of a directive the tokenizer cannot step past the last character, so the
   `=` itself becomes the value: `{{trans "%s" s=}}` prints `=`.
 
+None of this is guessable, which is why `ParameterParser` is a line-by-line port of
+`Tokenizer\Parameter` rather than a scanner written to be reasonable. A reasonable one
+disagreed with it five ways, and each disagreement handed a directive parameters the filter
+never produced — `{{block class=Foo\ template=x.phtml}}` is one garbage class on the filter,
+and was a class plus a live `template` here.
+
 <!-- generated:parameters -->
 ```
-{{trans "T %a" a="x y"}}      -       → T x y  # a quoted value may contain spaces
-{{trans "T %a %b" a= b=$x}}   x="X"   → T  X  # whitespace after `=` ends the value - it does not swallow the next parameter
-{{trans "T %a" a=}}           -       → T =   # strict: T ; at the very end of a directive the cursor cannot advance, so the `=` becomes the value
-{{trans "T %a" a=$x b}}       x="X"   → T X   # a word with no `=` is dropped entirely
-{{trans "T %a" a%3D$x}}       x="X"   → T X   # the blob is rawurldecode()d first, so an encoded `=` makes a parameter
+{{trans "T %a" a="x y"}}      -       → T x y         # a quoted value may contain spaces
+{{trans "T %a %b" a= b=$x}}   x="X"   → T  X          # whitespace after `=` ends the value - it does not swallow the next parameter
+{{trans "T %a" a=}}           -       → T =           # at the very end of a directive the cursor cannot advance, so the `=` becomes the value
+{{trans "T [%a]" a=1\ b=2}}   -       → T [1\ b=2]    # a backslash escapes the next character in an UNQUOTED value too, so the escaped space does not end it and `a` swallows the rest
+{{trans "T [%a]" a="x\"y"}}   -       → T [x\&quot;y]  # and it keeps the backslash, unless what follows is another backslash
+{{trans "T %a" a=$x b}}       x="X"   → T X           # a TRAILING word with no `=` is dropped
+{{trans "T [%ab]" a b=1}}     -       → T [1]         # but one before another parameter is not - the name accumulates across the whitespace
+{{trans "T 50% off" =X}}      -       → T 50X off     # an empty key is the placeholder `%` itself, so it rewrites every `%` in the text
+{{trans "T %a" a%3D$x}}       x="X"   → T X           # the blob is rawurldecode()d first, so an encoded `=` makes a parameter
 ```
 <!-- /generated -->
 

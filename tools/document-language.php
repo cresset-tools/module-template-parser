@@ -258,7 +258,11 @@ $sections = [
     example('{{trans "T %a" a="x y"}}', [], 'a quoted value may contain spaces'),
     example('{{trans "T %a %b" a= b=$x}}', ['x' => 'X'], 'whitespace after `=` ends the value - it does not swallow the next parameter'),
     example('{{trans "T %a" a=}}', [], 'at the very end of a directive the cursor cannot advance, so the `=` becomes the value'),
-    example('{{trans "T %a" a=$x b}}', ['x' => 'X'], 'a word with no `=` is dropped entirely'),
+    example('{{trans "T [%a]" a=1\\ b=2}}', [], 'a backslash escapes the next character in an UNQUOTED value too, so the escaped space does not end it and `a` swallows the rest'),
+    example('{{trans "T [%a]" a="x\\"y"}}', [], 'and it keeps the backslash, unless what follows is another backslash'),
+    example('{{trans "T %a" a=$x b}}', ['x' => 'X'], 'a TRAILING word with no `=` is dropped'),
+    example('{{trans "T [%ab]" a b=1}}', [], 'but one before another parameter is not - the name accumulates across the whitespace'),
+    example('{{trans "T 50% off" =X}}', [], 'an empty key is the placeholder `%` itself, so it rewrites every `%` in the text'),
     example('{{trans "T %a" a%3D$x}}', ['x' => 'X'], 'the blob is rawurldecode()d first, so an encoded `=` makes a parameter'),
 ],
 'nesting' => [
