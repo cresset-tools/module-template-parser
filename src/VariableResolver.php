@@ -27,6 +27,9 @@ final class VariableResolver
     private const ACCESSOR = '/^(get|has|is)[A-Z0-9_]/';
 
     /** `getBar()`, and also `getBar("x")` - legacy parses arguments and then ignores them. */
+    /** Argument arrays nested deeper than this are refused; legacy segfaults instead. */
+    private const MAX_ARGUMENT_DEPTH = 64;
+
     private const METHOD_CALL = '/^([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)$/s';
 
     /** @var ?\Closure(object,string,list<mixed>,Context):?Resolution */
@@ -299,14 +302,19 @@ final class VariableResolver
      * Parses a method call's arguments, the way Tokenizer\Variable::getMethodArgs() does.
      *
      * Only reached once a host has installed a method-call server. Without one, legacy's own
-     * behaviour is to parse these and throw them away - and so is this engine's, so the work
-     * is not done at all.
+     * behaviour is to parse these and throw them away - and so is this engine's, so none of
+     * this work happens at all.
      *
-     * The grammar is small and all of it is legacy's: values separated by commas or
-     * whitespace; a run of digits and dots is a float; `[` opens an array whose members may
-     * carry a `key:` prefix; anything else is a string, either quoted with backslash escapes
-     * or bare up to the next separator. A `$name` value resolves against the scope, as
-     * getStackArgs() does, so `getUrl($store, ...)` is handed the store and not the word.
+     * The grammar is legacy's: values separated by commas or whitespace; a run of digits and
+     * dots is a float; `[` opens an array whose members may carry a `key:` prefix; anything
+     * else is a string, quoted or bare, in which a backslash escapes the next character. A
+     * `$name` value resolves against the scope, as getStackArgs() does, so
+     * `getUrl($store, ...)` is handed the store and not the word.
+     *
+     * Written as a cursor port rather than a reasonable-looking scanner, for the reason
+     * ParameterParser is: a hand-rolled version disagreed with the tokenizer five ways and
+     * hung on the sixth. What is NOT legacy's is the depth cap and the progress assertion -
+     * legacy has neither, and segfaults on the first and spins on the second.
      *
      * @return list<mixed>
      */
@@ -315,24 +323,45 @@ final class VariableResolver
         $offset = 0;
 
         /** @var list<mixed> $parsed */
-        $parsed = $this->parseValues($arguments, $offset, $context, null);
+        $parsed = $this->parseValues($arguments, $offset, $context, false, 0);
 
         return $parsed;
     }
 
     /**
-     * Values up to $terminator, or to the end of the string when there is none.
+     * Values up to the closing `]` (inside an array) or the closing `)` / end of input.
+     *
+     * The `)` case is the one legacy gets right and a scanner easily does not: `)` is a
+     * string break, so a bare `)` makes parseString() return '' without moving the cursor.
+     * Filtering only `,` and whitespace there meant the loop appended '' for ever -
+     * `{{var o.f())}}` exhausted memory in under a second, reachable from every CLI command
+     * because the console wires the method-call port unconditionally.
      *
      * @return array<array-key,mixed>
      */
-    private function parseValues(string $source, int &$offset, Context $context, ?string $terminator): array
+    private function parseValues(string $source, int &$offset, Context $context, bool $inArray, int $depth): array
     {
+        if ($depth > self::MAX_ARGUMENT_DEPTH) {
+            // Legacy recurses until the C stack gives out - a 360 KB argument list segfaults
+            // it, and PHP cannot catch that. Refusing is the only safe reading, and no real
+            // template nests arguments anywhere near this deep.
+            // Unpositioned, like AccessorError: the resolver has no view of the source, and
+            // the evaluator re-raises it against the directive it was resolving.
+            throw NestingLimitError::at(
+                '',
+                0,
+                sprintf('method arguments nested deeper than %d levels', self::MAX_ARGUMENT_DEPTH),
+                'legacy recurses here until the C stack gives out, which PHP cannot catch'
+            );
+        }
+
         $values = [];
         $length = strlen($source);
 
         while ($offset < $length) {
             $char = $source[$offset];
-            if ($char === $terminator) {
+
+            if ($inArray ? $char === ']' : $char === ')') {
                 $offset++;
                 break;
             }
@@ -341,11 +370,22 @@ final class VariableResolver
                 continue;
             }
 
+            $before = $offset;
             // Keys exist inside an array and nowhere else: getMethodArgs() never reads one.
-            $key = $terminator === null ? null : $this->parseMemberKey($source, $offset);
-            $value = $this->parseValue($source, $offset, $context, $terminator !== null);
+            $key = $inArray ? $this->parseMemberKey($source, $offset) : null;
+            $value = $this->parseValue($source, $offset, $context, $inArray, $depth);
 
-            if ($key === null || $key === '') {
+            // getArray() and getMethodArgs() both advance unconditionally each pass; this
+            // scanner can decline to. Without this the only symptom is a hang.
+            if ($offset === $before) {
+                $offset++;
+                continue;
+            }
+
+            // `if ($key)`, not a null check: legacy tests the key for truthiness, so the
+            // string '0' is falsy there and the member is APPENDED rather than landing on
+            // slot 0 and overwriting whatever was already there.
+            if ($key === null || $key === '' || $key === '0') {
                 $values[] = $value;
             } else {
                 $values[$key] = $value;
@@ -355,7 +395,7 @@ final class VariableResolver
         return $values;
     }
 
-    private function parseValue(string $source, int &$offset, Context $context, bool $inArray): mixed
+    private function parseValue(string $source, int &$offset, Context $context, bool $inArray, int $depth): mixed
     {
         $char = $source[$offset];
 
@@ -365,7 +405,7 @@ final class VariableResolver
         if ($char === '[') {
             $offset++;
 
-            return $this->parseValues($source, $offset, $context, ']');
+            return $this->parseValues($source, $offset, $context, true, $depth + 1);
         }
 
         $raw = $this->parseString($source, $offset, $inArray);
@@ -386,33 +426,43 @@ final class VariableResolver
         return (float)substr($source, $start, $offset - $start);
     }
 
-    /** getString(): a quoted run with backslash escapes, or a bare run up to a separator. */
+    /**
+     * getString(): a quoted run or a bare run up to a separator, backslash escaping either.
+     *
+     * The escape applies outside quotes too, which is what makes `f(a\,b)` a single argument
+     * `a,b`. Reading bare values byte-for-byte instead also left an escaped `)` behind as a
+     * stray break character, which is the second way into the hang above.
+     */
     private function parseString(string $source, int &$offset, bool $inArray): string
     {
         $length = strlen($source);
-        $quote = ($source[$offset] === '"' || $source[$offset] === "'") ? $source[$offset] : null;
-        $value = '';
 
-        if ($quote !== null) {
-            $offset++;
-            while ($offset < $length) {
-                if ($source[$offset] === '\\' && $offset + 1 < $length) {
-                    $value .= $source[++$offset];
-                } elseif ($source[$offset] === $quote) {
-                    $offset++;
-
-                    return $value;
-                } else {
-                    $value .= $source[$offset];
-                }
-                $offset++;
-            }
-
-            return $value;
+        // getString() returns empty the moment it lands on whitespace, before it even looks
+        // for a quote. Only reachable after a `key:`, since the array loop skips whitespace
+        // between members - which is why `[a : b]` is `a => ''` there and not `a => 'b'`.
+        if (trim($source[$offset]) === '') {
+            return '';
         }
 
-        while ($offset < $length && !$this->isStringBreak($source[$offset], $inArray)) {
-            $value .= $source[$offset++];
+        $quote = ($source[$offset] === '"' || $source[$offset] === "'") ? $source[$offset] : null;
+        $value = $quote === null ? $source[$offset] : '';
+
+        while (++$offset < $length) {
+            $char = $source[$offset];
+
+            if ($quote === null && $this->isStringBreak($char, $inArray)) {
+                break;
+            }
+            if ($quote !== null && $char === $quote) {
+                $offset++;
+                break;
+            }
+            if ($char === '\\' && $offset + 1 < $length) {
+                $value .= $source[++$offset];
+                continue;
+            }
+
+            $value .= $char;
         }
 
         return $value;
@@ -429,7 +479,10 @@ final class VariableResolver
     /**
      * getMemberKey(): a `key:` prefix inside an array, or null when the member has none.
      *
-     * Looks ahead rather than consuming, because legacy rewinds when it finds no colon.
+     * Looks ahead rather than consuming, because legacy rewinds when it finds no colon. The
+     * probe stops at `[` as well as at a string break: without that, a run of N `[` was
+     * rescanned at every nesting level, which is quadratic - 16 000 of them took 7.5 seconds
+     * where the same depth with a comma after each took 0.011.
      */
     private function parseMemberKey(string $source, int &$offset): ?string
     {
@@ -445,10 +498,13 @@ final class VariableResolver
             }
             $probe++;
         } else {
-            // A colon ends a key and nothing else does, which is why this cannot reuse
-            // parseString(): there, a colon is an ordinary character in a value.
+            // The FIRST character joins the key unconditionally, before the colon test, so a
+            // leading `:` is part of the key text rather than a separator: `[:1]` is the
+            // single value `:1` there, not an empty key holding 1.
+            $key .= $source[$probe++];
             while ($probe < $length
                 && $source[$probe] !== ':'
+                && $source[$probe] !== '['
                 && !$this->isStringBreak($source[$probe], true)) {
                 $key .= $source[$probe++];
             }
@@ -458,10 +514,18 @@ final class VariableResolver
             return null;                // no colon: an unkeyed member, and $offset stays put
         }
 
+        // A trailing `key:` with nothing after it would leave the cursor past the end, and
+        // every read from there is an "Uninitialized string offset" warning - which Magento's
+        // error handler turns into a thrown ErrorException.
+        if ($probe + 1 >= $length) {
+            return null;
+        }
+
         $offset = $probe + 1;
 
         return $key;
     }
+
 
     /** Invokes a public, non-static, argument-less method, or null if it is not one. */
     private function invokeAccessor(object $value, string $method): ?Resolution

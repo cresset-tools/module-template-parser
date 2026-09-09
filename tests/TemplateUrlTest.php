@@ -6,6 +6,7 @@ namespace Cresset\TemplateParser\Test;
 use Cresset\TemplateParser\Context;
 use Cresset\TemplateParser\HostDirectives;
 use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\NestingLimitError;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\Port\TemplateUrlBuilder;
 use Cresset\TemplateParser\TemplateEngine;
@@ -155,6 +156,54 @@ final class TemplateUrlTest extends TestCase
         );
 
         self::assertSame('a, b (c).d', $this->calls[0][1][1]);
+    }
+
+    /**
+     * A stray `)` in the argument list used to spin for ever.
+     *
+     * `)` is a string break, so parseString() returned '' without moving the cursor, and the
+     * value loop appended '' until memory ran out - 35 bytes of template, under a second.
+     * Reachable from every CLI command, because the console wires this port unconditionally
+     * and then sweeps every template in the codebase and the email_template table.
+     */
+    public function testAStrayClosingParenDoesNotHang(): void
+    {
+        $this->engine()->render(
+            "{{var this.getUrl(\$store,'a/b/'))}}",
+            ['this' => $this->templateModel(), 'store' => new \stdClass()]
+        );
+
+        self::assertCount(1, $this->calls);
+        self::assertSame('a/b/', $this->calls[0][1][1]);
+    }
+
+    /** Argument nesting is bounded: legacy recurses here until the C stack gives out. */
+    public function testDeepArgumentNestingIsRefusedRatherThanFatal(): void
+    {
+        $this->expectException(NestingLimitError::class);
+        $this->engine()->render(
+            '{{var this.getUrl(' . str_repeat('[', 500) . ')}}',
+            ['this' => $this->templateModel(), 'store' => new \stdClass()]
+        );
+    }
+
+    /** A trailing `key:` runs the cursor past the end; Magento promotes that warning. */
+    public function testATrailingMemberKeyDoesNotReadPastTheEnd(): void
+    {
+        set_error_handler(static function (int $severity, string $message): bool {
+            throw new \ErrorException($message, 0, $severity);
+        });
+
+        try {
+            $this->engine()->render(
+                '{{var this.getUrl([a:)}}',
+                ['this' => $this->templateModel(), 'store' => new \stdClass()]
+            );
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertCount(1, $this->calls);
     }
 
     /** A context is still a context: an unrelated method with arguments is not served. */
