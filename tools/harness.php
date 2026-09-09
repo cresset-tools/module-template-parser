@@ -50,6 +50,37 @@ namespace {
 
     /** This package's root, so tools need no knowledge of where they were invoked from. */
     define('PKGROOT', dirname(__DIR__));
+
+    /**
+     * Optional collaborators the filter has gained over time.
+     *
+     * Mage-OS added Template\DirectiveOutputNeutralizer as part of the StyleSmuggler
+     * hardening, and Template::__construct resolves it through the global ObjectManager when
+     * it is not injected - which this harness deliberately cannot serve. Requiring it when
+     * the tree has it keeps the tools working against both an older checkout and a current
+     * one; neutralizerFor() below returns null on a tree that predates it.
+     */
+    $optional = MROOT . '/lib/internal/Magento/Framework/Filter/Template/DirectiveOutputNeutralizer.php';
+    if (is_file($optional)) {
+        require $optional;
+    }
+}
+
+namespace Harness {
+    /**
+     * The neutralizer to hand Template, or null on a tree that has none.
+     *
+     * Enabled, because that is what Mage-OS ships: the corpus records the filter as it is
+     * today, not as it was.
+     */
+    function neutralizerFor(
+        \Magento\Framework\Filter\Template\SignatureProvider $signatures,
+        bool $enabled = true
+    ): mixed {
+        $class = \Magento\Framework\Filter\Template\DirectiveOutputNeutralizer::class;
+
+        return class_exists($class) ? new $class($signatures, $enabled) : null;
+    }
 }
 
 /*

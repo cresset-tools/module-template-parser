@@ -173,8 +173,8 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**2016 cases recorded, 281 of them constructs the legacy filter cannot render at all. Over
-the 1154 cases where both engines render and the surfaces are comparable, output is
+**2308 cases recorded, 313 of them constructs the legacy filter cannot render at all. Over
+the 1334 cases where both engines render and the surfaces are comparable, output is
 byte-identical.**
 
 Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
@@ -206,6 +206,29 @@ Quirks it reproduces:
 
 Unknown modifiers and unknown escape types are reproduced only in compatible mode. Everywhere
 else they fail closed.
+
+#### Which legacy filter?
+
+Mage-OS shipped StyleSmuggler hardening in September 2026. Part of it,
+`Template\DirectiveOutputNeutralizer`, encodes `{{` in resolved directive output so it can
+never be re-parsed by a later pass — which changes observable rendering:
+
+```
+{{var a}}  with  a = '{{block class=Evil}}'
+  before the hardening:  [{{block class=Evil}}]
+  after:                 [&#123;&#123;block class=Evil}}]
+```
+
+Both trees are in the field, so compatible mode targets either. It follows the current filter
+by default; for a tree from before the hardening:
+
+```php
+TemplateEngine::withOptions(Options::compatible()->withOutputNeutralizer(false));
+```
+
+The corpus records both, and 288 cases carry a second expectation for the older behaviour.
+This engine needs none of it — a value is never re-parsed here whatever the setting — so the
+flag does nothing outside compatible mode.
 
 Quirks it does not reproduce:
 
@@ -383,10 +406,10 @@ composer install
 vendor/bin/phpunit
 ```
 
-2993 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+3475 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
-- `LegacyParityTest` replays the 2016 recorded cases, so the differential runs anywhere with
+- `LegacyParityTest` replays the 2308 recorded cases, so the differential runs anywhere with
   no Magento installation, and drift in compatible mode shows up as a failing case rather than
   a surprise in production.
 - `StyleSmugglerDifferentialTest` asserts both halves of the vulnerability: that the recording

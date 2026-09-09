@@ -157,7 +157,45 @@ final class Evaluator
             return $node->fullRaw();
         }
 
-        return $handler($node, $context, $this);
+        return $this->neutralizeOutput($handler($node, $context, $this), $node);
+    }
+
+    /**
+     * Encodes directive openers in a resolved directive's output.
+     *
+     * Reproduces Mage-OS's Template\DirectiveOutputNeutralizer, added with the StyleSmuggler
+     * hardening. Legacy applies it to the output of every directive that actually resolved -
+     * `$replacedValue !== $construction[0]` - so a variable whose value contains `{{` renders
+     * with the braces encoded.
+     *
+     * This engine does not need it: a value is never re-parsed here, whatever the setting.
+     * It exists so compatible mode still matches the filter byte for byte now the hardening
+     * has landed. The signed-span handling upstream has no analogue here, because nothing is
+     * ever signed - deferral is structured.
+     */
+    private function neutralizeOutput(string $output, DirectiveNode $node): string
+    {
+        if (!$this->options->legacyQuirks
+            || !$this->options->neutralizeDirectiveOutput
+            || $output === ''
+            || !str_contains($output, '{')
+            || $output === $node->fullRaw()
+        ) {
+            return $output;
+        }
+
+        $output = str_replace('{{', '&#123;&#123;', $output);
+
+        // A single brace at either edge is encoded too: it could pair with an adjacent one
+        // once this output sits next to its neighbours.
+        if ($output[0] === '{') {
+            $output = '&#123;' . substr($output, 1);
+        }
+        if (str_ends_with($output, '{')) {
+            $output = substr($output, 0, -1) . '&#123;';
+        }
+
+        return $output;
     }
 
     /**

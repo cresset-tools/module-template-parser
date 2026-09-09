@@ -15,7 +15,7 @@ docker run --rm -v "$PWD":/m php:8.3-cli sh -c \
    cd /m && php /tmp/phpunit.phar'
 ```
 
-2993 tests. 267 are skipped by design: they are the shapes compatible mode deliberately
+3475 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ## The parity corpus
@@ -27,8 +27,10 @@ recordings, so the differential runs anywhere with no Magento installation.
 The corpus is a matrix of value shapes against construct shapes, plus a no-variables pass and
 the 45 real templates in `tests/fixtures/corpus/`. Those templates are harvested from the
 Magento/Mage-OS tree and include `.html` files whose `{{` sequences are not directives at all,
-such as translation strings and JS templates. 2016 cases in total, 281 of which crash the
-stock filter.
+such as translation strings and JS templates. 2308 cases in total, 313 of which crash the
+stock filter. 288 carry a second expectation for the filter as it was before the
+September 2026 StyleSmuggler hardening, which compatible mode can target with
+`Options::withOutputNeutralizer(false)`.
 
 ### Re-recording
 
@@ -82,14 +84,14 @@ re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 ### The sensitivity canary
 
 Green assertions mean nothing if the corpus cannot tell a correct engine from a broken one, so
-each deliberate mis-configuration must produce divergences over the 1154 rendering-comparable
+each deliberate mis-configuration must produce divergences over the 1334 rendering-comparable
 cases:
 
 | Engine | Divergences |
 |---|---|
 | compatible (control) | 0 |
-| lenient (legacy quirks off) | 319 |
-| strict (default) | 566 |
+| lenient (legacy quirks off) | 460 |
+| strict (default) | 735 |
 
 ## Guards and tests
 

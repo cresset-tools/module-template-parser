@@ -66,6 +66,63 @@ final class LegacyParityTest extends TestCase
         return array_filter(self::recordedCases(), static fn ($c) => $c[0]['outcome'] === 'throw');
     }
 
+    /**
+     * Cases whose rendering changed with the StyleSmuggler hardening.
+     *
+     * @return array<string,array{0:array}>
+     */
+    public static function preHardeningCases(): array
+    {
+        return array_filter(
+            self::recordedCases(),
+            static fn ($c) => isset($c[0]['pre_hardening'])
+                && $c[0]['parity']
+                && !in_array(explode('/', $c[0]['id'])[0], self::DELIBERATE_OVER_REFUSALS, true)
+        );
+    }
+
+    /**
+     * Compatible mode targets the CURRENT filter by default, and the older one on request.
+     *
+     * Mage-OS added Template\DirectiveOutputNeutralizer with the StyleSmuggler hardening; it
+     * encodes `{{` in resolved directive output, which changes observable rendering for any
+     * variable whose value contains a directive opener. Both trees are in the field, so both
+     * are recorded and both are asserted - a flag with only one of its settings tested is a
+     * flag that works by accident.
+     */
+    #[DataProvider('preHardeningCases')]
+    public function testPreHardeningRenderingIsReproducibleOnRequest(array $case): void
+    {
+        $engine = TemplateEngine::withOptions(Options::compatible()->withOutputNeutralizer(false));
+        $expected = $case['pre_hardening'];
+
+        if ($expected['outcome'] !== 'ok') {
+            $this->expectException(LegacyIncompatibleError::class);
+            $engine->render($case['template'], self::variablesFor($case));
+            return;
+        }
+
+        self::assertSame(
+            $expected['expected'],
+            $engine->render($case['template'], self::variablesFor($case)),
+            sprintf("pre-hardening rendering diverged for %s\n  template: %s", $case['id'], $case['template'])
+        );
+    }
+
+    /** ...and the two really are different, or the flag is doing nothing. */
+    public function testTheHardeningActuallyChangesRendering(): void
+    {
+        $cases = self::preHardeningCases();
+        self::assertGreaterThan(40, count($cases), 'the corpus should exercise the neutralizer widely');
+
+        $case = $cases['var/directive'][0] ?? array_values($cases)[0][0];
+        self::assertNotSame(
+            $case['expected'],
+            $case['pre_hardening']['expected'],
+            'a recorded pre-hardening variant that matches the current one is not a variant'
+        );
+    }
+
     public function testTheCorpusIsSubstantial(): void
     {
         $cases = self::recordedCases();

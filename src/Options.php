@@ -41,7 +41,20 @@ final class Options
         public readonly int $maxNestingDepth = self::DEFAULT_MAX_NESTING_DEPTH,
         public readonly bool $legacyQuirks = false,
         public readonly bool $refuseLegacyIncompatible = false,
-        public readonly bool $failOnPolicyViolation = false
+        public readonly bool $failOnPolicyViolation = false,
+        /**
+         * Encode `{{` in resolved directive output, as Mage-OS's
+         * Template\DirectiveOutputNeutralizer does.
+         *
+         * Added upstream with the StyleSmuggler hardening, and it changes observable
+         * rendering: a variable whose value contains `{{` comes back with the braces encoded.
+         * On by default in compatible mode, because that is the filter merchants run once
+         * they update; turn it off to target a tree from before the hardening.
+         *
+         * This engine needs none of it - a value is never re-parsed here whatever the
+         * setting - so outside compatible mode it does nothing.
+         */
+        public readonly bool $neutralizeDirectiveOutput = true
     ) {
         if ($this->maxNestingDepth < 1) {
             throw new \InvalidArgumentException('maxNestingDepth must be at least 1');
@@ -81,14 +94,14 @@ final class Options
      */
     public static function compatible(): self
     {
-        return new self(false, false, false, self::DEFAULT_MAX_NESTING_DEPTH, true, true, false);
+        return new self(false, false, false, self::DEFAULT_MAX_NESTING_DEPTH, true, true, false, true);
     }
 
     public function withLegacyQuirks(bool $enabled): self
     {
         return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
             $this->maxNestingDepth, $enabled, $this->refuseLegacyIncompatible,
-            $this->failOnPolicyViolation);
+            $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
     }
 
     /**
@@ -107,7 +120,8 @@ final class Options
     public function withRefuseLegacyIncompatible(bool $refuse): self
     {
         return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
-            $this->maxNestingDepth, $this->legacyQuirks, $refuse, $this->failOnPolicyViolation);
+            $this->maxNestingDepth, $this->legacyQuirks, $refuse, $this->failOnPolicyViolation,
+            $this->neutralizeDirectiveOutput);
     }
 
     /**
@@ -120,26 +134,35 @@ final class Options
     public function withFailOnPolicyViolation(bool $fail): self
     {
         return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
-            $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $fail);
+            $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $fail,
+            $this->neutralizeDirectiveOutput);
     }
 
     public function withMaxNestingDepth(int $depth): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables, $depth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation);
+        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables, $depth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
     }
 
     public function withSyntax(bool $strict): self
     {
-        return new self($strict, $this->strictDirectives, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation);
+        return new self($strict, $this->strictDirectives, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
     }
 
     public function withDirectives(bool $strict): self
     {
-        return new self($this->strictSyntax, $strict, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation);
+        return new self($this->strictSyntax, $strict, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
+    }
+
+    /** Targets a Mage-OS tree from before the StyleSmuggler hardening. */
+    public function withOutputNeutralizer(bool $enabled): self
+    {
+        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
+            $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible,
+            $this->failOnPolicyViolation, $enabled);
     }
 
     public function withVariables(bool $strict): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $strict, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation);
+        return new self($this->strictSyntax, $this->strictDirectives, $strict, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
     }
 }

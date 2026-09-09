@@ -107,7 +107,7 @@ class EmailLikeLegacy extends LegacyTemplate {
     }
 }
 
-function legacy(array $vars): LegacyTemplate {
+function legacy(array $vars, bool $neutralize = true): LegacyTemplate {
     $r = new StrictResolver(new VariableFactory());
     \Magento\Framework\App\ObjectManager::$registry[VarDirective::class] = new VarDirective($r, new FilterApplier(new FilterPool()));
     // Template::forDirective resolves this through the global ObjectManager. Leaving it
@@ -117,7 +117,8 @@ function legacy(array $vars): LegacyTemplate {
     $s = new SimpleDirective(new ProcessorPool(), new ParameterFactory(), $r, new FilterApplier(new FilterPool()));
     $t = new EmailLikeLegacy(new StringUtils(), [], ['depend'=>new DependDirective($r),'if'=>new IfDirective($r),
         'template'=>new TemplateDirective($r,new ParameterFactory()),'legacy'=>new LegacyDirective($s)],
-        $r, new SignatureProvider(new Random()), new FilteringDepthMeter());
+        $r, $sig = new SignatureProvider(new Random()), new FilteringDepthMeter(),
+        \Harness\neutralizerFor($sig, $neutralize));
     $t->setVariables($vars); return $t;
 }
 
@@ -153,12 +154,39 @@ function parityEligible(string $tpl): bool {
 }
 
 /** @return array{0:string,1:?string} [outcome, value] */
-function record(string $tpl, array $vars): array {
+function record(string $tpl, array $vars, bool $neutralize = true): array {
     set_error_handler(static fn () => true);   // legacy emits notices; not part of the contract
-    try { $out = ['ok', legacy($vars)->filter($tpl)]; }
+    try { $out = ['ok', legacy($vars, $neutralize)->filter($tpl)]; }
     catch (\Throwable $e) { $out = ['throw', get_class($e)]; }
     restore_error_handler();
     return $out;
+}
+
+/**
+ * Records a case against both halves of the StyleSmuggler hardening.
+ *
+ * Mage-OS's DirectiveOutputNeutralizer encodes `{{` in resolved directive output, which
+ * changes observable rendering. Trees before and after the hardening are both in the field,
+ * so both are recorded: `expected` is the current filter, and `pre_hardening` carries the
+ * older behaviour when it differs.
+ *
+ * @param array<string,mixed> $vars
+ */
+function recordBoth(string $id, string $tpl, array $vars, ?string $object, bool $parity): array {
+    [$outcome, $value] = record($tpl, $vars, true);
+    [$plainOutcome, $plainValue] = record($tpl, $vars, false);
+
+    $case = [
+        'id' => $id, 'template' => $tpl,
+        'variables' => $object === null ? $vars : [],
+        'object' => $object,
+        'outcome' => $outcome, 'expected' => $value, 'parity' => $parity,
+    ];
+    if ($plainOutcome !== $outcome || $plainValue !== $value) {
+        $case['pre_hardening'] = ['outcome' => $plainOutcome, 'expected' => $plainValue];
+    }
+
+    return $case;
 }
 
 // ---- the corpus: value shapes x construct shapes ----
@@ -173,6 +201,9 @@ $values = [
     // NOTE: invalid UTF-8 is deliberately absent - json_encode() cannot represent it, and
     // it is pinned directly in CompatibilityModeTest instead.
     'newlines' => "a\nb\nc",
+    // Single braces at the edges: DirectiveOutputNeutralizer encodes those separately from
+    // `{{`, because concatenation with a neighbour could otherwise form an opener.
+    'brace_lead' => '{x', 'brace_trail' => 'x{', 'brace_both' => '{x{', 'brace_solo' => '{',
 ];
 
 // Objects cannot be serialised into the fixture, so they are recorded by tag and rebuilt
@@ -303,36 +334,26 @@ $constructs = [
 $cases = [];
 foreach ($values as $vlabel => $v) {
     foreach ($constructs as $clabel => $tpl) {
-        $vars = ['a' => $v];
-        [$outcome, $value] = record($tpl, $vars);
         $isObject = str_starts_with($vlabel, '@');
-        $cases[] = [
-            'id' => "$clabel/$vlabel",
-            'template' => $tpl,
-            'variables' => $isObject ? [] : ['a' => $v],
-            'object' => $isObject ? substr($vlabel, 1) : null,
-            'outcome' => $outcome,
-            'expected' => $value,
-            'parity' => parityEligible($tpl),
-        ];
+        $cases[] = recordBoth(
+            "$clabel/$vlabel",
+            $tpl,
+            ['a' => $v],
+            $isObject ? substr($vlabel, 1) : null,
+            parityEligible($tpl)
+        );
     }
 }
 // no-variables path, which legacy treats specially
 foreach ($constructs as $clabel => $tpl) {
-    [$outcome, $value] = record($tpl, []);
-    $cases[] = ['id' => "$clabel/novars", 'template' => $tpl, 'variables' => [],
-                'object' => null, 'outcome' => $outcome, 'expected' => $value,
-                'parity' => parityEligible($tpl)];
+    $cases[] = recordBoth("$clabel/novars", $tpl, [], null, parityEligible($tpl));
 }
 // the real harvested templates, rendered with a realistic variable set
 $realVars = ['customer_name'=>'Jan Jansen','store_name'=>'Demo','name'=>'Jan','a'=>1,
              'store_phone'=>'123','store_hours'=>'9-5','logo_width'=>'180','logo_height'=>'50'];
 foreach (glob(PKGROOT . '/tests/fixtures/corpus/*.html') ?: [] as $file) {
     $src = (string)file_get_contents($file);
-    [$outcome, $value] = record($src, $realVars);
-    $cases[] = ['id' => 'real/' . basename($file), 'template' => $src, 'variables' => $realVars,
-                'object' => null, 'outcome' => $outcome, 'expected' => $value,
-                'parity' => parityEligible($src)];
+    $cases[] = recordBoth('real/' . basename($file), $src, $realVars, null, parityEligible($src));
 }
 
 $json = json_encode($cases, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

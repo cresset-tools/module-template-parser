@@ -150,10 +150,19 @@ final class StyleSmugglerDifferentialTest extends TestCase
         $addressHtml = $engine->render(self::$fixture['address_format'], self::$fixture['address_variables']);
         $emailOutput = $engine->render(self::$fixture['email_template'], ['billingAddressHtml' => $addressHtml]);
 
+        // Customer data, so it survives as text. Since the StyleSmuggler hardening the
+        // legacy filter encodes `{{` in resolved output, and compatible mode reproduces
+        // that, so the braces arrive as entities. What matters is that the class name is
+        // present as inert text and nothing constructed it - asserted separately.
         self::assertStringContainsString(
-            '{{block class=Magento\Email\Block\Adminhtml\Template\Preview}}',
+            'block class=Magento\Email\Block\Adminhtml\Template\Preview',
             $emailOutput,
-            'the payload should appear verbatim, as the customer-supplied text it is'
+            'the payload should appear as the customer-supplied text it is'
+        );
+        self::assertStringNotContainsString(
+            '{{block class=Magento',
+            $emailOutput,
+            'the braces should be encoded, as the hardened legacy filter encodes them'
         );
     }
 

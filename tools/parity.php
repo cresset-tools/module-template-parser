@@ -41,7 +41,8 @@ function parityLegacyFilter(array $vars): LegacyTemplate {
     $s = new SimpleDirective(new ProcessorPool(), new ParameterFactory(), $r, new FilterApplier(new FilterPool()));
     $t = new LegacyTemplate(new StringUtils(), [], ['depend'=>new DependDirective($r),'if'=>new IfDirective($r),
         'template'=>new TemplateDirective($r,new ParameterFactory()),'legacy'=>new LegacyDirective($s)],
-        $r, new SignatureProvider(new Random()), new FilteringDepthMeter());
+        $r, $sig = new SignatureProvider(new Random()), new FilteringDepthMeter(),
+        \Harness\neutralizerFor($sig));
     $t->setVariables($vars); return $t;
 }
 function parityAttempt(callable $fn): string {

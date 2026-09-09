@@ -112,7 +112,11 @@ final class CompatibilityModeTest extends TestCase
         $out = $engine->render('Billing: {{var addr|raw}}', ['addr' => $payload]);
 
         self::assertSame([], $instantiated);
-        self::assertStringContainsString('{{block', $out);
+        // The payload survives as text. Since the StyleSmuggler hardening, the legacy filter
+        // encodes `{{` in resolved output and compatible mode reproduces that, so the braces
+        // come back as entities - inert either way, and the point is that nothing ran.
+        self::assertStringContainsString('block class=Magento\Email\Block', $out);
+        self::assertStringContainsString('&#123;&#123;block', $out);
     }
 
     /**
