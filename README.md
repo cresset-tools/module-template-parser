@@ -201,7 +201,7 @@ Quirks it reproduces:
 | no variables | directives pass through verbatim, which is the template-validation path |
 | getter keys | `getAddress1()` reads `address_1`, because a run of digits is its own segment |
 | member access | only through `getData()`; a real getter is never called |
-| unknown modifiers | skipped, so `{{var x|typo}}` renders raw |
+| unknown modifiers | skipped, so `{{var x\|typo}}` renders raw |
 | unknown escape types | `escape:none` returns the value unescaped |
 
 Unknown modifiers and unknown escape types are reproduced only in compatible mode. Everywhere
