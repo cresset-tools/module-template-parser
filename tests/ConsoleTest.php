@@ -5,6 +5,7 @@ namespace Cresset\TemplateParser\Test;
 
 use Cresset\TemplateParser\Console\Application;
 use Cresset\TemplateParser\Console\Auditor;
+use Cresset\TemplateParser\Console\LegacyRender;
 use Cresset\TemplateParser\Console\EngineFactory;
 use Cresset\TemplateParser\Console\Finding;
 use Cresset\TemplateParser\Console\MagentoContext;
@@ -54,6 +55,47 @@ final class ConsoleTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/strict, lenient or compatible/');
         Mode::parse('yolo');
+    }
+
+    /**
+     * A divergence caused by an unwired port says so.
+     *
+     * Compatible mode emits an unregistered directive verbatim, so a port nobody wired lands
+     * in the output as its own source and reads like an engine bug. {{layout}} does this on
+     * every default run, because it will not render without a handle allowlist.
+     */
+    public function testADivergenceFromAnUnwiredPortNamesThePort(): void
+    {
+        $subject = new TemplateSubject(
+            id: 'x',
+            label: 'x',
+            origin: 'test',
+            content: 'a{{layout handle="sales_email_order_items"}}b'
+        );
+
+        $divergences = $this->auditor()->diff(
+            [$subject],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender('a<table/>b', [])
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertStringContainsString('no port wired for {{layout}}', (string)$divergences[0]->note);
+    }
+
+    /** A difference with no unwired directive in it gets no such excuse. */
+    public function testAnOrdinaryDivergenceIsNotBlamedOnAPort(): void
+    {
+        $subject = new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: 'plain');
+
+        $divergences = $this->auditor()->diff(
+            [$subject],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender('different', [])
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertNull($divergences[0]->note);
     }
 
     /** Without a store, the context is unavailable rather than fatal. */

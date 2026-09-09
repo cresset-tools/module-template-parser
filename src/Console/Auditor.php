@@ -6,6 +6,7 @@ namespace Cresset\TemplateParser\Console;
 use Cresset\TemplateParser\Console\Source\TemplateSource;
 use Cresset\TemplateParser\Context;
 use Cresset\TemplateParser\RenderPolicy;
+use Cresset\TemplateParser\TemplateEngine;
 use Cresset\TemplateParser\TemplateError;
 
 /**
@@ -150,7 +151,11 @@ class Auditor
                         'the legacy filter cannot render this, but this engine does');
                 }
 
-                return $legacyOutput === $ours ? null : new Divergence($subject, $legacyOutput, $ours, null);
+                if ($legacyOutput === $ours) {
+                    return null;
+                }
+
+                return new Divergence($subject, $legacyOutput, $ours, $this->unwiredPortNote($ours, $engine));
             });
 
             if ($divergence !== null) {
@@ -159,6 +164,43 @@ class Auditor
         }
 
         return $divergences;
+    }
+
+    /**
+     * Names the ports a divergence is actually caused by, when it is caused by a port.
+     *
+     * A directive this engine knows but has no port for stays unregistered, and compatible
+     * mode emits an unregistered directive verbatim - so it lands in the output as its own
+     * source text and the report shows a byte difference that reads like an engine bug.
+     * {{layout}} does this on every run by default, because it needs a handle allowlist
+     * before it will render anything, and that turns eight stock sales emails plus their
+     * theme overrides into sixteen unexplained diffs.
+     *
+     * Only directives left verbatim in OUR output count. One the author simply misspelled is
+     * verbatim on both sides and cancels out of the comparison.
+     */
+    private function unwiredPortNote(string $ours, TemplateEngine $engine): ?string
+    {
+        $unwired = array_diff($engine->evaluator()->spec()->knownNames(), $engine->evaluator()->registered());
+
+        $found = [];
+        foreach ($unwired as $name) {
+            if (preg_match('/\{\{' . preg_quote($name, '/') . '(?![a-zA-Z0-9_])/i', $ours) === 1) {
+                $found[] = $name;
+            }
+        }
+
+        if ($found === []) {
+            return null;
+        }
+
+        sort($found);
+
+        return sprintf(
+            'no port wired for {{%s}}, so it is left as written here and rendered today - '
+            . 'this is the tool being unconfigured, not the engines disagreeing',
+            implode('}}, {{', $found)
+        );
     }
 
     private function firstLine(string $message): string
