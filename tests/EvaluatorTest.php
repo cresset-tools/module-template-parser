@@ -86,6 +86,27 @@ final class EvaluatorTest extends TestCase
         self::assertSame('T =', $engine->render('{{trans "T %s" s=}}'));
     }
 
+    /**
+     * {{for}} injects `loop.index`, zero-based, as ForDirective does.
+     *
+     * Legacy builds it with `setData('index', $loopIndex++)` from 0. Without it a template
+     * that prints the index renders nothing here - the silent kind of regression, and one
+     * the language reference caught rather than any test.
+     */
+    public function testForInjectsAZeroBasedLoopIndex(): void
+    {
+        self::assertSame(
+            '[0][1][2]',
+            $this->engine->render('{{for i in xs}}[{{var loop.index}}]{{/for}}', ['xs' => ['a', 'b', 'c']])
+        );
+
+        // Legacy overwrites whatever `loop` was in scope, so this does too.
+        self::assertSame(
+            '[0]',
+            $this->engine->render('{{for i in xs}}[{{var loop.index}}]{{/for}}', ['xs' => ['a'], 'loop' => 'mine'])
+        );
+    }
+
     public function testUnknownDirectiveIsEmittedVerbatimInLenientMode(): void
     {
         // No handler registered for `layout`; it must round-trip rather than vanish or run.

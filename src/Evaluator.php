@@ -453,11 +453,18 @@ final class Evaluator
             }
 
             $out = '';
+            $index = 0;
             foreach ($values as $value) {
                 // The body gets its own scope for the loop variable, but its deferred work
                 // and policy violations belong to the render - without absorbing them a
                 // violation could be hidden simply by wrapping it in a loop.
-                $iteration = $c->withVariables([$item => $value]);
+                //
+                // `loop` alongside it, because ForDirective injects one and templates use it.
+                // Zero-based, as `setData('index', $loopIndex++)` there is - a template that
+                // prints it would otherwise be off by one, and one that renders nothing at all
+                // here would be the silent kind of regression this engine exists to avoid.
+                // Legacy overwrites any `loop` already in scope, so this does too.
+                $iteration = $c->withVariables([$item => $value, 'loop' => ['index' => $index++]]);
                 $out .= $e->renderNodes($n->children(), $iteration);
                 $c->absorb($iteration);
             }

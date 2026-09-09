@@ -19,6 +19,10 @@ Everything in this README lives under `Cresset\TemplateParser\`; later snippets 
 Requires PHP 8.3, 8.4 or 8.5. The engine is plain PHP with no Magento dependency; the Magento
 bindings sit behind ports in `src/Magento/`.
 
+Looking for what a directive actually does, rather than what this engine does with it?
+[**docs/directives.md**](docs/directives.md) is a reference for the template language itself —
+every example in it rendered through the real filter to produce it.
+
 ## Why
 
 `Magento\Framework\Filter\Template` finds directives with regular expressions and scans its
@@ -336,6 +340,11 @@ Reproducing that faithfully would mean not escaping loop variables, which is the
 defect this package exists to remove. `{{for}}` is therefore recorded and required to render
 safely, but is not held to rendering-equality with legacy.
 
+The one part of it that is a feature rather than a defect is kept: `ForDirective` injects a
+`loop` variable carrying `index`, and so does this engine — zero-based, as it is there. A
+template that prints `{{var loop.index}}` keeps working, and does not quietly start printing
+nothing.
+
 ## Strict mode
 
 A template that cannot be parsed, names a directive that does not exist, or reads a variable
@@ -606,6 +615,7 @@ src/Context.php    scope, policy and structured deferral
 src/Magento/       adapters binding the ports to Magento
 src/Console/       the CLI: commands, sources, and the Magento bridge
 bin/               template-parser entrypoint
+docs/              reference for the template language, generated from a live filter
 tools/             differential, benchmark and fixture-recording scripts
 ```
 

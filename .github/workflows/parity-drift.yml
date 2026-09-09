@@ -85,3 +85,25 @@ jobs:
 
       - name: Confirm the StyleSmuggler fixture was left alone
         run: git diff --quiet -- tests/fixtures/legacy/stylesmuggler.json
+
+      # The language reference is generated from the same filter, and the generator
+      # already refuses to write when a documented example stops being true - so this
+      # step fails either way: a non-zero exit, or a diff it did manage to write.
+      - name: Regenerate the language reference
+        env:
+          MAGENTO_ROOT: ${{ github.workspace }}/.mageos
+        run: bougie run -- php tools/document-language.php
+
+      - name: Fail if the reference drifted
+        run: |
+          if ! git diff --quiet -- docs/directives.md; then
+            echo '::error::docs/directives.md no longer matches what the filter renders.'
+            echo
+            echo 'Re-run tools/document-language.php against a Mage-OS checkout and commit'
+            echo 'the result. Read the diff first: every line in that file is a claim about'
+            echo 'the language, so a change here is a change in what is true.'
+            echo
+            git --no-pager diff -- docs/directives.md
+            exit 1
+          fi
+          echo 'The language reference still matches the filter.'
