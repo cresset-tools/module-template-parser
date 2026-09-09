@@ -351,8 +351,12 @@ A variable that *does* resolve is never an error; it is tested for truthiness. `
 reports a collection that resolves to something non-iterable.
 
 The engine uses standard PHP truthiness. The legacy filter tests `resolve(...) == ''`, which
-on PHP 8 makes `0`, `'0'` and `[]` truthy. That flipped silently on the PHP 7 to 8 upgrade,
-since `0 == ''` used to be true. See `KnownDivergenceTest`.
+on PHP 8 makes `0`, `'0'` and `[]` all truthy — so `{{if qty}}` runs its true branch for a
+zero quantity.
+
+Only `0` and `0.0` are new. `0 == ''` was true on PHP 7 and became false in PHP 8, so those
+two silently flipped on upgrade; `'0'` and `[]` never equalled `''` on either version and
+have always been truthy here. Measured on 7.4.33 and 8.3.33. See `KnownDivergenceTest`.
 
 ### Nesting
 
