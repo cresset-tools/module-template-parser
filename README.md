@@ -393,9 +393,88 @@ mode too: it limits input complexity rather than syntax tolerance, so deeply nes
 refused rather than recovered. Includes are separately bounded against cycles, against depth,
 and against total count, since five levels of fan-out is not five renders.
 
+## The command line tool
+
+```sh
+vendor/bin/template-parser repl        # try directives interactively
+vendor/bin/template-parser check       # will these templates render?
+vendor/bin/template-parser diff        # do they render the same as today?
+```
+
+Run from inside a store it finds `app/etc/env.php`, boots Magento and wires every port it
+can, so `{{block}}`, `{{media}}`, `{{config}}` and the rest resolve against the real
+application. Run anywhere else it degrades to the built-in directives and still checks syntax.
+
+```
+$ template-parser repl
+  mode    compatible - reproduces the legacy filter, refuses what it could not render
+  store   connected
+  17 directives wired
+
+compatible> {{media url="wysiwyg/banner.jpg"}}
+http://shop.example/media/wysiwyg/banner.jpg
+compatible> {{media url="../../../app/etc/env.php"}}
+(empty)
+compatible> :mode strict
+compatible> {{var custmer_name}}
+Unknown variable "custmer_name" in {{var custmer_name}}
+  hint: did you mean {{var customer_name}}?
+```
+
+`:help` lists the rest — `:set`, `:vars`, `:store`, `:stores`, `:directives`, `:mode`.
+
+### Checking templates
+
+`check` renders everything it can find and says what stops it, with advice rather than just a
+diagnostic. `--source` picks where to look: `codebase` (files in app/code, vendor, app/design),
+`email`, `cms`, `newsletter`, or `all`.
+
+```sh
+template-parser check --source=codebase --mode=strict --fail-on=error
+template-parser check --source=all --format=json > findings.json
+```
+
+The exit code is what makes it useful in CI: non-zero at or above `--fail-on`, which defaults
+to `error` so a first run over a decade of templates is not a wall of red.
+
+### Diffing against the filter you run today
+
+`diff` renders each template through **both** engines and reports the ones whose output
+differs. This is the number that decides whether a migration is safe, and it needs a store —
+the templates that matter are in a merchant's database, not the repository.
+
+```sh
+template-parser diff --source=email --store=1
+template-parser diff --source=all --format=json --fail-on-divergence
+```
+
+`--store` sets the store context, so `{{trans}}` resolves in that store view's language and
+`{{config}}` in its scope. It emulates rather than just switching the store id, because
+translations and design follow the emulation and not the id.
+
+### Inside n98-magerun2
+
+The same commands, against the store magerun already booted:
+
+```sh
+ln -s /path/to/module-template-parser ~/.n98-magerun2/modules/template-parser
+n98-magerun2 template-parser:check --source=email
+```
+
+The shipped `n98-magerun2.yaml` registers them. Nothing is reimplemented for magerun — the
+subclasses only rename the commands into magerun's shared namespace and hand over its
+ObjectManager instead of booting a second one.
+
+### With bougie
+
+```sh
+bougie tool run cresset-tools/module-template-parser check --source=codebase
+bougie run -- vendor/bin/n98-magerun2 template-parser:diff --source=email
+```
+
 ## Speed
 
-Faster than the legacy filter, which was not the expected result.
+Faster than the legacy filter, which is nice to have on top of the strictness benefits.
 
 `tools/benchmark.php` renders the same templates through both engines, each constructed once
 outside the timing loop, since in Magento both are DI instances reused across a request. It
@@ -481,6 +560,8 @@ src/Parser.php     tokens -> AST, lenient (recover) or strict (reject)
 src/Evaluator.php  AST -> string, explicit handler table
 src/Context.php    scope, policy and structured deferral
 src/Magento/       adapters binding the ports to Magento
+src/Console/       the CLI: commands, sources, and the Magento bridge
+bin/               template-parser entrypoint
 tools/             differential, benchmark and fixture-recording scripts
 ```
 

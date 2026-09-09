@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+/**
+ * Standalone entrypoint.
+ *
+ * Finds an autoloader whether this package is the project or a dependency of one, so
+ * `bougie tool run cresset-tools/module-template-parser` and a checkout both work.
+ */
+foreach ([
+    __DIR__ . '/../vendor/autoload.php',     // installed as the project
+    __DIR__ . '/../../../autoload.php',      // installed as a dependency
+    getcwd() . '/vendor/autoload.php',       // run from a project root
+] as $autoload) {
+    if (is_file($autoload)) {
+        require $autoload;
+        break;
+    }
+}
+
+if (!class_exists(\Cresset\TemplateParser\TemplateEngine::class)) {
+    fwrite(STDERR, "template-parser: could not find an autoloader.\n"
+        . "Run `composer install` in the package, or install it into a project.\n");
+    exit(1);
+}
+
+exit(\Cresset\TemplateParser\Console\Application::create()->run());

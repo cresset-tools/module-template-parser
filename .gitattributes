@@ -4,3 +4,5 @@
 /.github        export-ignore
 /phpunit.xml    export-ignore
 /.gitattributes export-ignore
+/vendor         export-ignore
+/composer.lock  export-ignore

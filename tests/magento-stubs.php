@@ -90,6 +90,18 @@ namespace Magento\Email\Model\Template\Css {
         class Processor { public function process($css) { return $css; } }
     }
 }
+namespace Magento\Email\Model {
+    if (!class_exists(Template::class)) {
+        class Template {
+            public function load($id) { return $this; }
+            public function loadDefault($id) { return $this; }
+            public function getTemplateText() { return ''; }
+        }
+    }
+    if (!class_exists(TemplateFactory::class)) {
+        class TemplateFactory { public function create(array $data = []) { return new Template(); } }
+    }
+}
 namespace Magento\Variable\Model {
     if (!class_exists(Variable::class)) {
         class Variable {
