@@ -24,8 +24,8 @@ use Cresset\TemplateParser\TemplateEngine;
 /**
  * Builds an engine for a mode, wiring whatever ports the host can supply.
  *
- * Without a store this yields the built-in surface only - var, if, depend, for - which is
- * enough to check syntax and to try things in the REPL. With one, every port this package
+ * Without a store this yields the built-in surface only - var, if, depend, for, else, trans
+ * and inlinecss - which is enough to check syntax and to try things in the REPL. With one, every port this package
  * has an adapter for is connected, so {{block}}, {{layout}}, {{config}} and the rest resolve
  * against the real application and a merchant can see what their template will actually do.
  *

@@ -30,21 +30,24 @@ by accident.
 
 Two rules surprise people. A variable that does not exist renders as nothing, silently — no
 warning, no marker, so a typo survives for years. And when the filter has been given **no
-variables at all**, every directive is passed through verbatim instead: that is the path
-Magento uses to validate a template without rendering it, and it means an empty variable set
-is not the same as a missing variable.
+variables at all**, the four variable-reading directives — `var`, `if`, `depend` and `for` —
+are passed through verbatim instead: that is the path Magento uses to validate a template
+without rendering it, and it means an empty variable set is not the same as a missing
+variable. Only those four. `{{trans}}` and `{{template}}` have no such short-circuit and run
+as normal.
 
 <!-- generated:var -->
 ```
-{{var a}}      a="Ada"        → Ada
-{{var a}}      a="<b>&</b>"   → &lt;b&gt;&amp;&lt;/b&gt;  # escaped by default
-{{var a}}      a=null         → (nothing)                # a variable set to null renders as nothing
-{{var nope}}   a=1            → (nothing)                # strict raises UnknownVariableError; an unknown variable renders as nothing, silently
-{{var a}}      -              → {{var a}}                # strict raises UnknownVariableError; with NO variables at all the directive is passed through verbatim
-{{var a}}      a=["x","y"]    → Array                    # strict: (nothing); an array is cast to the string "Array"
-{{var a}}      a=0            → 0
-{{var a}}      a=true         → 1
-{{var a}}      a=false        → (nothing)                # false casts to the empty string
+{{var a}}           a="Ada"        → Ada
+{{var a}}           a="<b>&</b>"   → &lt;b&gt;&amp;&lt;/b&gt;  # escaped by default
+{{var a}}           a=null         → (nothing)                # a variable set to null renders as nothing
+{{var nope}}        a=1            → (nothing)                # strict raises UnknownVariableError; an unknown variable renders as nothing, silently
+{{var a}}           -              → {{var a}}                # strict raises UnknownVariableError; with NO variables at all the directive is passed through verbatim
+{{trans "Hello"}}   -              → Hello                    # but only the variable-reading directives do that - {{trans}} still runs
+{{var a}}           a=["x","y"]    → Array                    # strict: (nothing); an array is cast to the string "Array"
+{{var a}}           a=0            → 0
+{{var a}}           a=true         → 1
+{{var a}}           a=false        → (nothing)                # false casts to the empty string
 ```
 <!-- /generated -->
 
@@ -102,8 +105,11 @@ renders the store when `store` is a string.
 
 To get escaping and something else, ask for both: `{{var x|escape|nl2br}}`.
 
-The implemented modifiers are `escape`, `raw` and `nl2br`; the escape types are `html`
-(the default), `htmlentities` and `url`. This engine reproduces all four unescaped cases in
+The implemented modifiers are `escape` and `nl2br`; the escape types are `html` (the
+default), `htmlentities` and `url`. **`raw` is not one of them** — no `raw` filter exists in
+Magento at all. It works by being an unknown modifier that gets skipped, which is the same
+fail-open path as `|typo` above: it does not strip the escaping so much as replace it with
+nothing. This engine reproduces all four unescaped cases in
 compatible mode and fails closed everywhere else, which is what the `strict:` comments show.
 
 <!-- generated:modifiers -->
@@ -261,7 +267,11 @@ Its scope is the directive's parameters merged over the parent's variables — a
 produces an *array of both values* rather than overriding it. That array then casts to the
 string `Array`, which is the usual way this is discovered.
 
-A missing or unresolvable `config_path` renders the literal `{Error in template processing}`.
+A `config_path` that is **absent** renders the literal `{Error in template processing}`, and
+so does a template with no include processor wired. A path that is present but resolves to no
+template is the host's business, not the directive's — inside Magento that route ends in
+`getTemplateType()` raising. The row below shows this file's own harness returning the literal
+for an unknown path, which is the one example here that is not the filter's own behaviour.
 
 <!-- generated:template -->
 ```
@@ -325,12 +335,19 @@ to ten lowercase letters with an optional closing tag matched by backreference. 
 sharp consequence: **a directive cannot contain another of the same name.** The inner closing
 tag ends the outer construction, and what is left over is usually a fatal.
 
-Different names nest freely, to any depth the surface allows.
+Different names nest, but not freely: `{{for}}` scans its body rather than rendering it, so
+nothing nests *through* a `{{for}}` and a `{{for}}` whose collection is not a list of rows
+comes back verbatim, taking whatever was inside it along. Three distinct names reach three
+levels when the innermost is not a `{{for}}` — or when it is one with a collection it can
+actually walk.
 
 <!-- generated:nesting -->
 ```
-{{if a}}{{depend a}}{{for i in a}}[{{var i.b}}]{{/for}}{{/depend}}{{/if}}   a=[{"b":"x"}]   → [x]        # three distinct names nest
-{{if a}}{{if a}}Y{{/if}}{{/if}}                                             a=1             → !TypeError  # strict: Y; a directive cannot contain ITSELF - the inner close ends the outer
+{{if a}}{{depend a}}{{for i in a}}[{{var i.b}}]{{/for}}{{/depend}}{{/if}}   a=[{"b":"x"}]   → [x]                                                        # three distinct names nest, if > depend > for
+{{depend a}}{{if a}}{{for i in a}}[{{var i.b}}]{{/for}}{{/if}}{{/depend}}   a=[{"b":"x"}]   → [x]                                                        # depend > if > for
+{{for i in a}}{{if i.b}}[{{var i.b}}]{{/if}}{{/for}}                        a=[{"b":"x"}]   → x                                                          # but {{for}} OUTERMOST does not nest - its body is scanned, not rendered
+{{if a}}{{depend a}}{{for i in a}}[{{var i.b}}]{{/for}}{{/depend}}{{/if}}   a=1             → &#123;&#123;for i in a}}[&#123;&#123;var i.b}}]&#123;&#...  # strict raises TemplateTypeError; and a non-iterable collection leaves the innermost {{for}} verbatim, so nothing nests through it
+{{if a}}{{if a}}Y{{/if}}{{/if}}                                             a=1             → !TypeError                                                 # strict: Y; a directive cannot contain ITSELF - the inner close ends the outer
 {{depend a}}{{if a}}Y{{/if}}{{/depend}}                                     a=1             → Y
 ```
 <!-- /generated -->

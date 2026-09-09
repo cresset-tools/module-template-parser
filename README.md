@@ -185,8 +185,8 @@ rather than reimplementing it, because reimplementing the escaper once made the 
 circular.
 
 **3176 cases recorded, 323 of them constructs the legacy filter cannot render at all. Over
-the 2506 cases where both engines render and the surfaces are comparable, output is
-byte-identical.**
+the 2199 cases where both engines render, the surfaces are comparable and compatible mode
+does not deliberately refuse, output is byte-identical.**
 
 Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
 class of divergence, and the honest reading is that the corpus bounds what is known rather
@@ -281,7 +281,10 @@ verified against the real filter:
 
 Nesting is bounded by repeated names, not depth. A directive cannot contain itself at any
 distance, but three distinct names nest fine: all six orderings of `{{if}}`, `{{depend}}` and
-`{{for}}` render three deep on the real filter.
+`{{for}}` render three deep on the real filter — but only when `{{for}}`'s collection is a
+list of arrays, since its body is scanned rather than rendered. Give it anything else and the
+construct comes back verbatim, and nothing nests through it. `LegacyNestingReportTest` asserts
+only that this engine reports no incompatibility for those shapes; it never runs the filter.
 
 The `{{100}}` row is narrower than it looks. `CONSTRUCTION_PATTERN` is case-insensitive, so
 `{{Password}}` and `{{Forgot Your Password?}}` do capture a name, fail to resolve, and come
@@ -303,7 +306,7 @@ something by accident that this parser will not build in:
 
 | Shape | What legacy does |
 |---|---|
-| `{{var.a}}`, `{{var_a}}`, `{{var2 a}}`, `{{depend.a}}`, `{{VAR.a}}` | punctuation after a name is read as a parameter separator, which makes `{{var.a}}` a live variable read — case-insensitively, so `{{VAR.a}}` too |
+| `{{var.a}}`, `{{var_a}}`, `{{var2 a}}`, `{{depend.a}}Y{{/depend}}`, `{{VAR.a}}` | punctuation after a name is read as a parameter separator, which makes `{{var.a}}` a live variable read — case-insensitively, so `{{VAR.a}}` too. `{{depend.a}}` needs its body and closing tag to render; without them it is a TypeError there too |
 | `{{if}}{{if}}{{/if}}`, its `{{depend}}` twin, `{{if}}{{depend}}x{{/if}}` | nesting collapses to `''` by accident of the lazy body match |
 | `{{foo}}x{{/foo}}`, `{{var a}}Y{{/var}}` | the optional closing group swallows a body for a directive that has none |
 
@@ -432,7 +435,7 @@ application. Run anywhere else it degrades to the built-in directives and still 
 $ template-parser repl
   mode    compatible - reproduces the legacy filter, refuses what it could not render
   store   connected
-  17 directives wired
+  18 directives wired
 
 compatible> {{media url="wysiwyg/banner.jpg"}}
 http://shop.example/media/wysiwyg/banner.jpg
@@ -600,7 +603,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-4499 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+4524 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 3176 recorded cases, so the differential runs anywhere with

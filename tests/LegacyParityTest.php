@@ -214,7 +214,7 @@ final class LegacyParityTest extends TestCase
      * Where legacy raises a fatal, compatible mode refuses.
      *
      * This is the bug-for-bug contract: an engine that renders what the old one crashes on
-     * is a better engine, not a compatible one. 281 of the recorded cases crash the stock
+     * is a better engine, not a compatible one. 323 of the recorded cases crash the stock
      * filter - degenerate directive names, stray closing tags, unclosed blocks - and
      * compatible mode declines all of them, with a diagnostic rather than a TypeError.
      */

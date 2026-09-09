@@ -15,7 +15,7 @@ docker run --rm -v "$PWD":/m php:8.3-cli sh -c \
    cd /m && php /tmp/phpunit.phar'
 ```
 
-4499 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
+4524 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ### Mutation testing, without taking the machine down
@@ -102,14 +102,14 @@ re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 ### The sensitivity canary
 
 Green assertions mean nothing if the corpus cannot tell a correct engine from a broken one, so
-each deliberate mis-configuration must produce divergences over the 1334 rendering-comparable
+each deliberate mis-configuration must produce divergences over the 2199 rendering-comparable
 cases:
 
 | Engine | Divergences |
 |---|---|
 | compatible (control) | 0 |
-| lenient (legacy quirks off) | 460 |
-| strict (default) | 735 |
+| lenient (legacy quirks off) | 686 |
+| strict (default) | 1038 |
 
 ## Benchmarking
 
