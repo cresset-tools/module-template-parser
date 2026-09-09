@@ -7,6 +7,8 @@ use Cresset\TemplateParser\Ast\DirectiveNode;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\RenderPolicy;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -93,6 +95,19 @@ final class StyleSmugglerDifferentialTest extends TestCase
     }
 
     /** @param callable():TemplateEngine $factory */
+    /**
+     * The payload runs with {{block}} EXPLICITLY PERMITTED.
+     *
+     * This is the point of the test and it has to be said carefully. Rendering under the
+     * default RenderPolicy::restricted() would refuse {{block}} outright, so the test would
+     * pass whether or not a value can be re-parsed - and it did: reintroducing a second pass
+     * over resolved output, which is exactly the StyleSmuggler condition, left this test
+     * green because the policy was quietly doing the work.
+     *
+     * Granting the capability strips that away. The only thing left between the attacker's
+     * directive and execution is the property this engine actually claims: a value is never
+     * parsed as source. If that breaks, this fails.
+     */
     #[DataProvider('modes')]
     public function testThisEngineNeverExecutesTheSmuggledBlock(callable $factory): void
     {
@@ -103,10 +118,13 @@ final class StyleSmugglerDifferentialTest extends TestCase
             return '[BLOCK-RENDERED]';
         });
 
+        $permissive = static fn (array $variables): Context
+            => new Context($variables, RenderPolicy::unrestricted());
+
         // Stage 1: the address formatter, with the poisoned fields.
         $addressHtml = $engine->render(
             self::$fixture['address_format'],
-            self::$fixture['address_variables']
+            context: $permissive(self::$fixture['address_variables'])
         );
 
         self::assertSame([], $executed, 'nothing may execute while formatting the address');
@@ -115,7 +133,7 @@ final class StyleSmugglerDifferentialTest extends TestCase
         // where legacy executes the smuggled directive.
         $emailOutput = $engine->render(
             self::$fixture['email_template'],
-            ['billingAddressHtml' => $addressHtml]
+            context: $permissive(['billingAddressHtml' => $addressHtml])
         );
 
         self::assertSame(
@@ -124,6 +142,26 @@ final class StyleSmugglerDifferentialTest extends TestCase
             'a directive that arrived through a variable was executed'
         );
         self::assertStringNotContainsString('[BLOCK-RENDERED]', $emailOutput);
+    }
+
+    /**
+     * And the policy refuses it as well, when it is not granted.
+     *
+     * Defence in depth, asserted separately so neither layer can stand in for the other.
+     */
+    public function testThePolicyAlsoRefusesTheSmuggledBlock(): void
+    {
+        $executed = [];
+        $engine = TemplateEngine::compatible();
+        $engine->evaluator()->register('block', function (DirectiveNode $n) use (&$executed, $engine): string {
+            $executed[] = $engine->evaluator()->params($n)['class'] ?? '';
+            return '[BLOCK-RENDERED]';
+        });
+
+        $context = new Context(self::$fixture['address_variables'], RenderPolicy::restricted());
+        $engine->render(self::$fixture['address_format'], context: $context);
+
+        self::assertSame([], $executed);
     }
 
     /** There is no signature to smuggle, because the engine has no signature mechanism. */
