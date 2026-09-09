@@ -18,7 +18,7 @@ use Cresset\TemplateParser\UnknownVariableError;
  * business guessing. Here that guess is welcome: this is a tool someone runs precisely
  * because they want to be told what to change.
  */
-final class Fixer
+class Fixer
 {
     /** @return array{0:string,1:?string} severity and suggested fix */
     public function advise(TemplateError $error): array

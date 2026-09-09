@@ -187,14 +187,33 @@ class ReplCommand extends Command
             case ':help':
                 $output->writeln(<<<'HELP'
   <comment>:mode</comment> strict|lenient|compatible   switch engine posture
-  <comment>:set</comment> name=value                   set a variable
+  <comment>:set</comment> name=value                   set a variable (see :types)
   <comment>:unset</comment> name                       remove one
   <comment>:vars</comment>                             list variables in scope
   <comment>:store</comment> [id]                       render in a store's context
   <comment>:stores</comment>                           list stores
   <comment>:directives</comment>                       what is wired here
+  <comment>:types</comment>                            how :set reads a value
   <comment>:quit</comment>                             leave
 HELP);
+                return true;
+
+            case ':types':
+                $output->writeln(<<<'TYPES'
+  Values are typed, because the difference matters here:
+
+    <comment>:set qty=0</comment>          int 0
+    <comment>:set qty="0"</comment>        string "0"
+    <comment>:set price=1.5</comment>      float
+    <comment>:set flag=true</comment>      bool     (also false, null)
+    <comment>:set xs=[1,2]</comment>       array    (JSON)
+    <comment>:set o={"a":1}</comment>      array    (JSON, associative)
+    <comment>:set name=Ada</comment>       string   (a bare word)
+
+  On PHP 8 the legacy filter treats int 0 as TRUTHY and string "0" as truthy too,
+  while this engine uses standard PHP truthiness and calls both falsy. Being able
+  to set one and not the other is the point.
+TYPES);
                 return true;
 
             case ':mode':
@@ -212,8 +231,9 @@ HELP);
                     return true;
                 }
                 [$key, $value] = explode('=', $argument, 2);
-                $variables[trim($key)] = $value;
-                $output->writeln(sprintf('  %s = %s', trim($key), $value));
+                $parsed = self::parseValue($value);
+                $variables[trim($key)] = $parsed;
+                $output->writeln(sprintf('  %s = %s', trim($key), self::describeValue($parsed)));
                 return true;
 
             case ':unset':
@@ -225,7 +245,7 @@ HELP);
                     $output->writeln('  <fg=gray>(none)</>');
                 }
                 foreach ($variables as $key => $value) {
-                    $output->writeln(sprintf('  %-20s %s', $key, is_scalar($value) ? (string)$value : json_encode($value)));
+                    $output->writeln(sprintf('  %-20s %s', $key, self::describeValue($value)));
                 }
                 return true;
 
@@ -268,9 +288,76 @@ HELP);
                 continue;
             }
             [$key, $value] = explode('=', $pair, 2);
-            $variables[trim($key)] = $value;
+            $variables[trim($key)] = self::parseValue($value);
         }
 
         return $variables;
+    }
+
+    /**
+     * Reads a typed value from what someone typed.
+     *
+     * Strings-only would make the REPL useless for the questions people actually bring to
+     * it. `{{if qty}}` behaves differently for int 0 and string "0" - that difference is the
+     * PHP 7 to 8 truthiness change this engine documents - and a REPL that can only produce
+     * strings cannot show either half of it.
+     *
+     * Bare words stay strings, so the common case is unchanged; quoting forces a string when
+     * the value would otherwise look like something else.
+     */
+    private static function parseValue(string $raw): mixed
+    {
+        $value = trim($raw);
+
+        if ($value === '') {
+            return '';
+        }
+
+        $first = $value[0];
+        $last = $value[strlen($value) - 1];
+        if (strlen($value) >= 2 && ($first === '"' || $first === "'") && $last === $first) {
+            return substr($value, 1, -1);
+        }
+
+        return match (strtolower($value)) {
+            'true' => true,
+            'false' => false,
+            'null' => null,
+            default => self::parseScalarOrJson($value),
+        };
+    }
+
+    private static function parseScalarOrJson(string $value): mixed
+    {
+        if (is_numeric($value)) {
+            // An integer-looking value becomes an int, so {{if qty}} can be asked about 0.
+            return str_contains($value, '.') || stripos($value, 'e') !== false
+                ? (float)$value
+                : (int)$value;
+        }
+
+        if ($value[0] === '[' || $value[0] === '{') {
+            try {
+                return json_decode($value, true, 64, JSON_THROW_ON_ERROR);
+            } catch (\JsonException) {
+                return $value;           // not JSON after all; take it literally
+            }
+        }
+
+        return $value;
+    }
+
+    /** Type and value, so `0` and `"0"` are never confused in the listing. */
+    private static function describeValue(mixed $value): string
+    {
+        return match (true) {
+            is_string($value) => sprintf('string  %s', var_export($value, true)),
+            is_bool($value) => sprintf('bool    %s', $value ? 'true' : 'false'),
+            is_int($value) => sprintf('int     %d', $value),
+            is_float($value) => sprintf('float   %s', var_export($value, true)),
+            $value === null => 'null',
+            is_array($value) => sprintf('array   %s', json_encode($value)),
+            default => get_debug_type($value),
+        };
     }
 }

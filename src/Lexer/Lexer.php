@@ -22,8 +22,18 @@ final class Lexer
     /** Enough to see any legal directive name plus its delimiter. */
     private const MAX_PEEK = 64;
 
-    public function __construct(private readonly \Cresset\TemplateParser\DirectiveSpec $spec = new \Cresset\TemplateParser\DirectiveSpec())
+    private readonly \Cresset\TemplateParser\DirectiveSpec $spec;
+
+    /*
+     * Nullable, not `= new DirectiveSpec()`. Magento's DI compiler stores a constructor
+     * default verbatim and writes generated/metadata with var_export(), which emits
+     * `DirectiveSpec::__set_state(...)` for an object - a fatal on every production request,
+     * and invisible in developer mode. This one was missed when the others were fixed
+     * because the sweep that checked for it could not resolve classes in subdirectories.
+     */
+    public function __construct(?\Cresset\TemplateParser\DirectiveSpec $spec = null)
     {
+        $this->spec = $spec ?? new \Cresset\TemplateParser\DirectiveSpec();
     }
 
     /**

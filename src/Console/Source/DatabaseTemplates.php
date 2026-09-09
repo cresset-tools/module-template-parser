@@ -16,7 +16,7 @@ use Cresset\TemplateParser\Console\TemplateSubject;
  *
  * Read-only by construction: a SELECT, and nothing on this class can write.
  */
-final class DatabaseTemplates implements TemplateSource
+class DatabaseTemplates implements TemplateSource
 {
     private function __construct(
         private readonly MagentoContext $magento,

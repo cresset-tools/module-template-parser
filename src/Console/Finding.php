@@ -10,7 +10,7 @@ namespace Cresset\TemplateParser\Console;
  * will not render is an error; one that renders differently from today is a warning, because
  * it still sends; one this engine refuses on purpose is a note.
  */
-final class Finding
+class Finding
 {
     public const ERROR = 'error';
     public const WARNING = 'warning';

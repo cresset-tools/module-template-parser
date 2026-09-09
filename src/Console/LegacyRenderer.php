@@ -14,7 +14,7 @@ namespace Cresset\TemplateParser\Console;
  * Returns null when there is no store, or when the filter raised: a template the current
  * filter cannot render has no output to compare against, which is itself worth reporting.
  */
-final class LegacyRenderer
+class LegacyRenderer
 {
     public function __construct(private readonly MagentoContext $magento)
     {

@@ -15,7 +15,7 @@ use Cresset\TemplateParser\TemplateError;
  * hand them here, and print what comes back. Keeping it free of Symfony types is what lets
  * the same logic run inside n98-magerun2, or in anything else that can require this package.
  */
-final class Auditor
+class Auditor
 {
     private readonly Fixer $fixer;
 

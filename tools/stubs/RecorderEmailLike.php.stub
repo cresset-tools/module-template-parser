@@ -1,0 +1,70 @@
+<?php
+// strict_types matters here, not as house style: Email\Model\Template\Filter declares it,
+// so htmlentities() and rawurlencode() raise a TypeError on a non-string there. Without this
+// line the recorder would coerce instead, and record 46 legacy fatals as successful renders.
+declare(strict_types=1);
+// A class declaration lives here rather than in a *.php file so Magento's DI scanners
+// never try to reflect it: they walk every *.php under an installed module, and a
+// module installed from git ships tools/.
+
+use Magento\Framework\Filter\Template as LegacyTemplate;
+
+class EmailLikeLegacy extends LegacyTemplate {
+    protected $_modifiers = ['nl2br' => ''];
+    public function __construct(...$args) {
+        parent::__construct(...$args);
+        $this->_modifiers['escape'] = [$this, 'modifierEscape'];
+    }
+    private ?\Magento\Framework\Escaper $realEscaper = null;
+    /**
+     * Email\Model\Template\Filter::modifierEscape, copied verbatim - including calling the
+     * REAL Escaper rather than a reimplementation of it.
+     *
+     * Reimplementing this is how the measurement went circular the first time: the recorder
+     * repeated the engine's own escaping bug, so the fixtures certified the bug as legacy
+     * truth. Two properties are impossible to get right by hand and both change the recorded
+     * outcome:
+     *
+     *  - escapeHtml() recurses into an array and RETURNS AN ARRAY, so a following |nl2br
+     *    receives an array and raises a TypeError. Casting to string here records "[Array]"
+     *    as a successful render instead.
+     *  - htmlentities()/rawurlencode() are called on the raw value, and Filter.php declares
+     *    strict_types=1, so a non-string is a TypeError. This file declares strict_types=1
+     *    for exactly that reason - do not add casts.
+     */
+    public function modifierEscape($value, $type = 'html') {
+        switch ($type) {
+            case 'html':
+                return ($this->realEscaper ??= new \Magento\Framework\Escaper())->escapeHtml($value);
+            case 'htmlentities':
+                return htmlentities($value, ENT_QUOTES);
+            case 'url':
+                return rawurlencode($value);
+        }
+        return $value;
+    }
+    public function varDirective($construction) {
+        if (count($this->templateVars) == 0) { return $construction[0]; }
+        list($directive, $modifiers) = $this->explodeModifiers(
+            $construction[2] . ($construction['filters'] ?? ''), 'escape'
+        );
+        return $this->applyModifiers($this->getVariable($directive, ''), $modifiers);
+    }
+    protected function explodeModifiers($value, $default = null) {
+        $parts = $value !== null ? explode('|', $value, 2) : [];
+        return 2 === count($parts) ? $parts : [$value, $default];
+    }
+    protected function applyModifiers($value, $modifiers) {
+        foreach (($modifiers !== null ? explode('|', $modifiers) : []) as $part) {
+            if (empty($part)) { continue; }
+            $params = explode(':', $part);
+            $modifier = array_shift($params);
+            if (isset($this->_modifiers[$modifier])) {
+                $callback = $this->_modifiers[$modifier] ?: $modifier;
+                array_unshift($params, $value);
+                $value = $callback(...$params);
+            }
+        }
+        return $value;
+    }
+}

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Console;
 
 /** One template that renders differently, with enough context to see why. */
-final class Divergence
+class Divergence
 {
     public function __construct(
         public readonly TemplateSubject $subject,

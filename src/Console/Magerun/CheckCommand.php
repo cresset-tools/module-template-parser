@@ -14,7 +14,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
  * every other module.
  */
 #[AsCommand(name: 'template-parser:check')]
-final class CheckCommand extends BaseCommand
+class CheckCommand extends BaseCommand
 {
     use MagerunBridge;
 }

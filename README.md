@@ -423,6 +423,19 @@ Unknown variable "custmer_name" in {{var custmer_name}}
 
 `:help` lists the rest — `:set`, `:vars`, `:store`, `:stores`, `:directives`, `:mode`.
 
+Values are typed, which matters more here than it might elsewhere:
+
+```
+compatible> :set qty=0            int 0
+compatible> :set label="0"        string "0"      quoting forces a string
+compatible> :set xs=[1,2]         array           JSON
+compatible> :set flag=true        bool            also false, null, 1.5, bare words
+```
+
+`{{if qty}}` answers differently for int `0` under each mode — compatible reproduces the
+legacy filter's `== ''` test and calls it truthy, strict uses standard PHP truthiness and
+calls it falsy. `:types` explains it in the REPL.
+
 ### Checking templates
 
 `check` renders everything it can find and says what stops it, with advice rather than just a

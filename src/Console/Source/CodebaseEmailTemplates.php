@@ -11,7 +11,7 @@ use Cresset\TemplateParser\Console\TemplateSubject;
  * These are the ones a CI run can check, because they are in the repository. A merchant who
  * has never touched an email still renders these.
  */
-final class CodebaseEmailTemplates implements TemplateSource
+class CodebaseEmailTemplates implements TemplateSource
 {
     /** @param array<string,mixed> $variables */
     public function __construct(

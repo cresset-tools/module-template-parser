@@ -15,7 +15,7 @@ namespace Cresset\TemplateParser\Console;
  * rather than failing, so the REPL and the syntax checks work on a laptop with no Magento
  * anywhere near them.
  */
-final class MagentoContext
+class MagentoContext
 {
     private bool $areaSet = false;
 

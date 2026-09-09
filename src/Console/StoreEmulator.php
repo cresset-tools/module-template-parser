@@ -14,7 +14,7 @@ namespace Cresset\TemplateParser\Console;
  *
  * Without a store, or without an emulation service, the callback simply runs.
  */
-final class StoreEmulator
+class StoreEmulator
 {
     public function __construct(private readonly MagentoContext $magento)
     {

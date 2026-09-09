@@ -47,65 +47,7 @@ use Magento\Framework\Filter\Template\Tokenizer\{VariableFactory, ParameterFacto
  * behaviour worth recording. varDirective/explodeModifiers/applyModifiers below are copied
  * verbatim from that class.
  */
-class EmailLikeLegacy extends LegacyTemplate {
-    protected $_modifiers = ['nl2br' => ''];
-    public function __construct(...$args) {
-        parent::__construct(...$args);
-        $this->_modifiers['escape'] = [$this, 'modifierEscape'];
-    }
-    private ?\Magento\Framework\Escaper $realEscaper = null;
-    /**
-     * Email\Model\Template\Filter::modifierEscape, copied verbatim - including calling the
-     * REAL Escaper rather than a reimplementation of it.
-     *
-     * Reimplementing this is how the measurement went circular the first time: the recorder
-     * repeated the engine's own escaping bug, so the fixtures certified the bug as legacy
-     * truth. Two properties are impossible to get right by hand and both change the recorded
-     * outcome:
-     *
-     *  - escapeHtml() recurses into an array and RETURNS AN ARRAY, so a following |nl2br
-     *    receives an array and raises a TypeError. Casting to string here records "[Array]"
-     *    as a successful render instead.
-     *  - htmlentities()/rawurlencode() are called on the raw value, and Filter.php declares
-     *    strict_types=1, so a non-string is a TypeError. This file declares strict_types=1
-     *    for exactly that reason - do not add casts.
-     */
-    public function modifierEscape($value, $type = 'html') {
-        switch ($type) {
-            case 'html':
-                return ($this->realEscaper ??= new \Magento\Framework\Escaper())->escapeHtml($value);
-            case 'htmlentities':
-                return htmlentities($value, ENT_QUOTES);
-            case 'url':
-                return rawurlencode($value);
-        }
-        return $value;
-    }
-    public function varDirective($construction) {
-        if (count($this->templateVars) == 0) { return $construction[0]; }
-        list($directive, $modifiers) = $this->explodeModifiers(
-            $construction[2] . ($construction['filters'] ?? ''), 'escape'
-        );
-        return $this->applyModifiers($this->getVariable($directive, ''), $modifiers);
-    }
-    protected function explodeModifiers($value, $default = null) {
-        $parts = $value !== null ? explode('|', $value, 2) : [];
-        return 2 === count($parts) ? $parts : [$value, $default];
-    }
-    protected function applyModifiers($value, $modifiers) {
-        foreach (($modifiers !== null ? explode('|', $modifiers) : []) as $part) {
-            if (empty($part)) { continue; }
-            $params = explode(':', $part);
-            $modifier = array_shift($params);
-            if (isset($this->_modifiers[$modifier])) {
-                $callback = $this->_modifiers[$modifier] ?: $modifier;
-                array_unshift($params, $value);
-                $value = $callback(...$params);
-            }
-        }
-        return $value;
-    }
-}
+require __DIR__ . '/stubs/RecorderEmailLike.php.stub';
 
 function legacy(array $vars, bool $neutralize = true): LegacyTemplate {
     $r = new StrictResolver(new VariableFactory());

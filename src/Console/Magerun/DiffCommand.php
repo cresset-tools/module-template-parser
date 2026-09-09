@@ -14,7 +14,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
  * every other module.
  */
 #[AsCommand(name: 'template-parser:diff')]
-final class DiffCommand extends BaseCommand
+class DiffCommand extends BaseCommand
 {
     use MagerunBridge;
 }

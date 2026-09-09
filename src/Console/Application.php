@@ -16,7 +16,7 @@ use Symfony\Component\Console\Command\Command;
  * the same list without this class - see commands(). Anything that only works in one of the
  * two entrypoints is a bug.
  */
-final class Application extends ConsoleApplication
+class Application extends ConsoleApplication
 {
     public const VERSION = '0.1.0-dev';
 

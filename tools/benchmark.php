@@ -55,46 +55,7 @@ use Magento\Framework\Escaper;
  * Uniquely named: Magento's DI scanner includes every tools/ file that declares a class, so
  * two tools sharing a class name would collide.
  */
-class BenchmarkEmailLikeLegacy extends LegacyTemplate {
-    protected $_modifiers = ['nl2br' => ''];
-    private ?Escaper $escaper = null;
-    public function __construct(...$args) {
-        parent::__construct(...$args);
-        $this->_modifiers['escape'] = [$this, 'modifierEscape'];
-    }
-    public function modifierEscape($value, $type = 'html') {
-        switch ($type) {
-            case 'html': return ($this->escaper ??= new Escaper())->escapeHtml($value);
-            case 'htmlentities': return htmlentities($value, ENT_QUOTES);
-            case 'url': return rawurlencode($value);
-        }
-        return $value;
-    }
-    public function varDirective($construction) {
-        if (count($this->templateVars) == 0) { return $construction[0]; }
-        list($directive, $modifiers) = $this->explodeModifiers(
-            $construction[2] . ($construction['filters'] ?? ''), 'escape'
-        );
-        return $this->applyModifiers($this->getVariable($directive, ''), $modifiers);
-    }
-    protected function explodeModifiers($value, $default = null) {
-        $parts = $value !== null ? explode('|', $value, 2) : [];
-        return 2 === count($parts) ? $parts : [$value, $default];
-    }
-    protected function applyModifiers($value, $modifiers) {
-        foreach (($modifiers !== null ? explode('|', $modifiers) : []) as $part) {
-            if (empty($part)) { continue; }
-            $params = explode(':', $part);
-            $modifier = array_shift($params);
-            if (isset($this->_modifiers[$modifier])) {
-                $callback = $this->_modifiers[$modifier] ?: $modifier;
-                array_unshift($params, $value);
-                $value = $callback(...$params);
-            }
-        }
-        return $value;
-    }
-}
+require __DIR__ . '/stubs/BenchmarkEmailLike.php.stub';
 
 $iterations = max(1, (int)($argv[1] ?? 200));
 

@@ -191,6 +191,59 @@ final class ConsoleTest extends TestCase
         self::assertStringContainsString('depend', $display);
     }
 
+    /**
+     * :set produces typed values, not only strings.
+     *
+     * The difference is the whole reason the REPL is useful for this engine: {{if qty}}
+     * behaves differently for int 0 and string "0", and a REPL that could only make strings
+     * could not show either half of it.
+     */
+    #[DataProvider('typedValues')]
+    public function testSetProducesTypedValues(string $literal, string $expectedDescription): void
+    {
+        $display = $this->repl([sprintf(':set v=%s', $literal), ':vars']);
+
+        self::assertStringContainsString($expectedDescription, $display, $literal);
+    }
+
+    public static function typedValues(): array
+    {
+        return [
+            'int'            => ['0', 'int     0'],
+            'quoted is text' => ['"0"', "string  '0'"],
+            'float'          => ['1.5', 'float   1.5'],
+            'bool true'      => ['true', 'bool    true'],
+            'bool false'     => ['false', 'bool    false'],
+            'null'           => ['null', 'null'],
+            'json list'      => ['[1,2]', 'array   [1,2]'],
+            'json object'    => ['{"a":1}', 'array   {"a":1}'],
+            'bare word'      => ['Ada', "string  'Ada'"],
+            'not json after all' => ['[oops', "string  '[oops'"],
+        ];
+    }
+
+    /** int 0 and string "0" reach the engine as different things. */
+    public function testTypedValuesReachTheEngine(): void
+    {
+        $strict = $this->repl([
+            ':set qty=0',
+            ':set xs=[1,2]',
+            '{{if qty}}truthy{{else}}falsy{{/if}}',
+            '{{for i in xs}}[{{var i}}]{{/for}}',
+        ], ['--mode' => 'strict']);
+
+        self::assertStringContainsString('falsy', $strict, 'int 0 is falsy under standard truthiness');
+        self::assertStringContainsString('[1][2]', $strict, 'a JSON list should be iterable');
+    }
+
+    /** ...and compatible mode disagrees about 0, which is the legacy quirk. */
+    public function testCompatibleModeTreatsIntZeroAsTruthy(): void
+    {
+        $display = $this->repl([':set qty=0', '{{if qty}}truthy{{else}}falsy{{/if}}'], ['--mode' => 'compatible']);
+
+        self::assertStringContainsString('truthy', $display);
+    }
+
     public function testReplRejectsAnUnknownColonCommand(): void
     {
         self::assertStringContainsString('unknown command', $this->repl([':nope']));

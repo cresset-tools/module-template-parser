@@ -10,7 +10,7 @@ namespace Cresset\TemplateParser\Console;
  * typed into the REPL are all the same shape by the time anything looks at them, so the
  * checking and diffing code has one case to handle rather than four.
  */
-final class TemplateSubject
+class TemplateSubject
 {
     /** @param array<string,mixed> $variables */
     public function __construct(

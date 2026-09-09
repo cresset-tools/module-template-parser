@@ -31,7 +31,7 @@ use Cresset\TemplateParser\TemplateEngine;
  * A port that cannot be constructed is skipped rather than fatal. A store missing
  * Magento_Variable should cost you {{customvar}}, not the tool.
  */
-final class EngineFactory
+class EngineFactory
 {
     /** @param string[] $allowedLayoutHandles */
     public function __construct(
