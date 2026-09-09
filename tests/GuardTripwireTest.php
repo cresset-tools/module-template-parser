@@ -831,6 +831,13 @@ final class GuardTripwireTest extends TestCase
      */
     public function testDeepNestingDoesNotCopyTheOpenStackPerLevel(): void
     {
+        if (extension_loaded('xdebug')) {
+            // Xdebug aborts at 256 frames by default - two per nesting level - and its own
+            // per-frame bookkeeping would dominate the number being measured anyway. The
+            // other PHP versions in CI carry this one.
+            self::markTestSkipped('xdebug caps recursion far below the depth this measures');
+        }
+
         $depth = 6000;
         $source = str_repeat('{{if a}}', $depth) . 'x' . str_repeat('{{/if}}', $depth);
 
