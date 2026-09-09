@@ -11,6 +11,10 @@ use Cresset\TemplateParser\Port\BlockRenderer;
 use Cresset\TemplateParser\Port\TemplateLoader;
 use Cresset\TemplateParser\Port\Translator;
 use Cresset\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\Options;
+use Cresset\TemplateParser\RenderPolicy;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class HostDirectivesTest extends TestCase
@@ -144,5 +148,73 @@ final class HostDirectivesTest extends TestCase
 
         self::assertSame(0, $renderer->calls, 'a directive from data must never execute');
         self::assertSame('child:{{block class="Evil"}}', $out);
+    }
+
+    /**
+     * {{template}} matches legacy's own handling of an include it cannot process.
+     *
+     * TemplateDirective::process returns the literal string "{Error in template processing}"
+     * when config_path is absent - not an exception, not empty output, but text that ends up
+     * in the email. This engine rendered nothing, which is a divergence on every template
+     * with a malformed include. Legacy also resolves $-prefixed parameters before using
+     * them, so `config_path=$b` is an include of whatever `b` holds.
+     */
+    #[DataProvider('includeShapes')]
+    public function testIncludesMatchLegacyHandling(string $template, string $compatible, string $lenient): void
+    {
+        $loader = new class implements TemplateLoader {
+            public function load(string $path): ?string
+            {
+                return $path === 'design/email/header' ? 'HEADER' : null;
+            }
+        };
+
+        foreach (['compatible' => $compatible, 'lenient' => $lenient] as $mode => $expected) {
+            $options = $mode === 'compatible' ? Options::compatible() : Options::lenient();
+            $evaluator = new Evaluator(options: $options);
+            HostDirectives::register($evaluator, new HostServices(templates: $loader));
+            $engine = new TemplateEngine(new Parser(options: $options), $evaluator);
+
+            self::assertSame(
+                $expected,
+                $engine->render($template, context: new Context(['b' => 'design/email/header'], RenderPolicy::unrestricted())),
+                $mode . ': ' . $template
+            );
+        }
+    }
+
+    public static function includeShapes(): array
+    {
+        // The compatible column is what the real filter produces, verified against it - the
+        // braces arrive encoded because the StyleSmuggler hardening neutralises them.
+        return [
+            'resolvable'          => ['{{template config_path="design/email/header"}}', 'HEADER', 'HEADER'],
+            'unknown path'        => ['{{template config_path="design/email/nope"}}', '', ''],
+            'missing config_path' => ['{{template}}', '&#123;Error in template processing}', ''],
+            'other param only'    => ['{{template foo="1"}}', '&#123;Error in template processing}', ''],
+            'dollar prefixed'     => ['{{template config_path=$b}}', 'HEADER', 'HEADER'],
+        ];
+    }
+
+    /** A path the guard refuses renders nothing, like every other guarded directive. */
+    public function testAnUnsafeIncludePathRendersNothingAndIsNotLoaded(): void
+    {
+        $seen = [];
+        $loader = new class ($seen) implements TemplateLoader {
+            public function __construct(private array &$seen) {}
+            public function load(string $path): ?string { $this->seen[] = $path; return 'LOADED'; }
+        };
+
+        $evaluator = new Evaluator(options: Options::compatible());
+        HostDirectives::register($evaluator, new HostServices(templates: $loader));
+        $engine = new TemplateEngine(new Parser(options: Options::compatible()), $evaluator);
+
+        $out = $engine->render(
+            '{{template config_path="../../app/etc/env.php"}}',
+            context: new Context([], RenderPolicy::unrestricted())
+        );
+
+        self::assertSame('', $out);
+        self::assertSame([], $seen, 'the refused path reached the loader');
     }
 }

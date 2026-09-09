@@ -44,6 +44,38 @@ final class HostDirectives
         return true;
     }
 
+    /**
+     * What legacy emits for an include it cannot process.
+     *
+     * TemplateDirective::process returns this literal string when config_path is absent or
+     * no template processor is set - it is not an exception and not empty output, it is text
+     * that ends up in the email. Compatible mode reproduces it; elsewhere an unresolvable
+     * include renders nothing, since the string is a legacy artefact and not useful output.
+     */
+    private static function unresolvedInclude(Evaluator $evaluator): string
+    {
+        return $evaluator->options()->legacyQuirks ? '{Error in template processing}' : '';
+    }
+
+    /**
+     * Resolves `$name` parameter values against the scope, as legacy's directives do.
+     *
+     * @param array<string,string> $parameters
+     * @return array<string,string>
+     */
+    private static function resolveDollarParameters(array $parameters, Context $context, Evaluator $evaluator): array
+    {
+        foreach ($parameters as $key => $value) {
+            if (!is_string($value) || !str_starts_with($value, '$')) {
+                continue;
+            }
+            $resolved = $evaluator->resolver()->value(substr($value, 1), $context);
+            $parameters[$key] = $resolved === null ? $value : $evaluator->stringify($resolved);
+        }
+
+        return $parameters;
+    }
+
     private static function decodeEntities(string $value): string
     {
         return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -102,12 +134,20 @@ final class HostDirectives
             // included template using one loses its body and leaks the closing tag as text.
             $parser ??= new Parser(spec: $evaluator->spec(), options: $evaluator->options());
             $evaluator->register('template', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($templates, $parser): string {
-                $params = $e->params($n);
+                // Legacy resolves any $-prefixed parameter against the scope before using
+                // it, so `{{template config_path=$b}}` is an include of whatever `b` holds.
+                $params = self::resolveDollarParameters($e->params($n), $c, $e);
                 $path = $params['config_path'] ?? '';
-                // Guarded like {{config path=}} is. The shipped ConfigTemplateLoader happens
-                // to allowlist, but the TemplateLoader port does not require an implementation
-                // to, so the check belongs on this side of it.
-                if ($path === '' || !PathGuard::isSafeConfigPath($path)) {
+                // No config_path at all is legacy's own error case, and it says so in the
+                // output rather than rendering nothing.
+                if ($path === '') {
+                    return self::unresolvedInclude($e);
+                }
+                // A path that IS given but fails the guard renders nothing, like every other
+                // guarded directive here. Guarded like {{config path=}} is: the shipped
+                // ConfigTemplateLoader happens to allowlist, but the TemplateLoader port does
+                // not require an implementation to, so the check belongs on this side of it.
+                if (!PathGuard::isSafeConfigPath($path)) {
                     return '';
                 }
 
@@ -123,6 +163,9 @@ final class HostDirectives
                     );
                 }
 
+                // Nothing found is not legacy's error case: with a processor set, legacy
+                // returns whatever the processor returned, which for an unknown path is
+                // empty. The error string is only for a missing config_path.
                 $source = $templates->load($path);
                 if ($source === null) {
                     return '';
