@@ -18,6 +18,23 @@ docker run --rm -v "$PWD":/m php:8.3-cli sh -c \
 4499 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
+### Mutation testing, without taking the machine down
+
+Every guard here is checked by removing it and watching the suite fail. Two rules, both
+learned the hard way:
+
+- **Bound the mutation.** One that made `{{var}}` re-parse its own output recursed without a
+  limit. Reproducing a defect does not require reproducing it unboundedly - the bounded
+  version, one extra pass, is what legacy actually does and it fails the suite just as loudly.
+- **Kill the run before restoring the file.** A tool timeout backgrounds a command rather than
+  stopping it, so `cp` -ing the original back leaves a process running against a build that no
+  longer exists. That one ran unattended for two and a half hours, reached 48 GB and invoked
+  the kernel OOM killer.
+
+`tests/bootstrap.php` now clamps an unlimited `memory_limit` to 2 GB, and the tools under
+`tools/` do the same, so the failure mode is a fatal with a stack trace. bougie launches PHP
+with `-d memory_limit=-1`; a deliberate lower limit on the command line is left alone.
+
 ## The parity corpus
 
 `tools/record-legacy.php` runs the real Magento filter over a generated corpus and records

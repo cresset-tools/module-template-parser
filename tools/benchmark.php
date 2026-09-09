@@ -22,6 +22,11 @@ if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }
 define('CRESSET_TEMPLATE_PARSER_TOOL', true);
+// The same ceiling the test bootstrap sets, for the same reason: bougie launches
+// PHP unlimited, and a tool that runs the whole corpus is where a runaway would hide.
+if (ini_get('memory_limit') === '-1') {
+    ini_set('memory_limit', '2G');
+}
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
