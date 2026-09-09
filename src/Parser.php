@@ -66,13 +66,16 @@ final class Parser
 
         $tokens = $this->lexer->tokenize($source);
         $index = 0;
-        $children = $this->parseUntil($tokens, $index, null, []);
+        // A variable, because parseUntil() takes the stack by reference so that nesting costs
+        // one entry rather than a copy per level.
+        $openStack = [];
+        $children = $this->parseUntil($tokens, $index, null, $openStack);
 
         while ($index < count($tokens)) {
             // Only reachable in lenient mode: a stray close stopped the top-level scan.
             $children[] = new TextNode($tokens[$index]->raw);
             $index++;
-            $children = array_merge($children, $this->parseUntil($tokens, $index, null, []));
+            $children = array_merge($children, $this->parseUntil($tokens, $index, null, $openStack));
         }
 
         $this->assertNoStrayElse($children);
@@ -85,7 +88,7 @@ final class Parser
      * @param string[] $openStack block directives currently open, outermost first
      * @return Node[]
      */
-    private function parseUntil(array $tokens, int &$index, ?string $closingName, array $openStack): array
+    private function parseUntil(array $tokens, int &$index, ?string $closingName, array &$openStack): array
     {
         $nodes = [];
         $count = count($tokens);
@@ -148,7 +151,7 @@ final class Parser
     }
 
     /** @param Token[] $tokens */
-    private function parseOpen(array $tokens, int &$index, Token $token, array $openStack): Node
+    private function parseOpen(array $tokens, int &$index, Token $token, array &$openStack): Node
     {
         if ($this->options->strictDirectives && !$this->spec->isKnown($token->name)) {
             throw SyntaxError::at(
@@ -186,7 +189,18 @@ final class Parser
         $node = new DirectiveNode($token->name, $token->params, $token->raw, $token->offset);
         $index++;
 
-        $body = $this->parseUntil($tokens, $index, $token->name, [...$openStack, $token->name]);
+        // Push and pop, not `[...$openStack, $name]`. That built a fresh array per level, so
+        // every open directive held its own copy and peak memory was O(depth squared): 4 000
+        // levels of a 58 KB template reached 178 MB, and 10 000 exhausted a gigabyte. The
+        // default depth of 3 never noticed, but Options::withMaxNestingDepth() has no upper
+        // bound, so a host raising it for a "trusted" template type inherited the footgun.
+        $openStack[] = $token->name;
+
+        try {
+            $body = $this->parseUntil($tokens, $index, $token->name, $openStack);
+        } finally {
+            array_pop($openStack);
+        }
 
         if ($this->spec->acceptsElse($token->name)) {
             $split = $this->splitOnElse($body);
@@ -270,40 +284,63 @@ final class Parser
         // dispatches by reflection, which resolves case-insensitively, so `{{VAR.x}}` is a
         // live variable read on the legacy filter. Matching only lower case made compatible
         // mode MORE permissive than the filter it reproduces.
-        if (preg_match_all('/\{\{([a-zA-Z]{1,10})(?![a-zA-Z])([^\s}])/', $source, $found, PREG_OFFSET_CAPTURE)) {
-            foreach ($found[1] as $i => [$name, $offset]) {
-                if (!$this->spec->isKnown(strtolower($name))) {
-                    continue;               // legacy would not dispatch it either
-                }
-                $this->refuseIfLegacyCannotRender(
-                    $offset - 2,
-                    LegacyIncompatibility::NAME_PREFIX_SPLIT,
-                    sprintf(
-                        '{{%s%s...}} - the legacy filter reads the name as "%s" and the rest as '
-                        . 'its parameters, which is a different construct from this one',
-                        $name,
-                        $found[2][$i][0],
-                        $name
-                    )
-                );
+        foreach ($this->matches('/\{\{([a-zA-Z]{1,10})(?![a-zA-Z])([^\s}])/', $source) as $match) {
+            [$name, $offset] = $match[1];
+            if (!$this->spec->isKnown(strtolower($name))) {
+                continue;                   // legacy would not dispatch it either
             }
+            $this->refuseIfLegacyCannotRender(
+                $offset - 2,
+                LegacyIncompatibility::NAME_PREFIX_SPLIT,
+                sprintf(
+                    '{{%s%s...}} - the legacy filter reads the name as "%s" and the rest as '
+                    . 'its parameters, which is a different construct from this one',
+                    $name,
+                    $match[2][0],
+                    $name
+                )
+            );
         }
 
-        if (preg_match_all('/\{\{\/([a-zA-Z]{1,10})\s+\}\}/', $source, $found, PREG_OFFSET_CAPTURE)) {
-            foreach ($found[1] as $i => [$name, $offset]) {
-                if (!$this->spec->isKnown(strtolower($name))) {
-                    continue;
-                }
-                $this->refuseIfLegacyCannotRender(
-                    $offset - 3,
-                    LegacyIncompatibility::PADDED_CLOSING_TAG,
-                    sprintf(
-                        '{{/%s }} has whitespace before the braces - the legacy filter\'s closing '
-                        . 'backreference does not allow it and raises a TypeError',
-                        $name
-                    )
-                );
+        foreach ($this->matches('/\{\{\/([a-zA-Z]{1,10})\s+\}\}/', $source) as $match) {
+            [$name, $offset] = $match[1];
+            if (!$this->spec->isKnown(strtolower($name))) {
+                continue;
             }
+            $this->refuseIfLegacyCannotRender(
+                $offset - 3,
+                LegacyIncompatibility::PADDED_CLOSING_TAG,
+                sprintf(
+                    '{{/%s }} has whitespace before the braces - the legacy filter\'s closing '
+                    . 'backreference does not allow it and raises a TypeError',
+                    $name
+                )
+            );
+        }
+    }
+
+    /**
+     * Walks a pattern's matches one at a time.
+     *
+     * Not preg_match_all(PREG_OFFSET_CAPTURE): that builds a capture table for every match
+     * in the whole source before the first one is read, and in compatible mode the loops
+     * above throw on the first match they care about. 4 MB of `{{var.` allocated 527 MB to
+     * report a single error - a fatal at Magento's usual 768 MB limit, from a template a
+     * merchant can paste into a CMS block.
+     *
+     * @return \Generator<int,array<int,array{0:string,1:int}>>
+     */
+    private function matches(string $pattern, string $source): \Generator
+    {
+        $offset = 0;
+        $length = strlen($source);
+
+        while ($offset < $length && preg_match($pattern, $source, $match, PREG_OFFSET_CAPTURE, $offset) === 1) {
+            yield $match;
+
+            // max(1, ...) so a pattern that could match empty cannot spin here. Neither of
+            // these can, but the next one added might.
+            $offset = $match[0][1] + max(1, strlen($match[0][0]));
         }
     }
 

@@ -793,6 +793,54 @@ final class GuardTripwireTest extends TestCase
         ];
     }
 
+    /**
+     * Reporting one parse refusal must not cost a table of every match in the source.
+     *
+     * refuseLegacyParsingDifferences() used preg_match_all(PREG_OFFSET_CAPTURE) and then threw
+     * on the first match it cared about, so 4 MB of `{{var.` allocated 527 MB - a fatal at
+     * Magento's usual 768 MB limit, from a template a merchant can paste into a CMS block.
+     *
+     * The threshold is process-wide peak, and the whole suite peaks near 130 MB, so 300 MB
+     * cannot be reached by anything but a regression here.
+     */
+    public function testRefusingAParseDifferenceDoesNotMaterialiseEveryMatch(): void
+    {
+        $source = str_repeat('{{var.', 666666) . '}}';
+
+        try {
+            TemplateEngine::compatible()->render($source, []);
+            self::fail('expected the first {{var. to be refused');
+        } catch (TemplateError) {
+            // the refusal is the point; the allocation is what is under test
+        }
+
+        self::assertLessThan(
+            300 * 1024 * 1024,
+            memory_get_peak_usage(true),
+            'peak memory suggests the whole match table is being built again'
+        );
+    }
+
+    /**
+     * Nesting costs one stack entry per level, not a copy of the stack per level.
+     *
+     * `[...$openStack, $name]` made peak O(depth squared): 4 000 levels of a 58 KB template
+     * reached 178 MB and 10 000 exhausted a gigabyte - it grows as the square, so 6 000 is 400 MB.
+     * Unreachable at the default depth of 3,
+     * but Options::withMaxNestingDepth() has no upper bound.
+     */
+    public function testDeepNestingDoesNotCopyTheOpenStackPerLevel(): void
+    {
+        $depth = 6000;
+        $source = str_repeat('{{if a}}', $depth) . 'x' . str_repeat('{{/if}}', $depth);
+
+        $rendered = TemplateEngine::withOptions(Options::lenient()->withMaxNestingDepth($depth + 1))
+            ->render($source, ['a' => 1]);
+
+        self::assertSame('x', $rendered);
+        self::assertLessThan(300 * 1024 * 1024, memory_get_peak_usage(true));
+    }
+
     /** An object with no __toString yields '', not a serialisation of its innards. */
     public function testAnUnstringableObjectRendersEmpty(): void
     {
