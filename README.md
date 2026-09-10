@@ -158,6 +158,14 @@ foreach ($context->violations() as $v) {
 The allowlist is checked before the port, so a refused class is never constructed.
 `{{widget}}` shares the block allowlist, since a widget is a block by another name.
 
+Wiring `{{widget}}` for an **email** surface adds a capability that surface did not have.
+`Email\Model\Template\Filter` and the newsletter filter both extend
+`Framework\Filter\Template`, which has no `widgetDirective` at all — so `{{widget type="…"}}`
+in an email template renders as its own text today, and with the port wired it becomes block
+instantiation chosen by template text. That may be exactly what you want; it is not something
+to acquire by accident, so wire that port per surface rather than globally. `diff` says so
+when it sees it rather than reporting the difference as the engine's.
+
 The policy is consulted only after a handler is found. It can therefore remove a capability
 the host granted, but it never changes the output for a directive nobody wired up, which would
 break compatible mode's parity.

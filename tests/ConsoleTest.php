@@ -83,6 +83,82 @@ final class ConsoleTest extends TestCase
         self::assertStringContainsString('no port wired for {{layout}}', (string)$divergences[0]->note);
     }
 
+    /**
+     * The mirror image: the FILTER has no processor, and this engine does.
+     *
+     * `Email\Model\Template\Filter` extends `Framework\Filter\Template`, which has no
+     * widgetDirective and no transDirective - so those render verbatim on that surface while
+     * this engine, with the port wired, renders them. That is a capability the template did
+     * not have, and reporting it as a bare difference puts it on the engine.
+     */
+    public function testADivergenceFromADirectiveTheFilterLacksSaysSo(): void
+    {
+        $subject = new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: 'a{{trans "hi"}}b');
+
+        $divergences = $this->auditor()->diff(
+            [$subject],
+            Mode::Compatible,
+            // What the base filter does with a directive it has no processor for.
+            static fn (): LegacyRender => new LegacyRender('a{{trans "hi"}}b', [])
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertStringContainsString('has no {{trans}} processor', (string)$divergences[0]->note);
+        self::assertStringContainsString('capability gained', (string)$divergences[0]->note);
+    }
+
+    /**
+     * A directive verbatim on BOTH sides is not a surface gap.
+     *
+     * With no variables in scope the filter passes directives through untouched, and this
+     * engine reproduces that - so `{{var x}}` is its own text on both sides and cancels out
+     * of the comparison. Naming it would send a reader looking for a port difference that is
+     * not there.
+     */
+    public function testADirectiveVerbatimOnBothSidesIsNotCalledASurfaceGap(): void
+    {
+        $subject = new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: 'a{{var x}}b');
+
+        $divergences = $this->auditor()->diff(
+            [$subject],
+            Mode::Compatible,
+            // The same passthrough, plus something else that differs - so there IS a
+            // divergence to report, and `{{var}}` is not the reason for it.
+            static fn (): LegacyRender => new LegacyRender('a{{var x}}bZ', [])
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertStringNotContainsString('capability gained', (string)$divergences[0]->note);
+    }
+
+    /**
+     * A directive absent from our output because we have NO port is not a capability gained.
+     *
+     * The two notes answer opposite questions and the difference is which side has the port.
+     * Here `{{layout}}` is unwired in this tool and sits inside a branch this engine discards,
+     * so it is absent from our output entirely - reporting that as a capability gained would
+     * be exactly backwards.
+     */
+    public function testAnUnwiredDirectiveIsNeverCalledACapabilityGained(): void
+    {
+        $subject = new TemplateSubject(
+            id: 'x',
+            label: 'x',
+            origin: 'test',
+            content: '{{depend nope}}{{layout handle="x"}}{{/depend}}',
+            variables: ['other' => 1]
+        );
+
+        $divergences = $this->auditor()->diff(
+            [$subject],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender('{{layout handle="x"}}', ['other' => 1])
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertStringNotContainsString('capability gained', (string)$divergences[0]->note);
+    }
+
     /** A difference with no unwired directive in it gets no such excuse. */
     public function testAnOrdinaryDivergenceIsNotBlamedOnAPort(): void
     {

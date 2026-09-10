@@ -160,7 +160,7 @@ class Auditor
                     return null;
                 }
 
-                return new Divergence($subject, $legacyOutput, $ours, $this->unwiredPortNote($ours, $engine));
+                return new Divergence($subject, $legacyOutput, $ours, $this->divergenceNote($legacyOutput, $ours, $engine));
             });
 
             if ($divergence !== null) {
@@ -169,6 +169,59 @@ class Auditor
         }
 
         return $divergences;
+    }
+
+    /** Both notes a difference can carry: a port this tool lacks, and one the filter lacks. */
+    private function divergenceNote(string $legacyOutput, string $ours, TemplateEngine $engine): ?string
+    {
+        $notes = array_filter([
+            $this->unwiredPortNote($ours, $engine),
+            $this->surfaceGapNote($legacyOutput, $ours, $engine),
+        ]);
+
+        return $notes === [] ? null : implode('; ', $notes);
+    }
+
+    /**
+     * Names directives the FILTER has no processor for on this surface, when we render them.
+     *
+     * The mirror image of the note below, and the one that reads worst without it. Both
+     * `Email\Model\Template\Filter` and the newsletter filter extend
+     * `Framework\Filter\Template`, which has no widgetDirective at all - so an email template
+     * containing `{{widget type="..."}}` renders that text verbatim today, while this engine,
+     * with a widget port wired, builds the block and renders its HTML.
+     *
+     * That is a capability the template did not previously have - block instantiation from
+     * template text, on a surface where the filter offered none - and calling it a divergence
+     * without saying so puts it on the engine. The CMS surface is the other way round: that
+     * pipeline DOES implement widget, and there the two agree.
+     *
+     * Only directives verbatim in the LEGACY output and absent from ours count, which is the
+     * signature of "they had no processor and we did". One that is verbatim on both sides is
+     * a misspelling and cancels out.
+     */
+    private function surfaceGapNote(string $legacyOutput, string $ours, TemplateEngine $engine): ?string
+    {
+        $found = [];
+        foreach ($engine->evaluator()->registered() as $name) {
+            $pattern = '/\{\{' . preg_quote($name, '/') . '(?![a-zA-Z0-9_])/i';
+            if (preg_match($pattern, $legacyOutput) === 1 && preg_match($pattern, $ours) !== 1) {
+                $found[] = $name;
+            }
+        }
+
+        if ($found === []) {
+            return null;
+        }
+
+        sort($found);
+
+        return sprintf(
+            'the filter this template renders through has no {{%s}} processor, so it emits the '
+            . 'directive as written; this engine has a port wired and renders it - a capability '
+            . 'gained, not the engines disagreeing',
+            implode('}}, {{', $found)
+        );
     }
 
     /**
