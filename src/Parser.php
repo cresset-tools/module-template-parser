@@ -515,10 +515,31 @@ final class Parser
     private function splitOnElse(array $body): ?array
     {
         foreach ($body as $i => $node) {
-            if ($node instanceof DirectiveNode && $node->name() === 'else') {
-                return [array_slice($body, 0, $i), array_slice($body, $i + 1), $node->raw()];
+            if (!$node instanceof DirectiveNode || $node->name() !== 'else') {
+                continue;
             }
+
+            // CONSTRUCTION_IF_PATTERN spells the divider as the literal `({{else}}(.*?))?` -
+            // no `\s*`, no parameters. So `{{else }}` is not a divider on the legacy filter
+            // at all: it is text inside the TRUE branch, and the {{if}} has no false branch.
+            //
+            // Neither reading is worth having. Accepting it silently flips which branch is
+            // emitted, in both directions - `{{if a}}A{{else }}B{{/if}}` renders `A` here and
+            // `A{{else }}B` there - and reproducing legacy would bury a plain typo in output
+            // nobody reads. A trailing space is a typo, so it is reported as one.
+            if ($node->params() !== '') {
+                throw SyntaxError::at(
+                    $this->source,
+                    $node->offset(),
+                    sprintf('{{else%s}} is not a divider - {{else}} takes no parameters', $node->params()),
+                    'the legacy filter matches the literal `{{else}}` only, so anything else '
+                    . 'is text in the true branch and the {{if}} has no false branch at all'
+                );
+            }
+
+            return [array_slice($body, 0, $i), array_slice($body, $i + 1), $node->raw()];
         }
+
         return null;
     }
 }

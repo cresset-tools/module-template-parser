@@ -707,8 +707,35 @@ final class GuardTripwireTest extends TestCase
     {
         return [
             'plain'      => ['{{if x}}a{{else}}b{{/if}}'],
-            'spaced'     => ['{{if x}}a{{else }}b{{/if}}'],
             'uppercase'  => ['{{IF x}}a{{ELSE}}b{{/IF}}'],
+        ];
+    }
+
+    /**
+     * A padded or parameterised {{else}} is a typo, and is reported as one.
+     *
+     * CONSTRUCTION_IF_PATTERN spells the divider as the literal `({{else}}(.*?))?`, so on the
+     * legacy filter `{{else }}` is not a divider at all - it is text in the TRUE branch, and
+     * the {{if}} has no false branch. Accepting it as a divider silently flipped which branch
+     * was emitted, in both directions; reproducing legacy would bury the typo in output
+     * nobody reads. This test used to assert only that it round-tripped, which is why the
+     * rendering divergence went unnoticed.
+     */
+    #[DataProvider('paddedElseForms')]
+    public function testAPaddedElseIsReportedAsATypo(string $source): void
+    {
+        $this->expectException(SyntaxError::class);
+        $this->expectExceptionMessageMatches('/\{\{else.*\}\} is not a divider/');
+        TemplateEngine::withOptions(Options::compatible())->render($source, ['x' => 1]);
+    }
+
+    public static function paddedElseForms(): array
+    {
+        return [
+            'trailing space' => ['{{if x}}a{{else }}b{{/if}}'],
+            'leading space'  => ['{{if x}}a{{else  }}b{{/if}}'],
+            'tab'            => ["{{if x}}a{{else\t}}b{{/if}}"],
+            'parameter'      => ['{{if x}}a{{else y}}b{{/if}}'],
         ];
     }
 

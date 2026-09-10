@@ -248,6 +248,18 @@ flag does nothing outside compatible mode.
 
 Quirks it does not reproduce:
 
+- **A `{{` that is not an opener is text, not a mangled construct.** `.a{{{var color}}}` — CSS
+  with a directive pasted straight after the brace — renders `.a{` plus the resolved value
+  here; legacy matches the whole span with an empty name, rescues it through `SimpleDirective`
+  at the inner offset, and prints `&#123;&#123;var color}}}`. Same for `{{A{{var x}}`: the
+  stray braces are text and the real directive resolves.
+- **A name is the name that was written.** `[a-z]{0,10}` is greedy but backtracks to satisfy
+  the closing backreference, so `{{iframe}}` re-reads as `{{if}}` with the condition `rame`
+  there and swallows everything to the next `{{/if}}`. Here `iframe` is an unknown directive.
+- **`{{else }}` is a typo, and is reported.** The legacy pattern spells the divider as the
+  literal `{{else}}`, so a trailing space makes it text in the true branch and the `{{if}}`
+  loses its false branch entirely. Accepting it as a divider silently flips which branch
+  renders; reproducing legacy buries the typo. Neither is worth having, so it raises.
 - the security behaviour, which is structural: a value is never re-parsed as source, in any mode;
 - reflection dispatch of arbitrary filter methods;
 - `{{layout}}` without an allowlist. A layout handle decides which blocks get built, so the

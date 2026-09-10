@@ -63,6 +63,22 @@ final class Lexer
                 continue;
             }
 
+            // A `{{` with ANOTHER `{{` inside its span is not the opener - the inner one is.
+            // `.a{{{var color}}}` is the common shape: someone writes CSS and pastes a
+            // directive straight after the brace. Legacy matches the outer span with an empty
+            // name, rescues it through SimpleDirective at the inner offset, and prints an
+            // encoded literal; treating the stray braces as text and letting the real
+            // directive resolve is both more useful and what this engine already does one
+            // character along, for `{{A{{var x}}`.
+            //
+            // Advance ONE byte, not two: in `{{{` the inner opener overlaps the outer, so
+            // skipping the whole `{{` would step straight over it. peek() is O(1) on the
+            // window, so a run of braces stays linear.
+            if ($candidate[0] === TokenType::Degenerate && self::openerInsideSpan($source, $afterOpen)) {
+                $cursor = $open + 1;
+                continue;
+            }
+
             // Only a plausible construct needs the closer located.
             if ($knownClose <= $open) {
                 $found = strpos($source, self::CLOSE, $afterOpen);
@@ -105,6 +121,26 @@ final class Lexer
      *
      * @return array{0:TokenType,1:string}|null null when this is certainly not a construct
      */
+    /**
+     * Whether another `{{` opens inside this span before it closes.
+     *
+     * Looks from one byte BEFORE the window so the overlapping `{{{` case is seen: there the
+     * inner opener is the outer's second brace plus the next one.
+     */
+    private static function openerInsideSpan(string $source, int $afterOpen): bool
+    {
+        $span = substr($source, $afterOpen - 1, self::MAX_PEEK);
+        // From offset 0: the span starts on the outer's SECOND brace, so a match there is
+        // that brace plus a new one - the overlap this exists to catch.
+        $inner = strpos($span, self::OPEN);
+        if ($inner === false) {
+            return false;
+        }
+        $close = strpos($span, self::CLOSE);
+
+        return $close === false || $inner < $close;
+    }
+
     private function peek(string $window): ?array
     {
         if ($window === '') {
