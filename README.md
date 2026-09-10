@@ -260,6 +260,11 @@ Quirks it does not reproduce:
   literal `{{else}}`, so a trailing space makes it text in the true branch and the `{{if}}`
   loses its false branch entirely. Accepting it as a divider silently flips which branch
   renders; reproducing legacy buries the typo. Neither is worth having, so it raises.
+- **A quoted parameter may contain `{{` and `}}`.** `{{trans "a {{b}}"}}` renders the text
+  here. The legacy filter cannot express it — its lazy `(.*?)}}` stops at the first closer
+  wherever it falls, so the directive gets a text it cannot parse and the remainder becomes
+  literal output. A lexer has no reason to inherit that, so this is the one place the engine
+  does *more* than the filter rather than less.
 - the security behaviour, which is structural: a value is never re-parsed as source, in any mode;
 - reflection dispatch of arbitrary filter methods;
 - `{{layout}}` without an allowlist. A layout handle decides which blocks get built, so the

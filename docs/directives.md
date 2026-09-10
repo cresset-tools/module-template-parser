@@ -254,6 +254,8 @@ as well as the substituted values. `|raw` turns it off.
 {{trans "Hi %2" 1=$a}}       a="Ada"   → Hi Ada          # which makes this the one that works
 {{trans "Hi %n" n=$a|raw}}   a="<b>"   → Hi <b>          # |raw turns the escaping off
 {{trans "a|b"}}              -         → (nothing)       # the split on `|` happens first, so a pipe in the text truncates it and the whole directive renders nothing
+{{trans "a {{b}}"}}          -         → "}}             # strict: a {{b}}; a quoted text may hold `{{` here; the filter stops at the first `}}` wherever it is and renders the leftovers as text
+{{trans 'has }} inside'}}    -         →  inside'}}      # and `}}` likewise
 {{trans Hello}}              -         → (nothing)       # the text has to be quoted
 {{trans "Hi"x=1}}            -         → (nothing)       # and separated from its arguments by whitespace
 ```

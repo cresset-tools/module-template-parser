@@ -129,6 +129,34 @@ final class EvaluatorTest extends TestCase
         self::assertSame('DEEP', $engine->render('{{var x.a b}}', ['x' => ['ab' => 'DEEP']]));
     }
 
+    /**
+     * A quoted parameter may hold `{{` and `}}` - the one place this engine does MORE.
+     *
+     * The legacy filter's `(.*?)}}` is lazy and stops at the first closer wherever it falls,
+     * so `{{trans "a {{b}}"}}` reaches transDirective as the unparseable text `"a {{b` and
+     * the leftover `"}}` becomes literal output. A lexer can see that the braces are inside
+     * a quoted value, and there is no reason to inherit a regex's limitation.
+     *
+     * Compatible mode still encodes the braces on the way out, because that is what it does
+     * to all directive output; strict and lenient hand back the text as written.
+     */
+    public function testAQuotedParameterMayContainBraces(): void
+    {
+        self::assertSame('a &#123;&#123;b}}', TemplateEngine::compatible()->render('{{trans "a {{b}}"}}'));
+        self::assertSame('a {{b}}', TemplateEngine::lenient()->render('{{trans "a {{b}}"}}'));
+        self::assertSame('has }} inside', TemplateEngine::compatible()->render("{{trans 'has }} inside'}}"));
+
+        // An unterminated quote falls back to the naive closer, as the filter reads it: the
+        // text will not parse, so the directive renders nothing.
+        self::assertSame('', TemplateEngine::compatible()->render('{{trans "unterminated}}'));
+
+        // And a `{{` OUTSIDE quotes is still a run-on, not a parameter.
+        self::assertSame(
+            'A&#123;&#123;var b}B',
+            TemplateEngine::compatible()->render('{{if a}}A{{var b}B{{/if}}', ['a' => 1, 'b' => 2])
+        );
+    }
+
     public function testUnknownDirectiveIsEmittedVerbatimInLenientMode(): void
     {
         // No handler registered for `layout`; it must round-trip rather than vanish or run.

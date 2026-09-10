@@ -84,10 +84,7 @@ final class Lexer
             // with `{{else}}` in the way it is worse, because BOTH branches then render.
             // Nothing legitimate puts a `{{` inside a directive's parameters - legacy's own
             // lazy capture mangles that too - so the run-on reading is never the right one.
-            if (self::openerInsideSpan($source, $afterOpen)) {
-                $cursor = $open + 1;
-                continue;
-            }
+            $quotesClose = false;
 
             // Only a plausible construct needs the closer located.
             if ($knownClose <= $open) {
@@ -98,6 +95,36 @@ final class Lexer
                 break;                       // unterminated: the remainder is text
             }
             $close = $knownClose;
+
+            // A quoted parameter may legitimately contain both `{{` and `}}`:
+            //
+            //     {{trans "a {{b}}"}}
+            //
+            // The legacy filter cannot express that - its lazy `(.*?)}}` stops at the first
+            // closer wherever it is, and it renders the leftovers as text - but a lexer can,
+            // and there is no reason to inherit the limitation. Only re-scan when the naive
+            // span actually holds a quote, so the common case keeps the plain strpos and the
+            // cached closer.
+            if (strcspn(substr($source, $afterOpen, $close - $afterOpen), '"\'') < $close - $afterOpen) {
+                // An unterminated quote falls back to the naive closer rather than eating
+                // the rest of the document: `{{trans "unterminated}}` is malformed either
+                // way, and the filter reads it as a directive whose text will not parse.
+                $quoted = self::closeOutsideQuotes($source, $afterOpen);
+                if ($quoted !== null) {
+                    $close = $quoted;
+                    $knownClose = -1;        // the cache holds the naive closer; drop it
+                    $quotesClose = true;
+                }
+            }
+
+            // Quotes only shelter a `{{` when they are quotes. In `{{var c}"{{else}}` the
+            // `"` never closes - it is HTML around a directive that lost a brace - so
+            // honouring it would hide the {{else}} and both branches would render again.
+            // closeOutsideQuotes() returning a position is the proof that they balance.
+            if (self::openerInsideSpan($source, $afterOpen, $close, $quotesClose)) {
+                $cursor = $open + 1;
+                continue;
+            }
 
             [$type, $name] = $candidate;
             $raw = substr($source, $open, $close + strlen(self::CLOSE) - $open);
@@ -132,23 +159,79 @@ final class Lexer
      * @return array{0:TokenType,1:string}|null null when this is certainly not a construct
      */
     /**
+     * The offset of the closing `}}` that is not inside a quoted parameter value.
+     *
+     * Returns null when the construct never closes outside quotes, in which case the rest of
+     * the source is text. A backslash escapes the next character, as the parameter tokenizer
+     * treats it, so `"a\"b"` does not end early.
+     */
+    private static function closeOutsideQuotes(string $source, int $from): ?int
+    {
+        $length = strlen($source);
+        $quote = null;
+
+        for ($i = $from; $i < $length; $i++) {
+            $char = $source[$i];
+
+            if ($quote !== null) {
+                if ($char === '\\') {
+                    $i++;
+                } elseif ($char === $quote) {
+                    $quote = null;
+                }
+                continue;
+            }
+
+            if ($char === '"' || $char === "'") {
+                $quote = $char;
+            } elseif ($char === '}' && ($source[$i + 1] ?? '') === '}') {
+                return $i;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Whether another `{{` opens inside this span before it closes.
      *
      * Looks from one byte BEFORE the window so the overlapping `{{{` case is seen: there the
      * inner opener is the outer's second brace plus the next one.
      */
-    private static function openerInsideSpan(string $source, int $afterOpen): bool
-    {
-        $span = substr($source, $afterOpen - 1, self::MAX_PEEK);
-        // From offset 0: the span starts on the outer's SECOND brace, so a match there is
-        // that brace plus a new one - the overlap this exists to catch.
-        $inner = strpos($span, self::OPEN);
-        if ($inner === false) {
-            return false;
-        }
-        $close = strpos($span, self::CLOSE);
+    private static function openerInsideSpan(
+        string $source,
+        int $afterOpen,
+        int $close,
+        bool $respectQuotes
+    ): bool {
+        // From one byte back: the span starts on the outer's SECOND brace, so a `{{` at
+        // offset 0 is that brace plus a new one - the overlap `{{{` produces.
+        $span = substr($source, $afterOpen - 1, min(self::MAX_PEEK, $close - $afterOpen + 2));
+        $length = strlen($span);
+        $quote = null;
 
-        return $close === false || $inner < $close;
+        for ($i = 0; $i < $length; $i++) {
+            $char = $span[$i];
+
+            if ($quote !== null) {
+                if ($char === '\\') {
+                    $i++;
+                } elseif ($char === $quote) {
+                    $quote = null;
+                }
+                continue;
+            }
+
+            // A quoted value may hold `{{` legitimately - `{{trans "a {{b}}"}}` - so an
+            // opener only counts when it is part of the construct rather than of its text.
+            if ($respectQuotes && ($char === '"' || $char === "'")) {
+                $quote = $char;
+            } elseif ($char === '{' && ($span[$i + 1] ?? '') === '{') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function peek(string $window): ?array

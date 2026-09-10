@@ -246,6 +246,9 @@ $sections = [
     example('{{trans "Hi %2" 1=$a}}', ['a' => 'Ada'], 'which makes this the one that works'),
     example('{{trans "Hi %n" n=$a|raw}}', ['a' => '<b>'], '|raw turns the escaping off'),
     example('{{trans "a|b"}}', [], 'the split on `|` happens first, so a pipe in the text truncates it and the whole directive renders nothing'),
+    // The one place this engine does MORE than the filter rather than less.
+    example('{{trans "a {{b}}"}}', [], 'a quoted text may hold `{{` here; the filter stops at the first `}}` wherever it is and renders the leftovers as text', divergent: true),
+    example("{{trans 'has }} inside'}}", [], 'and `}}` likewise', divergent: true),
     example('{{trans Hello}}', [], 'the text has to be quoted'),
     example('{{trans "Hi"x=1}}', [], 'and separated from its arguments by whitespace'),
 ],
