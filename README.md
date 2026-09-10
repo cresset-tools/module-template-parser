@@ -679,7 +679,8 @@ argument:
   payload was malformed.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the corpus layout, how to re-record fixtures, and
-what the rest of the suite covers.
+what the rest of the suite covers. [CHANGELOG.md](CHANGELOG.md) records what has changed and
+why it mattered; nothing has been released yet, so the public API may still move.
 
 ## Repository layout
 

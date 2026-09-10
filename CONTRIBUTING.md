@@ -139,6 +139,21 @@ Two assertion habits to avoid, both of which produced tests that could not fail:
 - Fixture values containing nothing the code under test would change, such as asserting
   escaping with a value that has no special characters in it.
 
+## The changelog
+
+[CHANGELOG.md](CHANGELOG.md) records what changed and why it mattered, not what was touched.
+A line that only names a file is not an entry; a line that says which template rendered wrong,
+or what a guard let through, is.
+
+Not every commit needs one. A change a reader of the package would notice — a behaviour, a
+guard, a public API, a divergence from the legacy filter — does. Refactors and test-only
+changes do not.
+
+Two numbers in the README are checked against the corpus by
+`LegacyParityTest::testTheReadmeHeadlineMatchesTheCorpus`, so adding cases fails the suite
+until the sentence is updated with them. The changelog's own count is written as "at the time
+of writing" and is not checked, a changelog being historical by nature.
+
 ## Reporting a security issue
 
 Do not open a public issue. See [SECURITY.md](SECURITY.md).
