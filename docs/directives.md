@@ -366,6 +366,12 @@ an opener. One in the middle is left alone.
 This changes observable rendering, so it is part of the language now. Trees from before the
 hardening are still in the field; this engine can target either.
 
+It is **not aware of the template type.** `Template::filter()` calls the neutralizer on every
+resolved directive, and `isPlainTemplateMode()` gates only `{{css}}` and `{{inlinecss}}` — so a
+plain-text email whose variable holds a `{{` delivers the literal characters `&#123;&#123;` to
+the recipient, where an HTML one at least renders them back as braces. Worth knowing before
+assuming an entity is a safe way to write a brace: in a plain-text template it is not.
+
 <!-- generated:neutralizer -->
 ```
 {{var a}}   a="{{block class=Evil}}"   → &#123;&#123;block class=Evil}}  # strict: {{block class=Evil}}; a resolved value carrying `{{` comes back encoded
