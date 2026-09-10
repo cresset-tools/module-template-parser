@@ -237,23 +237,55 @@ final class Parser
             return $node;
         }
 
+        // Before blaming the operator for a missing closing tag, check whether one was
+        // WRITTEN and then eaten. A directive scans to the first `}}`, so a single missing
+        // brace earlier in the body makes the next construct run on and swallow the closer:
+        //
+        //     {{if a}}A{{var b}B{{/if}}   ->   var's parameters are ` b}B{{/if`
+        //
+        // The template plainly contains {{/if}}, so "never closed" reads as nonsense to the
+        // person looking at it. Naming the construct that ate it points at the real fault.
+        $swallowed = $this->closingTagSwallowedBy($body, $token->name);
+
         if ($this->options->strictSyntax) {
             throw SyntaxError::at(
                 $this->source,
                 $token->offset,
-                sprintf('Unclosed directive {{%s}} — expected {{/%s}}', $token->name, $token->name),
-                sprintf('add {{/%s}} to close it, or remove the opening tag', $token->name)
+                $swallowed === null
+                    ? sprintf('Unclosed directive {{%s}} — expected {{/%s}}', $token->name, $token->name)
+                    : sprintf(
+                        '{{%s}} is not closed: its {{/%s}} was swallowed by {{%s%s}}, whose '
+                        . 'parameters run on past a missing `}`',
+                        $token->name,
+                        $token->name,
+                        $swallowed->name(),
+                        $swallowed->params()
+                    ),
+                $swallowed === null
+                    ? sprintf('add {{/%s}} to close it, or remove the opening tag', $token->name)
+                    : sprintf('close {{%s}} with `}}`, not `}`', $swallowed->name())
             );
         }
 
         $this->refuseIfLegacyCannotRender(
             $token->offset,
             LegacyIncompatibility::UNCLOSED_BLOCK,
-            sprintf(
-                '{{%s}} is never closed here - the legacy filter finds its closing tag with a '
-                . 'separate pattern, so whether this renders there depends on text further on',
-                $token->name
-            )
+            $swallowed === null
+                ? sprintf(
+                    '{{%s}} is never closed here - the legacy filter finds its closing tag with '
+                    . 'a separate pattern, so whether this renders there depends on text further on',
+                    $token->name
+                )
+                : sprintf(
+                    '{{%s}} is not closed: its {{/%s}} was swallowed by {{%s%s}}, whose parameters '
+                    . 'run on past a missing `}`. The legacy filter finds {{/%s}} with a separate '
+                    . 'pattern and does not lose it, so it renders something different there',
+                    $token->name,
+                    $token->name,
+                    $swallowed->name(),
+                    $swallowed->params(),
+                    $token->name
+                )
         );
 
         return new UnclosedDirective($node);
@@ -335,6 +367,28 @@ final class Parser
                 )
             );
         }
+    }
+
+    /**
+     * The directive in $body whose parameters ate this block's closing tag, if one did.
+     *
+     * A directive's span ends at the first `}}`, so `{{var b}` - one brace short - runs on
+     * to whatever `}}` comes next, which is usually the block's own closing tag. The tag is
+     * then inside that directive's parameters rather than in the token stream.
+     *
+     * @param Node[] $body
+     */
+    private function closingTagSwallowedBy(array $body, string $name): ?DirectiveNode
+    {
+        $closing = '{{/' . $name;
+
+        foreach ($body as $node) {
+            if ($node instanceof DirectiveNode && str_contains($node->params(), $closing)) {
+                return $node;
+            }
+        }
+
+        return null;
     }
 
     /**

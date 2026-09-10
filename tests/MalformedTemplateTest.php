@@ -5,6 +5,7 @@ namespace Cresset\TemplateParser\Test;
 
 use Cresset\TemplateParser\Ast\DirectiveNode;
 use Cresset\TemplateParser\NestingLimitError;
+use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\SyntaxError;
 use Cresset\TemplateParser\TemplateEngine;
 use Cresset\TemplateParser\UnknownVariableError;
@@ -173,5 +174,41 @@ final class MalformedTemplateTest extends TestCase
         $elapsed = microtime(true) - $start;
 
         self::assertLessThan(2.0, $elapsed, 'rendering 2000 directives should not take seconds');
+    }
+
+    /**
+     * A missing `}` eats the closing tag, so "never closed" is the wrong thing to say.
+     *
+     * A directive's span ends at the first `}}`, so `{{var b}` - one brace short - runs on to
+     * whatever `}}` comes next, which is usually the block's own closing tag:
+     *
+     *     {{if a}}A{{var b}B{{/if}}   ->   var's parameters are ` b}B{{/if`
+     *
+     * The template plainly contains {{/if}}, so telling the operator it is never closed reads
+     * as nonsense to the person looking at it. One deleted brace in the stock header.html
+     * produces exactly this, so it is the likeliest malformed template there is.
+     */
+    public function testAMissingBraceIsReportedAsOneRatherThanAMissingClosingTag(): void
+    {
+        try {
+            TemplateEngine::withOptions(Options::strict())->render('{{if a}}A{{var b}B{{/if}}', ['a' => 1]);
+            self::fail('expected a syntax error');
+        } catch (SyntaxError $e) {
+            self::assertStringContainsString('was swallowed by {{var b}B{{/if}}', $e->getMessage());
+            self::assertStringContainsString('missing `}`', $e->getMessage());
+            self::assertStringContainsString('close {{var}} with `}}`, not `}`', $e->getMessage());
+        }
+    }
+
+    /** A genuinely unclosed block still gets the plain message - nothing ate its tag. */
+    public function testAGenuinelyUnclosedBlockStillSaysSo(): void
+    {
+        try {
+            TemplateEngine::withOptions(Options::strict())->render('{{if a}}A', ['a' => 1]);
+            self::fail('expected a syntax error');
+        } catch (SyntaxError $e) {
+            self::assertStringContainsString('Unclosed directive {{if}}', $e->getMessage());
+            self::assertStringNotContainsString('swallowed', $e->getMessage());
+        }
     }
 }
