@@ -32,6 +32,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png",
             "tape": [
@@ -52,6 +53,7 @@
             "template": "{{media url=\"logo/logo.png\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png",
             "tape": [
@@ -83,6 +85,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -103,6 +106,7 @@
             "template": "{{media}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -134,6 +138,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -154,6 +159,7 @@
             "template": "{{media url=\"\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -185,6 +191,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -196,6 +203,7 @@
             "template": "{{media url=\"../../app/etc/env.php\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -218,6 +226,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -229,6 +238,7 @@
             "template": "{{media url=\"&#46&#46/&#46&#46/app/etc/env.php\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -251,6 +261,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -262,6 +273,7 @@
             "template": "{{media url=\"http://evil.example/x\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -284,6 +296,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -295,6 +308,7 @@
             "template": "{{media url=\"x&quot;&gt;&lt;script&gt;\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -317,6 +331,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -337,6 +352,7 @@
             "template": "{{media url=$path}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -368,6 +384,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US/Magento_Email/logo_email.png",
             "tape": [
@@ -389,6 +406,7 @@
             "template": "{{view url=\"Magento_Email::logo_email.png\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png",
             "tape": [
@@ -421,6 +439,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US",
             "tape": [
@@ -442,6 +461,7 @@
             "template": "{{view}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US",
             "tape": [
@@ -474,6 +494,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css",
             "tape": [
@@ -497,6 +518,7 @@
             "template": "{{view url=\"css/email.css\" area=\"adminhtml\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css",
             "tape": [
@@ -531,6 +553,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -542,6 +565,7 @@
             "template": "{{view url=\"css/email.css\" area=\"../../..\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -564,6 +588,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -575,6 +600,7 @@
             "template": "{{view url=\"css/email.css\" locale=\"../..\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -597,6 +623,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -608,6 +635,7 @@
             "template": "{{view url=\"css/email.css\" theme=\"../../..\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -630,6 +658,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US/Magento_Email/css/email.css",
             "tape": [
@@ -653,6 +682,7 @@
             "template": "{{view url=\"css/email.css\" module=\"Magento_Email\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/css/email.css",
             "tape": [
@@ -676,6 +706,7 @@
             "template": "{{view url=\"css/email.css\" themeModel=\"x\"}}",
             "variables": [],
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -687,6 +718,7 @@
             "template": "{{view url=\"css/email.css\" themeModel=\"x\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -709,6 +741,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -720,6 +753,7 @@
             "template": "{{view url=\"../../../secret\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -742,6 +776,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -763,6 +798,7 @@
             "template": "{{store url=\"customer/account\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -795,6 +831,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -816,6 +853,7 @@
             "template": "{{store url=\"\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -848,6 +886,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -869,6 +908,7 @@
             "template": "{{store}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -901,6 +941,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?id=7&token=abc",
             "tape": [
@@ -925,6 +966,7 @@
             "template": "{{store url=\"customer/account\" _query_id=\"7\" _query_token=\"abc\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?id=7&token=abc",
             "tape": [
@@ -960,6 +1002,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -983,6 +1026,7 @@
             "template": "{{store url=\"customer/account\" _query_name=$name}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -1017,6 +1061,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -1040,6 +1085,7 @@
             "template": "{{store url=\"customer/account\" _type=\"web\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -1074,6 +1120,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -1085,6 +1132,7 @@
             "template": "{{store url=\"customer/account\" _type=\"../..\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -1107,6 +1155,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -1130,6 +1179,7 @@
             "template": "{{store direct_url=\"customer/account\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -1164,6 +1214,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -1175,6 +1226,7 @@
             "template": "{{store direct_url=\"../../app/etc/env.php\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -1197,6 +1249,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -1208,6 +1261,7 @@
             "template": "{{store url=\"customer/account\" anything=\"../../..\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -1230,6 +1284,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -1254,6 +1309,7 @@
             "template": "{{store url=\"customer/account\" _escape_params=\"0\" q=\"a b\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -1289,6 +1345,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -1312,6 +1369,7 @@
             "template": "{{store url=\"customer/account\" _nosid=\"1\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -1346,6 +1404,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -1364,6 +1423,7 @@
             "template": "{{protocol}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -1393,6 +1453,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -1411,6 +1472,7 @@
             "template": "{{protocol store=\"1\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -1440,6 +1502,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com/a",
             "tape": [
@@ -1458,6 +1521,7 @@
             "template": "{{protocol url=\"example.com/a\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com/a",
             "tape": [
@@ -1487,6 +1551,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com:8080/a",
             "tape": [
@@ -1505,6 +1570,7 @@
             "template": "{{protocol url=\"example.com:8080/a\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com:8080/a",
             "tape": [
@@ -1534,6 +1600,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1552,6 +1619,7 @@
             "template": "{{protocol url=\"a.example/x&quot;&gt;\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1581,6 +1649,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://a.example/x",
             "tape": [
@@ -1599,6 +1668,7 @@
             "template": "{{protocol http=\"http://a.example/x\" https=\"https://a.example/x\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://a.example/x",
             "tape": [
@@ -1628,6 +1698,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1646,6 +1717,7 @@
             "template": "{{protocol http=\"plain/page\" https=\"secure/page\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1675,6 +1747,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1693,6 +1766,7 @@
             "template": "{{protocol http=\"https://a.example/x\" https=\"https://a.example/x\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1722,6 +1796,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -1740,6 +1815,7 @@
             "template": "{{protocol http=$js https=$js}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -1769,6 +1845,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1789,6 +1866,7 @@
             "template": "{{config path=\"general/store_information/name\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1820,6 +1898,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1840,6 +1919,7 @@
             "template": "{{config path=\"general/store_information/country_id\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1871,6 +1951,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1891,6 +1972,7 @@
             "template": "{{config path=\"general/store_information/region_id\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1922,6 +2004,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1942,6 +2025,7 @@
             "template": "{{config path=\"general/store_information/phone\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1973,6 +2057,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -1993,6 +2078,7 @@
             "template": "{{config path=\"admin/security/password_lifetime\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2024,6 +2110,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2035,6 +2122,7 @@
             "template": "{{config}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2057,6 +2145,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2078,6 +2167,7 @@
             "template": "{{customvar code=\"promo_text\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2110,6 +2200,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2131,6 +2222,7 @@
             "template": "{{customvar code=\"checkout/tos\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2163,6 +2255,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2184,6 +2277,7 @@
             "template": "{{customvar code=\"store hours\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2216,6 +2310,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2227,6 +2322,7 @@
             "template": "{{customvar code=\"../x\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2249,6 +2345,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2260,6 +2357,7 @@
             "template": "{{customvar}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2282,6 +2380,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/*\nCompilation from source: LESS file is empty: frontend/en_US/css/email.less\n*/",
             "tape": [
@@ -2302,6 +2401,7 @@
             "template": "{{css file=\"css/email.css\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2324,6 +2424,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/* \"file\" parameter must be specified */",
             "tape": [],
@@ -2335,6 +2436,7 @@
             "template": "{{css}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2357,6 +2459,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/* invalid file parameter */",
             "tape": [],
@@ -2368,6 +2471,7 @@
             "template": "{{css file=\"../../app/etc/env.php\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2390,6 +2494,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2401,6 +2506,7 @@
             "template": "{{inlinecss file=\"css/email-inline.css\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2423,6 +2529,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2434,6 +2541,7 @@
             "template": "{{inlinecss file=\"../../app/etc/env.php\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2456,6 +2564,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2476,6 +2585,7 @@
             "template": "{{template config_path=\"design/email/nope\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2496,6 +2606,7 @@
             "template": "{{template config_path=\"\"}}",
             "variables": [],
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -2507,6 +2618,7 @@
             "template": "{{template config_path=\"\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -2529,6 +2641,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -2540,6 +2653,7 @@
             "template": "{{template}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -2562,6 +2676,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2573,6 +2688,7 @@
             "template": "{{template config_path=\"../../etc/env\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2595,6 +2711,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2617,6 +2734,7 @@
             "template": "{{block class=\"No\\Such\\Klass\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2650,6 +2768,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2672,6 +2791,7 @@
             "template": "{{block class=\"Magento\\Backend\\Block\\Template\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2705,6 +2825,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "ValidatorException",
             "tape": [
@@ -2730,6 +2851,7 @@
             "template": "{{block class=\"Magento\\Framework\\View\\Element\\Template\" area=\"adminhtml\" template=\"Magento_Backend::page/js/require_js.phtml\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "ValidatorException",
             "tape": [
@@ -2766,6 +2888,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2787,6 +2910,7 @@
             "template": "{{widget type=\"No\\Such\\Widget\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -2798,6 +2922,67 @@
                         []
                     ],
                     "returned": ""
+                }
+            ],
+            "legacy": null,
+            "agreed": false
+        },
+        {
+            "id": "widget_cms_block/empty",
+            "template": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "variables": {
+                "this": "<Magento\\Email\\Model\\Template\\Interceptor>",
+                "store": "<Magento\\Store\\Model\\Store\\Interceptor>",
+                "logo_url": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png",
+                "logo_alt": "Main Website Store",
+                "logo_width": null,
+                "logo_height": null,
+                "store_phone": null,
+                "store_hours": null,
+                "store_email": "support@example.com",
+                "template_styles": null
+            },
+            "plain_text": false,
+            "surface": "email",
+            "outcome": "ok",
+            "expected": "<div class=\"widget block block-static-block\">\n    </div>\n",
+            "tape": [
+                {
+                    "port": "widgets",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Cms\\Block\\Widget\\Block",
+                        {
+                            "template": "widget/static_block/default.phtml",
+                            "block_id": "1"
+                        }
+                    ],
+                    "returned": "<div class=\"widget block block-static-block\">\n    </div>\n"
+                }
+            ],
+            "legacy": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "agreed": false
+        },
+        {
+            "id": "widget_cms_block/empty/plain",
+            "template": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "variables": [],
+            "plain_text": true,
+            "surface": "email",
+            "outcome": "ok",
+            "expected": "<div class=\"widget block block-static-block\">\n    </div>\n",
+            "tape": [
+                {
+                    "port": "widgets",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Cms\\Block\\Widget\\Block",
+                        {
+                            "template": "widget/static_block/default.phtml",
+                            "block_id": "1"
+                        }
+                    ],
+                    "returned": "<div class=\"widget block block-static-block\">\n    </div>\n"
                 }
             ],
             "legacy": null,
@@ -2819,6 +3004,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "NoSuchEntityException",
             "tape": [
@@ -2843,6 +3029,7 @@
             "template": "{{layout handle=\"sales_email_order_items\" order_id=\"1\"}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "NoSuchEntityException",
             "tape": [
@@ -2878,6 +3065,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2889,6 +3077,7 @@
             "template": "{{layout}}",
             "variables": [],
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -2914,6 +3103,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png",
             "tape": [
@@ -2938,6 +3128,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png",
             "tape": [
@@ -2972,6 +3163,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -2996,6 +3188,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -3030,6 +3223,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -3054,6 +3248,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -3088,6 +3283,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3103,6 +3299,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3128,6 +3325,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3143,6 +3341,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3168,6 +3367,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3183,6 +3383,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3208,6 +3409,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3223,6 +3425,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3248,6 +3451,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/catalog/product/cache/x.jpg",
             "tape": [
@@ -3272,6 +3476,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/catalog/product/cache/x.jpg",
             "tape": [
@@ -3306,6 +3511,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US/Magento_Email/logo_email.png",
             "tape": [
@@ -3331,6 +3537,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png",
             "tape": [
@@ -3366,6 +3573,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US",
             "tape": [
@@ -3391,6 +3599,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US",
             "tape": [
@@ -3426,6 +3635,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css",
             "tape": [
@@ -3453,6 +3663,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css",
             "tape": [
@@ -3490,6 +3701,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3505,6 +3717,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3530,6 +3743,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3545,6 +3759,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3570,6 +3785,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3585,6 +3801,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3610,6 +3827,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US/Magento_Email/css/email.css",
             "tape": [
@@ -3637,6 +3855,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/css/email.css",
             "tape": [
@@ -3664,6 +3883,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3679,6 +3899,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3704,6 +3925,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3719,6 +3941,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -3744,6 +3967,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -3769,6 +3993,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -3804,6 +4029,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -3829,6 +4055,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -3864,6 +4091,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -3889,6 +4117,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -3924,6 +4153,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?id=7&token=abc",
             "tape": [
@@ -3952,6 +4182,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?id=7&token=abc",
             "tape": [
@@ -3990,6 +4221,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?name=O%27Brien+%3Co%40example.com%3E",
             "tape": [
@@ -4017,6 +4249,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?name=O%27Brien+%3Co%40example.com%3E",
             "tape": [
@@ -4054,6 +4287,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -4081,6 +4315,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -4118,6 +4353,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -4133,6 +4369,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -4158,6 +4395,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -4185,6 +4423,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -4222,6 +4461,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -4237,6 +4477,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -4262,6 +4503,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -4277,6 +4519,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -4302,6 +4545,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -4330,6 +4574,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -4368,6 +4613,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -4395,6 +4641,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -4432,6 +4679,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -4454,6 +4702,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -4486,6 +4735,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -4508,6 +4758,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -4540,6 +4791,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com/a",
             "tape": [
@@ -4562,6 +4814,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com/a",
             "tape": [
@@ -4594,6 +4847,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com:8080/a",
             "tape": [
@@ -4616,6 +4870,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com:8080/a",
             "tape": [
@@ -4648,6 +4903,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4670,6 +4926,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4702,6 +4959,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://a.example/x",
             "tape": [
@@ -4724,6 +4982,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://a.example/x",
             "tape": [
@@ -4756,6 +5015,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4778,6 +5038,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4810,6 +5071,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4832,6 +5094,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4864,6 +5127,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4886,6 +5150,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4918,6 +5183,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4942,6 +5208,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -4976,6 +5243,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5000,6 +5268,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5034,6 +5303,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5058,6 +5328,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5092,6 +5363,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5116,6 +5388,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5150,6 +5423,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5174,6 +5448,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5208,6 +5483,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5223,6 +5499,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5248,6 +5525,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5273,6 +5551,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5308,6 +5587,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5333,6 +5613,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5368,6 +5649,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5393,6 +5675,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5428,6 +5711,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5443,6 +5727,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5468,6 +5753,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5483,6 +5769,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5508,6 +5795,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/*\nCompilation from source: LESS file is empty: frontend/en_US/css/email.less\n*/",
             "tape": [
@@ -5532,6 +5820,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5557,6 +5846,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/* \"file\" parameter must be specified */",
             "tape": [],
@@ -5572,6 +5862,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5597,6 +5888,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/* invalid file parameter */",
             "tape": [],
@@ -5612,6 +5904,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5637,6 +5930,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5652,6 +5946,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5677,6 +5972,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5692,6 +5988,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5717,6 +6014,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5741,6 +6039,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5765,6 +6064,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -5780,6 +6080,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -5805,6 +6106,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -5820,6 +6122,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -5845,6 +6148,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5860,6 +6164,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -5885,6 +6190,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5911,6 +6217,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5947,6 +6254,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -5973,6 +6281,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -6009,6 +6318,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "ValidatorException",
             "tape": [
@@ -6038,6 +6348,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "ValidatorException",
             "tape": [
@@ -6077,6 +6388,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -6102,6 +6414,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -6113,6 +6426,74 @@
                         []
                     ],
                     "returned": ""
+                }
+            ],
+            "legacy": null,
+            "agreed": false
+        },
+        {
+            "id": "widget_cms_block/values",
+            "template": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "variables": {
+                "path": "catalog/product/cache/x.jpg",
+                "name": "O'Brien <o@example.com>",
+                "js": "javascript&#58alert(document.domain)",
+                "this": "<Magento\\Email\\Model\\Template\\Interceptor>",
+                "store": "<Magento\\Store\\Model\\Store\\Interceptor>",
+                "logo_url": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png",
+                "logo_alt": "Main Website Store",
+                "logo_width": null,
+                "logo_height": null,
+                "store_phone": null,
+                "store_hours": null,
+                "store_email": "support@example.com",
+                "template_styles": null
+            },
+            "plain_text": false,
+            "surface": "email",
+            "outcome": "ok",
+            "expected": "<div class=\"widget block block-static-block\">\n    </div>\n",
+            "tape": [
+                {
+                    "port": "widgets",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Cms\\Block\\Widget\\Block",
+                        {
+                            "template": "widget/static_block/default.phtml",
+                            "block_id": "1"
+                        }
+                    ],
+                    "returned": "<div class=\"widget block block-static-block\">\n    </div>\n"
+                }
+            ],
+            "legacy": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "agreed": false
+        },
+        {
+            "id": "widget_cms_block/values/plain",
+            "template": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "variables": {
+                "path": "catalog/product/cache/x.jpg",
+                "name": "O'Brien <o@example.com>",
+                "js": "javascript&#58alert(document.domain)"
+            },
+            "plain_text": true,
+            "surface": "email",
+            "outcome": "ok",
+            "expected": "<div class=\"widget block block-static-block\">\n    </div>\n",
+            "tape": [
+                {
+                    "port": "widgets",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Cms\\Block\\Widget\\Block",
+                        {
+                            "template": "widget/static_block/default.phtml",
+                            "block_id": "1"
+                        }
+                    ],
+                    "returned": "<div class=\"widget block block-static-block\">\n    </div>\n"
                 }
             ],
             "legacy": null,
@@ -6137,6 +6518,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "NoSuchEntityException",
             "tape": [
@@ -6165,6 +6547,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "NoSuchEntityException",
             "tape": [
@@ -6203,6 +6586,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6218,6 +6602,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6243,6 +6628,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png",
             "tape": [
@@ -6267,6 +6653,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png",
             "tape": [
@@ -6301,6 +6688,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -6325,6 +6713,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -6359,6 +6748,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -6383,6 +6773,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/media/",
             "tape": [
@@ -6417,6 +6808,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6432,6 +6824,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6457,6 +6850,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6472,6 +6866,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6497,6 +6892,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6512,6 +6908,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6537,6 +6934,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6552,6 +6950,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6577,6 +6976,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6592,6 +6992,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6617,6 +7018,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US/Magento_Email/logo_email.png",
             "tape": [
@@ -6642,6 +7044,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png",
             "tape": [
@@ -6677,6 +7080,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US",
             "tape": [
@@ -6702,6 +7106,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US",
             "tape": [
@@ -6737,6 +7142,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css",
             "tape": [
@@ -6764,6 +7170,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css",
             "tape": [
@@ -6801,6 +7208,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6816,6 +7224,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6841,6 +7250,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6856,6 +7266,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6881,6 +7292,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6896,6 +7308,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6921,6 +7334,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/_view/en_US/Magento_Email/css/email.css",
             "tape": [
@@ -6948,6 +7362,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/css/email.css",
             "tape": [
@@ -6975,6 +7390,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -6990,6 +7406,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7015,6 +7432,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7030,6 +7448,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7055,6 +7474,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -7080,6 +7500,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -7115,6 +7536,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -7140,6 +7562,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -7175,6 +7598,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -7200,6 +7624,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/",
             "tape": [
@@ -7235,6 +7660,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?id=7&token=abc",
             "tape": [
@@ -7263,6 +7689,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?id=7&token=abc",
             "tape": [
@@ -7301,6 +7728,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -7328,6 +7756,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -7365,6 +7794,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -7392,6 +7822,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -7429,6 +7860,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7444,6 +7876,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7469,6 +7902,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -7496,6 +7930,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -7533,6 +7968,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7548,6 +7984,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7573,6 +8010,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7588,6 +8026,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -7613,6 +8052,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -7641,6 +8081,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "InvalidArgumentException",
             "tape": [
@@ -7679,6 +8120,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -7706,6 +8148,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
             "tape": [
@@ -7743,6 +8186,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -7765,6 +8209,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -7797,6 +8242,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -7819,6 +8265,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http",
             "tape": [
@@ -7851,6 +8298,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com/a",
             "tape": [
@@ -7873,6 +8321,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com/a",
             "tape": [
@@ -7905,6 +8354,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com:8080/a",
             "tape": [
@@ -7927,6 +8377,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://example.com:8080/a",
             "tape": [
@@ -7959,6 +8410,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -7981,6 +8433,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8013,6 +8466,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://a.example/x",
             "tape": [
@@ -8035,6 +8489,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "http://a.example/x",
             "tape": [
@@ -8067,6 +8522,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8089,6 +8545,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8121,6 +8578,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8143,6 +8601,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8175,6 +8634,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8197,6 +8657,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8229,6 +8690,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8253,6 +8715,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8287,6 +8750,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8311,6 +8775,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8345,6 +8810,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8369,6 +8835,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8403,6 +8870,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8427,6 +8895,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8461,6 +8930,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8485,6 +8955,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8519,6 +8990,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8534,6 +9006,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8559,6 +9032,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8584,6 +9058,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8619,6 +9094,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8644,6 +9120,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8679,6 +9156,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8704,6 +9182,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -8739,6 +9218,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8754,6 +9234,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8779,6 +9260,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8794,6 +9276,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8819,6 +9302,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/*\nCompilation from source: LESS file is empty: frontend/en_US/css/email.less\n*/",
             "tape": [
@@ -8843,6 +9327,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8868,6 +9353,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/* \"file\" parameter must be specified */",
             "tape": [],
@@ -8883,6 +9369,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8908,6 +9395,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "/* invalid file parameter */",
             "tape": [],
@@ -8923,6 +9411,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8948,6 +9437,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8963,6 +9453,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -8988,6 +9479,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -9003,6 +9495,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -9028,6 +9521,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -9052,6 +9546,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -9076,6 +9571,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -9091,6 +9587,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -9116,6 +9613,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -9131,6 +9629,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "&#123;Error in template processing}",
             "tape": [],
@@ -9156,6 +9655,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -9171,6 +9671,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -9196,6 +9697,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -9222,6 +9724,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -9258,6 +9761,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -9284,6 +9788,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -9320,6 +9825,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "ValidatorException",
             "tape": [
@@ -9349,6 +9855,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "ValidatorException",
             "tape": [
@@ -9388,6 +9895,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -9413,6 +9921,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [
@@ -9424,6 +9933,74 @@
                         []
                     ],
                     "returned": ""
+                }
+            ],
+            "legacy": null,
+            "agreed": false
+        },
+        {
+            "id": "widget_cms_block/hostile",
+            "template": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "variables": {
+                "path": "../../app/etc/env.php",
+                "name": "\"><script>alert(1)</script>",
+                "js": "javascript&#58alert(document.domain)",
+                "this": "<Magento\\Email\\Model\\Template\\Interceptor>",
+                "store": "<Magento\\Store\\Model\\Store\\Interceptor>",
+                "logo_url": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png",
+                "logo_alt": "Main Website Store",
+                "logo_width": null,
+                "logo_height": null,
+                "store_phone": null,
+                "store_hours": null,
+                "store_email": "support@example.com",
+                "template_styles": null
+            },
+            "plain_text": false,
+            "surface": "email",
+            "outcome": "ok",
+            "expected": "<div class=\"widget block block-static-block\">\n    </div>\n",
+            "tape": [
+                {
+                    "port": "widgets",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Cms\\Block\\Widget\\Block",
+                        {
+                            "template": "widget/static_block/default.phtml",
+                            "block_id": "1"
+                        }
+                    ],
+                    "returned": "<div class=\"widget block block-static-block\">\n    </div>\n"
+                }
+            ],
+            "legacy": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "agreed": false
+        },
+        {
+            "id": "widget_cms_block/hostile/plain",
+            "template": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "variables": {
+                "path": "../../app/etc/env.php",
+                "name": "\"><script>alert(1)</script>",
+                "js": "javascript&#58alert(document.domain)"
+            },
+            "plain_text": true,
+            "surface": "email",
+            "outcome": "ok",
+            "expected": "<div class=\"widget block block-static-block\">\n    </div>\n",
+            "tape": [
+                {
+                    "port": "widgets",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Cms\\Block\\Widget\\Block",
+                        {
+                            "template": "widget/static_block/default.phtml",
+                            "block_id": "1"
+                        }
+                    ],
+                    "returned": "<div class=\"widget block block-static-block\">\n    </div>\n"
                 }
             ],
             "legacy": null,
@@ -9448,6 +10025,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "throw",
             "expected": "NoSuchEntityException",
             "tape": [
@@ -9476,6 +10054,7 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "throw",
             "expected": "NoSuchEntityException",
             "tape": [
@@ -9514,6 +10093,7 @@
                 "template_styles": null
             },
             "plain_text": false,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
@@ -9529,10 +10109,1203 @@
                 "js": "javascript&#58alert(document.domain)"
             },
             "plain_text": true,
+            "surface": "email",
             "outcome": "ok",
             "expected": "",
             "tape": [],
             "legacy": null,
+            "agreed": false
+        },
+        {
+            "id": "media_plain/cms",
+            "template": "{{media url=\"logo/logo.png\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        "logo/logo.png"
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/media/logo/logo.png",
+            "agreed": true
+        },
+        {
+            "id": "media_absent/cms",
+            "template": "{{media}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/media/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        ""
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/media/"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/media/",
+            "agreed": true
+        },
+        {
+            "id": "media_empty/cms",
+            "template": "{{media url=\"\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/media/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        ""
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/media/"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/media/",
+            "agreed": true
+        },
+        {
+            "id": "media_traversal/cms",
+            "template": "{{media url=\"../../app/etc/env.php\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "http://template-parser-demo.bougie.run:7080/media/../../app/etc/env.php",
+            "agreed": false
+        },
+        {
+            "id": "media_entity/cms",
+            "template": "{{media url=\"&#46&#46/&#46&#46/app/etc/env.php\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "http://template-parser-demo.bougie.run:7080/media/&#46&#46/&#46&#46/app/etc/env.php",
+            "agreed": false
+        },
+        {
+            "id": "media_scheme/cms",
+            "template": "{{media url=\"http://evil.example/x\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "http://template-parser-demo.bougie.run:7080/media/http://evil.example/x",
+            "agreed": false
+        },
+        {
+            "id": "media_markup/cms",
+            "template": "{{media url=\"x&quot;&gt;&lt;script&gt;\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "http://template-parser-demo.bougie.run:7080/media/x",
+            "agreed": false
+        },
+        {
+            "id": "media_var/cms",
+            "template": "{{media url=$path}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/media/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        ""
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/media/"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/media/",
+            "agreed": true
+        },
+        {
+            "id": "view_plain/cms",
+            "template": "{{view url=\"Magento_Email::logo_email.png\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "viewUrl",
+                    "args": [
+                        "Magento_Email::logo_email.png",
+                        []
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/logo_email.png",
+            "agreed": true
+        },
+        {
+            "id": "view_absent/cms",
+            "template": "{{view}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "viewUrl",
+                    "args": [
+                        "",
+                        []
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US",
+            "agreed": true
+        },
+        {
+            "id": "view_area/cms",
+            "template": "{{view url=\"css/email.css\" area=\"adminhtml\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "viewUrl",
+                    "args": [
+                        "css/email.css",
+                        {
+                            "area": "adminhtml"
+                        }
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/static/version1788936175/adminhtml/Magento/backend/en_US/css/email.css",
+            "agreed": true
+        },
+        {
+            "id": "view_area_walk/cms",
+            "template": "{{view url=\"css/email.css\" area=\"../../..\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "http://template-parser-demo.bougie.run:7080/static/version1788936175/../../../Magento/luma/en_US/css/email.css",
+            "agreed": false
+        },
+        {
+            "id": "view_locale_walk/cms",
+            "template": "{{view url=\"css/email.css\" locale=\"../..\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/../../css/email.css",
+            "agreed": false
+        },
+        {
+            "id": "view_theme_walk/cms",
+            "template": "{{view url=\"css/email.css\" theme=\"../../..\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/../../../en_US/css/email.css",
+            "agreed": false
+        },
+        {
+            "id": "view_module/cms",
+            "template": "{{view url=\"css/email.css\" module=\"Magento_Email\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/css/email.css",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "viewUrl",
+                    "args": [
+                        "css/email.css",
+                        {
+                            "module": "Magento_Email"
+                        }
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/css/email.css"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/Magento_Email/css/email.css",
+            "agreed": true
+        },
+        {
+            "id": "view_theme_model/cms",
+            "template": "{{view url=\"css/email.css\" themeModel=\"x\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": null,
+            "agreed": false
+        },
+        {
+            "id": "view_traversal/cms",
+            "template": "{{view url=\"../../../secret\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "http://template-parser-demo.bougie.run:7080/static/version1788936175/frontend/Magento/luma/en_US/../../../secret",
+            "agreed": false
+        },
+        {
+            "id": "store_plain/cms",
+            "template": "{{store url=\"customer/account\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "customer/account",
+                        []
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/customer/account/"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_empty/cms",
+            "template": "{{store url=\"\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "",
+                        []
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_absent/cms",
+            "template": "{{store}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "",
+                        []
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_query/cms",
+            "template": "{{store url=\"customer/account\" _query_id=\"7\" _query_token=\"abc\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/customer/account/?id=7&token=abc",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "customer/account",
+                        {
+                            "_query_id": "7",
+                            "_query_token": "abc"
+                        }
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/customer/account/?id=7&token=abc"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_query_text/cms",
+            "template": "{{store url=\"customer/account\" _query_name=$name}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "customer/account",
+                        {
+                            "_query_name": null
+                        }
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/customer/account/"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_type/cms",
+            "template": "{{store url=\"customer/account\" _type=\"web\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "customer/account",
+                        {
+                            "_type": "web"
+                        }
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/customer/account/"
+                }
+            ],
+            "legacy": "http://template-parser-demo.bougie.run:7080/customer/account/",
+            "agreed": true
+        },
+        {
+            "id": "store_type_walk/cms",
+            "template": "{{store url=\"customer/account\" _type=\"../..\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_direct/cms",
+            "template": "{{store direct_url=\"customer/account\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "throw",
+            "expected": "InvalidArgumentException",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "",
+                        {
+                            "_direct": "customer/account"
+                        }
+                    ],
+                    "threw": "InvalidArgumentException"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_direct_walk/cms",
+            "template": "{{store direct_url=\"../../app/etc/env.php\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_route_param/cms",
+            "template": "{{store url=\"customer/account\" anything=\"../../..\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_escape_off/cms",
+            "template": "{{store url=\"customer/account\" _escape_params=\"0\" q=\"a b\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "throw",
+            "expected": "InvalidArgumentException",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "customer/account",
+                        {
+                            "_escape_params": "0",
+                            "q": "a b"
+                        }
+                    ],
+                    "threw": "InvalidArgumentException"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "store_nosid/cms",
+            "template": "{{store url=\"customer/account\" _nosid=\"1\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://template-parser-demo.bougie.run:7080/customer/account/",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "storeUrl",
+                    "args": [
+                        "customer/account",
+                        {
+                            "_nosid": "1"
+                        }
+                    ],
+                    "returned": "http://template-parser-demo.bougie.run:7080/customer/account/"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "protocol_bare/cms",
+            "template": "{{protocol}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "http",
+            "agreed": true
+        },
+        {
+            "id": "protocol_store/cms",
+            "template": "{{protocol store=\"1\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "http",
+            "agreed": true
+        },
+        {
+            "id": "protocol_url/cms",
+            "template": "{{protocol url=\"example.com/a\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://example.com/a",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "http://example.com/a",
+            "agreed": true
+        },
+        {
+            "id": "protocol_port/cms",
+            "template": "{{protocol url=\"example.com:8080/a\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://example.com:8080/a",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "http://example.com:8080/a",
+            "agreed": true
+        },
+        {
+            "id": "protocol_url_markup/cms",
+            "template": "{{protocol url=\"a.example/x&quot;&gt;\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "http://a.example/x&quot;&gt;",
+            "agreed": false
+        },
+        {
+            "id": "protocol_pair/cms",
+            "template": "{{protocol http=\"http://a.example/x\" https=\"https://a.example/x\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http://a.example/x",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "http://a.example/x",
+            "agreed": true
+        },
+        {
+            "id": "protocol_pair_rel/cms",
+            "template": "{{protocol http=\"plain/page\" https=\"secure/page\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "Error filtering template: Contents of plain/page could not be loaded or is empty",
+            "agreed": false
+        },
+        {
+            "id": "protocol_pair_swap/cms",
+            "template": "{{protocol http=\"https://a.example/x\" https=\"https://a.example/x\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "Error filtering template: Contents of https://a.example/x could not be loaded or is empty",
+            "agreed": false
+        },
+        {
+            "id": "protocol_pair_js/cms",
+            "template": "{{protocol http=$js https=$js}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "http",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "isSecure",
+                    "args": [],
+                    "returned": false
+                }
+            ],
+            "legacy": "http",
+            "agreed": true
+        },
+        {
+            "id": "config_name/cms",
+            "template": "{{config path=\"general/store_information/name\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "config",
+                    "method": "value",
+                    "args": [
+                        "general/store_information/name"
+                    ],
+                    "returned": null
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "config_country/cms",
+            "template": "{{config path=\"general/store_information/country_id\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "config",
+                    "method": "value",
+                    "args": [
+                        "general/store_information/country_id"
+                    ],
+                    "returned": ""
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "config_region/cms",
+            "template": "{{config path=\"general/store_information/region_id\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "config",
+                    "method": "value",
+                    "args": [
+                        "general/store_information/region_id"
+                    ],
+                    "returned": null
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "config_phone/cms",
+            "template": "{{config path=\"general/store_information/phone\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "config",
+                    "method": "value",
+                    "args": [
+                        "general/store_information/phone"
+                    ],
+                    "returned": null
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "config_denied/cms",
+            "template": "{{config path=\"admin/security/password_lifetime\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "config",
+                    "method": "value",
+                    "args": [
+                        "admin/security/password_lifetime"
+                    ],
+                    "returned": null
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "config_absent/cms",
+            "template": "{{config}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "customvar_plain/cms",
+            "template": "{{customvar code=\"promo_text\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "customVariables",
+                    "method": "value",
+                    "args": [
+                        "promo_text",
+                        false
+                    ],
+                    "returned": null
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "customvar_slash/cms",
+            "template": "{{customvar code=\"checkout/tos\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "customVariables",
+                    "method": "value",
+                    "args": [
+                        "checkout/tos",
+                        false
+                    ],
+                    "returned": null
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "customvar_space/cms",
+            "template": "{{customvar code=\"store hours\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "customVariables",
+                    "method": "value",
+                    "args": [
+                        "store hours",
+                        false
+                    ],
+                    "returned": null
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "customvar_walk/cms",
+            "template": "{{customvar code=\"../x\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "customvar_absent/cms",
+            "template": "{{customvar}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "css_plain/cms",
+            "template": "{{css file=\"css/email.css\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "html {\n  font-size: 62.5%;\n  -webkit-text-size-adjust: 100%;\n  -ms-text-size-adjust: 100%;\n  font-size-adjust: 100%;\n}\nbody {\n  color: #333;\n  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;\n  font-style: normal;\n  font-weight: 400;\n  line-height: 1.42857143;\n  font-size: 14px;\n}\np {\n  margin-top: 0;\n  margin-bottom: 10px;\n}\nabbr[title] {\n  border-bottom: 1px dotted #ccc;\n  cursor: help;\n}\nb,\nstrong {\n  font-weight: 700;\n}\nem,\ni {\n  font-style: italic;\n}\nmark {\n  background: #f6f6f6;\n  color: #000000;\n}\nsmall,\n.small {\n  font-size: 12px;\n}\nhr {\n  border: 0;\n  border-top: 1px solid #ccc;\n  margin-bottom: 20px;\n  margin-top: 20px;\n}\nsub,\nsup {\n  font-size: 71.42857143000001%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\nsup {\n  top: -0.5em;\n}\nsub {\n  bottom: -0.25em;\n}\ndfn {\n  font-style: italic;\n}\nh1 {\n  font-weight: 300;\n  line-height: 1.1;\n  font-size: 26px;\n  margin-top: 0;\n  margin-bottom: 20px;\n}\nh2 {\n  font-weight: 300;\n  line-height: 1.1;\n  font-size: 26px;\n  margin-top: 25px;\n  margin-bottom: 20px;\n}\nh3 {\n  font-weight: 300;\n  line-height: 1.1;\n  font-size: 18px;\n  margin-top: 20px;\n  margin-bottom: 10px;\n}\nh4 {\n  font-weight: 700;\n  line-height: 1.1;\n  font-size: 14px;\n  margin-top: 20px;\n  margin-bottom: 20px;\n}\nh5 {\n  font-weight: 700;\n  line-height: 1.1;\n  font-size: 12px;\n  margin-top: 20px;\n  margin-bottom: 20px;\n}\nh6 {\n  font-weight: 700;\n  line-height: 1.1;\n  font-size: 10px;\n  margin-top: 20px;\n  margin-bottom: 20px;\n}\nh1 small,\nh2 small,\nh3 small,\nh4 small,\nh5 small,\nh6 small,\nh1 .small,\nh2 .small,\nh3 .small,\nh4 .small,\nh5 .small,\nh6 .small {\n  color: #333;\n  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;\n  font-style: normal;\n  font-weight: 400;\n  line-height: 1;\n}\na,\n.alink {\n  color: #006bb4;\n  text-decoration: none;\n}\na:visited,\n.alink:visited {\n  color: #006bb4;\n  text-decoration: none;\n}\na:hover,\n.alink:hover {\n  color: #006bb4;\n  text-decoration: underline;\n}\na:active,\n.alink:active {\n  color: #ff5501;\n  text-decoration: underline;\n}\nul,\nol {\n  margin-top: 0;\n  margin-bottom: 25px;\n}\nul > li,\nol > li {\n  margin-top: 0;\n  margin-bottom: 10px;\n}\nul ul,\nol ul,\nul ol,\nol ol {\n  margin-bottom: 0;\n}\ndl {\n  margin-bottom: 20px;\n  margin-top: 0;\n}\ndt {\n  font-weight: 700;\n  margin-bottom: 5px;\n  margin-top: 0;\n}\ndd {\n  margin-bottom: 10px;\n  margin-top: 0;\n  margin-left: 0;\n}\ncode,\nkbd,\npre,\nsamp {\n  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;\n}\ncode {\n  background: #f6f6f6;\n  color: #111111;\n  padding: 2px 4px;\n  font-size: 12px;\n  white-space: nowrap;\n}\nkbd {\n  background: #f6f6f6;\n  color: #111111;\n  padding: 2px 4px;\n  font-size: 12px;\n}\npre {\n  background: #f6f6f6;\n  border: 1px solid #ccc;\n  color: #111111;\n  line-height: 1.42857143;\n  margin: 0 0 10px;\n  padding: 10px;\n  font-size: 12px;\n  display: block;\n  word-wrap: break-word;\n}\npre code {\n  background-color: transparent;\n  border-radius: 0;\n  color: inherit;\n  font-size: inherit;\n  padding: 0;\n  white-space: pre-wrap;\n}\nblockquote {\n  border-left: 0 solid #ccc;\n  margin: 0 0 20px 40px;\n  padding: 0;\n  color: #333;\n  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;\n  font-style: italic;\n  font-weight: 400;\n  line-height: 1.42857143;\n  font-size: 14px;\n}\nblockquote p:last-child,\nblockquote ul:last-child,\nblockquote ol:last-child {\n  margin-bottom: 0;\n}\nblockquote footer,\nblockquote small,\nblockquote .small {\n  color: #333;\n  line-height: 1.42857143;\n  font-size: 10px;\n  display: block;\n}\nblockquote footer:before,\nblockquote small:before,\nblockquote .small:before {\n  content: '\\2014 \\00A0';\n}\nblockquote cite {\n  font-style: normal;\n}\nblockquote:before,\nblockquote:after {\n  content: '';\n}\nq {\n  quotes: none;\n}\nq:before,\nq:after {\n  content: '';\n  content: none;\n}\ncite {\n  font-style: normal;\n}\n.shipment-track th {\n  text-align: left;\n}\n.shipment-track > tbody > tr > th,\n.shipment-track > tfoot > tr > th,\n.shipment-track > tbody > tr > td,\n.shipment-track > tfoot > tr > td {\n  vertical-align: top;\n}\n.shipment-track > thead > tr > th,\n.shipment-track > thead > tr > td {\n  vertical-align: bottom;\n}\n.shipment-track > thead > tr > th,\n.shipment-track > tbody > tr > th,\n.shipment-track > tfoot > tr > th,\n.shipment-track > thead > tr > td,\n.shipment-track > tbody > tr > td,\n.shipment-track > tfoot > tr > td {\n  padding: 0 10px;\n}\n.email-items th {\n  text-align: left;\n}\n.email-items > tbody > tr > th,\n.email-items > tfoot > tr > th,\n.email-items > tbody > tr > td,\n.email-items > tfoot > tr > td {\n  vertical-align: top;\n}\n.email-items > thead > tr > th,\n.email-items > thead > tr > td {\n  vertical-align: bottom;\n}\n.email-items > thead > tr > th,\n.email-items > tbody > tr > th,\n.email-items > tfoot > tr > th,\n.email-items > thead > tr > td,\n.email-items > tbody > tr > td,\n.email-items > tfoot > tr > td {\n  padding: 0 10px;\n}\n@media only screen and (max-width: 639px) {\n  html,\n  body {\n    background-color: #fff;\n    width: 100% !important;\n  }\n  .main {\n    max-width: 100% !important;\n    min-width: 240px;\n    width: auto !important;\n  }\n}\n@media only screen and (max-width: 479px) {\n  .header,\n  .main-content,\n  .footer {\n    padding: 25px 10px !important;\n  }\n  .footer td {\n    display: block;\n    width: auto !important;\n  }\n  .email-features > tbody > tr > td {\n    clear: both;\n    display: block;\n    padding-top: 20px;\n    width: auto !important;\n  }\n  .email-summary h1 {\n    font-size: 24px !important;\n  }\n  .order-details .address-details,\n  .order-details .method-info {\n    display: block;\n    padding: 10px 0 !important;\n    width: auto !important;\n  }\n  .order-details .address-details h3,\n  .order-details .method-info h3 {\n    margin-bottom: 5px !important;\n    margin-top: 0 !important;\n  }\n  .button .inner-wrapper {\n    width: 100% !important;\n  }\n  .button .inner-wrapper td a {\n    font-size: 16px;\n  }\n}\nbody,\ntable,\ntd,\na {\n  -ms-text-size-adjust: 100%;\n  -webkit-text-size-adjust: 100%;\n}\nimg {\n  -ms-interpolation-mode: bicubic;\n}\ntable,\ntd {\n  mso-table-lspace: 0pt;\n  mso-table-rspace: 0pt;\n}\na:visited {\n  color: #006bb4 !important;\n  text-decoration: none !important;\n}\na:hover {\n  color: #006bb4 !important;\n  text-decoration: underline !important;\n}\na:active {\n  color: #ff5501 !important;\n  text-decoration: underline !important;\n}\n.no-link a,\n.address-details a {\n  color: #333 !important;\n  cursor: default !important;\n  text-decoration: none !important;\n}\n.button .inner-wrapper td:hover {\n  background-color: #006bb4 !important;\n}\n.button .inner-wrapper a:active,\n.button .inner-wrapper td:active {\n  background-color: #006bb4 !important;\n}\n.button a:active,\n.button a:hover,\n.button a:visited {\n  border: 1px solid #006bb4;\n  color: #fff !important;\n  text-decoration: none !important;\n}\n.email-items {\n  overflow-x: auto;\n  overflow-y: hidden;\n  width: 100%;\n  -ms-overflow-style: -ms-autohiding-scrollbar;\n  -webkit-overflow-scrolling: touch;\n}\n/*# sourceMappingURL=data:application/json,%7B%22version%22%3A3%2C%22sources%22%3A%5B%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2F_typography.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2F_utilities.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2F_variables.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2Fvariables%5C%2F_typography.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2FMagento_Sales%5C%2Fcss%5C%2Fsource%5C%2F_email.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2F_tables.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2F_responsive.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2F_email-base.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2F_email-extend.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2FMagento_Customer%5C%2Fcss%5C%2Fsource%5C%2F_email.less%22%5D%2C%22names%22%3A%5B%5D%2C%22mappings%22%3A%22AA4NI%3BEC8EA%2CgBAAA%3BED5EI%2C8BAAA%3BEACA%2C0BAAA%3BEACA%2CsBAAA%3B%3BAAGJ%3BECuEA%2CWAAA%3BEAAA%2CaC5RqB%2CaCMC%2C8CFsRtB%3BEAAA%2CkBAAA%3BEAAA%2CgBAAA%3BEAAA%2CuBAAA%3BEAAA%2CeAAA%3B%3BADnEA%3BECmEA%2CaAAA%3BEAAA%2CmBAAA%3B%3BADtDA%2CIAAI%3BECsDJ%2C8BAAA%3BEDpDI%2CYAAA%3B%3BAAGJ%3BAACA%3BECgDA%2CgBAAA%3B%3BAD5CA%3BAACA%3BEC2CA%2CkBAAA%3B%3BADvCA%3BECuCA%2CmBAAA%3BEAAA%2CcAAA%3B%3BADlCA%3BAACA%3BECiCA%2CeAAA%3B%3BAD7BA%3BEACI%2CSAAA%3BEC4BJ%2C0BAAA%3BEAAA%2CmBAAA%3BEAAA%2CgBAAA%3B%3BADtBA%3BAACA%3BECqBA%2C6BAAA%3BEDnBI%2CcAAA%3BEACA%2CkBAAA%3BEACA%2CwBAAA%3B%3BAAGJ%3BEACI%2CWAAA%3B%3BAAGJ%3BEACI%2CeAAA%3B%3BAAGJ%3BECMA%2CkBAAA%3B%3BADQA%3BECRA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CaAAA%3BEAAA%2CmBAAA%3B%3BADYA%3BECZA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BADgBA%3BEChBA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BADoBA%3BECpBA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BADwBA%3BECxBA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BAD4BA%3BEC5BA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BADgCA%2CEACI%3BAADA%2CEACA%3BAADI%2CEACJ%3BAADQ%2CEACR%3BAADY%2CEACZ%3BAADgB%2CEAChB%3BAADJ%2CEAEI%3BAAFA%2CEAEA%3BAAFI%2CEAEJ%3BAAFQ%2CEAER%3BAAFY%2CEAEZ%3BAAFgB%2CEAEhB%3BEClCJ%2CWAAA%3BEAAA%2CaC5RqB%2CaCMC%2C8CFsRtB%3BEAAA%2CkBAAA%3BEAAA%2CgBAAA%3BEAAA%2CcAAA%3B%3BADkDA%3BAACA%3BECnDA%2CcAAA%3BEAAA%2CqBAAA%3B%3BADjJA%2CCAAC%3BAAAD%2CMAAC%3BECiJD%2CcAAA%3BEAAA%2CqBAAA%3B%3BAD5IA%2CCAAC%3BAAAD%2CMAAC%3BEC4ID%2CcAAA%3BEAAA%2C0BAAA%3B%3BADvIA%2CCAAC%3BAAAD%2CMAAC%3BECuID%2CcAAA%3BEAAA%2C0BAAA%3B%3BADyEA%3BAACA%3BEC1EA%2CaAAA%3BEAAA%2CmBAAA%3B%3BADyEA%2CEAYM%3BAAXN%2CEAWM%3BECrFN%2CaAAA%3BEAAA%2CmBAAA%3B%3BADyEA%2CEAwBI%3BAAvBJ%2CEAuBI%3BAAxBJ%2CEAyBI%3BAAxBJ%2CEAwBI%3BEACI%2CgBAAA%3B%3BAAIR%3BECvGA%2CmBAAA%3BEAAA%2CaAAA%3B%3BAD4GA%3BEC5GA%2CgBAAA%3BEAAA%2CkBAAA%3BEAAA%2CaAAA%3B%3BADkHA%3BEClHA%2CmBAAA%3BEAAA%2CaAAA%3BEDqHI%2CcAAA%3B%3BAA2BJ%3BAACA%3BAACA%3BAACA%3BECnJA%2CsCEpR8C%2CwBFoR9C%3B%3BADwJA%3BECxJA%2CmBAAA%3BEAAA%2CcAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BED6JI%2CmBAAA%3B%3BAAIJ%3BECjKA%2CmBAAA%3BEAAA%2CcAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3B%3BADyKA%3BECzKA%2CmBAAA%3BEAAA%2CsBAAA%3BEAAA%2CcAAA%3BEAAA%2CuBAAA%3BEAAA%2CgBAAA%3BEAAA%2CaAAA%3BEAAA%2CeAAA%3BEDiLI%2CcAAA%3BEACA%2CqBAAA%3B%3BAATJ%2CGAWI%3BEACI%2C6BAAA%3BEACA%2CgBAAA%3BEACA%2CcAAA%3BEACA%2CkBAAA%3BEACA%2CUAAA%3BEACA%2CqBAAA%3B%3BAAuBR%3BECjNA%2CyBAAA%3BEAAA%2CqBAAA%3BEAAA%2CUAAA%3BEAAA%2CWAAA%3BEAAA%2CaC5RqB%2CaCMC%2C8CFsRtB%3BEAAA%2CkBAAA%3BEAAA%2CgBAAA%3BEAAA%2CuBAAA%3BEAAA%2CeAAA%3B%3BAD6NQ%2CUAHJ%2CEAGK%3BAAAD%2CUAFJ%2CGAEK%3BAAAD%2CUADJ%2CGACK%3BEACG%2CgBAAA%3B%3BAAbZ%2CUAiBI%3BAAjBJ%2CUAkBI%3BAAlBJ%2CUAmBI%3BECpOJ%2CWAAA%3BEAAA%2CuBAAA%3BEAAA%2CeAAA%3BEDwOQ%2CcAAA%3B%3BAAEA%2CUARJ%2COAQK%3BAAAD%2CUAPJ%2CMAOK%3BAAAD%2CUANJ%2COAMK%3BEC1OT%2CSEzEyB%2CaFyEzB%3B%3BADiNA%2CUA8BI%3BEC%5C%2FOJ%2CkBAAA%3B%3BADsPI%2CUAAC%3BAACD%2CUAAC%3BEACG%2CSAAS%2CEAAT%3B%3BAAIR%3BEACI%2CYAAA%3B%3BAAEA%2CCAAC%3BAACD%2CCAAC%3BEACG%2CSAAS%2CEAAT%3BEACA%2CaAAA%3B%3BAAKR%3BECvQA%2CkBAAA%3B%3BAGjMJ%2CeCpFI%3BEACI%2CgBAAA%3B%3BADmFR%2CeChFM%2CQAEI%2CKACI%3BAD6Ed%2CeC%5C%2FEM%2CQACI%2CKACI%3BAD6Ed%2CeChFM%2CQAEI%2CKAEI%3BAD4Ed%2CeC%5C%2FEM%2CQACI%2CKAEI%3BEACE%2CmBAAA%3B%3BAD2EhB%2CeCtEM%2CQAAQ%2CKACJ%3BADqEV%2CeCtEM%2CQAAQ%2CKAEJ%3BEACE%2CsBAAA%3B%3BADmEZ%2CeC%5C%2FDM%2CQAGI%2CKACI%3BAD2Dd%2CeC9DM%2CQAEI%2CKACI%3BAD2Dd%2CeC7DM%2CQACI%2CKACI%3BAD2Dd%2CeC%5C%2FDM%2CQAGI%2CKAEI%3BAD0Dd%2CeC9DM%2CQAEI%2CKAEI%3BAD0Dd%2CeC7DM%2CQACI%2CKAEI%3BEJ2PV%2CeAAA%3B%3BAGtKJ%2CYC%5C%2FGI%3BEACI%2CgBAAA%3B%3BAD8GR%2CYC3GM%2CQAEI%2CKACI%3BADwGd%2CYC1GM%2CQACI%2CKACI%3BADwGd%2CYC3GM%2CQAEI%2CKAEI%3BADuGd%2CYC1GM%2CQACI%2CKAEI%3BEACE%2CmBAAA%3B%3BADsGhB%2CYCjGM%2CQAAQ%2CKACJ%3BADgGV%2CYCjGM%2CQAAQ%2CKAEJ%3BEACE%2CsBAAA%3B%3BAD8FZ%2CYC1FM%2CQAGI%2CKACI%3BADsFd%2CYCzFM%2CQAEI%2CKACI%3BADsFd%2CYCxFM%2CQACI%2CKACI%3BADsFd%2CYC1FM%2CQAGI%2CKAEI%3BADqFd%2CYCzFM%2CQAEI%2CKAEI%3BADqFd%2CYCxFM%2CQACI%2CKAEI%3BEJ2PV%2CeAAA%3B%3BAKjQA%2CwBAJqD%3BECgJrD%3BEACA%3BIAEI%2CsBAAA%3BIACA%2CsBAAA%3B%3BEAGJ%3BIACI%2C0BAAA%3BIACA%2CgBAAA%3BIACA%2CsBAAA%3B%3B%3BADlJJ%2CwBAJsD%3BEEQtD%3BEACA%3BEACA%3BIACI%2CkBAAA%3B%3BEAGJ%2COACI%3BIACI%2CcAAA%3BIACA%2CsBAAA%3B%3BECER%2CeACM%2CQACI%2CKACI%3BIACE%2CWAAA%3BIACA%2CcAAA%3BIACA%2CiBAAA%3BIACA%2CsBAAA%3B%3BEL1ChB%2CcACI%3BIACI%2CeAAA%3B%3BEA2DR%2CcACI%3BEADJ%2CcAEI%3BIACI%2CcAAA%3BIACA%2CeAAA%3BIACA%2CsBAAA%3B%3BEALR%2CcACI%2CiBAMI%3BEAPR%2CcAEI%2CaAKI%3BIACI%2CkBAAA%3BIACA%2CwBAAA%3B%3BEGuJR%2COACI%3BIACI%2CsBAAA%3B%3BEAFR%2COACI%2CeAGI%2CGACI%3BIACI%2CeAAA%3B%3B%3BAAnLpB%3BAACA%3BAACA%3BAACA%3BEACI%2C0BAAA%3BEACA%2C8BAAA%3B%3BAAIJ%3BEACI%2C%2BBAAA%3B%3BAAIJ%3BAACA%3BEACI%2CqBAAA%3BEACA%2CqBAAA%3B%3BAA6BJ%2CCAAC%3BEACG%2CcAAA%3BEACA%2CqBAAA%3B%3BAAGJ%2CCAAC%3BEACG%2CcAAA%3BEACA%2C0BAAA%3B%3BAAGJ%2CCAAC%3BEACG%2CcAAA%3BEACA%2C0BAAA%3B%3BAAIJ%2CQAAS%3BAHxDT%2CgBAAiB%3BEGyDb%2CWAAA%3BEACA%2C0BAAA%3BEACA%2CgCAAA%3B%3BAAqFJ%2COACI%2CeACI%2CGAAE%3BEACE%2CyBAAA%3B%3BAAHZ%2COACI%2CeAKI%2CEAAC%3BAANT%2COACI%2CeAMI%2CGAAE%3BEACE%2CyBAAA%3B%3BAARZ%2COAYI%2CEAAC%3BAAZL%2COAaI%2CEAAC%3BAAbL%2COAcI%2CEAAC%3BEAEG%2CyBAAA%3BEACA%2CWAAA%3BEACA%2CgCAAA%3B%3BAHMR%3BECmIA%2CgBAAA%3BEACA%2CkBAAA%3BEACA%2CWAAA%3BEACA%2C4CAAA%3BEACA%2CiCAAA%22%7D */",
+            "tape": [
+                {
+                    "port": "stylesheets",
+                    "method": "load",
+                    "args": [
+                        "css/email.css"
+                    ],
+                    "returned": "html {\n  font-size: 62.5%;\n  -webkit-text-size-adjust: 100%;\n  -ms-text-size-adjust: 100%;\n  font-size-adjust: 100%;\n}\nbody {\n  color: #333;\n  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;\n  font-style: normal;\n  font-weight: 400;\n  line-height: 1.42857143;\n  font-size: 14px;\n}\np {\n  margin-top: 0;\n  margin-bottom: 10px;\n}\nabbr[title] {\n  border-bottom: 1px dotted #ccc;\n  cursor: help;\n}\nb,\nstrong {\n  font-weight: 700;\n}\nem,\ni {\n  font-style: italic;\n}\nmark {\n  background: #f6f6f6;\n  color: #000000;\n}\nsmall,\n.small {\n  font-size: 12px;\n}\nhr {\n  border: 0;\n  border-top: 1px solid #ccc;\n  margin-bottom: 20px;\n  margin-top: 20px;\n}\nsub,\nsup {\n  font-size: 71.42857143000001%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\nsup {\n  top: -0.5em;\n}\nsub {\n  bottom: -0.25em;\n}\ndfn {\n  font-style: italic;\n}\nh1 {\n  font-weight: 300;\n  line-height: 1.1;\n  font-size: 26px;\n  margin-top: 0;\n  margin-bottom: 20px;\n}\nh2 {\n  font-weight: 300;\n  line-height: 1.1;\n  font-size: 26px;\n  margin-top: 25px;\n  margin-bottom: 20px;\n}\nh3 {\n  font-weight: 300;\n  line-height: 1.1;\n  font-size: 18px;\n  margin-top: 20px;\n  margin-bottom: 10px;\n}\nh4 {\n  font-weight: 700;\n  line-height: 1.1;\n  font-size: 14px;\n  margin-top: 20px;\n  margin-bottom: 20px;\n}\nh5 {\n  font-weight: 700;\n  line-height: 1.1;\n  font-size: 12px;\n  margin-top: 20px;\n  margin-bottom: 20px;\n}\nh6 {\n  font-weight: 700;\n  line-height: 1.1;\n  font-size: 10px;\n  margin-top: 20px;\n  margin-bottom: 20px;\n}\nh1 small,\nh2 small,\nh3 small,\nh4 small,\nh5 small,\nh6 small,\nh1 .small,\nh2 .small,\nh3 .small,\nh4 .small,\nh5 .small,\nh6 .small {\n  color: #333;\n  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;\n  font-style: normal;\n  font-weight: 400;\n  line-height: 1;\n}\na,\n.alink {\n  color: #006bb4;\n  text-decoration: none;\n}\na:visited,\n.alink:visited {\n  color: #006bb4;\n  text-decoration: none;\n}\na:hover,\n.alink:hover {\n  color: #006bb4;\n  text-decoration: underline;\n}\na:active,\n.alink:active {\n  color: #ff5501;\n  text-decoration: underline;\n}\nul,\nol {\n  margin-top: 0;\n  margin-bottom: 25px;\n}\nul > li,\nol > li {\n  margin-top: 0;\n  margin-bottom: 10px;\n}\nul ul,\nol ul,\nul ol,\nol ol {\n  margin-bottom: 0;\n}\ndl {\n  margin-bottom: 20px;\n  margin-top: 0;\n}\ndt {\n  font-weight: 700;\n  margin-bottom: 5px;\n  margin-top: 0;\n}\ndd {\n  margin-bottom: 10px;\n  margin-top: 0;\n  margin-left: 0;\n}\ncode,\nkbd,\npre,\nsamp {\n  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;\n}\ncode {\n  background: #f6f6f6;\n  color: #111111;\n  padding: 2px 4px;\n  font-size: 12px;\n  white-space: nowrap;\n}\nkbd {\n  background: #f6f6f6;\n  color: #111111;\n  padding: 2px 4px;\n  font-size: 12px;\n}\npre {\n  background: #f6f6f6;\n  border: 1px solid #ccc;\n  color: #111111;\n  line-height: 1.42857143;\n  margin: 0 0 10px;\n  padding: 10px;\n  font-size: 12px;\n  display: block;\n  word-wrap: break-word;\n}\npre code {\n  background-color: transparent;\n  border-radius: 0;\n  color: inherit;\n  font-size: inherit;\n  padding: 0;\n  white-space: pre-wrap;\n}\nblockquote {\n  border-left: 0 solid #ccc;\n  margin: 0 0 20px 40px;\n  padding: 0;\n  color: #333;\n  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;\n  font-style: italic;\n  font-weight: 400;\n  line-height: 1.42857143;\n  font-size: 14px;\n}\nblockquote p:last-child,\nblockquote ul:last-child,\nblockquote ol:last-child {\n  margin-bottom: 0;\n}\nblockquote footer,\nblockquote small,\nblockquote .small {\n  color: #333;\n  line-height: 1.42857143;\n  font-size: 10px;\n  display: block;\n}\nblockquote footer:before,\nblockquote small:before,\nblockquote .small:before {\n  content: '\\2014 \\00A0';\n}\nblockquote cite {\n  font-style: normal;\n}\nblockquote:before,\nblockquote:after {\n  content: '';\n}\nq {\n  quotes: none;\n}\nq:before,\nq:after {\n  content: '';\n  content: none;\n}\ncite {\n  font-style: normal;\n}\n.shipment-track th {\n  text-align: left;\n}\n.shipment-track > tbody > tr > th,\n.shipment-track > tfoot > tr > th,\n.shipment-track > tbody > tr > td,\n.shipment-track > tfoot > tr > td {\n  vertical-align: top;\n}\n.shipment-track > thead > tr > th,\n.shipment-track > thead > tr > td {\n  vertical-align: bottom;\n}\n.shipment-track > thead > tr > th,\n.shipment-track > tbody > tr > th,\n.shipment-track > tfoot > tr > th,\n.shipment-track > thead > tr > td,\n.shipment-track > tbody > tr > td,\n.shipment-track > tfoot > tr > td {\n  padding: 0 10px;\n}\n.email-items th {\n  text-align: left;\n}\n.email-items > tbody > tr > th,\n.email-items > tfoot > tr > th,\n.email-items > tbody > tr > td,\n.email-items > tfoot > tr > td {\n  vertical-align: top;\n}\n.email-items > thead > tr > th,\n.email-items > thead > tr > td {\n  vertical-align: bottom;\n}\n.email-items > thead > tr > th,\n.email-items > tbody > tr > th,\n.email-items > tfoot > tr > th,\n.email-items > thead > tr > td,\n.email-items > tbody > tr > td,\n.email-items > tfoot > tr > td {\n  padding: 0 10px;\n}\n@media only screen and (max-width: 639px) {\n  html,\n  body {\n    background-color: #fff;\n    width: 100% !important;\n  }\n  .main {\n    max-width: 100% !important;\n    min-width: 240px;\n    width: auto !important;\n  }\n}\n@media only screen and (max-width: 479px) {\n  .header,\n  .main-content,\n  .footer {\n    padding: 25px 10px !important;\n  }\n  .footer td {\n    display: block;\n    width: auto !important;\n  }\n  .email-features > tbody > tr > td {\n    clear: both;\n    display: block;\n    padding-top: 20px;\n    width: auto !important;\n  }\n  .email-summary h1 {\n    font-size: 24px !important;\n  }\n  .order-details .address-details,\n  .order-details .method-info {\n    display: block;\n    padding: 10px 0 !important;\n    width: auto !important;\n  }\n  .order-details .address-details h3,\n  .order-details .method-info h3 {\n    margin-bottom: 5px !important;\n    margin-top: 0 !important;\n  }\n  .button .inner-wrapper {\n    width: 100% !important;\n  }\n  .button .inner-wrapper td a {\n    font-size: 16px;\n  }\n}\nbody,\ntable,\ntd,\na {\n  -ms-text-size-adjust: 100%;\n  -webkit-text-size-adjust: 100%;\n}\nimg {\n  -ms-interpolation-mode: bicubic;\n}\ntable,\ntd {\n  mso-table-lspace: 0pt;\n  mso-table-rspace: 0pt;\n}\na:visited {\n  color: #006bb4 !important;\n  text-decoration: none !important;\n}\na:hover {\n  color: #006bb4 !important;\n  text-decoration: underline !important;\n}\na:active {\n  color: #ff5501 !important;\n  text-decoration: underline !important;\n}\n.no-link a,\n.address-details a {\n  color: #333 !important;\n  cursor: default !important;\n  text-decoration: none !important;\n}\n.button .inner-wrapper td:hover {\n  background-color: #006bb4 !important;\n}\n.button .inner-wrapper a:active,\n.button .inner-wrapper td:active {\n  background-color: #006bb4 !important;\n}\n.button a:active,\n.button a:hover,\n.button a:visited {\n  border: 1px solid #006bb4;\n  color: #fff !important;\n  text-decoration: none !important;\n}\n.email-items {\n  overflow-x: auto;\n  overflow-y: hidden;\n  width: 100%;\n  -ms-overflow-style: -ms-autohiding-scrollbar;\n  -webkit-overflow-scrolling: touch;\n}\n/*# sourceMappingURL=data:application/json,%7B%22version%22%3A3%2C%22sources%22%3A%5B%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2F_typography.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2F_utilities.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2F_variables.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2Fvariables%5C%2F_typography.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2FMagento_Sales%5C%2Fcss%5C%2Fsource%5C%2F_email.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2F_tables.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2Flib%5C%2F_responsive.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2F_email-base.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2Fcss%5C%2Fsource%5C%2F_email-extend.less%22%2C%22%5C%2Fstatic%5C%2Ffrontend%5C%2FMagento%5C%2Fluma%5C%2Fen_US%5C%2FMagento_Customer%5C%2Fcss%5C%2Fsource%5C%2F_email.less%22%5D%2C%22names%22%3A%5B%5D%2C%22mappings%22%3A%22AA4NI%3BEC8EA%2CgBAAA%3BED5EI%2C8BAAA%3BEACA%2C0BAAA%3BEACA%2CsBAAA%3B%3BAAGJ%3BECuEA%2CWAAA%3BEAAA%2CaC5RqB%2CaCMC%2C8CFsRtB%3BEAAA%2CkBAAA%3BEAAA%2CgBAAA%3BEAAA%2CuBAAA%3BEAAA%2CeAAA%3B%3BADnEA%3BECmEA%2CaAAA%3BEAAA%2CmBAAA%3B%3BADtDA%2CIAAI%3BECsDJ%2C8BAAA%3BEDpDI%2CYAAA%3B%3BAAGJ%3BAACA%3BECgDA%2CgBAAA%3B%3BAD5CA%3BAACA%3BEC2CA%2CkBAAA%3B%3BADvCA%3BECuCA%2CmBAAA%3BEAAA%2CcAAA%3B%3BADlCA%3BAACA%3BECiCA%2CeAAA%3B%3BAD7BA%3BEACI%2CSAAA%3BEC4BJ%2C0BAAA%3BEAAA%2CmBAAA%3BEAAA%2CgBAAA%3B%3BADtBA%3BAACA%3BECqBA%2C6BAAA%3BEDnBI%2CcAAA%3BEACA%2CkBAAA%3BEACA%2CwBAAA%3B%3BAAGJ%3BEACI%2CWAAA%3B%3BAAGJ%3BEACI%2CeAAA%3B%3BAAGJ%3BECMA%2CkBAAA%3B%3BADQA%3BECRA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CaAAA%3BEAAA%2CmBAAA%3B%3BADYA%3BECZA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BADgBA%3BEChBA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BADoBA%3BECpBA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BADwBA%3BECxBA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BAD4BA%3BEC5BA%2CgBAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BEAAA%2CgBAAA%3BEAAA%2CmBAAA%3B%3BADgCA%2CEACI%3BAADA%2CEACA%3BAADI%2CEACJ%3BAADQ%2CEACR%3BAADY%2CEACZ%3BAADgB%2CEAChB%3BAADJ%2CEAEI%3BAAFA%2CEAEA%3BAAFI%2CEAEJ%3BAAFQ%2CEAER%3BAAFY%2CEAEZ%3BAAFgB%2CEAEhB%3BEClCJ%2CWAAA%3BEAAA%2CaC5RqB%2CaCMC%2C8CFsRtB%3BEAAA%2CkBAAA%3BEAAA%2CgBAAA%3BEAAA%2CcAAA%3B%3BADkDA%3BAACA%3BECnDA%2CcAAA%3BEAAA%2CqBAAA%3B%3BADjJA%2CCAAC%3BAAAD%2CMAAC%3BECiJD%2CcAAA%3BEAAA%2CqBAAA%3B%3BAD5IA%2CCAAC%3BAAAD%2CMAAC%3BEC4ID%2CcAAA%3BEAAA%2C0BAAA%3B%3BADvIA%2CCAAC%3BAAAD%2CMAAC%3BECuID%2CcAAA%3BEAAA%2C0BAAA%3B%3BADyEA%3BAACA%3BEC1EA%2CaAAA%3BEAAA%2CmBAAA%3B%3BADyEA%2CEAYM%3BAAXN%2CEAWM%3BECrFN%2CaAAA%3BEAAA%2CmBAAA%3B%3BADyEA%2CEAwBI%3BAAvBJ%2CEAuBI%3BAAxBJ%2CEAyBI%3BAAxBJ%2CEAwBI%3BEACI%2CgBAAA%3B%3BAAIR%3BECvGA%2CmBAAA%3BEAAA%2CaAAA%3B%3BAD4GA%3BEC5GA%2CgBAAA%3BEAAA%2CkBAAA%3BEAAA%2CaAAA%3B%3BADkHA%3BEClHA%2CmBAAA%3BEAAA%2CaAAA%3BEDqHI%2CcAAA%3B%3BAA2BJ%3BAACA%3BAACA%3BAACA%3BECnJA%2CsCEpR8C%2CwBFoR9C%3B%3BADwJA%3BECxJA%2CmBAAA%3BEAAA%2CcAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3BED6JI%2CmBAAA%3B%3BAAIJ%3BECjKA%2CmBAAA%3BEAAA%2CcAAA%3BEAAA%2CgBAAA%3BEAAA%2CeAAA%3B%3BADyKA%3BECzKA%2CmBAAA%3BEAAA%2CsBAAA%3BEAAA%2CcAAA%3BEAAA%2CuBAAA%3BEAAA%2CgBAAA%3BEAAA%2CaAAA%3BEAAA%2CeAAA%3BEDiLI%2CcAAA%3BEACA%2CqBAAA%3B%3BAATJ%2CGAWI%3BEACI%2C6BAAA%3BEACA%2CgBAAA%3BEACA%2CcAAA%3BEACA%2CkBAAA%3BEACA%2CUAAA%3BEACA%2CqBAAA%3B%3BAAuBR%3BECjNA%2CyBAAA%3BEAAA%2CqBAAA%3BEAAA%2CUAAA%3BEAAA%2CWAAA%3BEAAA%2CaC5RqB%2CaCMC%2C8CFsRtB%3BEAAA%2CkBAAA%3BEAAA%2CgBAAA%3BEAAA%2CuBAAA%3BEAAA%2CeAAA%3B%3BAD6NQ%2CUAHJ%2CEAGK%3BAAAD%2CUAFJ%2CGAEK%3BAAAD%2CUADJ%2CGACK%3BEACG%2CgBAAA%3B%3BAAbZ%2CUAiBI%3BAAjBJ%2CUAkBI%3BAAlBJ%2CUAmBI%3BECpOJ%2CWAAA%3BEAAA%2CuBAAA%3BEAAA%2CeAAA%3BEDwOQ%2CcAAA%3B%3BAAEA%2CUARJ%2COAQK%3BAAAD%2CUAPJ%2CMAOK%3BAAAD%2CUANJ%2COAMK%3BEC1OT%2CSEzEyB%2CaFyEzB%3B%3BADiNA%2CUA8BI%3BEC%5C%2FOJ%2CkBAAA%3B%3BADsPI%2CUAAC%3BAACD%2CUAAC%3BEACG%2CSAAS%2CEAAT%3B%3BAAIR%3BEACI%2CYAAA%3B%3BAAEA%2CCAAC%3BAACD%2CCAAC%3BEACG%2CSAAS%2CEAAT%3BEACA%2CaAAA%3B%3BAAKR%3BECvQA%2CkBAAA%3B%3BAGjMJ%2CeCpFI%3BEACI%2CgBAAA%3B%3BADmFR%2CeChFM%2CQAEI%2CKACI%3BAD6Ed%2CeC%5C%2FEM%2CQACI%2CKACI%3BAD6Ed%2CeChFM%2CQAEI%2CKAEI%3BAD4Ed%2CeC%5C%2FEM%2CQACI%2CKAEI%3BEACE%2CmBAAA%3B%3BAD2EhB%2CeCtEM%2CQAAQ%2CKACJ%3BADqEV%2CeCtEM%2CQAAQ%2CKAEJ%3BEACE%2CsBAAA%3B%3BADmEZ%2CeC%5C%2FDM%2CQAGI%2CKACI%3BAD2Dd%2CeC9DM%2CQAEI%2CKACI%3BAD2Dd%2CeC7DM%2CQACI%2CKACI%3BAD2Dd%2CeC%5C%2FDM%2CQAGI%2CKAEI%3BAD0Dd%2CeC9DM%2CQAEI%2CKAEI%3BAD0Dd%2CeC7DM%2CQACI%2CKAEI%3BEJ2PV%2CeAAA%3B%3BAGtKJ%2CYC%5C%2FGI%3BEACI%2CgBAAA%3B%3BAD8GR%2CYC3GM%2CQAEI%2CKACI%3BADwGd%2CYC1GM%2CQACI%2CKACI%3BADwGd%2CYC3GM%2CQAEI%2CKAEI%3BADuGd%2CYC1GM%2CQACI%2CKAEI%3BEACE%2CmBAAA%3B%3BADsGhB%2CYCjGM%2CQAAQ%2CKACJ%3BADgGV%2CYCjGM%2CQAAQ%2CKAEJ%3BEACE%2CsBAAA%3B%3BAD8FZ%2CYC1FM%2CQAGI%2CKACI%3BADsFd%2CYCzFM%2CQAEI%2CKACI%3BADsFd%2CYCxFM%2CQACI%2CKACI%3BADsFd%2CYC1FM%2CQAGI%2CKAEI%3BADqFd%2CYCzFM%2CQAEI%2CKAEI%3BADqFd%2CYCxFM%2CQACI%2CKAEI%3BEJ2PV%2CeAAA%3B%3BAKjQA%2CwBAJqD%3BECgJrD%3BEACA%3BIAEI%2CsBAAA%3BIACA%2CsBAAA%3B%3BEAGJ%3BIACI%2C0BAAA%3BIACA%2CgBAAA%3BIACA%2CsBAAA%3B%3B%3BADlJJ%2CwBAJsD%3BEEQtD%3BEACA%3BEACA%3BIACI%2CkBAAA%3B%3BEAGJ%2COACI%3BIACI%2CcAAA%3BIACA%2CsBAAA%3B%3BECER%2CeACM%2CQACI%2CKACI%3BIACE%2CWAAA%3BIACA%2CcAAA%3BIACA%2CiBAAA%3BIACA%2CsBAAA%3B%3BEL1ChB%2CcACI%3BIACI%2CeAAA%3B%3BEA2DR%2CcACI%3BEADJ%2CcAEI%3BIACI%2CcAAA%3BIACA%2CeAAA%3BIACA%2CsBAAA%3B%3BEALR%2CcACI%2CiBAMI%3BEAPR%2CcAEI%2CaAKI%3BIACI%2CkBAAA%3BIACA%2CwBAAA%3B%3BEGuJR%2COACI%3BIACI%2CsBAAA%3B%3BEAFR%2COACI%2CeAGI%2CGACI%3BIACI%2CeAAA%3B%3B%3BAAnLpB%3BAACA%3BAACA%3BAACA%3BEACI%2C0BAAA%3BEACA%2C8BAAA%3B%3BAAIJ%3BEACI%2C%2BBAAA%3B%3BAAIJ%3BAACA%3BEACI%2CqBAAA%3BEACA%2CqBAAA%3B%3BAA6BJ%2CCAAC%3BEACG%2CcAAA%3BEACA%2CqBAAA%3B%3BAAGJ%2CCAAC%3BEACG%2CcAAA%3BEACA%2C0BAAA%3B%3BAAGJ%2CCAAC%3BEACG%2CcAAA%3BEACA%2C0BAAA%3B%3BAAIJ%2CQAAS%3BAHxDT%2CgBAAiB%3BEGyDb%2CWAAA%3BEACA%2C0BAAA%3BEACA%2CgCAAA%3B%3BAAqFJ%2COACI%2CeACI%2CGAAE%3BEACE%2CyBAAA%3B%3BAAHZ%2COACI%2CeAKI%2CEAAC%3BAANT%2COACI%2CeAMI%2CGAAE%3BEACE%2CyBAAA%3B%3BAARZ%2COAYI%2CEAAC%3BAAZL%2COAaI%2CEAAC%3BAAbL%2COAcI%2CEAAC%3BEAEG%2CyBAAA%3BEACA%2CWAAA%3BEACA%2CgCAAA%3B%3BAHMR%3BECmIA%2CgBAAA%3BEACA%2CkBAAA%3BEACA%2CWAAA%3BEACA%2C4CAAA%3BEACA%2CiCAAA%22%7D */"
+                }
+            ],
+            "legacy": "Error filtering template: Design params must be set before calling this method",
+            "agreed": false
+        },
+        {
+            "id": "css_absent/cms",
+            "template": "{{css}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "/* \"file\" parameter must be specified */",
+            "tape": [],
+            "legacy": "/* \"file\" parameter must be specified */",
+            "agreed": true
+        },
+        {
+            "id": "css_traversal/cms",
+            "template": "{{css file=\"../../app/etc/env.php\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "/* invalid file parameter */",
+            "tape": [],
+            "legacy": "Error filtering template: Design params must be set before calling this method",
+            "agreed": false
+        },
+        {
+            "id": "inlinecss_plain/cms",
+            "template": "{{inlinecss file=\"css/email-inline.css\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "Error filtering template: Design params must be set before calling this method",
+            "agreed": false
+        },
+        {
+            "id": "inlinecss_traversal/cms",
+            "template": "{{inlinecss file=\"../../app/etc/env.php\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "Error filtering template: Design params must be set before calling this method",
+            "agreed": false
+        },
+        {
+            "id": "template_missing/cms",
+            "template": "{{template config_path=\"design/email/nope\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "templates",
+                    "method": "load",
+                    "args": [
+                        "design/email/nope"
+                    ],
+                    "returned": null
+                }
+            ],
+            "legacy": "&#123;Error in template processing}",
+            "agreed": false
+        },
+        {
+            "id": "template_empty/cms",
+            "template": "{{template config_path=\"\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "&#123;Error in template processing}",
+            "tape": [],
+            "legacy": "&#123;Error in template processing}",
+            "agreed": true
+        },
+        {
+            "id": "template_absent/cms",
+            "template": "{{template}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "&#123;Error in template processing}",
+            "tape": [],
+            "legacy": "&#123;Error in template processing}",
+            "agreed": true
+        },
+        {
+            "id": "template_walk/cms",
+            "template": "{{template config_path=\"../../etc/env\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "&#123;Error in template processing}",
+            "agreed": false
+        },
+        {
+            "id": "block_missing/cms",
+            "template": "{{block class=\"No\\Such\\Klass\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "blocks",
+                    "method": "render",
+                    "args": [
+                        "No\\Such\\Klass",
+                        [],
+                        "toHtml"
+                    ],
+                    "returned": ""
+                }
+            ],
+            "legacy": "Error filtering template: Invalid block type: No\\Such\\Klass",
+            "agreed": false
+        },
+        {
+            "id": "block_admin/cms",
+            "template": "{{block class=\"Magento\\Backend\\Block\\Template\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "blocks",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Backend\\Block\\Template",
+                        [],
+                        "toHtml"
+                    ],
+                    "returned": ""
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "block_area/cms",
+            "template": "{{block class=\"Magento\\Framework\\View\\Element\\Template\" area=\"adminhtml\" template=\"Magento_Backend::page/js/require_js.phtml\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "throw",
+            "expected": "ValidatorException",
+            "tape": [
+                {
+                    "port": "blocks",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Framework\\View\\Element\\Template",
+                        {
+                            "area": "adminhtml",
+                            "template": "Magento_Backend::page/js/require_js.phtml"
+                        },
+                        "toHtml"
+                    ],
+                    "threw": "ValidatorException"
+                }
+            ],
+            "legacy": "Error filtering template: Invalid base url type",
+            "agreed": false
+        },
+        {
+            "id": "widget_missing/cms",
+            "template": "{{widget type=\"No\\Such\\Widget\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [
+                {
+                    "port": "widgets",
+                    "method": "render",
+                    "args": [
+                        "No\\Such\\Widget",
+                        []
+                    ],
+                    "returned": ""
+                }
+            ],
+            "legacy": "",
+            "agreed": true
+        },
+        {
+            "id": "widget_cms_block/cms",
+            "template": "{{widget type=\"Magento\\Cms\\Block\\Widget\\Block\" template=\"widget/static_block/default.phtml\" block_id=\"1\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "<div class=\"widget block block-static-block\">\n    </div>\n",
+            "tape": [
+                {
+                    "port": "widgets",
+                    "method": "render",
+                    "args": [
+                        "Magento\\Cms\\Block\\Widget\\Block",
+                        {
+                            "template": "widget/static_block/default.phtml",
+                            "block_id": "1"
+                        }
+                    ],
+                    "returned": "<div class=\"widget block block-static-block\">\n    </div>\n"
+                }
+            ],
+            "legacy": "<div class=\"widget block block-static-block\">\n    </div>\n",
+            "agreed": true
+        },
+        {
+            "id": "layout_handle/cms",
+            "template": "{{layout handle=\"sales_email_order_items\" order_id=\"1\"}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "throw",
+            "expected": "NoSuchEntityException",
+            "tape": [
+                {
+                    "port": "layouts",
+                    "method": "render",
+                    "args": [
+                        "sales_email_order_items",
+                        "frontend",
+                        {
+                            "order_id": "1"
+                        }
+                    ],
+                    "threw": "NoSuchEntityException"
+                }
+            ],
+            "legacy": "Error filtering template: The entity that was requested doesn't exist. Verify the entity and try again.",
+            "agreed": false
+        },
+        {
+            "id": "layout_absent/cms",
+            "template": "{{layout}}",
+            "variables": [],
+            "plain_text": false,
+            "surface": "cms",
+            "outcome": "ok",
+            "expected": "",
+            "tape": [],
+            "legacy": "Error filtering template: Failed to write tag file: /home/jelle/template-parser-demo/var/cache/symfony/tags/",
             "agreed": false
         }
     ]

@@ -111,6 +111,62 @@ final class StorePortParityTest extends TestCase
     }
 
     /**
+     * Where the two engines agreed on the store, they still agree here.
+     *
+     * This is the parity assertion for the twelve port-backed directives, and it works offline
+     * because `legacy` is a recorded CONSTANT while our side is recomputed from the tape every
+     * run. Nothing circular: a change that makes this engine render differently from what the
+     * filter rendered fails, without needing a store to notice.
+     *
+     * Only the cases that agreed when this was recorded are held to it. Most of the rest
+     * disagree because a guard refused something the filter renders, which is the point of the
+     * package - and those are pinned from the other side by the output test above, so a case
+     * cannot quietly cross from one group to the other either.
+     */
+    #[DataProvider('agreeingCases')]
+    public function testWhatAgreedWithTheFilterStillAgrees(array $case): void
+    {
+        [, $result] = self::replay($case);
+
+        self::assertSame('ok', $result[0], $case['id'] . ': this rendered on the store and now raises');
+        self::assertSame($case['legacy'], $result[1], $case['id']);
+    }
+
+    /** @return array<string,array{0:array}> */
+    public static function agreeingCases(): array
+    {
+        return array_filter(self::recordedCases(), static fn (array $c): bool => (bool)$c[0]['agreed']);
+    }
+
+    /**
+     * And the set of agreeing cases is itself pinned.
+     *
+     * Without this a guard that starts refusing something the filter renders simply leaves the
+     * agreeing set smaller, and every remaining assertion still passes. The count is the thing
+     * that would otherwise erode silently, one case at a time.
+     */
+    public function testTheAgreementSetHasNotShrunk(): void
+    {
+        $agreed = count(self::agreeingCases());
+        $comparable = count(array_filter(
+            self::recordedCases(),
+            static fn (array $c): bool => $c[0]['legacy'] !== null
+        ));
+
+        self::assertSame(
+            136,
+            $agreed,
+            sprintf(
+                'the number of store cases agreeing with the legacy filter changed (%d of %d '
+                . 'comparable). If that is deliberate, read the fixture diff and update this '
+                . 'number; if it is not, a guard has started or stopped refusing.',
+                $agreed,
+                $comparable
+            )
+        );
+    }
+
+    /**
      * Nothing a variable's value carries is ever parsed as source, on this surface either.
      *
      * The hostile variable set holds a live `javascript&#58` scheme and an attribute breakout,

@@ -106,7 +106,15 @@ templates end to end and is the parity measure; this file exists for the tapes.
 
 Anything below the port boundary — `StoreUrlBuilder`, `AssetStylesheetLoader` and the rest of
 `src/Magento/` — is invisible to a tape by construction, and needs its own unit test. That is
-not a gap in the tape; it is the boundary doing its job.
+not a gap in the tape; it is the boundary doing its job. Verified: deleting the country-name
+substitution or the custom-variable truthiness quirk passes `StorePortParityTest` and fails the
+suite, which is the arrangement working rather than a hole in it.
+
+Two numbers move when you re-record. `StorePortParityTest::testTheAgreementSetHasNotShrunk`
+pins how many cases agree with the filter, and the README quotes the same figure. Both are
+meant to be edited deliberately: read the fixture diff, satisfy yourself the change is one you
+intended, then update them. The count exists precisely so that a guard which starts refusing
+something the filter renders cannot erode the agreeing set one case at a time in silence.
 
 ## What the suite covers
 

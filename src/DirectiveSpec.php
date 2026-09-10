@@ -20,10 +20,24 @@ final class DirectiveSpec
         'for' => false,
     ];
 
-    /** Known self-closing directives, from the stock filter surface. */
+    /**
+     * Known self-closing directives, from the stock filter surface.
+     *
+     * `filter` was on this list and is not a directive. Magento has two extension points and
+     * they are easy to confuse: SimpleDirective\ProcessorPool registers arbitrary NAMED
+     * directives, so a module adding `mydir` gets `{{mydir}}`, while
+     * DirectiveProcessor\Filter\FilterPool registers MODIFIERS, so one adding `foofilter`
+     * gets `{{var x|foofilter}}`. There is no `{{filter}}` in either, and no stock template
+     * uses one. Listing it made knownNames() claim a directive that does not exist, which is
+     * what the diff notes and the render policy are built out of.
+     *
+     * Which leaves a real gap this engine does not close: a store whose module registered a
+     * ProcessorPool directive has a `{{mydir}}` the filter renders and this leaves verbatim.
+     * That needs a port and is a design decision, not a list entry.
+     */
     private const VOID_DIRECTIVES = [
         'var', 'block', 'template', 'trans', 'inlinecss', 'layout', 'media', 'store',
-        'config', 'customvar', 'protocol', 'view', 'widget', 'css', 'filter', 'else',
+        'config', 'customvar', 'protocol', 'view', 'widget', 'css', 'else',
     ];
 
     /** @var array<string,bool> */

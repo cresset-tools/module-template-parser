@@ -231,9 +231,26 @@ its observable decisions — what it let through, what it refused by never askin
 forwarded alongside. A tape needs no store, so it is a fixture rather than a manual check.
 
 That split matters because it is where the bugs have been. Until those twelve were recorded,
-five directives out of nineteen were actually compared, and every security defect adversarial
-fuzzing has found in this package lived in the other fourteen. Deleting the fix for the live
+five directives out of eighteen were actually compared, and every security defect adversarial
+fuzzing has found in this package lived in the other thirteen. Deleting the fix for the live
 `javascript:` scheme now fails twelve store-tape cases.
+
+Agreement with the filter is asserted, not merely noted: `legacy` is a recorded constant and
+the candidate is recomputed from the tape each run, so the 136 store cases that agreed when
+recorded have to keep agreeing, offline, with no store. The *count* is pinned too — otherwise a
+guard that starts refusing something the filter renders just leaves a smaller agreeing set and
+every remaining assertion still passes.
+
+Every directive but one now has an asserted comparison against the filter somewhere. The
+exception is `{{for}}`, which is a declared divergence for the reason given above. Two caveats
+worth stating plainly:
+
+- `{{layout}}`'s corpus cases agree **vacuously** — the base filter has no `layoutDirective`
+  and the test engine has no port, so both sides emit the directive verbatim. Its real
+  comparison is `template-parser diff --allow-layout-handle=stock-email`, which renders the
+  sixteen stock sales emails through both engines and finds them identical.
+- `{{widget}}` cannot be compared on the email surface at all, that filter having no
+  `widgetDirective`; it is compared on the CMS surface, which does.
 
 Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
 class of divergence, and the honest reading is that the corpus bounds what is known rather

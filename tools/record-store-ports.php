@@ -50,6 +50,7 @@ use Cresset\TemplateParser\Console\LegacyRenderer;
 use Cresset\TemplateParser\Console\MagentoContext;
 use Cresset\TemplateParser\Console\Mode;
 use Cresset\TemplateParser\Console\StoreEmulator;
+use Cresset\TemplateParser\Console\TemplateSubject;
 use Cresset\TemplateParser\Context;
 use Cresset\TemplateParser\DirectiveSpec;
 use Cresset\TemplateParser\Evaluator;
@@ -181,6 +182,12 @@ const CONSTRUCTS = [
     'block_admin'        => '{{block class="Magento\\Backend\\Block\\Template"}}',
     'block_area'         => '{{block class="Magento\\Framework\\View\\Element\\Template" area="adminhtml" template="Magento_Backend::page/js/require_js.phtml"}}',
     'widget_missing'     => '{{widget type="No\\Such\\Widget"}}',
+    // Widgets that actually RENDER on the CMS surface. A construct where both sides produce
+    // nothing agrees vacuously and proves nothing - which is what {{widget}} coverage was
+    // until now, and what {{layout}}'s corpus cases still are.
+    'widget_cms_block'   => '{{widget type="Magento\\Cms\\Block\\Widget\\Block" template="widget/static_block/default.phtml" block_id="1"}}',
+    // Not Page\Link: that block generates a random DOM id per render, so it can never agree
+    // with anything, including itself. A nondeterministic construct is not a fixture.
     'layout_handle'      => '{{layout handle="sales_email_order_items" order_id="1"}}',
     'layout_absent'      => '{{layout}}',
 ];
@@ -283,6 +290,7 @@ foreach (VARIABLE_SETS as $vlabel => $variables) {
                 'template' => $template,
                 'variables' => scalarsOnly($rendered),
                 'plain_text' => $plainText,
+                'surface' => 'email',
                 'outcome' => $ours[0],
                 'expected' => $ours[1],
                 'tape' => $tape->entries(),
@@ -291,6 +299,57 @@ foreach (VARIABLE_SETS as $vlabel => $variables) {
             ];
         }
     }
+}
+
+/*
+ * The CMS surface.
+ *
+ * Email\Model\Template\Filter extends the framework base and therefore has no widgetDirective
+ * at all, so {{widget}} can never be COMPARED there - only observed as a capability this engine
+ * adds. Cms\Model\Template\Filter extends Widget\Model\Template\Filter and does implement it.
+ * Without this pass {{widget}} had no surface anywhere that could tell agreement from
+ * disagreement, and neither did the difference between the two surfaces.
+ *
+ * Once per construct: a CMS render takes no variables and has no plain-text mode.
+ */
+foreach (CONSTRUCTS as $clabel => $template) {
+    $tape = new PortTape();
+
+    [$render, $ours] = $stores->around($storeId, static function () use (
+        $spec, $factory, $storeId, $tape, $template, $legacy
+    ): array {
+        $render = $legacy->render($template, [], $storeId, TemplateSubject::KIND_CMS);
+
+        $options = Mode::Compatible->options();
+        $evaluator = new Evaluator(spec: $spec, options: $options);
+        HostDirectives::register(
+            $evaluator,
+            TapedServices::recording($factory->hostServices($storeId), $tape),
+            new Parser($spec, $options)
+        );
+        $engine = new TemplateEngine(new Parser($spec, $options), $evaluator);
+
+        try {
+            return [$render, ['ok', $engine->render($template, context: new Context([], RenderPolicy::unrestricted()))]];
+        } catch (\Throwable $e) {
+            return [$render, ['throw', (new ReflectionClass($e))->getShortName()]];
+        }
+    });
+
+    $legacyOutput = $render?->output;
+
+    $cases[] = [
+        'id' => $clabel . '/cms',
+        'template' => $template,
+        'variables' => [],
+        'plain_text' => false,
+        'surface' => 'cms',
+        'outcome' => $ours[0],
+        'expected' => $ours[1],
+        'tape' => $tape->entries(),
+        'legacy' => $legacyOutput,
+        'agreed' => $legacyOutput !== null && $ours[0] === 'ok' && $legacyOutput === $ours[1],
+    ];
 }
 
 $out = [

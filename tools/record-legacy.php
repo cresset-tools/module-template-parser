@@ -76,7 +76,7 @@ function legacy(array $vars, bool $neutralize = true): LegacyTemplate {
  * the ports. Cases touching these are recorded but excluded from strict parity.
  */
 const SURFACE_DIVERGENT = ['template','inlinecss','css','store','block','widget',
-                           'media','config','customvar','protocol','view','filter','for'];
+                           'media','config','customvar','protocol','view','for'];
 
 /*
  * `for` is on that list for a different reason from the rest, and a deliberate one.

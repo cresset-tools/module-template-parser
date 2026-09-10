@@ -104,6 +104,13 @@ Entries say what changed and why it mattered. A line that only names a file has 
   `{{template}}` include's child model overwrote the parent's variables before the parent's
   comparison ran, so the parent was compared against the child's scope.
 
+- `{{filter}}` was listed as a stock directive and is not one. Magento's two extension points
+  are easy to confuse: `SimpleDirective\ProcessorPool` registers arbitrary *named* directives
+  (`mydir` → `{{mydir}}`), and `DirectiveProcessor\Filter\FilterPool` registers *modifiers*
+  (`foofilter` → `{{var x|foofilter}}`). Neither produces a `{{filter}}`. Listing it made
+  `knownNames()` — which `diff`'s notes and the render policy are built from — claim a
+  directive nobody can write.
+
 ### Security
 
 Nothing here has been released, so none of this reached a deployed store.
