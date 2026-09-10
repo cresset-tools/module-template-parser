@@ -67,6 +67,11 @@ segment — so `getAddress1()` reads `address_1`, not `address1`.
 Whitespace anywhere in a path is skipped, a leading dot is nothing at all, and the whole
 expression is `rawurldecode()`d before it is split — so `%2E` is a path separator.
 
+A `/` is **not** a path separator to the template language, but it is one *inside* a
+DataObject: `getData('a/b')` falls back to walking `['a']['b']` when the direct lookup comes
+back null. `hasData()` knows nothing about that syntax, so the two disagree — which matters to
+anything that checks for a key before reading it.
+
 The last rule is the one that produces mysterious output: member access is only *attempted*
 when the parent is an array or a DataObject. On a scalar parent the access never happens and
 the cursor never advances, so **the parent itself is the result**. `{{var store.frontend_name}}`
@@ -80,6 +85,7 @@ renders the store when `store` is a string.
 {{var c.getName()}}            c=DataObject           → Ada       # a getter maps to getData("name") - it is never called
 {{var c.getAddress1()}}        c=DataObject           → Main St   # a run of digits is its own segment, so this reads address_1
 {{var c.getName("ignored")}}   c=DataObject           → Ada       # arguments are parsed and dropped
+{{var c.nested/q}}             c=DataObject           → DEEP      # a `/` inside a key is a path INSIDE the DataObject - getData() walks it, hasData() does not know the syntax
 {{var a . b}}                  a={"b":"deep"}         → deep      # whitespace anywhere in a path is skipped
 {{var .a}}                     a="Ada"                → Ada       # a leading dot is no action at all
 {{var a..b}}                   a={"b":"deep"}         → deep

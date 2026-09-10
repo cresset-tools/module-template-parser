@@ -283,6 +283,10 @@ $constructs = [
     'var_get_bag'     => '[{{var a.get()}}]',
     'var_call_open'   => '[{{var a.getB(}}]',
     'var_call_extra'  => '[{{var a.getB()}}]',
+    // DataObject::getData() walks an `a/b` key; hasData() does not know the syntax, so
+    // gating the read on it lost the traversal entirely.
+    'var_slash_path'  => '[{{var a.nested/q}}]',
+    'var_slash_miss'  => '[{{var a.nested/zz}}]',
     // Every stray {{/...}} is a legacy fatal, whatever its spelling: the name capture is
     // [a-z]{0,10}, a leading `/` leaves it empty, and ProcessorPool::get(null) raises. The
     // lexer only recognised some spellings, so the rest rendered as text - a fail-open hole.

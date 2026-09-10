@@ -863,6 +863,28 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/true",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/true",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
         "id": "close_upper/true",
         "template": "[{{/A}}]",
         "variables": {
@@ -2120,6 +2142,28 @@
     {
         "id": "var_call_extra/false",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/false",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/false",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": false
         },
@@ -3390,6 +3434,28 @@
     {
         "id": "var_call_extra/zero",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/zero",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/zero",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": 0
         },
@@ -4681,6 +4747,28 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/one",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/one",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
         "id": "close_upper/one",
         "template": "[{{/A}}]",
         "variables": {
@@ -5954,6 +6042,28 @@
     {
         "id": "var_call_extra/answer",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/answer",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/answer",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": 42
         },
@@ -7245,6 +7355,28 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/strzero",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/strzero",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "close_upper/strzero",
         "template": "[{{/A}}]",
         "variables": {
@@ -8502,6 +8634,28 @@
     {
         "id": "var_call_extra/emptystr",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/emptystr",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/emptystr",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": ""
         },
@@ -9781,6 +9935,28 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/word",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/word",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
         "id": "close_upper/word",
         "template": "[{{/A}}]",
         "variables": {
@@ -11038,6 +11214,28 @@
     {
         "id": "var_call_extra/null",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/null",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/null",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": null
         },
@@ -12308,6 +12506,28 @@
     {
         "id": "var_call_extra/floatzero",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/floatzero",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/floatzero",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": 0
         },
@@ -13599,6 +13819,28 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/float",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/float",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
         "id": "close_upper/float",
         "template": "[{{/A}}]",
         "variables": {
@@ -14862,6 +15104,28 @@
         "object": null,
         "outcome": "throw",
         "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/emptyarr",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/emptyarr",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -16359,6 +16623,34 @@
         "object": null,
         "outcome": "throw",
         "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/list",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/list",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -17893,6 +18185,32 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/assoc",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/assoc",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "close_upper/assoc",
         "template": "[{{/A}}]",
         "variables": {
@@ -19387,6 +19705,32 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/assocempty",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/assocempty",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "close_upper/assocempty",
         "template": "[{{/A}}]",
         "variables": {
@@ -20734,6 +21078,28 @@
     {
         "id": "var_call_extra/html",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/html",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/html",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": "<b>&\"x\"</b>"
         },
@@ -22128,6 +22494,36 @@
     {
         "id": "var_call_extra/directive",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;var a}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{var a}}]"
+        }
+    },
+    {
+        "id": "var_slash_path/directive",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;var a}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{var a}}]"
+        }
+    },
+    {
+        "id": "var_slash_miss/directive",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": "{{var a}}"
         },
@@ -23619,6 +24015,36 @@
         }
     },
     {
+        "id": "var_slash_path/blockpayload",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;block class=Evil}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{block class=Evil}}]"
+        }
+    },
+    {
+        "id": "var_slash_miss/blockpayload",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;block class=Evil}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{block class=Evil}}]"
+        }
+    },
+    {
         "id": "close_upper/blockpayload",
         "template": "[{{/A}}]",
         "variables": {
@@ -24961,6 +25387,28 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/longstr",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/longstr",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
         "id": "close_upper/longstr",
         "template": "[{{/A}}]",
         "variables": {
@@ -26234,6 +26682,28 @@
     {
         "id": "var_call_extra/spaces",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/spaces",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/spaces",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": "  padded  "
         },
@@ -27525,6 +27995,28 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/entities",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/entities",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
         "id": "close_upper/entities",
         "template": "[{{/A}}]",
         "variables": {
@@ -28798,6 +29290,28 @@
     {
         "id": "var_call_extra/newlines",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/newlines",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/newlines",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": "a\nb\nc"
         },
@@ -30212,6 +30726,36 @@
     {
         "id": "var_call_extra/brace_lead",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x]"
+        }
+    },
+    {
+        "id": "var_slash_path/brace_lead",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x]"
+        }
+    },
+    {
+        "id": "var_slash_miss/brace_lead",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": "{x"
         },
@@ -31642,6 +32186,36 @@
     {
         "id": "var_call_extra/brace_trail",
         "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[x{]"
+        }
+    },
+    {
+        "id": "var_slash_path/brace_trail",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[x{]"
+        }
+    },
+    {
+        "id": "var_slash_miss/brace_trail",
+        "template": "[{{var a.nested/zz}}]",
         "variables": {
             "a": "x{"
         },
@@ -33133,6 +33707,36 @@
         }
     },
     {
+        "id": "var_slash_path/brace_both",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x{]"
+        }
+    },
+    {
+        "id": "var_slash_miss/brace_both",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x{]"
+        }
+    },
+    {
         "id": "close_upper/brace_both",
         "template": "[{{/A}}]",
         "variables": {
@@ -34611,6 +35215,36 @@
         }
     },
     {
+        "id": "var_slash_path/brace_solo",
+        "template": "[{{var a.nested/q}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{]"
+        }
+    },
+    {
+        "id": "var_slash_miss/brace_solo",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{]"
+        }
+    },
+    {
         "id": "close_upper/brace_solo",
         "template": "[{{/A}}]",
         "variables": {
@@ -35783,6 +36417,24 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/@dataobject",
+        "template": "[{{var a.nested/q}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[NESTED]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/@dataobject",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "close_upper/@dataobject",
         "template": "[{{/A}}]",
         "variables": [],
@@ -36802,6 +37454,24 @@
     {
         "id": "var_call_extra/@stringable",
         "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/@stringable",
+        "template": "[{{var a.nested/q}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/@stringable",
+        "template": "[{{var a.nested/zz}}]",
         "variables": [],
         "object": "stringable",
         "outcome": "ok",
@@ -37835,6 +38505,24 @@
         "parity": true
     },
     {
+        "id": "var_slash_path/@plainobject",
+        "template": "[{{var a.nested/q}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/@plainobject",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "close_upper/@plainobject",
         "template": "[{{/A}}]",
         "variables": [],
@@ -38858,6 +39546,24 @@
         "object": "arrayofobject",
         "outcome": "throw",
         "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/@arrayofobject",
+        "template": "[{{var a.nested/q}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/@arrayofobject",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -39896,6 +40602,24 @@
         "object": null,
         "outcome": "ok",
         "expected": "[{{var a.getB()}}]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_path/novars",
+        "template": "[{{var a.nested/q}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a.nested/q}}]",
+        "parity": true
+    },
+    {
+        "id": "var_slash_miss/novars",
+        "template": "[{{var a.nested/zz}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a.nested/zz}}]",
         "parity": true
     },
     {

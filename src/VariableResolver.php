@@ -639,7 +639,18 @@ final class VariableResolver
                 && $reflection->getNumberOfParameters() >= 1
                 && $this->acceptsStringKey($reflection)
             ) {
-                return (bool)$this->callHost($value, 'hasData', $key);
+                if ((bool)$this->callHost($value, 'hasData', $key)) {
+                    return true;
+                }
+
+                // hasData() is `array_key_exists($key, $this->_data)` and knows nothing about
+                // the `a/b/c` path syntax getData() implements - getData falls back to
+                // getDataByPath() whenever a direct lookup comes back null and the key holds
+                // a slash. Trusting hasData for those keys made `{{var order.billing/city}}`
+                // resolve on the filter and to nothing here. The asymmetry is DataObject's;
+                // only slash keys are widened, so a key that is genuinely absent is still
+                // missing rather than null.
+                return str_contains($key, '/') && $this->readBag($value, $key) !== null;
             }
         }
 

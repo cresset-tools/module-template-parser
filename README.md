@@ -265,6 +265,14 @@ Quirks it does not reproduce:
   wherever it falls, so the directive gets a text it cannot parse and the remainder becomes
   literal output. A lexer has no reason to inherit that, so this is the one place the engine
   does *more* than the filter rather than less.
+- **A fatal in a branch that is discarded.** The legacy filter runs every directive processor
+  over the whole source and collects the results before applying any, so a construct inside a
+  false `{{depend}}` is still evaluated by another processor's independent pass — and if it is
+  a fatal, the render dies. This engine walks a tree and short-circuits, so a discarded branch
+  is never evaluated and the template renders. It takes two nested blocks of different names
+  for a processor's pass to reach inside, plus a construct that is genuinely fatal for the
+  values in scope, and it is the one accepted gap in "nothing the filter crashes on is
+  rendered here".
 - the security behaviour, which is structural: a value is never re-parsed as source, in any mode;
 - reflection dispatch of arbitrary filter methods;
 - `{{layout}}` without an allowlist. A layout handle decides which blocks get built, so the

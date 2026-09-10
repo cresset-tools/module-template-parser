@@ -161,7 +161,7 @@ function example(string $template, array $vars = [], ?string $note = null, bool 
     return ['template' => $template, 'vars' => $vars, 'note' => $note, 'divergent' => $divergent, 'includes' => $includes];
 }
 
-$customer = new \Magento\Framework\DataObject(['name' => 'Ada', 'address_1' => 'Main St', 'rp_token' => 'tok']);
+$customer = new \Magento\Framework\DataObject(['name' => 'Ada', 'address_1' => 'Main St', 'rp_token' => 'tok', 'nested' => ['q' => 'DEEP']]);
 
 $sections = [
 'var' => [
@@ -183,6 +183,7 @@ $sections = [
     example('{{var c.getName()}}', ['c' => $customer], 'a getter maps to getData("name") - it is never called'),
     example('{{var c.getAddress1()}}', ['c' => $customer], 'a run of digits is its own segment, so this reads address_1'),
     example('{{var c.getName("ignored")}}', ['c' => $customer], 'arguments are parsed and dropped'),
+    example('{{var c.nested/q}}', ['c' => $customer], 'a `/` inside a key is a path INSIDE the DataObject - getData() walks it, hasData() does not know the syntax'),
     example('{{var a . b}}', ['a' => ['b' => 'deep']], 'whitespace anywhere in a path is skipped'),
     example('{{var .a}}', ['a' => 'Ada'], 'a leading dot is no action at all'),
     example('{{var a..b}}', ['a' => ['b' => 'deep']]),

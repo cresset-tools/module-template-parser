@@ -63,6 +63,11 @@ final class ObjectFixtures
             'getData(b)'           => static fn (object $o): mixed => $o->getData('b'),
             'getData(n)'           => static fn (object $o): mixed => $o->getData('n'),
             'getData(missing)'     => static fn (object $o): mixed => $o->getData('missing'),
+            // getData() walks an `a/b` key when the direct lookup is null; hasData() does NOT
+            // know the syntax at all. The resolver depends on both halves of that asymmetry,
+            // and only had a probe for the first.
+            'getData(nested/zz)'   => static fn (object $o): mixed => $o->getData('nested/zz'),
+            'hasData(nested/q)'    => static fn (object $o): mixed => $o->hasData('nested/q'),
             'getData(null_key)'    => static fn (object $o): mixed => $o->getData('null_key'),
             'getData(nested/q)'    => static fn (object $o): mixed => $o->getData('nested/q'),
             'hasData(b)'           => static fn (object $o): mixed => $o->hasData('b'),
