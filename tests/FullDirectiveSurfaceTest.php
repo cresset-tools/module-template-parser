@@ -148,11 +148,43 @@ final class FullDirectiveSurfaceTest extends TestCase
 
     public function testProtocolPicksBetweenHttpAndHttpsParameters(): void
     {
+        $pair = '{{protocol http="http://plain.example/page" https="https://secure.example/page"}}';
+
         $services = $this->services();
-        self::assertSame('plain/page', $this->engine($services)->render('{{protocol http="plain/page" https="secure/page"}}'));
+        self::assertSame('http://plain.example/page', $this->engine($services)->render($pair));
 
         $services->urls->secure = true;
-        self::assertSame('secure/page', $this->engine($services)->render('{{protocol http="plain/page" https="secure/page"}}'));
+        self::assertSame('https://secure.example/page', $this->engine($services)->render($pair));
+    }
+
+    /**
+     * These parameters are DEFINED to carry absolute URLs, and this test used to assert the
+     * opposite - that `http="plain/page"` rendered `plain/page` - which is a value
+     * validateProtocolDirectiveHttpScheme refuses outright, so nothing that reached it here
+     * could ever have reached a real store.
+     */
+    public function testProtocolRefusesParametersThatAreNotAbsoluteUrlsOnTheirOwnScheme(): void
+    {
+        $engine = $this->engine($this->services());
+
+        foreach ([
+            '{{protocol http="plain/page" https="secure/page"}}',
+            '{{protocol http="https://a.example/x" https="https://a.example/x"}}',
+            '{{protocol http="http://a.example/x" https="http://a.example/x"}}',
+            '{{protocol http="javascript&#58;alert(1)" https="javascript&#58;alert(1)"}}',
+        ] as $template) {
+            self::assertSame('', $engine->render($template), $template);
+        }
+    }
+
+    /** A bare {{protocol}} is the scheme itself - the form `{{protocol}}://{{store url=''}}` uses. */
+    public function testBareProtocolIsTheScheme(): void
+    {
+        $services = $this->services();
+        self::assertSame('http', $this->engine($services)->render('{{protocol}}'));
+
+        $services->urls->secure = true;
+        self::assertSame('https', $this->engine($services)->render('{{protocol}}'));
     }
 
     // ------------------------------------------------------------------

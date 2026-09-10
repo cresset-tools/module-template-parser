@@ -33,11 +33,79 @@ final class HostDirectives
      *
      * @param array<string,string> $parameters
      */
+    /** Parameters that are flags, scopes or query carriers rather than path segments. */
+    private const NON_PATH_PARAMETERS = [
+        '_query', '_nosid', '_absolute', '_secure', '_escape_params', '_scope', '_scope_to_url',
+        '_type',
+    ];
+
+    /** @var array<string,string> */
+    private const DESIGN_PARAMETER_SHAPES = [
+        'area' => '/^[a-zA-Z0-9_]{1,64}$/',
+        'locale' => '/^[a-zA-Z0-9_-]{1,32}$/',
+        'module' => '/^[a-zA-Z0-9_]{1,128}$/',
+        'theme' => '#^[a-zA-Z0-9_]{1,64}/[a-zA-Z0-9_-]{1,64}$#',
+        'themeId' => '/^[0-9]{1,10}$/',
+    ];
+
     private static function pathParametersAreSafe(array $parameters): bool
     {
-        foreach (['_direct', '_fragment', '_escape_params'] as $key) {
+        // `_type` picks which base URL the result is built on, so it is a name from a fixed
+        // set (link, web, media, static) and not free text - it is skipped by the loop below
+        // as a flag, which would otherwise leave it the one unguarded spelling.
+        $type = $parameters['_type'] ?? null;
+        if (is_string($type) && $type !== '' && !preg_match('/^[a-z]{1,16}$/', $type)) {
+            return false;
+        }
+
+        foreach ($parameters as $key => $value) {
+            if (!is_string($value) || $value === '') {
+                continue;
+            }
+
+            // A `_query_x` parameter becomes a QUERY parameter - storeDirective moves it into
+            // `_query` and the URL model escapes it - so it never reaches the path, and
+            // holding it to a path guard would refuse an ordinary customer name with an
+            // apostrophe in it. The rest of this list is flags and scopes.
+            if (str_starts_with($key, '_query_') || in_array($key, self::NON_PATH_PARAMETERS, true)) {
+                continue;
+            }
+
+            // Everything else is a route parameter, and Url::_getRouteParams() appends those
+            // as `$key . '/' . $value . '/'` - so the KEY is a path segment as much as the
+            // value is. Naming only `_direct`, `_fragment` and `_escape_params`, as this did,
+            // guarded three spellings out of an open set: `{{store url="x" a="../../.."}}`
+            // walked straight past it.
+            if (!PathGuard::isSafeRelativePath((string)$key) || !PathGuard::isSafeRelativePath($value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * The design parameters Asset\Repository turns into static-URL path segments.
+     *
+     * FallbackContext::generatePath() is `$area . '/' . $theme . '/' . $locale` with no
+     * validation of any of the three, and `module` becomes a segment of its own, so
+     * `{{view url="x" locale="../../.."}}` climbs out of the static root while still reading
+     * as a same-origin URL. Each is held to its own shape rather than to a path guard,
+     * because none of them is a path: an area and a module are identifiers, a locale is
+     * `en_US`, and a theme is exactly `Vendor/name`.
+     */
+    private static function designParametersAreSafe(array $parameters): bool
+    {
+        // themeModel is an object everywhere it is legitimately set. A string one is never
+        // anything but an attempt, and updateDesignParams hands it straight to
+        // Design::getThemePath(), so it is refused rather than shaped.
+        if (isset($parameters['themeModel'])) {
+            return false;
+        }
+
+        foreach (self::DESIGN_PARAMETER_SHAPES as $key => $shape) {
             $value = $parameters[$key] ?? null;
-            if (is_string($value) && $value !== '' && !PathGuard::isSafeRelativePath($value)) {
+            if ($value !== null && $value !== '' && !preg_match($shape, (string)$value)) {
                 return false;
             }
         }
@@ -295,7 +363,10 @@ final class HostDirectives
                 $params = $e->params($n, $c);
                 $path = $params['url'] ?? '';
                 unset($params['url']);
-                if (!PathGuard::isSafeRelativePath($path) || !self::pathParametersAreSafe($params)) {
+                if (!PathGuard::isSafeRelativePath($path)
+                    || !self::pathParametersAreSafe($params)
+                    || !self::designParametersAreSafe($params)
+                ) {
                     return '';
                 }
                 return $urls->viewUrl($path, $params);
@@ -303,19 +374,46 @@ final class HostDirectives
 
             $evaluator->register('protocol', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $params = $e->params($n, $c);
-                $scheme = $urls->isSecure() ? 'https' : 'http';
+                $secure = $urls->isSecure();
+                $scheme = $secure ? 'https' : 'http';
+
+                // Legacy's order: url wins over the pair, and with neither the directive is
+                // just the word 'http' or 'https' - which is the form stock templates use,
+                // as `{{protocol}}://{{store url=''}}`. Returning '' for it, as this did,
+                // silently unschemed every link in those templates.
+                if (isset($params['url'])) {
+                    $host = (string)$params['url'];
+                    // Legacy is `$protocol . '://' . $params['url']` with no checking at all,
+                    // so everything after the scheme is whatever the template said. Held to a
+                    // host, an optional port and a path - the previous pattern had no port,
+                    // which refused the `example.com:8080/a` legacy renders, and allowed every
+                    // markup delimiter after the first slash.
+                    if (!preg_match('#^[a-zA-Z0-9.-]+(?::[0-9]{1,5})?(/[^\s]*)?$#', $host, $m)) {
+                        return '';
+                    }
+                    // Only the tail goes through the path guard. The host cannot: to a guard
+                    // written for relative paths, `example.com:8080` IS a scheme, so checking
+                    // the whole value refused every URL carrying a port.
+                    $tail = ltrim($m[1] ?? '', '/');
+                    if ($tail !== '' && !PathGuard::isSafeRelativePath($tail)) {
+                        return '';
+                    }
+                    return $scheme . '://' . $host;
+                }
 
                 if (isset($params['http'], $params['https'])) {
-                    $chosen = $urls->isSecure() ? $params['https'] : $params['http'];
-                    return PathGuard::isSafeRelativePath($chosen) ? $chosen : '';
+                    // validateProtocolDirectiveHttpScheme requires each to parse and to carry
+                    // its own scheme, and throws otherwise. Refused rather than thrown: a
+                    // host-error shape, which this engine renders as a gap by design.
+                    if (!PathGuard::isSafeAbsoluteUrl((string)$params['http'], 'http')
+                        || !PathGuard::isSafeAbsoluteUrl((string)$params['https'], 'https')
+                    ) {
+                        return '';
+                    }
+                    return (string)($secure ? $params['https'] : $params['http']);
                 }
 
-                $host = $params['url'] ?? '';
-                // Legacy does `$protocol . '://' . $params['url']` with no checking at all.
-                if ($host === '' || !preg_match('#^[a-zA-Z0-9.-]+(/[^\s]*)?$#', $host)) {
-                    return '';
-                }
-                return $scheme . '://' . $host;
+                return $scheme;
             });
         }
 

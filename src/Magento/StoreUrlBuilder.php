@@ -34,6 +34,11 @@ class StoreUrlBuilder implements UrlBuilder
         }
         $parameters['_query'] = $query;
         $parameters['_nosid'] = true;
+        // storeDirective OVERWRITES this with the store code rather than reading it, and the
+        // difference matters: Url escapes route parameters only while it is truthy, so a
+        // template that forwarded its own `_escape_params=0` - as this did - turned the
+        // escaping off for every route parameter it also supplied.
+        $parameters['_escape_params'] = $this->storeManager->getStore()->getCode();
 
         return $this->urlModel->getUrl($path, $parameters);
     }

@@ -24,6 +24,16 @@ class AllowlistedLayoutRenderer implements LayoutRenderer
     ) {
     }
 
+    /**
+     * Parameters that are a capability rather than data, and are dropped.
+     *
+     * `setDataUsingMethod('template', ...)` is `setTemplate()`, on EVERY block in the handle -
+     * which is arbitrary .phtml execution from template text, the same escape closed in
+     * LayoutBlockRenderer by dropping a non-frontend `area`. Legacy forwards it; this does
+     * not. Dropped rather than refused, so the layout still renders with its own templates.
+     */
+    private const CAPABILITY_PARAMETERS = ['template', 'module_name'];
+
     /** @param array<string,string> $parameters */
     public function render(string $handle, string $area, array $parameters): string
     {
@@ -31,13 +41,48 @@ class AllowlistedLayoutRenderer implements LayoutRenderer
             return '';
         }
 
-        $render = function () use ($handle): string {
-            $layout = $this->layoutFactory->create();
+        foreach (self::CAPABILITY_PARAMETERS as $key) {
+            unset($parameters[$key]);
+        }
+
+        $render = function () use ($handle, $parameters): string {
+            // `cacheable => false`, as emulateAreaCallback does: the blocks here are built
+            // with per-render data, so letting them into the block cache would serve one
+            // recipient's order to the next.
+            $layout = $this->layoutFactory->create(['cacheable' => false]);
             $layout->getUpdate()->addHandle($handle)->load();
             $layout->generateXml();
             $layout->generateElements();
 
-            return (string)$layout->getOutput();
+            // The parameters ARE the directive. `{{layout handle="sales_email_order_items"
+            // order_id=$order_id}}` is how every stock order, invoice, shipment and credit
+            // memo email builds its item table, and dropping them - as this did, accepting
+            // $parameters and never reading it - rendered that table for no order at all.
+            // Legacy sets them on every block in the handle, not just the root, because the
+            // block that needs the id is generally a child.
+            $rootBlock = null;
+            foreach ($layout->getAllBlocks() as $block) {
+                if ($rootBlock === null && !$block->getParentBlock()) {
+                    $rootBlock = $block;
+                }
+                foreach ($parameters as $key => $value) {
+                    $block->setDataUsingMethod($key, $value);
+                }
+            }
+
+            // Without this getOutput() returns '' for any handle whose XML does not carry
+            // output="1" - so the directive rendered nothing and looked like it worked.
+            if ($rootBlock !== null) {
+                $layout->addOutputElement($rootBlock->getNameInLayout());
+            }
+
+            $output = (string)$layout->getOutput();
+            // https://bugs.php.net/bug.php?id=62468 - SimpleXML holds the layout's memory
+            // until the cycle collector runs, which for a queue rendering thousands of emails
+            // is the difference between steady and unbounded. Legacy does the same.
+            $layout->__destruct();
+
+            return $output;
         };
 
         return $area === $this->appState->getAreaCode()

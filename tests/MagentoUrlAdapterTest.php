@@ -50,6 +50,7 @@ final class MagentoUrlAdapterTest extends TestCase
                     public function __construct(private string $mediaBase, private bool $secure) {}
                     public function getBaseUrl($type = 'link', $secure = null) { return $this->mediaBase; }
                     public function isCurrentlySecure() { return $this->secure; }
+                    public function getCode() { return 'default'; }
                 };
             }
         };
@@ -84,6 +85,24 @@ final class MagentoUrlAdapterTest extends TestCase
         self::assertArrayNotHasKey('_query_id', $params, 'the _query_ prefixed key was left behind');
         self::assertArrayNotHasKey('_query_token', $params);
         self::assertSame('web', $params['_type'], 'non-query parameters must be passed through');
+    }
+
+    /**
+     * `_escape_params` is set from the store, never read from the template.
+     *
+     * Url only escapes route parameters while this is truthy, so a template forwarding its
+     * own `_escape_params=0` - which this adapter used to allow - turned the escaping off for
+     * every route parameter alongside it. storeDirective assigns the store code
+     * unconditionally, and the assignment being unconditional is the whole control.
+     */
+    public function testTheTemplateCannotTurnOffRouteParameterEscaping(): void
+    {
+        $calls = [];
+        $builder = new StoreUrlBuilder($this->urlModel($calls), $this->storeManager(), new Repository());
+
+        $builder->storeUrl('checkout/cart', ['_escape_params' => '0']);
+
+        self::assertSame('default', $calls[0][1]['_escape_params']);
     }
 
     /** Session ids must never be baked into a URL that will sit in someone's inbox. */

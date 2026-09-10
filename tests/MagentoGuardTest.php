@@ -230,48 +230,158 @@ final class MagentoGuardTest extends TestCase
 
     // ------------------------------------------------ AllowlistedLayoutRenderer
 
-    private function layoutFactory(array &$loaded): LayoutFactory
+    /**
+     * A layout faithful enough to see the parameters arrive.
+     *
+     * The previous stub had no getAllBlocks() and no addOutputElement(), so it could not have
+     * noticed that the renderer accepted $parameters and never read them - which is how every
+     * stock order email lost its item table.
+     */
+    private function layoutFactory(array &$loaded, ?object &$layout = null): LayoutFactory
     {
-        return new class ($loaded) extends LayoutFactory {
-            public function __construct(private array &$loaded) {}
-            public function create(array $data = [])
+        $made = new class {
+            /** @var array<string,array<string,mixed>> */
+            public array $blockData = ['root' => [], 'items' => []];
+            public array $created = [];
+            public array $output = [];
+            public bool $destructed = false;
+
+            public function getUpdate(): object
             {
-                return new class ($this->loadedRef()) {
-                    public function __construct(private array &$loaded) {}
-                    public function getUpdate(): object
-                    {
-                        return new class ($this->loaded) {
-                            public function __construct(private array &$loaded) {}
-                            public function addHandle($handle): self { $this->loaded[] = $handle; return $this; }
-                            public function load(): self { return $this; }
-                        };
-                    }
-                    public function generateXml(): void {}
-                    public function generateElements(): void {}
-                    public function getOutput(): string { return 'LAYOUT-OUTPUT'; }
+                return new class ($this) {
+                    public function __construct(private object $owner) {}
+                    public function addHandle($handle): self { $this->owner->created[] = $handle; return $this; }
+                    public function load(): self { return $this; }
                 };
             }
-            private function &loadedRef(): array { return $this->loaded; }
+
+            public function getAllBlocks(): array
+            {
+                $blocks = [];
+                // The parentless block is deliberately NOT first: legacy picks the root by
+                // asking for a parent, and a stub that lists it first cannot tell that apart
+                // from picking whatever came back first.
+                foreach (['items' => 'root', 'root' => null] as $name => $parent) {
+                    $blocks[$name] = new class ($this, $name, $parent) {
+                        public function __construct(private object $owner, private string $name, private ?string $parent) {}
+                        public function getParentBlock() { return $this->parent; }
+                        public function getNameInLayout(): string { return $this->name; }
+                        public function setDataUsingMethod($key, $value = null): void
+                        {
+                            $this->owner->blockData[$this->name][$key] = $value;
+                        }
+                    };
+                }
+                return $blocks;
+            }
+
+            public function addOutputElement($name): void { $this->output[] = $name; }
+            public function generateXml(): void {}
+            public function generateElements(): void {}
+            public function getOutput(): string { return 'LAYOUT-OUTPUT'; }
+            public function __destruct() { $this->destructed = true; }
         };
+        $layout = $made;
+
+        return new class ($loaded, $made) extends LayoutFactory {
+            public function __construct(private array &$loaded, private object $made) {}
+            public function create(array $data = [])
+            {
+                $this->loaded['__create_args'] = $data;
+                return $this->made;
+            }
+        };
+    }
+
+    private function handlesLoaded(array $loaded): array
+    {
+        unset($loaded['__create_args']);
+        return array_values($loaded);
     }
 
     public function testAnAllowlistedHandleRenders(): void
     {
         $loaded = [];
-        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded), new State(), ['ok_handle']);
+        $factory = $this->layoutFactory($loaded, $layout);
+        $renderer = new AllowlistedLayoutRenderer($factory, new State(), ['ok_handle']);
 
         self::assertSame('LAYOUT-OUTPUT', $renderer->render('ok_handle', 'frontend', []));
-        self::assertSame(['ok_handle'], $loaded);
+        self::assertSame(['ok_handle'], $this->handlesLoaded($layout->created));
+    }
+
+    /**
+     * The parameters are the directive.
+     *
+     * Every stock order, invoice, shipment and credit memo email is
+     * `{{layout handle="sales_email_order_items" order_id=$order_id}}`, and a renderer that
+     * accepts $parameters and never reads it builds that table for no order at all. Legacy
+     * sets them on EVERY block in the handle, because the block that needs the id is a child.
+     */
+    public function testParametersReachEveryBlockInTheHandle(): void
+    {
+        $loaded = [];
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
+
+        $renderer->render('ok_handle', 'frontend', ['order_id' => '42', 'store_hours' => '9-5']);
+
+        self::assertSame(['order_id' => '42', 'store_hours' => '9-5'], $layout->blockData['root']);
+        self::assertSame(['order_id' => '42', 'store_hours' => '9-5'], $layout->blockData['items']);
+    }
+
+    /**
+     * `setDataUsingMethod('template', ...)` is `setTemplate()` on every block in the handle,
+     * which is arbitrary .phtml execution chosen by template text - the same escape closed in
+     * LayoutBlockRenderer. Legacy forwards it. Dropped here, so the layout still renders.
+     */
+    public function testATemplateParameterIsDroppedRatherThanForwarded(): void
+    {
+        $loaded = [];
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
+
+        $out = $renderer->render('ok_handle', 'frontend', [
+            'template' => 'Magento_Backend::page/js/require_js.phtml',
+            'module_name' => 'Magento_Backend',
+            'order_id' => '42',
+        ]);
+
+        self::assertSame('LAYOUT-OUTPUT', $out, 'the render must still happen');
+        self::assertSame(['order_id' => '42'], $layout->blockData['root']);
+        self::assertSame(['order_id' => '42'], $layout->blockData['items']);
+    }
+
+    /**
+     * getOutput() returns '' for any handle whose XML lacks output="1" unless the root block
+     * is registered, so without this the directive rendered nothing and looked like it worked.
+     */
+    public function testTheRootBlockIsRegisteredForOutput(): void
+    {
+        $loaded = [];
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
+
+        $renderer->render('ok_handle', 'frontend', []);
+
+        self::assertSame(['root'], $layout->output, 'only the parentless block is the root');
+    }
+
+    /** Per-render data in a cacheable layout serves one recipient's order to the next. */
+    public function testTheLayoutIsBuiltUncacheable(): void
+    {
+        $loaded = [];
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
+
+        $renderer->render('ok_handle', 'frontend', []);
+
+        self::assertSame(['cacheable' => false], $loaded['__create_args']);
     }
 
     /** A layout handle decides which blocks get built; template text may not choose freely. */
     public function testAHandleOutsideTheAllowlistIsRefused(): void
     {
         $loaded = [];
-        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded), new State(), ['ok_handle']);
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
 
         self::assertSame('', $renderer->render('customer_account_edit', 'frontend', []));
-        self::assertSame([], $loaded, 'the handle was loaded despite being refused');
+        self::assertSame([], $layout->created, 'the handle was loaded despite being refused');
     }
 
     // ------------------------------------------------ adapter scope
