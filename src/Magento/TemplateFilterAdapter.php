@@ -39,6 +39,8 @@ class TemplateFilterAdapter implements TemplateFilterInterface
 
     private ?RenderPolicy $policy = null;
 
+    private bool $plainTemplateMode = false;
+
     /**
      * @param RenderPolicy|null $policy what a render may do, when the caller does not say.
      *
@@ -79,7 +81,13 @@ class TemplateFilterAdapter implements TemplateFilterInterface
     public function setVariables(array $variables): static
     {
         $this->variables = $variables;
-        $this->context = new Context($variables, $this->policy ?? $this->defaultPolicy);
+        $this->context = new Context($variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode);
+        return $this;
+    }
+
+    public function setPlainTemplateMode(bool $plain): static
+    {
+        $this->plainTemplateMode = $plain;
         return $this;
     }
 
@@ -94,7 +102,7 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         // A fresh scope per call. Reusing one context makes deferred(), violations() and
         // incompatibilities() cumulative across every template this adapter has ever
         // filtered, so a caller acting on "the last render" acts on all of them.
-        $this->context = new Context($this->variables, $this->policy ?? $this->defaultPolicy);
+        $this->context = new Context($this->variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode);
 
         try {
             return $this->engine->render($value, context: $this->context);

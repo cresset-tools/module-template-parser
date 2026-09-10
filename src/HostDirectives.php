@@ -330,7 +330,10 @@ final class HostDirectives
                 if (!PathGuard::isSafeIdentifier($code)) {
                     return '';
                 }
-                return (string)($vars->value($code, false) ?? '');
+                // The plain flag was hardcoded false, so a plain-text email got the variable's
+                // HTML value - markup in a text/plain body. The port has taken this argument
+                // since it was written; nothing was passing it.
+                return (string)($vars->value($code, $c->plainText()) ?? '');
             });
         }
 
@@ -427,6 +430,12 @@ final class HostDirectives
         if ($services->stylesheets !== null) {
             $stylesheets = $services->stylesheets;
             $evaluator->register('css', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($stylesheets): string {
+                // cssDirective opens with this: a stylesheet is not something a text/plain
+                // body can carry, so plain mode renders nothing - not even the comment below.
+                if ($c->plainText()) {
+                    return '';
+                }
+
                 $file = $e->params($n, $c)['file'] ?? '';
                 // cssDirective's own words for a missing file, so a template that has always
                 // rendered this comment keeps rendering the same one. A file that is PRESENT

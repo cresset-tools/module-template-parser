@@ -38,12 +38,31 @@ final class Context
 
     private RenderPolicy $policy;
 
-    /** @param array<string,mixed> $variables */
-    public function __construct(array $variables = [], ?RenderPolicy $policy = null)
-    {
+    /**
+     * @param array<string,mixed> $variables
+     * @param bool $plainText the template is being rendered as the PLAIN part of an email
+     */
+    public function __construct(
+        array $variables = [],
+        ?RenderPolicy $policy = null,
+        private readonly bool $plainText = false
+    ) {
         $this->variables = $variables;
         $this->policy = $policy ?? RenderPolicy::restricted();
         $this->includeBudget = (object)['spent' => 0];
+    }
+
+    /**
+     * Whether this render is the plain-text part of an email.
+     *
+     * Three directives change behaviour on it in the filter: {{customvar}} reads the variable's
+     * TEXT value rather than its HTML one, and {{css}} and {{inlinecss}} render nothing at all,
+     * a stylesheet in a text/plain body being noise at best. A property of the template being
+     * rendered rather than of the engine's posture, so it lives here and not in Options.
+     */
+    public function plainText(): bool
+    {
+        return $this->plainText;
     }
 
     public function policy(): RenderPolicy
@@ -81,7 +100,9 @@ final class Context
     /** @param array<string,mixed> $variables */
     public function withVariables(array $variables): self
     {
-        $clone = new self($this->variables + []);
+        // Plain-text mode is inherited for the same reason the policy is: it describes the
+        // document being produced, and an included template is part of that same document.
+        $clone = new self($this->variables + [], null, $this->plainText);
         foreach ($variables as $k => $v) {
             $clone->variables[$k] = $v;
         }

@@ -26,14 +26,21 @@ class ShadowComparator
      * @param array<string,mixed> $variables
      * @return string the LEGACY result, always
      */
-    public function compare(string $source, string $legacyResult, array $variables = []): string
-    {
+    public function compare(
+        string $source,
+        string $legacyResult,
+        array $variables = [],
+        bool $plainTemplateMode = false
+    ): string {
         if (!$this->enabled) {
             return $legacyResult;
         }
 
         try {
-            $candidate = $this->adapter->setVariables($variables)->filter($source);
+            $candidate = $this->adapter
+                ->setPlainTemplateMode($plainTemplateMode)
+                ->setVariables($variables)
+                ->filter($source);
         } catch (\Throwable $e) {
             $this->logger->info('template-parser shadow: engine raised', [
                 'error' => $e->getMessage(),

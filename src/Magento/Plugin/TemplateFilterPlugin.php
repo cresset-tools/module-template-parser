@@ -32,6 +32,8 @@ class TemplateFilterPlugin
     /** @var array<string,mixed> */
     private array $variables = [];
 
+    private bool $plainTemplateMode = false;
+
     public function __construct(private readonly ShadowComparator $comparator)
     {
     }
@@ -48,6 +50,22 @@ class TemplateFilterPlugin
     }
 
     /**
+     * Captured for the same reason the variables are: it is set on the subject, not on us.
+     *
+     * getProcessedTemplate() calls setPlainTemplateMode() on the filter it holds - which is
+     * the LEGACY filter, this being a plugin on it rather than a replacement for it - so
+     * without capturing it here the candidate render would use the HTML value of every custom
+     * variable while the legacy render used the text one, and every plain email would report
+     * as a divergence caused by nothing.
+     */
+    public function beforeSetPlainTemplateMode(LegacyTemplate $subject, $plain): array
+    {
+        $this->plainTemplateMode = (bool)$plain;
+
+        return [$plain];
+    }
+
+    /**
      * Compares, and returns whatever the comparator decides.
      *
      * In shadow mode that is always the legacy result, so enabling this changes nothing a
@@ -55,6 +73,6 @@ class TemplateFilterPlugin
      */
     public function afterFilter(LegacyTemplate $subject, string $result, string $value): string
     {
-        return $this->comparator->compare($value, $result, $this->variables);
+        return $this->comparator->compare($value, $result, $this->variables, $this->plainTemplateMode);
     }
 }

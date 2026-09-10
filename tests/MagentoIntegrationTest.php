@@ -10,6 +10,7 @@ use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
 use Cresset\TemplateParser\Magento\TemplateFilterInterface;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\CustomVariableReader;
 use Cresset\TemplateParser\RenderPolicy;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 use PHPUnit\Framework\TestCase;
@@ -183,6 +184,43 @@ final class MagentoIntegrationTest extends TestCase
 
         self::assertSame('Dear Ada,', $result);
         self::assertSame([], $lines, 'identical output should not be reported as a divergence');
+    }
+
+    /**
+     * Plain-text mode is set on the SUBJECT, so the plugin must capture it too.
+     *
+     * getProcessedTemplate() calls setPlainTemplateMode() on the filter it holds, and this is
+     * a plugin on that filter rather than a replacement for it. Uncaptured, the candidate
+     * render would use the HTML value of every custom variable while the legacy render used
+     * the text one, and every plain email would report a divergence caused by nothing.
+     */
+    public function testThePluginCapturesPlainTemplateMode(): void
+    {
+        $lines = [];
+        $adapter = new TemplateFilterAdapter(
+            new HostServices(customVariables: new class implements CustomVariableReader {
+                public function value(string $code, bool $plainText): ?string
+                {
+                    return $plainText ? 'TEXT' : '<b>HTML</b>';
+                }
+            }),
+            Options::compatible()
+        );
+        $plugin = new TemplateFilterPlugin(new ShadowComparator($adapter, $this->logger($lines), true));
+        $subject = new LegacyTemplate();
+
+        self::assertSame([true], $plugin->beforeSetPlainTemplateMode($subject, true));
+        $plugin->beforeSetVariables($subject, []);
+
+        // The legacy side of a plain render produces TEXT, and so must ours - a divergence
+        // logged here would be the plugin's own doing.
+        $plugin->afterFilter($subject, 'TEXT', '{{customvar code="g"}}');
+        self::assertSame([], $lines, 'plain mode did not reach the candidate render');
+
+        // And it is not sticky the wrong way: back to HTML, HTML is what agrees.
+        $plugin->beforeSetPlainTemplateMode($subject, false);
+        $plugin->afterFilter($subject, '<b>HTML</b>', '{{customvar code="g"}}');
+        self::assertSame([], $lines);
     }
 
     public function testThePluginReportsARealDivergence(): void

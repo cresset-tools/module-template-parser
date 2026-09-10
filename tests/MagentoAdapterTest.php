@@ -8,6 +8,9 @@ use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\LayoutInterface;
 use Cresset\TemplateParser\HostServices;
 use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\CustomVariableReader;
+use Cresset\TemplateParser\Port\StylesheetLoader;
+use Cresset\TemplateParser\Port\TemplateLoader;
 use Cresset\TemplateParser\TemplateError;
 use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
 use Cresset\TemplateParser\Magento\ShadowComparator;
@@ -192,5 +195,74 @@ final class MagentoAdapterTest extends TestCase
     {
         $this->expectException(TemplateError::class);
         (new TemplateFilterAdapter())->filter('{{if unclosed}}');
+    }
+
+    /**
+     * Plain-text mode, which the filter honours in three directives and this honoured in none.
+     *
+     * A plain email got the HTML value of every custom variable - markup in a text/plain body -
+     * and rendered its stylesheets there too. The port has taken a `$plainText` argument since
+     * it was written and nothing was ever passing it, which is the shape of bug a port cannot
+     * catch on its own.
+     *
+     * The method is named as Framework\Filter\Template names it, because
+     * AbstractTemplate::getProcessedTemplate() calls exactly this on whatever filter it holds -
+     * so a host that swaps this engine in behind that call reaches it without knowing.
+     */
+    public function testPlainTemplateModeReachesTheCustomVariableReader(): void
+    {
+        $seen = [];
+        $reader = new class ($seen) implements CustomVariableReader {
+            public function __construct(private array &$seen) {}
+            public function value(string $code, bool $plainText): ?string
+            {
+                $this->seen[] = [$code, $plainText];
+                return $plainText ? 'TEXT' : '<b>HTML</b>';
+            }
+        };
+
+        $adapter = new TemplateFilterAdapter(services: new HostServices(customVariables: $reader));
+
+        self::assertSame('<b>HTML</b>', $adapter->filter('{{customvar code="greeting"}}'));
+        $adapter->setPlainTemplateMode(true);
+        self::assertSame('TEXT', $adapter->filter('{{customvar code="greeting"}}'));
+
+        self::assertSame([['greeting', false], ['greeting', true]], $seen);
+    }
+
+    /** A stylesheet has nothing to inline into a text/plain body, so neither renders at all. */
+    public function testPlainTemplateModeSilencesTheStylesheetDirectives(): void
+    {
+        $adapter = new TemplateFilterAdapter(services: new HostServices(
+            stylesheets: new class implements StylesheetLoader {
+                public function load(string $file): ?string { return 'body{color:red}'; }
+            }
+        ));
+
+        self::assertSame('body{color:red}', $adapter->filter('{{css file="email.css"}}'));
+
+        $adapter->setPlainTemplateMode(true);
+        self::assertSame('', $adapter->filter('{{css file="email.css"}}'));
+        self::assertSame('', $adapter->filter('{{inlinecss file="email.css"}}'));
+        self::assertSame([], $adapter->deferred(), 'a plain body must not defer a stylesheet either');
+    }
+
+    /** Mode survives into an included template: the include is part of the same document. */
+    public function testPlainTemplateModeIsInheritedByIncludes(): void
+    {
+        $adapter = new TemplateFilterAdapter(services: new HostServices(
+            customVariables: new class implements CustomVariableReader {
+                public function value(string $code, bool $plainText): ?string
+                {
+                    return $plainText ? 'TEXT' : '<b>HTML</b>';
+                }
+            },
+            templates: new class implements TemplateLoader {
+                public function load(string $configPath): ?string { return '{{customvar code="g"}}'; }
+            }
+        ));
+        $adapter->setPlainTemplateMode(true);
+
+        self::assertSame('TEXT', $adapter->filter('{{template config_path="design/email/footer"}}'));
     }
 }

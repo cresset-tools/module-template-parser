@@ -484,6 +484,13 @@ final class Evaluator
 
         // Structured deferral: recorded, not emitted. The caller decides what to do.
         $this->handlers['inlinecss'] = function (DirectiveNode $n, Context $c): string {
+            // A stylesheet has nothing to inline into a text/plain body, and the filter
+            // returns '' here rather than deferring. Deferring anyway would hand the host a
+            // stylesheet to run Emogrifier over a document that is not HTML.
+            if ($c->plainText()) {
+                return '';
+            }
+
             $params = $this->parameters->parse($n->params());
             $file = $params['file'] ?? '';
             // Guarded like {{css file=}} is. Deferring is still handing a path to the host,

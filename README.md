@@ -112,6 +112,12 @@ and unit-testable.
 | `css` | `StylesheetLoader` | `AssetStylesheetLoader` | `PathGuard` |
 | `{{var this.getUrl(...)}}` | `TemplateUrlBuilder` *(optional)* | `TemplateModelUrlBuilder` | the receiver has to be a template model, and the store argument comes from the scope rather than the template; `PathGuard` on the route AND on `_direct`, which reaches the base URL unfiltered |
 
+Three of these change behaviour for the plain-text part of an email, as the filter's do:
+`{{customvar}}` reads a variable's text value rather than its HTML one, and `{{css}}` and
+`{{inlinecss}}` render nothing at all. Tell the engine which it is with
+`Context`'s `$plainText`, or — behind Magento — with `setPlainTemplateMode()` on the adapter,
+which is the name `AbstractTemplate::getProcessedTemplate()` already calls.
+
 The last row is not a directive. `StrictResolver` maps every `getFoo()` to `getData('foo')`
 except one: `getUrl` on an `AbstractTemplate` is really invoked, with its arguments parsed
 and its `$store` argument overwritten by the scope's. That single exception is where every
