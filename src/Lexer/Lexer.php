@@ -74,7 +74,17 @@ final class Lexer
             // Advance ONE byte, not two: in `{{{` the inner opener overlaps the outer, so
             // skipping the whole `{{` would step straight over it. peek() is O(1) on the
             // window, so a run of braces stays linear.
-            if ($candidate[0] === TokenType::Degenerate && self::openerInsideSpan($source, $afterOpen)) {
+            // Applies to a well-formed-looking name too, not only a degenerate one. A span
+            // ends at the first `}}`, so one missing brace makes a directive run on and
+            // swallow whatever structure follows:
+            //
+            //     {{if a}}A{{var b}B{{/if}}   ->   var's parameters become ` b}B{{/if`
+            //
+            // The closing tag vanishes into the parameters and the {{if}} looks unclosed;
+            // with `{{else}}` in the way it is worse, because BOTH branches then render.
+            // Nothing legitimate puts a `{{` inside a directive's parameters - legacy's own
+            // lazy capture mangles that too - so the run-on reading is never the right one.
+            if (self::openerInsideSpan($source, $afterOpen)) {
                 $cursor = $open + 1;
                 continue;
             }

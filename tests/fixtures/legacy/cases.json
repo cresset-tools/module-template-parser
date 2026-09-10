@@ -929,6 +929,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/true",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/true",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/true",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/true",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -2147,6 +2192,39 @@
         "object": null,
         "outcome": "throw",
         "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_short/false",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_else/false",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[E]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_dep/false",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -3387,6 +3465,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/zero",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/zero",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/zero",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/zero",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -4622,6 +4745,51 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/one",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/one",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/one",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/one",
@@ -5861,6 +6029,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/answer",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/answer",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/answer",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/answer",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -7098,6 +7311,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/strzero",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/strzero",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/strzero",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/strzero",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -8316,6 +8574,39 @@
         "object": null,
         "outcome": "throw",
         "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_short/emptystr",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_else/emptystr",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[E]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_dep/emptystr",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -9556,6 +9847,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/word",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/word",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/word",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/word",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -10774,6 +11110,39 @@
         "object": null,
         "outcome": "throw",
         "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_short/null",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_else/null",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[E]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_dep/null",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -12014,6 +12383,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/floatzero",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/floatzero",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/floatzero",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/floatzero",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -13251,6 +13665,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/float",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/float",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/float",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/float",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -14470,6 +14929,51 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/emptyarr",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/emptyarr",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/emptyarr",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/emptyarr",
@@ -15940,6 +16444,60 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/list",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/list",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/list",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/list",
@@ -17413,6 +17971,57 @@
         "parity": true
     },
     {
+        "id": "brace_short/assoc",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/assoc",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/assoc",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/assoc",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -18856,6 +19465,57 @@
         "parity": true
     },
     {
+        "id": "brace_short/assocempty",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/assocempty",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/assocempty",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/assocempty",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -20147,6 +20807,51 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/html",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/html",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/html",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/html",
@@ -21500,6 +22205,51 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/directive",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/directive",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/directive",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/directive",
@@ -22935,6 +23685,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/blockpayload",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/blockpayload",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/blockpayload",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/blockpayload",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -24232,6 +25027,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/longstr",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/longstr",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/longstr",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/longstr",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -25467,6 +26307,51 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/spaces",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/spaces",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/spaces",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/spaces",
@@ -26706,6 +27591,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/entities",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/entities",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/entities",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/entities",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -27941,6 +28871,51 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/newlines",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/newlines",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/newlines",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/newlines",
@@ -29314,6 +30289,51 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/brace_lead",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/brace_lead",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/brace_lead",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/brace_lead",
@@ -30699,6 +31719,51 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "brace_short/brace_trail",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/brace_trail",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/brace_trail",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
     },
     {
         "id": "trans/brace_trail",
@@ -32134,6 +33199,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/brace_both",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/brace_both",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/brace_both",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/brace_both",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -33567,6 +34677,51 @@
         "parity": true
     },
     {
+        "id": "brace_short/brace_solo",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/brace_solo",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/brace_solo",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/brace_solo",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -34682,6 +35837,33 @@
         "parity": true
     },
     {
+        "id": "brace_short/@dataobject",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_else/@dataobject",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[E]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_dep/@dataobject",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans/@dataobject",
         "template": "[{{trans \"T\"}}]",
         "variables": [],
@@ -35678,6 +36860,33 @@
         "object": "stringable",
         "outcome": "throw",
         "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_short/@stringable",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_else/@stringable",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[E]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_dep/@stringable",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
         "parity": true
     },
     {
@@ -36680,6 +37889,33 @@
         "parity": true
     },
     {
+        "id": "brace_short/@plainobject",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_else/@plainobject",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[E]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_dep/@plainobject",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans/@plainobject",
         "template": "[{{trans \"T\"}}]",
         "variables": [],
@@ -37679,6 +38915,45 @@
         "parity": true
     },
     {
+        "id": "brace_short/@arrayofobject",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_else/@arrayofobject",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
+        "id": "brace_short_dep/@arrayofobject",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Y&#123;&#123;var a}N]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Y{{var a}N]"
+        }
+    },
+    {
         "id": "trans/@arrayofobject",
         "template": "[{{trans \"T\"}}]",
         "variables": [],
@@ -38675,6 +39950,33 @@
         "object": null,
         "outcome": "throw",
         "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_short/novars",
+        "template": "[{{if a}}Y{{var a}N{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{if a}}Y{{var a}N{{/if}}]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_else/novars",
+        "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
+        "parity": true
+    },
+    {
+        "id": "brace_short_dep/novars",
+        "template": "[{{depend a}}Y{{var a}N{{/depend}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{depend a}}Y{{var a}N{{/depend}}]",
         "parity": true
     },
     {

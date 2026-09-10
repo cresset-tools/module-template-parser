@@ -292,6 +292,12 @@ $constructs = [
     'close_params'    => '[{{/var a}}]',
     'close_dotted'    => '[{{/a.b}}]',
     'close_slash'     => '[{{/a/}}]',
+    // One missing brace. Without the run-on rule the closing tag vanishes into the previous
+    // directive's parameters: the {{if}} looks unclosed, and with an {{else}} in the way BOTH
+    // branches render - `width="width="180"` from one deleted brace in the stock header.
+    'brace_short'     => '[{{if a}}Y{{var a}N{{/if}}]',
+    'brace_short_else'=> '[{{if a}}Y{{var a}N{{else}}E{{/if}}]',
+    'brace_short_dep' => '[{{depend a}}Y{{var a}N{{/depend}}]',
     // {{trans}}. Excluded from parity until the recorder grew a transDirective, so none of
     // these rules were ever measured - and four of them were wrong here.
     'trans'           => '[{{trans "T"}}]',

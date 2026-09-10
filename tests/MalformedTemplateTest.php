@@ -177,27 +177,33 @@ final class MalformedTemplateTest extends TestCase
     }
 
     /**
-     * A missing `}` eats the closing tag, so "never closed" is the wrong thing to say.
+     * A missing `}` does not eat the closing tag - the lexer refuses to run on.
      *
-     * A directive's span ends at the first `}}`, so `{{var b}` - one brace short - runs on to
-     * whatever `}}` comes next, which is usually the block's own closing tag:
+     * A span ends at the first `}}`, so `{{var b}` - one brace short - WOULD run on to
+     * whatever `}}` comes next, which is the block's own closing tag. The tag then vanishes
+     * into the parameters, the {{if}} looks unclosed, and with an {{else}} in the way both
+     * branches render: one deleted brace in the stock header.html produced
+     * `width="width="180"`, a duplicated unterminated attribute, silently.
      *
-     *     {{if a}}A{{var b}B{{/if}}   ->   var's parameters are ` b}B{{/if`
-     *
-     * The template plainly contains {{/if}}, so telling the operator it is never closed reads
-     * as nonsense to the person looking at it. One deleted brace in the stock header.html
-     * produces exactly this, so it is the likeliest malformed template there is.
+     * Nothing legitimate puts a `{{` inside a directive's parameters, so a second opener
+     * inside a span means this `{{` is not the opener. Reading it as text leaves the closing
+     * tag where the author put it - and lands byte-for-byte on what the filter renders,
+     * neutralizer encoding included.
      */
-    public function testAMissingBraceIsReportedAsOneRatherThanAMissingClosingTag(): void
+    public function testAMissingBraceDoesNotSwallowTheClosingTag(): void
     {
-        try {
-            TemplateEngine::withOptions(Options::strict())->render('{{if a}}A{{var b}B{{/if}}', ['a' => 1]);
-            self::fail('expected a syntax error');
-        } catch (SyntaxError $e) {
-            self::assertStringContainsString('was swallowed by {{var b}B{{/if}}', $e->getMessage());
-            self::assertStringContainsString('missing `}`', $e->getMessage());
-            self::assertStringContainsString('close {{var}} with `}}`, not `}`', $e->getMessage());
-        }
+        $engine = TemplateEngine::compatible();
+
+        self::assertSame(
+            'A&#123;&#123;var b}B',
+            $engine->render('{{if a}}A{{var b}B{{/if}}', ['a' => 1, 'b' => 2])
+        );
+
+        // The shape from header.html: the {{else}} is seen, so only one branch renders.
+        self::assertSame(
+            'width="&#123;&#123;var c}"',
+            $engine->render('{{if a}}width="{{var c}"{{else}}width="180"{{/if}}', ['a' => 1, 'c' => 5])
+        );
     }
 
     /** A genuinely unclosed block still gets the plain message - nothing ate its tag. */
