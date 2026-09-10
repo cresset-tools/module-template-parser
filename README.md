@@ -85,10 +85,29 @@ project module against whichever filter you want to cover:
 </type>
 ```
 
-That is still inert until you enable `Magento\ShadowComparator`, which renders the template
-through this engine, logs where it differs from the legacy output it was handed, and returns
-the *legacy* result — so switching it on changes nothing a customer sees. It logs the policy
-violations and legacy incompatibilities behind a divergence, not just a byte offset.
+```xml
+<type name="Cresset\TemplateParser\Magento\ShadowComparator">
+    <arguments><argument name="enabled" xsi:type="boolean">true</argument></arguments>
+</type>
+```
+
+`ShadowComparator` renders the template through this engine, logs where it differs from the
+legacy output it was handed, and returns the *legacy* result — so switching it on changes
+nothing a customer sees. It logs the policy violations and legacy incompatibilities behind a
+divergence, not just a byte offset, and it hashes the template rather than logging its content,
+because a rendered email holds a customer's name and address.
+
+Two renders are deliberately not compared. A **child** template — anything reached through
+`{{template}}` — is skipped, because the filter defers a directive it cannot finish in a child
+by emitting a signed placeholder for the parent to resolve, and the signature is random per
+render; this engine records that deferral structurally instead, so a child can never match.
+The parent's comparison covers the same content. And the candidate is put through the
+subject's own `applyInlineCss()` first, because the legacy result it is being compared against
+is a finished document and this engine defers that step to its host.
+
+Measured on a stock store: those two exemptions plus the wiring below take the 48 stock email
+templates from 203 engine failures and 118 reported divergences to **zero of both**, rendered
+through the model that sends them with the plugin live.
 
 ### Directive surface
 

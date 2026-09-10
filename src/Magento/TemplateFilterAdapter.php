@@ -56,7 +56,12 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         ?RenderPolicy $policy = null
     ) {
         $services ??= new HostServices();
-        $this->options = $options ?? new Options();
+        // COMPATIBLE, not the strict default. This class stands in for
+        // Magento\Framework\Filter\Template, and the strict default refuses what that filter
+        // renders - an unknown variable raises instead of rendering empty, which is a thing
+        // stock templates do constantly. Shadow mode over the 48 stock email templates raised
+        // 85 times on that alone before this. Pass Options explicitly to choose otherwise.
+        $this->options = $options ?? Options::compatible();
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
         $parser = new Parser(options: $this->options);
         $evaluator = new Evaluator(

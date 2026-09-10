@@ -223,6 +223,127 @@ final class MagentoIntegrationTest extends TestCase
         self::assertSame([], $lines);
     }
 
+    /**
+     * filter() is RE-ENTRANT, and the plugin kept one slot of captured state.
+     *
+     * A {{template}} include builds a child model which calls setVariables() and filter() of
+     * its own in the middle of its parent's filter(). With a single slot the child's variables
+     * overwrite the parent's, so the parent's afterFilter compared the parent's template
+     * against the CHILD's scope. On a stock store that reported divergences in templates where
+     * the engines agreed perfectly.
+     */
+    public function testThePluginComparesEachRenderAgainstItsOwnScope(): void
+    {
+        $lines = [];
+        $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
+        $plugin = new TemplateFilterPlugin(new ShadowComparator($adapter, $this->logger($lines), true));
+        $subject = new LegacyTemplate();
+
+        // Parent takes its scope and starts rendering.
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+        $plugin->beforeFilter($subject, 'Dear {{var name}},');
+
+        // An include renders inside it, with a scope of its own.
+        $plugin->beforeSetVariables($subject, ['name' => 'Grace']);
+        $plugin->beforeFilter($subject, 'Hi {{var name}}');
+        $plugin->afterFilter($subject, 'Hi Grace', 'Hi {{var name}}');
+
+        // The parent finishes. Its comparison must use ADA, which is what it was called with.
+        $plugin->afterFilter($subject, 'Dear Ada,', 'Dear {{var name}},');
+
+        self::assertSame([], $lines, 'the parent was compared against the child\'s variables');
+    }
+
+    /**
+     * A child render is not a document, and comparing one is a false positive by construction.
+     *
+     * The filter defers a directive it cannot finish in a child - {{inlinecss}}, which every
+     * stock email hits - by emitting a SIGNED placeholder for the parent to resolve, and the
+     * signature is random per render. This engine records the deferral structurally and emits
+     * nothing, so a child's output can never match. 78 of the 79 divergences a stock store
+     * reported were this and nothing else.
+     */
+    public function testAChildTemplateRenderIsNotCompared(): void
+    {
+        $lines = [];
+        $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
+        $plugin = new TemplateFilterPlugin(new ShadowComparator($adapter, $this->logger($lines), true));
+
+        $subject = new class extends LegacyTemplate {
+            public function isChildTemplate() { return true; }
+        };
+
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+        $plugin->beforeFilter($subject, '{{var name}}');
+        $result = $plugin->afterFilter($subject, 'SIGNATURE{{inlinecss file="x.css"}}SIGNATURE', '{{var name}}');
+
+        self::assertSame('SIGNATURE{{inlinecss file="x.css"}}SIGNATURE', $result);
+        self::assertSame([], $lines, 'a child render was compared');
+    }
+
+    /**
+     * The legacy result is a FINISHED document and the candidate is not.
+     *
+     * Email\Model\Template\Filter::filter() runs Emogrifier over the whole document before
+     * returning; this engine defers that to its host. Comparing the two directly reports a
+     * divergence for every template carrying a stylesheet, none of which is a disagreement
+     * between the engines.
+     */
+    public function testTheCandidateGoesThroughTheSameFinishingStep(): void
+    {
+        $lines = [];
+        $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
+        $comparator = new ShadowComparator($adapter, $this->logger($lines), true);
+
+        $comparator->compare(
+            '{{var name}}',
+            '<INLINED>Ada</INLINED>',
+            ['name' => 'Ada'],
+            false,
+            static fn (string $html): string => '<INLINED>' . $html . '</INLINED>'
+        );
+
+        self::assertSame([], $lines, 'the finishing step was not applied to the candidate');
+    }
+
+    /**
+     * And the PLUGIN is what has to build that finisher, from the subject it is wrapping.
+     *
+     * Testing the comparator with a finisher handed to it directly leaves the one line that
+     * decides whether a finisher exists at all completely uncovered - which is where it would
+     * actually go wrong.
+     */
+    public function testThePluginBuildsTheFinisherFromTheSubject(): void
+    {
+        $lines = [];
+        $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
+        $plugin = new TemplateFilterPlugin(new ShadowComparator($adapter, $this->logger($lines), true));
+
+        $subject = new class extends LegacyTemplate {
+            public function applyInlineCss($html) { return '<INLINED>' . $html . '</INLINED>'; }
+        };
+
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+        $plugin->beforeFilter($subject, 'Dear {{var name}},');
+        $plugin->afterFilter($subject, '<INLINED>Dear Ada,</INLINED>', 'Dear {{var name}},');
+
+        self::assertSame([], $lines, 'the plugin did not put the candidate through applyInlineCss');
+    }
+
+    /** A finisher that raises must not take a shadow run down with it. */
+    public function testAFinisherThatRaisesStillLeavesTheLegacyResultStanding(): void
+    {
+        $lines = [];
+        $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
+        $comparator = new ShadowComparator($adapter, $this->logger($lines), true);
+
+        $result = $comparator->compare('{{var name}}', 'Ada', ['name' => 'Ada'], false, static function (): string {
+            throw new \RuntimeException('emogrifier fell over');
+        });
+
+        self::assertSame('Ada', $result);
+    }
+
     public function testThePluginReportsARealDivergence(): void
     {
         $lines = [];

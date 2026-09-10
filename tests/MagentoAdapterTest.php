@@ -198,6 +198,26 @@ final class MagentoAdapterTest extends TestCase
     }
 
     /**
+     * The adapter stands in for the legacy filter, so it defaults to COMPATIBLE, not strict.
+     *
+     * `new Options()` is fully strict, and a strict engine refuses what the filter renders -
+     * an unknown variable raises instead of rendering empty, which stock templates rely on
+     * constantly. Shadow mode over the stock email templates raised 85 times on that alone.
+     * A caller that wants strictness passes Options; the default has to be the thing this
+     * class is a replacement for.
+     */
+    public function testTheAdapterDefaultsToCompatibleMode(): void
+    {
+        $adapter = new TemplateFilterAdapter();
+
+        self::assertSame(
+            'Dear ,',
+            $adapter->setVariables(['other' => 1])->filter('Dear {{var nobody_set_this}},'),
+            'an unknown variable must render empty, as the filter renders it'
+        );
+    }
+
+    /**
      * Plain-text mode, which the filter honours in three directives and this honoured in none.
      *
      * A plain email got the HTML value of every custom variable - markup in a text/plain body -

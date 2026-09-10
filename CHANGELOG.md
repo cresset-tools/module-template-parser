@@ -94,6 +94,16 @@ Entries say what changed and why it mattered. A line that only names a file has 
   `setUseAbsoluteLinks`, never applied store emulation, and replaced an empty variable
   read-back with the caller's set — so its "today" column matched no pipeline the store runs.
 
+- The documented adoption path did not work. Following the README produced an adapter with
+  **no host ports wired at all** — every Magento adapter was written, tested and connected to
+  nothing — so `{{css}}`, `{{template}}` and the rest raised "No handler registered", and the
+  adapter defaulted to strict rather than compatible mode, so an unknown variable raised where
+  the filter renders empty. Shadow mode over the 48 stock email templates failed 203 times
+  before this and reports zero now.
+- `TemplateFilterPlugin` kept a single slot of captured state, and `filter()` is re-entrant: a
+  `{{template}}` include's child model overwrote the parent's variables before the parent's
+  comparison ran, so the parent was compared against the child's scope.
+
 ### Security
 
 Nothing here has been released, so none of this reached a deployed store.

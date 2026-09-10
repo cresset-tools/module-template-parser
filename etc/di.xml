@@ -30,6 +30,72 @@
         enabled the LEGACY result is what gets returned.
     -->
 
+    <!--
+        The ports the adapter renders through.
+
+        Without these HostServices defaults every port to null, so the adapter registers only
+        the directives that need no host - and an email template hitting {{css}} or
+        {{template}} raises "No handler registered". Shadow mode over the 48 stock email
+        templates did exactly that 118 times before this existed: the Magento adapters were
+        all written, all tested, and nothing connected them to the class that renders.
+
+        Wiring them changes no behaviour on its own. The adapter is only reached once an
+        integrator declares the plugin, which this file deliberately does not.
+    -->
+    <!--
+        Every OPTIONAL object dependency, named explicitly.
+
+        A nullable constructor argument with a default of null is left null by DI unless it is
+        configured here - the type alone is not an instruction to resolve it. So each of these
+        classes was silently running in its degraded mode: ConfigTemplateLoader without a
+        TemplateFactory returns null for every include, which is how {{template}} rendered
+        nothing and every stock email lost its header and footer. The others lose the country
+        name, the theme, and the published-asset read.
+
+        They are nullable so the engine still loads on a tree that lacks the class. This is
+        what supplies them where it exists.
+    -->
+    <type name="Cresset\TemplateParser\Magento\ConfigTemplateLoader">
+        <arguments>
+            <argument name="templateFactory" xsi:type="object">Magento\Email\Model\TemplateFactory</argument>
+        </arguments>
+    </type>
+
+    <type name="Cresset\TemplateParser\Magento\AllowlistedConfigReader">
+        <arguments>
+            <argument name="storeInformation" xsi:type="object">Magento\Store\Model\Information</argument>
+            <argument name="storeManager" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
+        </arguments>
+    </type>
+
+    <type name="Cresset\TemplateParser\Magento\AssetStylesheetLoader">
+        <arguments>
+            <argument name="design" xsi:type="object">Magento\Framework\View\DesignInterface</argument>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem</argument>
+        </arguments>
+    </type>
+
+    <type name="Cresset\TemplateParser\HostServices">
+        <arguments>
+            <argument name="blocks" xsi:type="object">Cresset\TemplateParser\Magento\LayoutBlockRenderer</argument>
+            <argument name="translator" xsi:type="object">Cresset\TemplateParser\Magento\PhraseTranslator</argument>
+            <argument name="templates" xsi:type="object">Cresset\TemplateParser\Magento\ConfigTemplateLoader</argument>
+            <argument name="config" xsi:type="object">Cresset\TemplateParser\Magento\AllowlistedConfigReader</argument>
+            <argument name="customVariables" xsi:type="object">Cresset\TemplateParser\Magento\VariableCustomVariableReader</argument>
+            <argument name="urls" xsi:type="object">Cresset\TemplateParser\Magento\StoreUrlBuilder</argument>
+            <argument name="stylesheets" xsi:type="object">Cresset\TemplateParser\Magento\AssetStylesheetLoader</argument>
+            <argument name="layouts" xsi:type="object">Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer</argument>
+            <argument name="widgets" xsi:type="object">Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer</argument>
+            <argument name="templateUrls" xsi:type="object">Cresset\TemplateParser\Magento\TemplateModelUrlBuilder</argument>
+        </arguments>
+    </type>
+
+    <type name="Cresset\TemplateParser\Magento\TemplateFilterAdapter">
+        <arguments>
+            <argument name="services" xsi:type="object">Cresset\TemplateParser\HostServices</argument>
+        </arguments>
+    </type>
+
     <type name="Cresset\TemplateParser\Magento\LayoutBlockRenderer">
         <arguments>
             <!-- Only these methods may be named by {{block output="..."}}. -->

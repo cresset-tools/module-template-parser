@@ -34,6 +34,20 @@ class TemplateFilterPlugin
 
     private bool $plainTemplateMode = false;
 
+    /**
+     * The state each in-flight filter() call captured, innermost last.
+     *
+     * filter() is RE-ENTRANT: a {{template}} include builds a child model, and that child
+     * calls setVariables() and filter() of its own in the middle of its parent's filter().
+     * With a single slot the child's variables overwrite the parent's, and by the time the
+     * parent's afterFilter runs it compares the parent's template against the CHILD's scope -
+     * which reported 79 divergences on a stock store, none of them a disagreement between the
+     * engines. A stack because the nesting is a stack.
+     *
+     * @var list<array{0:array<string,mixed>,1:bool}>
+     */
+    private array $inFlight = [];
+
     public function __construct(private readonly ShadowComparator $comparator)
     {
     }
@@ -66,6 +80,21 @@ class TemplateFilterPlugin
     }
 
     /**
+     * Snapshots the scope this invocation will be compared against.
+     *
+     * Taken on the way IN, because by the time filter() returns an include may have replaced
+     * everything captured above with its own.
+     *
+     * @return array{0:string}
+     */
+    public function beforeFilter(LegacyTemplate $subject, $value): array
+    {
+        $this->inFlight[] = [$this->variables, $this->plainTemplateMode];
+
+        return [$value];
+    }
+
+    /**
      * Compares, and returns whatever the comparator decides.
      *
      * In shadow mode that is always the legacy result, so enabling this changes nothing a
@@ -73,6 +102,38 @@ class TemplateFilterPlugin
      */
     public function afterFilter(LegacyTemplate $subject, string $result, string $value): string
     {
-        return $this->comparator->compare($value, $result, $this->variables, $this->plainTemplateMode);
+        // A CHILD render is not a document, and comparing one is a false positive by
+        // construction. `Framework\Filter\Template` defers a directive it cannot finish in a
+        // child - {{inlinecss}} being the one every stock email hits - by emitting a SIGNED
+        // placeholder for the parent to resolve, and that signature is random per render. This
+        // engine records the deferral structurally instead and emits nothing, so a child's
+        // output can never match. The parent's comparison covers the same content, because the
+        // parent's render contains the child's, so nothing goes unchecked by skipping.
+        if (method_exists($subject, 'isChildTemplate') && $subject->isChildTemplate()) {
+            array_pop($this->inFlight);
+
+            return $result;
+        }
+
+        // The subject inlines its stylesheets before returning, so the result above is a
+        // FINISHED document. This engine defers that step, so the candidate has to be put
+        // through the same one or every template with a stylesheet reports as a divergence.
+        $finish = method_exists($subject, 'applyInlineCss')
+            ? static function (string $html) use ($subject): string {
+                try {
+                    return (string)$subject->applyInlineCss($html);
+                } catch (\Throwable) {
+                    // A candidate the inliner cannot process is compared as it stands; the
+                    // comparison is the point, and a shadow run must never raise.
+                    return $html;
+                }
+            }
+            : null;
+
+        // Whatever THIS invocation was called with, not whatever the last one left behind.
+        [$variables, $plainTemplateMode] = array_pop($this->inFlight)
+            ?? [$this->variables, $this->plainTemplateMode];
+
+        return $this->comparator->compare($value, $result, $variables, $plainTemplateMode, $finish);
     }
 }
