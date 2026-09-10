@@ -36,6 +36,13 @@
             <argument name="allowedOutputMethods" xsi:type="array">
                 <item name="toHtml" xsi:type="string">toHtml</item>
             </argument>
+            <!--
+                The store's own deny list for this directive, reused rather than reimplemented:
+                a rule added to Magento_Email's di.xml applies here too. The constructor takes
+                it loosely typed so a tree without the class still loads; this argument is what
+                supplies it where it exists. Remove this line on such a tree.
+            -->
+            <argument name="blockDirectivePolicy" xsi:type="object">Magento\Email\Model\Template\Filter\BlockDirectivePolicy</argument>
         </arguments>
     </type>
 

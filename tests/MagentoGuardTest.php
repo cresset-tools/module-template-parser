@@ -318,4 +318,129 @@ final class MagentoGuardTest extends TestCase
         self::assertSame(['line' => 1, 'column' => 1], Diagnostics::locate($source, -50));
         self::assertSame(['line' => 2, 'column' => 4], Diagnostics::locate($source, 9999));
     }
+
+    /**
+     * The store's own deny list, reproduced rather than reimplemented.
+     *
+     * Magento_Email hardened {{block}} with a BlockDirectivePolicy denying `\Block\Adminhtml\`
+     * and friends - 919 of the 1480 block classes in a stock store. This engine had no deny
+     * concept at all, only an allowlist that nothing set, which made it strictly MORE
+     * permissive than the filter it replaces: 11 admin blocks rendered real admin HTML.
+     */
+    public function testARestrictedBlockClassIsNotInstantiated(): void
+    {
+        // A class that EXISTS and passes the type check, so the deny list is what refuses it
+        // rather than something upstream - the first version of this test used a made-up name
+        // and passed with the deny list deleted.
+        $class = get_class(new class implements BlockInterface {
+            public function toHtml()
+            {
+                return 'ADMIN HTML';
+            }
+        });
+
+        $built = [];
+        $policy = new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$class]);
+        $renderer = new LayoutBlockRenderer($this->layout($built), $this->omConfig(), ['toHtml'], null, $policy);
+
+        self::assertSame('', $renderer->render($class, [], 'toHtml'));
+        self::assertSame([], $built, 'the block must not be constructed at all');
+
+        // Control: the same class with no policy is CONSTRUCTED, so the refusal above is the
+        // policy's doing and not the type check's - the first version of this test named a
+        // class that does not exist and passed with the deny list deleted.
+        $built = [];
+        $open = new LayoutBlockRenderer($this->layout($built), $this->omConfig(), ['toHtml']);
+        $open->render($class, [], 'toHtml');
+        self::assertSame([$class], $built);
+    }
+
+    /**
+     * And again on what was actually built.
+     *
+     * A class name is a spelling; DI resolves preferences and virtual types, so the thing
+     * constructed can be a class the written name is not. The store checks get_class($block)
+     * a second time for exactly that reason; without it an allowlist describes spellings
+     * rather than classes.
+     */
+    public function testARestrictedClassIsRefusedEvenWhenTheNameWasClean(): void
+    {
+        $denied = new class implements BlockInterface {
+            public function toHtml()
+            {
+                return 'ADMIN HTML';
+            }
+        };
+        $layout = new class ($denied) implements LayoutInterface {
+            public function __construct(private object $block)
+            {
+            }
+
+            public function createBlock($type, $name = '', array $arguments = [])
+            {
+                return $this->block;      // a preference resolving somewhere else entirely
+            }
+        };
+        $policy = new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$denied::class]);
+        $renderer = new LayoutBlockRenderer($layout, $this->omConfig(), ['toHtml'], null, $policy);
+
+        self::assertSame('', $renderer->render(\Magento\Framework\View\Element\BlockInterface::class, [], 'toHtml'));
+    }
+
+    /**
+     * `area` may only be frontend, and is dropped rather than refused.
+     *
+     * Forwarding it made Magento resolve the block's template out of the adminhtml theme, so
+     * `{{block class=...Template area=adminhtml template=Magento_Backend::...phtml}}` executed
+     * an admin .phtml - 249 of the 507 stock adminhtml templates rendered, from template text
+     * or from a variable's value. The store trims, case-folds and drops any other area.
+     */
+    public function testANonFrontendAreaOverrideIsDropped(): void
+    {
+        foreach (['adminhtml', 'base', 'ADMINHTML', ' adminhtml '] as $area) {
+            $data = $this->dataReachingTheBlock(['area' => $area, 'x' => '1']);
+
+            self::assertArrayNotHasKey('area', $data, $area . ' reached the block');
+            self::assertSame('1', $data['x'], 'other parameters still get through');
+        }
+
+        // The one it is allowed to ask for survives, in every spelling the store accepts.
+        foreach (['frontend', 'FRONTEND', ' frontend'] as $area) {
+            self::assertSame($area, $this->dataReachingTheBlock(['area' => $area])['area']);
+        }
+    }
+
+    /**
+     * The `data` a block is actually constructed with, which is what `area` decides.
+     *
+     * @param array<string,string> $parameters
+     * @return array<string,string>
+     */
+    private function dataReachingTheBlock(array $parameters): array
+    {
+        $seen = [];
+        $layout = new class ($seen) implements LayoutInterface {
+            /** @param array<string,string> $seen */
+            public function __construct(private array &$seen)
+            {
+            }
+
+            public function createBlock($type, $name = '', array $arguments = [])
+            {
+                $this->seen = $arguments['data'] ?? [];
+
+                return new class implements BlockInterface {
+                    public function toHtml()
+                    {
+                        return '';
+                    }
+                };
+            }
+        };
+
+        (new LayoutBlockRenderer($layout, $this->omConfig()))
+            ->render(\Magento\Framework\View\Element\BlockInterface::class, $parameters, 'toHtml');
+
+        return $seen;
+    }
 }

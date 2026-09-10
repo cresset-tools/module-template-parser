@@ -6,6 +6,9 @@ namespace Cresset\TemplateParser\Test;
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\LayoutInterface;
+use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\TemplateError;
 use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
 use Cresset\TemplateParser\Magento\ShadowComparator;
 use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
@@ -150,5 +153,44 @@ final class MagentoAdapterTest extends TestCase
 
         self::assertSame('L', $comparator->compare('{{if unclosed}}', 'L'));
         self::assertStringContainsString('engine raised', $logger->records[0][0]);
+    }
+
+    /**
+     * A host exception degrades the template, as the filter it replaces does.
+     *
+     * Email\Model\Template\Filter::filter() catches \Exception and substitutes an error
+     * string, so one bad directive costs a template rather than the request. This adapter let
+     * it out, turning a degraded email into a 500 - and a raising block is not rare: 595 of
+     * the 1480 block classes in a stock store raise when built with no data, 52 of them
+     * ordinary frontend blocks a CMS editor could name.
+     */
+    public function testAHostExceptionDegradesRatherThanEscaping(): void
+    {
+        $blocks = new class implements BlockRenderer {
+            public function render(string $class, array $parameters, string $method): string
+            {
+                throw new \InvalidArgumentException('Expected value of `identifier` was not provided');
+            }
+        };
+        $adapter = new TemplateFilterAdapter(new HostServices(blocks: $blocks));
+
+        self::assertSame(
+            'Error filtering template: Expected value of `identifier` was not provided',
+            $adapter->filter('{{block class="Vendor\\Mod\\Block\\Thing"}}')
+        );
+        self::assertInstanceOf(\InvalidArgumentException::class, $adapter->lastError());
+    }
+
+    /**
+     * But this engine's own diagnostics are the product, not a failure to hide.
+     *
+     * Shadow mode reports them as "engine raised" and `check` turns them into findings;
+     * swallowing them into an error string would make an engine refusal look like a
+     * divergence, which is the opposite of useful.
+     */
+    public function testTheEnginesOwnDiagnosticsStillEscape(): void
+    {
+        $this->expectException(TemplateError::class);
+        (new TemplateFilterAdapter())->filter('{{if unclosed}}');
     }
 }

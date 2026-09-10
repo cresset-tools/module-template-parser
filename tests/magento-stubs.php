@@ -47,6 +47,31 @@ namespace Magento\Store\Model {
         class Store {}
     }
 }
+namespace Magento\Email\Model\Template\Filter {
+    // Mage-OS's deny list for the {{block}} directive. LayoutBlockRenderer is typed against it
+    // concretely, because a compiled DI factory resolves an argument from its DECLARED type -
+    // an `object` one is handed the raw descriptor array and the constructor gets a TypeError.
+    if (!class_exists(BlockDirectivePolicy::class)) {
+        class BlockDirectivePolicy
+        {
+            /** @param string[] $restrictedPatterns */
+            public function __construct(private array $restrictedPatterns = [])
+            {
+            }
+
+            public function isRestricted(string $class): bool
+            {
+                foreach ($this->restrictedPatterns as $pattern) {
+                    if (stripos($class, $pattern) !== false) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+    }
+}
 namespace Magento\Email\Model {
     if (!class_exists(AbstractTemplate::class)) {
         abstract class AbstractTemplate
@@ -159,6 +184,23 @@ namespace Psr\Log {
 }
 namespace {
     if (!function_exists('__')) {
-        function __($text, ...$args) { return $text; }
+        /**
+         * Substitutes %1, %2 ... as Phrase\Renderer\Placeholder does.
+         *
+         * Returning the text unchanged made every `__('... %1', $x)` in the engine look
+         * correct in tests while shipping a literal `%1` - which is exactly the class of
+         * unfaithful stub that has hidden real defects here before.
+         */
+        function __($text, ...$args) {
+            if ($args !== [] && is_array($args[0])) {
+                $args = $args[0];
+            }
+            $map = [];
+            foreach (array_values($args) as $i => $value) {
+                $map['%' . ($i + 1)] = (string)$value;
+            }
+
+            return $map === [] ? $text : strtr((string)$text, $map);
+        }
     }
 }
