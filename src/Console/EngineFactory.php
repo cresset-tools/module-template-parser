@@ -117,7 +117,13 @@ class EngineFactory
             config: $this->build(fn (MagentoContext $m): ?object
                 => ($scope = $m->get(\Magento\Framework\App\Config\ScopeConfigInterface::class))
                     && ($vars = $m->get(\Magento\Variable\Model\Source\Variables::class))
-                    ? new AllowlistedConfigReader($scope, $vars, $storeId)
+                    ? new AllowlistedConfigReader(
+                        $scope,
+                        $vars,
+                        $storeId,
+                        $m->get(\Magento\Store\Model\Information::class),
+                        $m->get(\Magento\Store\Model\StoreManagerInterface::class),
+                    )
                     : null),
             customVariables: $this->build(fn (MagentoContext $m): ?object
                 => ($factory = $m->get(\Magento\Variable\Model\VariableFactory::class))

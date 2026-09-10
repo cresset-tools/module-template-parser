@@ -207,6 +207,30 @@ final class PathGuard
         return $path !== '' && (bool)preg_match('#^[a-zA-Z0-9_]+(/[a-zA-Z0-9_]+)*$#', $path);
     }
 
+    /**
+     * A custom variable code, which is not an identifier and never was.
+     *
+     * Magento validates a variable code for uniqueness and nothing else - Variable::validate()
+     * checks that a code and a name exist, and that is all - so any string a merchant typed
+     * into the admin is a legal code. Holding it to the identifier shape refused `checkout/tos`
+     * and anything else with a separator in it, which is an over-refusal on a value that only
+     * ever reaches loadByCode() as a bound query parameter.
+     *
+     * What is worth refusing is what no code legitimately contains: control bytes, a length no
+     * column would hold, and a traversal run. The last one is not about the Magento port -
+     * there the code is a bound query parameter and `../x` is merely a code that does not
+     * exist - but about the contract this class states, that a handler applies the guard so
+     * no port implementation has to remember to. A port that resolves a code against a
+     * directory still cannot be walked out of it.
+     */
+    public static function isSafeVariableCode(string $code): bool
+    {
+        return $code !== ''
+            && strlen($code) <= 255
+            && !preg_match('/[\x00-\x1F\x7F]/', $code)
+            && !preg_match('#(^|[/\\\\:?\#])\.{2,}([/\\\\:?\#]|$)#', $code);
+    }
+
     /** A layout handle or widget/block type is an identifier, not a path. */
     public static function isSafeIdentifier(string $value): bool
     {

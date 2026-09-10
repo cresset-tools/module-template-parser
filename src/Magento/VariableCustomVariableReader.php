@@ -24,6 +24,10 @@ class VariableCustomVariableReader implements CustomVariableReader
 
         $value = $variable->getValue($plainText ? Variable::TYPE_TEXT : Variable::TYPE_HTML);
 
-        return $value === '' ? null : (string)$value;
+        // customVarDirective keeps the value only `if ($value)`, so PHP truthiness decides -
+        // and a variable whose value is the string "0" renders as nothing. Reproduced rather
+        // than corrected: it is the same truthiness quirk {{if}} has, it is what merchants'
+        // templates have been rendering, and there is no safety argument for diverging.
+        return $value ? (string)$value : null;
     }
 }

@@ -178,6 +178,28 @@ final class FullDirectiveSurfaceTest extends TestCase
     }
 
     /**
+     * A custom variable code is a lookup key, and merchants namespace them with separators.
+     *
+     * Variable::validate() checks a code for existence and uniqueness and nothing else, so
+     * `checkout/tos` is a legal code and holding it to the identifier shape refused it - the
+     * directive rendered nothing, forever, with nothing to say why. A traversal run is still
+     * refused, because PathGuard's contract is that the handler guards so no port has to.
+     */
+    public function testACustomVariableCodeIsNotHeldToTheIdentifierShape(): void
+    {
+        $services = $this->services();
+        $engine = $this->engine($services);
+
+        foreach (['checkout/tos', 'store hours', 'a.b-c_d'] as $code) {
+            self::assertSame(
+                'VAR:' . $code,
+                $engine->render(sprintf('{{customvar code="%s"}}', $code)),
+                $code
+            );
+        }
+    }
+
+    /**
      * An absent path is the base URL, not a refusal.
      *
      * mediaDirective is `getBaseUrl(MEDIA) . $params['url']`, so with no `url` it concatenates

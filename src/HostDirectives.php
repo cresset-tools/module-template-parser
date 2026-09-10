@@ -327,7 +327,7 @@ final class HostDirectives
             $vars = $services->customVariables;
             $evaluator->register('customvar', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($vars): string {
                 $code = $e->params($n, $c)['code'] ?? '';
-                if (!PathGuard::isSafeIdentifier($code)) {
+                if (!PathGuard::isSafeVariableCode($code)) {
                     return '';
                 }
                 // The plain flag was hardcoded false, so a plain-text email got the variable's

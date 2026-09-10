@@ -126,6 +126,16 @@ namespace Magento\Store\Model {
     if (!interface_exists(StoreManagerInterface::class)) {
         interface StoreManagerInterface { public function getStore($storeId = null); }
     }
+    if (!class_exists(Information::class)) {
+        class Information {
+            public const XML_PATH_STORE_INFO_REGION_CODE = 'general/store_information/region_id';
+            public const XML_PATH_STORE_INFO_COUNTRY_CODE = 'general/store_information/country_id';
+            public function getStoreInformationObject($store)
+            {
+                return new class { public function getData($key = '') { return null; } };
+            }
+        }
+    }
 }
 namespace Magento\Framework\App {
     if (!interface_exists(TemplateTypesInterface::class)) {

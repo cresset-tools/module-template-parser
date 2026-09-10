@@ -13,6 +13,9 @@ use Magento\Variable\Model\Source\Variables;
 use Magento\Widget\Block\BlockInterface as WidgetBlockInterface;
 use Cresset\TemplateParser\Diagnostics;
 use Cresset\TemplateParser\Magento\AllowlistedConfigReader;
+use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
+use Cresset\TemplateParser\PathGuard;
+use Magento\Variable\Model\VariableFactory;
 use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
 use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
 use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
@@ -242,6 +245,130 @@ final class MagentoGuardTest extends TestCase
         );
 
         self::assertNull($reader->value('payment/secret/key'));
+    }
+
+    /**
+     * Two allowlisted config paths hold an ID and are rendered as a NAME.
+     *
+     * configDirective rewrites `general/store_information/country_id` from `NL` to
+     * `Netherlands` and `region_id` from a numeric id to the region's name. Returning the
+     * stored value instead put a country code in the footer of every email using the
+     * directive, which is most of them.
+     */
+    public function testCountryAndRegionRenderAsNamesNotIds(): void
+    {
+        $reader = $this->configReader(
+            ['general/store_information/country_id' => 'NL', 'general/store_information/region_id' => '268'],
+            ['country' => 'Netherlands', 'region' => 'Noord-Holland']
+        );
+
+        self::assertSame('Netherlands', $reader->value('general/store_information/country_id'));
+        self::assertSame('Noord-Holland', $reader->value('general/store_information/region_id'));
+    }
+
+    /**
+     * The asymmetry is legacy's, and it is not obviously intentional - so it is reproduced
+     * rather than tidied. Country is replaced UNCONDITIONALLY, so an unresolvable one renders
+     * empty rather than falling back to the code; region falls back to the stored value.
+     */
+    public function testAnUnresolvedCountryIsEmptyWhileAnUnresolvedRegionFallsBack(): void
+    {
+        $reader = $this->configReader(
+            ['general/store_information/country_id' => 'ZZ', 'general/store_information/region_id' => '268'],
+            ['country' => null, 'region' => null]
+        );
+
+        self::assertSame('', $reader->value('general/store_information/country_id'));
+        self::assertSame('268', $reader->value('general/store_information/region_id'));
+    }
+
+    /** Every other allowlisted path is returned exactly as stored. */
+    public function testOtherConfigPathsAreNotRewritten(): void
+    {
+        $reader = $this->configReader(
+            ['general/store_information/name' => 'Demo Store'],
+            ['country' => 'Netherlands', 'region' => 'Noord-Holland']
+        );
+
+        self::assertSame('Demo Store', $reader->value('general/store_information/name'));
+    }
+
+    /** A host with no Information model keeps the raw value rather than losing the directive. */
+    public function testWithoutTheStoreInformationModelTheStoredValueStands(): void
+    {
+        $reader = new AllowlistedConfigReader(
+            $this->scopeConfig(['general/store_information/country_id' => 'NL']),
+            $this->variables(['general/store_information/country_id']),
+        );
+
+        self::assertSame('NL', $reader->value('general/store_information/country_id'));
+    }
+
+    /** @param array<string,string> $config @param array<string,?string> $info */
+    private function configReader(array $config, array $info): AllowlistedConfigReader
+    {
+        return new AllowlistedConfigReader(
+            $this->scopeConfig($config),
+            $this->variables(array_keys($config)),
+            1,
+            new class ($info) extends \Magento\Store\Model\Information {
+                public function __construct(private array $info) {}
+                public function getStoreInformationObject($store)
+                {
+                    return new class ($this->info) {
+                        public function __construct(private array $info) {}
+                        public function getData($key = '') { return $this->info[$key] ?? null; }
+                    };
+                }
+            },
+            new class implements \Magento\Store\Model\StoreManagerInterface {
+                public function getStore($storeId = null) { return new \stdClass(); }
+            }
+        );
+    }
+
+    /**
+     * A custom variable code is a lookup key, not an identifier and not a path.
+     *
+     * Variable::validate() checks a code for existence and uniqueness and nothing else, so
+     * every string a merchant typed into the admin is a legal code - and holding it to the
+     * identifier shape refused any of them with a separator in it. It still may not carry a
+     * traversal run, not because loadByCode() could be walked (it is a bound query parameter)
+     * but because PathGuard's contract is that the handler guards so no port has to.
+     */
+    public function testACustomVariableCodeMayHoldWhateverAMerchantTyped(): void
+    {
+        foreach (['checkout/tos', 'my.var', 'a-b_c', 'store hours', 'caf' . "\u{e9}"] as $code) {
+            self::assertTrue(PathGuard::isSafeVariableCode($code), $code);
+        }
+
+        foreach (['../x', 'a/../b', '..', "a\x00b", str_repeat('a', 256), ''] as $code) {
+            self::assertFalse(PathGuard::isSafeVariableCode($code), var_export($code, true));
+        }
+    }
+
+    /**
+     * customVarDirective keeps its value only `if ($value)`, so PHP truthiness decides.
+     *
+     * A custom variable holding the string "0" therefore renders as nothing - the same
+     * truthiness quirk {{if}} has. Reproduced rather than corrected: it is what merchants'
+     * templates have been rendering and there is no safety argument for diverging.
+     */
+    public function testACustomVariableHoldingZeroRendersAsNothing(): void
+    {
+        $reader = new VariableCustomVariableReader(new class extends VariableFactory {
+            public function __construct() {}
+            public function create(array $data = [])
+            {
+                return new class extends \Magento\Variable\Model\Variable {
+                    public function setStoreId($storeId) { return $this; }
+                    public function loadByCode($code) { return $this; }
+                    public function getValue($type = null) { return '0'; }
+                };
+            }
+        });
+
+        self::assertNull($reader->value('anything', false));
     }
 
     /** If the allowlist cannot be obtained, deny - do not fall through and read anyway. */
