@@ -248,6 +248,14 @@ $constructs = [
     'nest_empty_dep'  => '{{depend}}{{depend}}{{/depend}}',
     'cross_unclosed'  => '{{if}}{{depend}}x{{/if}}',
     'unknown_paired'  => '{{foo}}x{{/foo}}',
+    // The same shape in other cases. CONSTRUCTION_PATTERN carries /si and its closing group
+    // is a backreference, so legacy swallows the whole block whatever the case and hands it
+    // back verbatim - body un-executed. The lexer here reads an upper-case unknown name as
+    // prose, so the body used to render: `{{Wrap}}A{{if x}}B{{/if}}C{{/Wrap}}` lost its B.
+    'upper_paired'    => '{{Foo}}x{{/Foo}}',
+    'shout_paired'    => '{{FOO}}x{{/FOO}}',
+    'mixed_close'     => '{{foo}}x{{/Foo}}',
+    'upper_wraps_dir' => '{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}',
     'var_paired'      => '{{var a}}Y{{/var}}',
     // Modifier arguments reaching an internal function, and escape types on non-strings.
     'nl2br_param'     => '[{{var a|nl2br:x}}]',

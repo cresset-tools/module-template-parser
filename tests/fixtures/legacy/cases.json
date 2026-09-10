@@ -572,6 +572,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/true",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/true",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/true",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/true",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/true",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -1876,6 +1920,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/false",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/false",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/false",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/false",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/false",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -3149,6 +3237,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/zero",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/zero",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/zero",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/zero",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -4456,6 +4588,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/one",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/one",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/one",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/one",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/one",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -5757,6 +5933,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/answer",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/answer",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/answer",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/answer",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -7064,6 +7284,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/strzero",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/strzero",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/strzero",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/strzero",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/strzero",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -8368,6 +8632,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/emptystr",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/emptystr",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/emptystr",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/emptystr",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/emptystr",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -9641,6 +9949,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/word",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/word",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/word",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/word",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -10948,6 +11300,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/null",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/null",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/null",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/null",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/null",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -12221,6 +12617,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/floatzero",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/floatzero",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/floatzero",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/floatzero",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -13528,6 +13968,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/float",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/float",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/float",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/float",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/float",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -14829,6 +15313,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/emptyarr",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/emptyarr",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/emptyarr",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/emptyarr",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -16273,6 +16801,62 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/list",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/list",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/list",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/list",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -17860,6 +18444,58 @@
         "parity": true
     },
     {
+        "id": "upper_paired/assoc",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/assoc",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/assoc",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/assoc",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/assoc",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -19380,6 +20016,58 @@
         "parity": true
     },
     {
+        "id": "upper_paired/assocempty",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/assocempty",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/assocempty",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/assocempty",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/assocempty",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -20796,6 +21484,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/html",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/html",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/html",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/html",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/html",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -22157,6 +22889,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/directive",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/directive",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/directive",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/directive",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -23668,6 +24444,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/blockpayload",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/blockpayload",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/blockpayload",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/blockpayload",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/blockpayload",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -25096,6 +25916,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/longstr",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/longstr",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/longstr",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/longstr",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/longstr",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -26397,6 +27261,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/spaces",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/spaces",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/spaces",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/spaces",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -27704,6 +28612,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/entities",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/entities",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/entities",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/entities",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/entities",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -29005,6 +29957,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/newlines",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/newlines",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/newlines",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/newlines",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -30389,6 +31385,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/brace_lead",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/brace_lead",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/brace_lead",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/brace_lead",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -31849,6 +32889,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/brace_trail",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/brace_trail",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/brace_trail",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/brace_trail",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -33360,6 +34444,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/brace_both",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/brace_both",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/brace_both",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/brace_both",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/brace_both",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -34868,6 +35996,50 @@
         "parity": true
     },
     {
+        "id": "upper_paired/brace_solo",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/brace_solo",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/brace_solo",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/brace_solo",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/brace_solo",
         "template": "{{var a}}Y{{/var}}",
         "variables": {
@@ -36192,6 +37364,42 @@
         "parity": true
     },
     {
+        "id": "upper_paired/@dataobject",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/@dataobject",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/@dataobject",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/@dataobject",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/@dataobject",
         "template": "{{var a}}Y{{/var}}",
         "variables": [],
@@ -37233,6 +38441,42 @@
         "object": "stringable",
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/@stringable",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/@stringable",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/@stringable",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/@stringable",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -38280,6 +39524,42 @@
         "parity": true
     },
     {
+        "id": "upper_paired/@plainobject",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/@plainobject",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/@plainobject",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/@plainobject",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "parity": true
+    },
+    {
         "id": "var_paired/@plainobject",
         "template": "{{var a}}Y{{/var}}",
         "variables": [],
@@ -39321,6 +40601,42 @@
         "object": "arrayofobject",
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/@arrayofobject",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/@arrayofobject",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/@arrayofobject",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/@arrayofobject",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {
@@ -40377,6 +41693,42 @@
         "object": null,
         "outcome": "ok",
         "expected": "{{foo}}x{{/foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_paired/novars",
+        "template": "{{Foo}}x{{/Foo}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "shout_paired/novars",
+        "template": "{{FOO}}x{{/FOO}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{FOO}}x{{/FOO}}",
+        "parity": true
+    },
+    {
+        "id": "mixed_close/novars",
+        "template": "{{foo}}x{{/Foo}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{foo}}x{{/Foo}}",
+        "parity": true
+    },
+    {
+        "id": "upper_wraps_dir/novars",
+        "template": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}",
         "parity": true
     },
     {

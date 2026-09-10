@@ -326,14 +326,14 @@ back verbatim. Those render here too.
         Options::$refuseLegacyIncompatible to allow it
 ```
 
-**Ten shapes are refused that legacy does render.** Each is a place where legacy's regex does
+**Ten shapes are refused that legacy does render**, in fourteen spellings. Each is a place where legacy's regex does
 something by accident that this parser will not build in:
 
 | Shape | What legacy does |
 |---|---|
 | `{{var.a}}`, `{{var_a}}`, `{{var2 a}}`, `{{depend.a}}Y{{/depend}}`, `{{VAR.a}}` | punctuation after a name is read as a parameter separator, which makes `{{var.a}}` a live variable read — case-insensitively, so `{{VAR.a}}` too. `{{depend.a}}` needs its body and closing tag to render; without them it is a TypeError there too |
 | `{{if}}{{if}}{{/if}}`, its `{{depend}}` twin, `{{if}}{{depend}}x{{/if}}` | nesting collapses to `''` by accident of the lazy body match |
-| `{{foo}}x{{/foo}}`, `{{var a}}Y{{/var}}` | the optional closing group swallows a body for a directive that has none |
+| `{{foo}}x{{/foo}}`, `{{Foo}}x{{/Foo}}`, `{{var a}}Y{{/var}}` | the optional closing group swallows a body for a directive that has none — case-insensitively, since it closes with a backreference under `/si`, so `{{Wrap}}A{{if x}}B{{/if}}C{{/Wrap}}` comes back verbatim with its `{{if}}` un-executed |
 
 `LegacyParityTest` asserts the two halves separately, because they are different claims:
 `testEveryLegacyFatalIsRefused` allows no exceptions, and

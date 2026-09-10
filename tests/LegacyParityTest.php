@@ -139,9 +139,13 @@ final class LegacyParityTest extends TestCase
      * observed set, so it cannot drift without a test failing.
      */
     public const DELIBERATE_OVER_REFUSALS = [
-        'cross_unclosed', 'depend_dot', 'nest_empty_dep', 'nest_empty_if',
-        'unknown_paired', 'upper_var_dot', 'var_digit', 'var_dot', 'var_paired',
-        'var_underscore',
+        // Sorted, because the observed set is - see testExtraRefusalsAreOnlyTheDocumentedShapes.
+        // `mixed_close`, `shout_paired`, `upper_paired` and `upper_wraps_dir` are
+        // `unknown_paired` in other cases rather than new shapes: CONSTRUCTION_PATTERN carries
+        // /si and closes with a backreference, so legacy swallows the block whatever the case.
+        'cross_unclosed', 'depend_dot', 'mixed_close', 'nest_empty_dep', 'nest_empty_if',
+        'shout_paired', 'unknown_paired', 'upper_paired', 'upper_var_dot', 'upper_wraps_dir',
+        'var_digit', 'var_dot', 'var_paired', 'var_underscore',
     ];
 
     /** Where legacy renders, compatible mode must render identically - or refuse by design. */
@@ -340,7 +344,7 @@ final class LegacyParityTest extends TestCase
      */
     public function testExtraRefusalsAreOnlyTheDocumentedShapes(): void
     {
-        $expected = self::DELIBERATE_OVER_REFUSALS;   // ten shapes; see the constant
+        $expected = self::DELIBERATE_OVER_REFUSALS;   // see the constant for what each is
 
         $engine = TemplateEngine::compatible();
         $shapes = [];
