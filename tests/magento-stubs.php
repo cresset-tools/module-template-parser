@@ -127,6 +127,29 @@ namespace Magento\Store\Model {
         interface StoreManagerInterface { public function getStore($storeId = null); }
     }
 }
+namespace Magento\Framework\App {
+    if (!interface_exists(TemplateTypesInterface::class)) {
+        interface TemplateTypesInterface {
+            public const TYPE_TEXT = 1;
+            public const TYPE_HTML = 2;
+        }
+    }
+    if (!class_exists(Area::class)) {
+        class Area {
+            public const AREA_GLOBAL = 'global';
+            public const AREA_FRONTEND = 'frontend';
+            public const AREA_ADMINHTML = 'adminhtml';
+        }
+    }
+}
+namespace Magento\Store\Model\App {
+    if (!class_exists(Emulation::class)) {
+        class Emulation {
+            public function startEnvironmentEmulation($storeId, $area = 'frontend', $force = false) { return $this; }
+            public function stopEnvironmentEmulation() { return $this; }
+        }
+    }
+}
 namespace Magento\Email\Model\Template\Css {
     if (!class_exists(Processor::class)) {
         class Processor { public function process($css) { return $css; } }

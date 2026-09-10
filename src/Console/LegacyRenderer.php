@@ -81,6 +81,14 @@ class LegacyRenderer
         $model = $factory->create();
         $model->setTemplateType(\Magento\Framework\App\TemplateTypesInterface::TYPE_HTML);
         $model->setTemplateText($template);
+        // processTemplate() sets this before every send, and getTemplateFilter() reads it
+        // ONCE, when it builds the filter - so it has to be set before the first call or the
+        // flag is null forever. With it null, Url::setRouteParams keeps `_absolute` (isset
+        // (null) being false) and getActionPath() pads `customer/account` out to
+        // `customer/account/index/`. That padding is not what any pipeline the store runs
+        // produces, so the tool's whole `today` column was a fourth thing, agreeing with
+        // neither production nor CMS.
+        $model->setUseAbsoluteLinks(true);
         // Without a design config there is no theme to resolve {{css}} and {{view}} against,
         // and getDesignParams() throws rather than defaulting.
         $model->setDesignConfig([
@@ -88,6 +96,47 @@ class LegacyRenderer
             'store' => $storeId ?? $this->currentStoreId(),
         ]);
 
+        // processTemplate() runs the whole render inside store emulation - that is what
+        // applyDesignConfig() does, and it is the only reason DesignInterface has a theme to
+        // resolve {{css}} and {{view}} against. Calling getProcessedTemplate() on its own
+        // skips it, so the filter resolved assets against an empty theme and every stock
+        // template carrying a stylesheet reported as a divergence. applyDesignConfig() is
+        // protected, so the emulation it performs is done here instead.
+        $emulation = $this->magento->get(\Magento\Store\Model\App\Emulation::class);
+        $emulationStore = $storeId ?? $this->currentStoreId();
+        $emulating = false;
+        if ($emulation !== null && $emulationStore !== null) {
+            try {
+                $emulation->startEnvironmentEmulation(
+                    $emulationStore,
+                    \Magento\Framework\App\Area::AREA_FRONTEND,
+                    true
+                );
+                $emulating = true;
+            } catch (\Throwable) {
+                // A store that cannot be emulated is still worth comparing without it.
+            }
+        }
+
+        try {
+            return $this->renderEmailIn($model, $template, $variables);
+        } finally {
+            if ($emulating) {
+                try {
+                    $emulation->stopEnvironmentEmulation();
+                } catch (\Throwable) {
+                }
+            }
+        }
+    }
+
+    /**
+     * The render itself, with emulation already established around it.
+     *
+     * @param array<string,mixed> $variables
+     */
+    private function renderEmailIn(object $model, string $template, array $variables): LegacyRender
+    {
         // Render once through the model and throw the result away. getProcessedTemplate() is
         // the only public path that configures the filter the way production configures it -
         // design params off the design config, the include processor, `this`, and the store
@@ -160,10 +209,18 @@ class LegacyRenderer
             $property = new \ReflectionProperty(\Magento\Framework\Filter\Template::class, 'templateVars');
             $used = $property->getValue($model->getTemplateFilter());
 
-            return is_array($used) && $used !== [] ? $used : $fallback;
+            // An EMPTY set is an answer, not a failure. When addEmailVariables() throws, the
+            // filter really does render with no variables - that is the documented quirk
+            // where a template comes back verbatim - and substituting the caller's full set
+            // here rendered the candidate with variables the legacy side never saw, which
+            // reports as a divergence in every template that uses one.
+            if (is_array($used)) {
+                return $used;
+            }
         } catch (\Throwable) {
-            return $fallback;
         }
+
+        return $fallback;
     }
 
     private function currentStoreId(): ?int
