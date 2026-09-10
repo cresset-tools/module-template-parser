@@ -198,8 +198,8 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**4199 cases recorded, 649 of them constructs the legacy filter cannot render at all. Over
-the 2679 cases where both engines render, the surfaces are comparable and compatible mode
+**4354 cases recorded, 649 of them constructs the legacy filter cannot render at all. Over
+the 2710 cases where both engines render, the surfaces are comparable and compatible mode
 does not deliberately refuse, output is byte-identical.**
 
 Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
@@ -280,7 +280,9 @@ Quirks it does not reproduce:
   here. The legacy filter cannot express it — its lazy `(.*?)}}` stops at the first closer
   wherever it falls, so the directive gets a text it cannot parse and the remainder becomes
   literal output. A lexer has no reason to inherit that, so this is the one place the engine
-  does *more* than the filter rather than less.
+  does *more* than the filter rather than less. `{{trans "a }}b"}}` is the same divergence
+  from the other side: `a }}b` here, `b"}}` there. Both are recorded as corpus cases with the
+  equality dropped, rather than kept out of the corpus.
 - **One missing brace, at top level.** `Hi {{var name}, bye {{var name}}` reads here as text,
   then the intact directive — the same reading as `{{A{{var x}}`. The legacy regex is lazier
   and less fussy: `(.*?)}}` swallows the broken opener, everything after it and the intact

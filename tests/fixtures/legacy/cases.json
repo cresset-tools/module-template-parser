@@ -1271,6 +1271,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/true",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/true",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/true",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/true",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/true",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/true",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -2764,6 +2827,69 @@
     {
         "id": "trans_unterm/false",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/false",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/false",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/false",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/false",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/false",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": false
         },
@@ -4303,6 +4429,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/zero",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/zero",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/zero",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/zero",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/zero",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/zero",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -5824,6 +6013,69 @@
     {
         "id": "trans_unterm/one",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/one",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/one",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/one",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/one",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/one",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": 1
         },
@@ -7363,6 +7615,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/answer",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/answer",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/answer",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/answer",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/answer",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/answer",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -8893,6 +9208,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/strzero",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/strzero",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/strzero",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/strzero",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/strzero",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/strzero",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -10386,6 +10764,69 @@
     {
         "id": "trans_unterm/emptystr",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/emptystr",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/emptystr",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/emptystr",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/emptystr",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/emptystr",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": ""
         },
@@ -11925,6 +12366,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/word",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/word",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/word",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/word",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/word",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/word",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -13418,6 +13922,69 @@
     {
         "id": "trans_unterm/null",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/null",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/null",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/null",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/null",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/null",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": null
         },
@@ -14957,6 +15524,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/floatzero",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/floatzero",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/floatzero",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/floatzero",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/floatzero",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/floatzero",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -16487,6 +17117,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/float",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/float",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/float",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/float",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/float",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/float",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -17992,6 +18685,69 @@
     {
         "id": "trans_unterm/emptyarr",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/emptyarr",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/emptyarr",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/emptyarr",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/emptyarr",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/emptyarr",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": []
         },
@@ -19854,6 +20610,84 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/list",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/list",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/list",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/list",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/list",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/list",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -21657,6 +22491,79 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/assoc",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/assoc",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/assoc",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/assoc",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/assoc",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/assoc",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -23439,6 +24346,79 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/assocempty",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/assocempty",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/assocempty",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/assocempty",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/assocempty",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/assocempty",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -25002,6 +25982,69 @@
     {
         "id": "trans_unterm/html",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/html",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/html",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/html",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/html",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/html",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": "<b>&\"x\"</b>"
         },
@@ -26680,6 +27723,69 @@
     {
         "id": "trans_unterm/directive",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/directive",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/directive",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/directive",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/directive",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/directive",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": "{{var a}}"
         },
@@ -28423,6 +29529,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/blockpayload",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/blockpayload",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/blockpayload",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/blockpayload",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/blockpayload",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/blockpayload",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -29989,6 +31158,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/longstr",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/longstr",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/longstr",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/longstr",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/longstr",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/longstr",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -31510,6 +32742,69 @@
     {
         "id": "trans_unterm/spaces",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/spaces",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/spaces",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/spaces",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/spaces",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/spaces",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": "  padded  "
         },
@@ -33049,6 +34344,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/entities",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/entities",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/entities",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/entities",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/entities",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/entities",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -34570,6 +35928,69 @@
     {
         "id": "trans_unterm/newlines",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/newlines",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/newlines",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/newlines",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/newlines",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/newlines",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": "a\nb\nc"
         },
@@ -36244,6 +37665,69 @@
     {
         "id": "trans_unterm/brace_lead",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/brace_lead",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/brace_lead",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/brace_lead",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/brace_lead",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/brace_lead",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": "{x"
         },
@@ -37954,6 +39438,69 @@
     {
         "id": "trans_unterm/brace_trail",
         "template": "[{{trans \"T}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/brace_trail",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/brace_trail",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/brace_trail",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/brace_trail",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/brace_trail",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": {
             "a": "x{"
         },
@@ -39697,6 +41244,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/brace_both",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/brace_both",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/brace_both",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/brace_both",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/brace_both",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/brace_both",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -41431,6 +43041,69 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/brace_solo",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/brace_solo",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/brace_solo",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/brace_solo",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/brace_solo",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/brace_solo",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": {
@@ -42743,6 +44416,59 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/@dataobject",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/@dataobject",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/@dataobject",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/@dataobject",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/@dataobject",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/@dataobject",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": [],
@@ -43977,6 +45703,59 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/@stringable",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/@stringable",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/@stringable",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/@stringable",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/@stringable",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/@stringable",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": [],
@@ -45204,6 +46983,59 @@
     {
         "id": "trans_unterm/@plainobject",
         "template": "[{{trans \"T}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/@plainobject",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/@plainobject",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/@plainobject",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/@plainobject",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/@plainobject",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
         "variables": [],
         "object": "plainobject",
         "outcome": "ok",
@@ -46457,6 +48289,59 @@
         "parity": true
     },
     {
+        "id": "close_q_trans/@arrayofobject",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/@arrayofobject",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/@arrayofobject",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/@arrayofobject",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/@arrayofobject",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans_open_q/@arrayofobject",
         "template": "[{{trans \"a {{b\"}}]",
         "variables": [],
@@ -47688,6 +49573,59 @@
         "object": null,
         "outcome": "ok",
         "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "close_q_trans/novars",
+        "template": "[{{trans \"a }}b\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_var/novars",
+        "template": "[{{var \"a }}b\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var \"a }}b\"}}]",
+        "parity": false
+    },
+    {
+        "id": "close_q_tpl/novars",
+        "template": "[{{template config_path=\"design/email/}}x\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}}]"
+        }
+    },
+    {
+        "id": "close_q_tpl_two/novars",
+        "template": "[{{template config_path=\"design/email/}}x\"}} {{template config_path=\"design/email/header_template\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;Error in template processing}x\"}} &#123;Error in template processing}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{Error in template processing}x\"}} {Error in template processing}]"
+        }
+    },
+    {
+        "id": "close_q_if/novars",
+        "template": "[{{if \"a }}b\"}}Y{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{if \"a }}b\"}}Y{{/if}}]",
         "parity": true
     },
     {

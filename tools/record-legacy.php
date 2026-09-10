@@ -109,7 +109,15 @@ const SURFACE_DIVERGENT = ['template','inlinecss','css','store','block','widget'
  * rendered here - and four of the seven shapes recorded are exactly that, because legacy
  * fatals on them rather than swallowing.
  */
-const KNOWN_DIVERGENT_CASES = ['brace_top_var', 'brace_top_trans', 'brace_top_two'];
+const KNOWN_DIVERGENT_CASES = [
+    'brace_top_var', 'brace_top_trans', 'brace_top_two',
+    // The other declared divergence, from the opposite direction: a `}}` inside a quoted
+    // value. The lexer reads it as part of the value and the regex stops at it wherever it
+    // falls, so `{{trans "a }}b"}}` renders `a }}b` here and `b"}}` there. This is the one
+    // place the engine does MORE than the filter, and it is in the README as such - so the
+    // cases are recorded and the equality is dropped, not the other way round.
+    'close_q_trans', 'close_q_var',
+];
 
 function parityEligible(string $tpl, string $id = ''): bool {
     foreach (KNOWN_DIVERGENT_CASES as $case) {
@@ -368,6 +376,15 @@ $constructs = [
     // "quotes balance" made these re-scan from the inner brace - one silently verbatim, the
     // other a refusal claiming a legacy TypeError that does not happen. The filter renders
     // all of them, so they belong in the corpus and not in a comment.
+    // A `}}` INSIDE a quoted value. The lexer here reads it as part of the value; the regex
+    // stops at it wherever it falls. Recorded across several directives so what legacy does
+    // with the truncated construct is measured rather than assumed - it renders for some and
+    // raises for others, and only the raising ones bear on the crash guarantee.
+    'close_q_trans'   => '[{{trans "a }}b"}}]',
+    'close_q_var'     => '[{{var "a }}b"}}]',
+    'close_q_tpl'     => '[{{template config_path="design/email/}}x"}}]',
+    'close_q_tpl_two' => '[{{template config_path="design/email/}}x"}} {{template config_path="design/email/header_template"}}]',
+    'close_q_if'      => '[{{if "a }}b"}}Y{{/if}}]',
     'trans_open_q'    => '[{{trans "a {{b"}}]',
     'trans_open_q_ns' => '[{{trans "50{{ off"}}]',
     'trans_open_q_st' => '[{{trans "{{ x"}}]',
