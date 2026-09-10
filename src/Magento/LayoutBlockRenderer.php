@@ -61,7 +61,13 @@ class LayoutBlockRenderer implements BlockRenderer
     {
         $class = ltrim($class, '\\');
 
-        if ($this->allowedClasses !== null && !in_array($class, $this->allowedClasses, true)) {
+        // Case-INSENSITIVELY, and with the leading separator off both sides. PHP class names
+        // are case-insensitive, so `magento\Cms\Block\Block` and `Magento\Cms\Block\Block`
+        // are one class; a strict in_array made them two, and an integrator who wrote either
+        // the wrong case or a leading `\` in di.xml got a directive that silently rendered
+        // nothing forever. Fail-closed either way - this list only ever permits a spelling of
+        // a class the integrator has already named - and the deny list still runs after it.
+        if ($this->allowedClasses !== null && !$this->isAllowedClass($class)) {
             return '';
         }
 
@@ -102,6 +108,17 @@ class LayoutBlockRenderer implements BlockRenderer
      * behaviour it has today. Any failure is treated as a refusal - a policy that cannot
      * answer is not a licence to instantiate.
      */
+    private function isAllowedClass(string $class): bool
+    {
+        foreach ($this->allowedClasses ?? [] as $allowed) {
+            if (strcasecmp($class, ltrim((string)$allowed, '\\')) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function isRestricted(string $class): bool
     {
         if ($this->blockDirectivePolicy === null) {

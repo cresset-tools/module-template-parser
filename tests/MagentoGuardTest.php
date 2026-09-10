@@ -97,6 +97,45 @@ final class MagentoGuardTest extends TestCase
         self::assertSame('<w>ok</w>', $renderer->render('\\' . $type, []));
     }
 
+    /**
+     * PHP class names are case-insensitive, so an allowlist that is not describes two classes
+     * where there is one.
+     *
+     * A strict in_array meant an integrator who wrote the wrong case - or a leading `\\` on
+     * the entry rather than on the directive - got a {{block}} that silently rendered nothing
+     * forever, with nothing to say why. Fail-closed either way: this list only ever permits a
+     * spelling of a class already named in di.xml, and the deny list still runs after it.
+     */
+    public function testTheBlockAllowlistMatchesTheWayPHPMatchesClassNames(): void
+    {
+        $class = get_class(new class implements BlockInterface {
+            public function toHtml() { return '<w>ok</w>'; }
+        });
+
+        foreach ([strtolower($class), strtoupper($class), '\\' . $class] as $spelling) {
+            $built = [];
+            $renderer = new LayoutBlockRenderer($this->layout($built), $this->omConfig(), ['toHtml'], [$spelling]);
+
+            // What the allowlist decides is whether the class gets CONSTRUCTED; what the
+            // stub layout hands back afterwards is a different question and a different test.
+            $renderer->render($class, [], 'toHtml');
+            self::assertSame([$class], $built, $spelling);
+        }
+    }
+
+    /** But a class that is not on the list at all is still refused. */
+    public function testTheBlockAllowlistStillRefusesWhatIsNotOnIt(): void
+    {
+        $class = get_class(new class implements BlockInterface {
+            public function toHtml() { return '<w>ok</w>'; }
+        });
+        $built = [];
+        $renderer = new LayoutBlockRenderer($this->layout($built), $this->omConfig(), ['toHtml'], ['Some\\Other\\Block']);
+
+        self::assertSame('', $renderer->render($class, [], 'toHtml'));
+        self::assertSame([], $built, 'an allowlist miss must not be constructed');
+    }
+
     /** An object manager that raises must fail closed. */
     public function testAWidgetIsRefusedWhenTheTypeCannotBeResolved(): void
     {

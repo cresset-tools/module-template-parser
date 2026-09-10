@@ -177,6 +177,42 @@ final class FullDirectiveSurfaceTest extends TestCase
         }
     }
 
+    /**
+     * An absent path is the base URL, not a refusal.
+     *
+     * mediaDirective is `getBaseUrl(MEDIA) . $params['url']`, so with no `url` it concatenates
+     * nothing and the directive IS the media root. Refusing it instead was a divergence on a
+     * shape any merchant reaches by typo'ing a variable name into `{{media url=$p}}` - and
+     * refusing a base URL protects nothing, because there is no attacker-controlled part left.
+     */
+    public function testAnAbsentPathIsTheBaseUrlRatherThanARefusal(): void
+    {
+        $engine = $this->engine($this->services());
+
+        self::assertSame('https://shop/media/', $engine->render('{{media}}'));
+        self::assertSame('https://shop/media/', $engine->render('{{media url=""}}'));
+        self::assertSame('https://shop/media/', $engine->render('{{media url=$empty}}', ['empty' => '']));
+        self::assertSame('https://shop/static/', $engine->render('{{view}}'));
+        self::assertSame('https://shop/static/', $engine->render('{{view url=""}}'));
+    }
+
+    /**
+     * A missing `file` gets cssDirective's own words; a refused one gets this engine's.
+     *
+     * The distinction matters: the first is a message the old filter produces and templates
+     * have always rendered, so it must come out the same. The second is a REFUSAL made here,
+     * and dressing it in legacy's wording would attribute it to a filter that would have
+     * tried to load the file.
+     */
+    public function testTheCssMessageForAMissingFileIsTheFiltersOwn(): void
+    {
+        $engine = $this->engine($this->services());
+
+        self::assertSame('/* "file" parameter must be specified */', $engine->render('{{css}}'));
+        self::assertSame('/* "file" parameter must be specified */', $engine->render('{{css file=""}}'));
+        self::assertSame('/* invalid file parameter */', $engine->render('{{css file="../../app/etc/env.php"}}'));
+    }
+
     /** A bare {{protocol}} is the scheme itself - the form `{{protocol}}://{{store url=''}}` uses. */
     public function testBareProtocolIsTheScheme(): void
     {

@@ -355,7 +355,13 @@ final class HostDirectives
 
             $evaluator->register('media', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $path = $e->params($n, $c)['url'] ?? '';
-                // Legacy concatenates this straight onto the media base URL.
+                // Legacy concatenates this straight onto the media base URL. An ABSENT path
+                // concatenates nothing, so the directive is the media root - which is what
+                // `{{media url=$p}}` with `$p` unset renders today, and refusing it instead
+                // was a divergence on a shape a merchant reaches by typo'ing a variable name.
+                if ($path === '') {
+                    return $urls->mediaUrl('');
+                }
                 return PathGuard::isSafeRelativePath($path) ? $urls->mediaUrl($path) : '';
             });
 
@@ -363,10 +369,11 @@ final class HostDirectives
                 $params = $e->params($n, $c);
                 $path = $params['url'] ?? '';
                 unset($params['url']);
-                if (!PathGuard::isSafeRelativePath($path)
-                    || !self::pathParametersAreSafe($params)
-                    || !self::designParametersAreSafe($params)
-                ) {
+                // As for {{media}}: an absent path is the static root, not a refusal.
+                if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
+                    return '';
+                }
+                if (!self::pathParametersAreSafe($params) || !self::designParametersAreSafe($params)) {
                     return '';
                 }
                 return $urls->viewUrl($path, $params);
@@ -421,6 +428,13 @@ final class HostDirectives
             $stylesheets = $services->stylesheets;
             $evaluator->register('css', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($stylesheets): string {
                 $file = $e->params($n, $c)['file'] ?? '';
+                // cssDirective's own words for a missing file, so a template that has always
+                // rendered this comment keeps rendering the same one. A file that is PRESENT
+                // and refused gets this engine's own message instead: that is a refusal here,
+                // not a message legacy has, and saying otherwise would misattribute it.
+                if ($file === '') {
+                    return '/* "file" parameter must be specified */';
+                }
                 if (!PathGuard::isSafeRelativePath($file)) {
                     return '/* invalid file parameter */';
                 }

@@ -125,6 +125,11 @@ class Auditor
                 $ours = null;
                 $ourFailure = null;
                 try {
+                    // Unrestricted DELIBERATELY, and only here. diff exists to measure the two
+                    // engines against each other, and the legacy filter has no policy at all -
+                    // so anything this one refused on policy would be reported as a divergence
+                    // in the engine rather than as the posture it is. The policy that matters
+                    // is the one the host sets at render time; this is a measurement.
                     $ours = $engine->render($subject->content, context: new Context($variables, RenderPolicy::unrestricted()));
                     // Whatever the host does to a finished render, it does to both.
                     if ($legacyRender?->finish !== null) {
