@@ -140,17 +140,35 @@ final class SecurityRegressionTest extends TestCase
             public function render(string $class, array $parameters, string $method): string { return ''; }
         }));
 
-        // 128k violations: 10.6 s with the prefix-copy implementation, 0.18 s indexed. The
-        // count matters - at half this size the old code came in just under a 2 s bar.
-        $source = str_repeat('{{block class="Foo"}}', 128000);
-        $context = new Context([], RenderPolicy::restricted());
+        // Two sizes and a ratio, not a stopwatch. A wall-clock bar measures the machine as
+        // much as the code: this failed on the CI job that happens to load xdebug while
+        // passing everywhere else, for a change that cost 10% rather than the 10x this
+        // exists to catch. O(offset) means doubling the input roughly quadruples the work,
+        // so the ratio is the thing being asserted and it is machine-independent.
+        //
+        // 128k violations: 10.6 s with the prefix-copy implementation, 0.18 s indexed.
+        $elapsed = [];
+        foreach ([64000, 128000] as $count) {
+            $context = new Context([], RenderPolicy::restricted());
+            $started = microtime(true);
+            $engine->render(str_repeat('{{block class="Foo"}}', $count), context: $context);
+            $elapsed[$count] = microtime(true) - $started;
 
-        $started = microtime(true);
-        $engine->render($source, context: $context);
-        $elapsed = microtime(true) - $started;
+            self::assertCount($count, $context->violations());
+        }
 
-        self::assertCount(128000, $context->violations());
-        self::assertLessThan(2.0, $elapsed, sprintf('took %.2fs - locate() is O(offset) again', $elapsed));
+        $ratio = $elapsed[128000] / max($elapsed[64000], 0.001);
+
+        self::assertLessThan(
+            3.0,
+            $ratio,
+            sprintf(
+                'doubling the input multiplied the work by %.1f (%.2fs then %.2fs) - locate() is O(offset) again',
+                $ratio,
+                $elapsed[64000],
+                $elapsed[128000]
+            )
+        );
     }
 
     public function testDiagnosticsStillReportTheRightPosition(): void

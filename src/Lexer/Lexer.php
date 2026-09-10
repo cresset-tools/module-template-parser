@@ -105,7 +105,8 @@ final class Lexer
             // and there is no reason to inherit the limitation. Only re-scan when the naive
             // span actually holds a quote, so the common case keeps the plain strpos and the
             // cached closer.
-            if (strcspn(substr($source, $afterOpen, $close - $afterOpen), '"\'') < $close - $afterOpen) {
+            $spanLength = $close - $afterOpen;
+            if (self::closerMayBeQuoted($source, $afterOpen, $spanLength)) {
                 // An unterminated quote falls back to the naive closer rather than eating
                 // the rest of the document: `{{trans "unterminated}}` is malformed either
                 // way, and the filter reads it as a directive whose text will not parse.
@@ -159,6 +160,31 @@ final class Lexer
      * @return array{0:TokenType,1:string}|null null when this is certainly not a construct
      */
     /**
+     * Whether the naive closer might be inside a quoted value, cheaply.
+     *
+     * This runs for every directive in the document, so it has to stay at C speed. If the
+     * closer were inside a quote, that quote would be open at the closer - which means an ODD
+     * number of its character precedes it. Even counts of both quote characters therefore
+     * prove the naive closer is outside quotes, and the careful character walk can be
+     * skipped. A backslash in the span could escape a quote, so that bails to the walk too.
+     *
+     * Wrong only in the safe direction: a false positive costs one scan, never a mis-parse.
+     */
+    private static function closerMayBeQuoted(string $source, int $from, int $length): bool
+    {
+        if ($length <= 0) {
+            return false;
+        }
+        if (strcspn($source, '"\'\\\\', $from, $length) === $length) {
+            return false;                    // no quote and no escape in the span at all
+        }
+
+        return substr_count($source, '"', $from, $length) % 2 === 1
+            || substr_count($source, "'", $from, $length) % 2 === 1
+            || substr_count($source, '\\\\', $from, $length) > 0;
+    }
+
+    /**
      * The offset of the closing `}}` that is not inside a quoted parameter value.
      *
      * Returns null when the construct never closes outside quotes, in which case the rest of
@@ -204,8 +230,20 @@ final class Lexer
         int $close,
         bool $respectQuotes
     ): bool {
-        // From one byte back: the span starts on the outer's SECOND brace, so a `{{` at
-        // offset 0 is that brace plus a new one - the overlap `{{{` produces.
+        // Fast path first, because this runs for every directive in the document and the
+        // answer is almost always no. From one byte back: the span starts on the outer's
+        // SECOND brace, so a `{{` there is that brace plus a new one - the overlap `{{{`
+        // produces. A quoted `{{` cannot be found by a scan that has not seen one at all.
+        $inner = strpos($source, self::OPEN, $afterOpen - 1);
+        if ($inner === false || $inner >= $close) {
+            return false;
+        }
+        if (!$respectQuotes) {
+            return true;
+        }
+
+        // Only now, with an opener really inside a span whose quotes balance, is it worth
+        // walking the characters to find out which side of a quote it fell on.
         $span = substr($source, $afterOpen - 1, min(self::MAX_PEEK, $close - $afterOpen + 2));
         $length = strlen($span);
         $quote = null;
