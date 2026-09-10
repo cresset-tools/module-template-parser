@@ -6,6 +6,7 @@ namespace Cresset\TemplateParser\Test;
 use Cresset\TemplateParser\LegacyIncompatibleError;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\TemplateEngine;
+use Cresset\TemplateParser\TemplateError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -157,6 +158,47 @@ final class LegacyParityTest extends TestCase
             $case['expected'],
             $actual,
             sprintf("compatible mode diverged for %s\n  template: %s", $case['id'], $case['template'])
+        );
+    }
+
+    /**
+     * A refusal must not tell the operator the legacy filter crashes when it does not.
+     *
+     * Half the over-refusal messages used to. `{{if}}{{if}}{{/if}}` renders as '' there, by
+     * accident of the lazy body match, and the message said TypeError; `{{if a}}A{{/if }}`
+     * really does raise ALONE, but renders when a well-formed {{/if}} follows it later, and
+     * the message asserted the crash unconditionally.
+     *
+     * That matters because of who reads it. This tool exists to tell a merchant which stored
+     * templates are broken, and a message claiming their template was already crashing - when
+     * it has been sending mail for years - is the tool being confidently wrong in the one
+     * place it is meant to be authoritative.
+     *
+     * The corpus knows the answer for every case it holds: `outcome` records what the filter
+     * really did. So a strong claim is only allowed where the corpus does not contradict it.
+     */
+    #[DataProvider('renderingCases')]
+    public function testNoRefusalClaimsACrashTheFilterDoesNotHave(array $case): void
+    {
+        try {
+            TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
+            $this->addToAssertionCount(1);
+
+            return;
+        } catch (TemplateError $e) {
+            $message = $e->getMessage();
+        }
+
+        self::assertStringNotContainsString(
+            'raises a TypeError here',
+            $message,
+            sprintf(
+                "%s is recorded as RENDERING on the legacy filter, so a refusal must not say it "
+                . "crashes there.\n  template: %s\n  legacy rendered: %s",
+                $case['id'],
+                $case['template'],
+                var_export($case['expected'], true)
+            )
         );
     }
 

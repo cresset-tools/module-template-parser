@@ -108,7 +108,14 @@ final class Parser
                     $token->offset,
                     LegacyIncompatibility::DEGENERATE_CONSTRUCT,
                     sprintf(
-                        '%s does not start with a letter - the legacy filter raises a TypeError here',
+                        // This claim IS unconditional, unlike the others nearby. The lexer
+                        // only reaches Degenerate when no second `{{` opens inside the span -
+                        // the case where legacy would rescue the construct through
+                        // SimpleDirective is routed to text instead - so what is left here
+                        // captures an empty directive name and reaches
+                        // ProcessorPool::get(null) every time.
+                        '%s does not start with a letter - the legacy filter captures an empty '
+                        . 'directive name and raises a TypeError here',
                         trim($token->raw)
                     )
                 );
@@ -136,7 +143,10 @@ final class Parser
                     $token->offset,
                     LegacyIncompatibility::STRAY_CLOSING_TAG,
                     sprintf(
-                        '{{/%s}} closes nothing - the legacy filter raises a TypeError here',
+                        '{{/%s}} closes nothing here - on the legacy filter its meaning depends '
+                        . 'on text elsewhere in the template, which may pair it with an earlier '
+                        . '{{%s}} or may leave it to raise',
+                        $token->name,
                         $token->name
                     )
                 );
@@ -239,7 +249,11 @@ final class Parser
         $this->refuseIfLegacyCannotRender(
             $token->offset,
             LegacyIncompatibility::UNCLOSED_BLOCK,
-            sprintf('{{%s}} is never closed - the legacy filter raises a TypeError here', $token->name)
+            sprintf(
+                '{{%s}} is never closed here - the legacy filter finds its closing tag with a '
+                . 'separate pattern, so whether this renders there depends on text further on',
+                $token->name
+            )
         );
 
         return new UnclosedDirective($node);
@@ -313,7 +327,10 @@ final class Parser
                 LegacyIncompatibility::PADDED_CLOSING_TAG,
                 sprintf(
                     '{{/%s }} has whitespace before the braces - the legacy filter\'s closing '
-                    . 'backreference does not allow it and raises a TypeError',
+                    . 'backreference does not allow it, so this closes nothing there. Alone it '
+                    . 'raises; with another well-formed {{/%s}} later in the template it renders '
+                    . 'instead, which is why it is refused either way',
+                    $name,
                     $name
                 )
             );
@@ -368,8 +385,9 @@ final class Parser
                     $at === false ? 0 : $at,
                     LegacyIncompatibility::STRAY_CLOSING_TAG,
                     sprintf(
-                        '%s is not a closing tag the legacy filter can dispatch - it captures '
-                        . 'an empty directive name and raises a TypeError',
+                        '%s is not a closing tag this parser paired - on the legacy filter it '
+                        . 'captures an empty directive name and raises, unless an opener of the '
+                        . 'same name earlier in the template swallows it first',
                         $spelling
                     )
                 );
@@ -450,7 +468,9 @@ final class Parser
                 $token->offset,
                 LegacyIncompatibility::SAME_NAME_NESTING,
                 sprintf(
-                    '{{%s}} nested inside {{%s}} - the legacy filter raises a TypeError here',
+                    '{{%s}} nested inside {{%s}} - the legacy filter cannot nest a directive in '
+                    . 'itself: its lazy body match ends the outer construct at the INNER closing '
+                    . 'tag, so what renders there is not the structure written here',
                     $token->name,
                     $token->name
                 )
