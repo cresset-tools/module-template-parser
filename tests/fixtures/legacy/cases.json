@@ -1010,6 +1010,83 @@
         }
     },
     {
+        "id": "brace_top_var/true",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/true",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/true",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/true",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/true",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/true",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/true",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/true",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -2440,6 +2517,83 @@
         "object": null,
         "outcome": "ok",
         "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_top_var/false",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/false",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/false",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/false",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/false",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/false",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/false",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {
@@ -3886,6 +4040,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/zero",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/zero",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/zero",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/zero",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/zero",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/zero",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/zero",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/zero",
@@ -5341,6 +5572,83 @@
         }
     },
     {
+        "id": "brace_top_var/one",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/one",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/one",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/one",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/one",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/one",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/one",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/one",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -6792,6 +7100,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/answer",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/answer",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/answer",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/answer",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/answer",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/answer",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/answer",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/answer",
@@ -8247,6 +8632,83 @@
         }
     },
     {
+        "id": "brace_top_var/strzero",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/strzero",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/strzero",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/strzero",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/strzero",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/strzero",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/strzero",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/strzero",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -9677,6 +10139,83 @@
         "object": null,
         "outcome": "ok",
         "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_top_var/emptystr",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/emptystr",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/emptystr",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/emptystr",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/emptystr",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/emptystr",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/emptystr",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {
@@ -11125,6 +11664,83 @@
         }
     },
     {
+        "id": "brace_top_var/word",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/word",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/word",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/word",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/word",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/word",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/word",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/word",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -12555,6 +13171,83 @@
         "object": null,
         "outcome": "ok",
         "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_top_var/null",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/null",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/null",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/null",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/null",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/null",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/null",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {
@@ -14001,6 +14694,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/floatzero",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/floatzero",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/floatzero",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/floatzero",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/floatzero",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/floatzero",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/floatzero",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/floatzero",
@@ -15456,6 +16226,83 @@
         }
     },
     {
+        "id": "brace_top_var/float",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/float",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/float",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/float",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/float",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/float",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/float",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/float",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -16891,6 +17738,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/emptyarr",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/emptyarr",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/emptyarr",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/emptyarr",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/emptyarr",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/emptyarr",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/emptyarr",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/emptyarr",
@@ -18598,6 +19522,104 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/list",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/list",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/list",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/list",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/list",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/list",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/list",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/list",
@@ -20328,6 +21350,97 @@
         }
     },
     {
+        "id": "brace_top_var/assoc",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/assoc",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/assoc",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/assoc",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/assoc",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/assoc",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/assoc",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/assoc",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -22019,6 +23132,97 @@
         }
     },
     {
+        "id": "brace_top_var/assocempty",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/assocempty",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/assocempty",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/assocempty",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/assocempty",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/assocempty",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/assocempty",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/assocempty",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -23544,6 +24748,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/html",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/html",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/html",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/html",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/html",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/html",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/html",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/html",
@@ -25121,6 +26402,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/directive",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/directive",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/directive",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/directive",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/directive",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/directive",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/directive",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/directive",
@@ -26780,6 +28138,83 @@
         }
     },
     {
+        "id": "brace_top_var/blockpayload",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/blockpayload",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/blockpayload",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/blockpayload",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/blockpayload",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/blockpayload",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/blockpayload",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/blockpayload",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -28293,6 +29728,83 @@
         }
     },
     {
+        "id": "brace_top_var/longstr",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/longstr",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/longstr",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/longstr",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/longstr",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/longstr",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/longstr",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/longstr",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -29744,6 +31256,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/spaces",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/spaces",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/spaces",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/spaces",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/spaces",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/spaces",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/spaces",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/spaces",
@@ -31199,6 +32788,83 @@
         }
     },
     {
+        "id": "brace_top_var/entities",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/entities",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/entities",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/entities",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/entities",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/entities",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/entities",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/entities",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -32650,6 +34316,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/newlines",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/newlines",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/newlines",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/newlines",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/newlines",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/newlines",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/newlines",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/newlines",
@@ -34247,6 +35990,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/brace_lead",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/brace_lead",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/brace_lead",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/brace_lead",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/brace_lead",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/brace_lead",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/brace_lead",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/brace_lead",
@@ -35856,6 +37676,83 @@
             "outcome": "ok",
             "expected": "[Y{{var a}N]"
         }
+    },
+    {
+        "id": "brace_top_var/brace_trail",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/brace_trail",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/brace_trail",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/brace_trail",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/brace_trail",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/brace_trail",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/brace_trail",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
     },
     {
         "id": "brace_short_else/brace_trail",
@@ -37515,6 +39412,83 @@
         }
     },
     {
+        "id": "brace_top_var/brace_both",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/brace_both",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/brace_both",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/brace_both",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/brace_both",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/brace_both",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/brace_both",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/brace_both",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -39172,6 +41146,83 @@
         }
     },
     {
+        "id": "brace_top_var/brace_solo",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/brace_solo",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/brace_solo",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/brace_solo",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/brace_solo",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/brace_solo",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/brace_solo",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/brace_solo",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": {
@@ -40485,6 +42536,69 @@
         "parity": true
     },
     {
+        "id": "brace_top_var/@dataobject",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/@dataobject",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/@dataobject",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/@dataobject",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/@dataobject",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/@dataobject",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/@dataobject",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/@dataobject",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": [],
@@ -41656,6 +43770,69 @@
         "parity": true
     },
     {
+        "id": "brace_top_var/@stringable",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/@stringable",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/@stringable",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/@stringable",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/@stringable",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/@stringable",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/@stringable",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/@stringable",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": [],
@@ -42824,6 +45001,69 @@
         "object": "plainobject",
         "outcome": "ok",
         "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "brace_top_var/@plainobject",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/@plainobject",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/@plainobject",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/@plainobject",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/@plainobject",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/@plainobject",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/@plainobject",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {
@@ -44002,6 +46242,69 @@
         }
     },
     {
+        "id": "brace_top_var/@arrayofobject",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Hi ]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/@arrayofobject",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/@arrayofobject",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/@arrayofobject",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/@arrayofobject",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/@arrayofobject",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/@arrayofobject",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
         "id": "brace_short_else/@arrayofobject",
         "template": "[{{if a}}Y{{var a}N{{else}}E{{/if}}]",
         "variables": [],
@@ -45178,6 +47481,69 @@
         "object": null,
         "outcome": "ok",
         "expected": "[{{if a}}Y{{var a}N{{/if}}]",
+        "parity": true
+    },
+    {
+        "id": "brace_top_var/novars",
+        "template": "[Hi {{var a}, bye {{var a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Hi {{var a}, bye {{var a}}]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_if/novars",
+        "template": "[Hi {{var a}, {{if a}}Y{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_mid/novars",
+        "template": "[A{{if a} B {{var a}} C]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_trans/novars",
+        "template": "[A{{trans \"hello\"} B {{var a}} C]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A C]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_dep/novars",
+        "template": "[A{{depend a} B {{var a}} C]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": true
+    },
+    {
+        "id": "brace_top_two/novars",
+        "template": "[{{var a} {{var a} {{var a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a} {{var a} {{var a}}]",
+        "parity": false
+    },
+    {
+        "id": "brace_top_close/novars",
+        "template": "[{{if a}}Y{{/if} {{var a}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
         "parity": true
     },
     {

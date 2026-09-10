@@ -65,6 +65,7 @@ final class Parser
         $this->refuseLegacyParsingDifferences($source);
 
         $tokens = $this->lexer->tokenize($source);
+        $this->refuseRunOnsLegacyDiesOn();
         $index = 0;
         // A variable, because parseUntil() takes the stack by reference so that nesting costs
         // one entry rather than a copy per level.
@@ -418,6 +419,67 @@ final class Parser
             // these can, but the next one added might.
             $offset = $match[0][1] + max(1, strlen($match[0][0]));
         }
+    }
+
+    /**
+     * A run-on that costs the legacy filter a paired directive is a legacy fatal.
+     *
+     * One missing brace at top level, with a later `}}` in the document. This engine reads
+     * the opener that never closed as text and renders the intact directive after it - the
+     * ruling already made for `{{A{{var x}}`. The regex reads the whole stretch as one
+     * construct, and what that stretch contains decides whether the filter merely loses
+     * output or dies:
+     *
+     *   `Hi {{var a}, bye {{var a}}`   swallowed, renders `Hi ` - a divergence, not a crash
+     *   `A{{if a} B {{var a}} C`       `if` with no body group - TypeError
+     *   `Hi {{var a}, {{if a}}Y{{/if}}` the `{{if}}` opener is swallowed, so `{{/if}}` is a
+     *                                  close with no opener: an empty name, and a TypeError
+     *
+     * So the test is whether a PAIRED directive is involved - as the run-on candidate itself,
+     * or as an opener inside the stretch whose closer is then left dangling. A void directive
+     * has no body group to be missing and no closer to orphan, which is why the first line
+     * above renders. Those stay a declared divergence; these are refused, because rendering
+     * what the old filter died on is inventing behaviour rather than reproducing it.
+     */
+    private function refuseRunOnsLegacyDiesOn(): void
+    {
+        if (!$this->options->legacyQuirks) {
+            return;
+        }
+
+        foreach ($this->lexer->runOns() as [$offset, $name, $span]) {
+            $culprit = $this->spec->isBlock($name) ? $name : $this->pairedOpenerIn($span);
+            if ($culprit === null) {
+                continue;
+            }
+
+            $this->refuseIfLegacyCannotRender(
+                $offset,
+                LegacyIncompatibility::RUN_ON_CONSTRUCT,
+                sprintf(
+                    '{{%s at offset %d never closes, and the legacy filter reads everything up '
+                    . 'to the next }} as one construct - which leaves {{%s}} without %s and '
+                    . 'raises a TypeError. The brace is the bug; add it',
+                    $name,
+                    $offset,
+                    $culprit,
+                    $this->spec->isBlock($name) ? 'a body' : 'its opening tag'
+                )
+            );
+        }
+    }
+
+    /** The first paired directive opened inside a swallowed span, if any. */
+    private function pairedOpenerIn(string $span): ?string
+    {
+        foreach ($this->matches('/\{\{([a-zA-Z]{1,10})\b/', $span) as $match) {
+            $name = strtolower($match[1][0]);
+            if ($this->spec->isBlock($name)) {
+                return $name;
+            }
+        }
+
+        return null;
     }
 
     private function refuseIfLegacyCannotRender(int $offset, string $kind, string $message): void

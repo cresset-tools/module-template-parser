@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Test;
 
 use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\LegacyIncompatibleError;
 use Cresset\TemplateParser\NestingLimitError;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\SyntaxError;
@@ -216,5 +217,72 @@ final class MalformedTemplateTest extends TestCase
             self::assertStringContainsString('Unclosed directive {{if}}', $e->getMessage());
             self::assertStringNotContainsString('swallowed', $e->getMessage());
         }
+    }
+
+    /**
+     * One missing brace at top level, where the legacy regex reads far more than this does.
+     *
+     * `(.*?)}}` swallows the broken opener, everything after it and the next intact directive,
+     * out to whatever `}}` it reaches first. What that stretch contains decides whether the
+     * filter merely loses output or dies, and the two outcomes get different answers here.
+     */
+    public function testARunOnIsRefusedOnlyWhenItCostsLegacyAPairedDirective(): void
+    {
+        $engine = TemplateEngine::compatible();
+
+        // Legacy RENDERS these (swallowing output), so refusing them would be an
+        // over-refusal. The opener is text; the intact directive renders.
+        self::assertSame('Hi {{var a}, bye 1', $engine->render('Hi {{var a}, bye {{var a}}', ['a' => 1]));
+        self::assertSame('A{{trans "x"} B 1 C', $engine->render('A{{trans "x"} B {{var a}} C', ['a' => 1]));
+        self::assertSame('{{var a} {{var a} 1', $engine->render('{{var a} {{var a} {{var a}}', ['a' => 1]));
+
+        // Legacy RAISES on these, so rendering them would be inventing behaviour. `if` and
+        // `depend` lose their body; in the third the `{{if}}` OPENER is swallowed, which
+        // leaves `{{/if}}` as a close with no opener - an empty directive name, and a
+        // TypeError out of ProcessorPool::get(null).
+        foreach ([
+            'paired candidate'     => 'A{{if a} B {{var a}} C',
+            'paired depend'        => 'A{{depend a} B {{var a}} C',
+            'swallowed opener'     => 'Hi {{var a}, {{if a}}Y{{/if}}',
+        ] as $label => $template) {
+            try {
+                $engine->render($template, ['a' => 1]);
+                self::fail($label . ': rendered a construct the legacy filter raises on');
+            } catch (LegacyIncompatibleError $e) {
+                self::assertStringContainsString('TypeError', $e->getMessage(), $label);
+            }
+        }
+    }
+
+    /**
+     * The run-on sites belong to ONE parse, and an engine is reused across renders.
+     *
+     * Left uncleared, the first broken template poisons every clean one after it: the site
+     * that justified a refusal is still in the list, so the next render is refused for a
+     * construct that is not in it. The same shape as deferred work accumulating across
+     * renders, which has its own test for the same reason.
+     */
+    public function testRunOnSitesDoNotLeakIntoTheNextRender(): void
+    {
+        $engine = TemplateEngine::compatible();
+
+        try {
+            $engine->render('A{{if a} B {{var a}} C', ['a' => 1]);
+            self::fail('the broken template should have been refused');
+        } catch (LegacyIncompatibleError) {
+        }
+
+        self::assertSame('Y', $engine->render('{{if a}}Y{{/if}}', ['a' => 1]));
+    }
+
+    /** A void directive has no body to lose and no closer to orphan, so it never refuses. */
+    public function testARunOnAroundVoidDirectivesOnlyIsNotARefusal(): void
+    {
+        $engine = TemplateEngine::compatible();
+
+        self::assertSame(
+            'A{{media url="x"} B 1 C',
+            $engine->render('A{{media url="x"} B {{var a}} C', ['a' => 1])
+        );
     }
 }

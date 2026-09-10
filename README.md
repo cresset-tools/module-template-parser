@@ -196,7 +196,9 @@ headline number:
 - **Nothing the legacy filter crashes on is rendered here.** A construct the old filter died
   on is one nobody has ever seen the output of, so rendering it would be inventing behaviour,
   not reproducing it.
-- **Where both render, they agree byte for byte** — for every case in the corpus.
+- **Where both render, they agree byte for byte** — for every case in the corpus except the
+  declared divergences named above, each of which is *recorded* as a case rather than left
+  out of one, so the disagreement is measured and pinned rather than avoided.
 
 Everything else is a superset of refusals, enumerated below. Before switching a store over,
 run `Magento\ShadowComparator` against your own templates; the corpus cannot contain them.
@@ -265,6 +267,16 @@ Quirks it does not reproduce:
   wherever it falls, so the directive gets a text it cannot parse and the remainder becomes
   literal output. A lexer has no reason to inherit that, so this is the one place the engine
   does *more* than the filter rather than less.
+- **One missing brace, at top level.** `Hi {{var name}, bye {{var name}}` reads here as text,
+  then the intact directive — the same reading as `{{A{{var x}}`. The legacy regex is lazier
+  and less fussy: `(.*?)}}` swallows the broken opener, everything after it and the intact
+  directive too, out to whatever `}}` it reaches first, so the line renders as `Hi ` and the
+  rest is gone. Preserving the visible text and rendering the directive that is actually
+  well-formed is the better answer, so the divergence is deliberate and the corpus records it
+  as one. Where that swallowed stretch would cost the filter a *paired* directive — leaving
+  `{{if}}` with no body, or `{{/if}}` with no opener — the filter raises a TypeError instead
+  of rendering, and those are refused here rather than rendered, which is what keeps the
+  guarantee below intact.
 - **A fatal in a branch that is discarded.** The legacy filter runs every directive processor
   over the whole source and collects the results before applying any, so a construct inside a
   false `{{depend}}` is still evaluated by another processor's independent pass — and if it is

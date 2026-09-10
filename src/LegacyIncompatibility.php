@@ -24,6 +24,7 @@ final class LegacyIncompatibility
     public const PADDED_CLOSING_TAG = 'padded_closing_tag';
     public const MODIFIER_ARGUMENTS = 'modifier_arguments';
     public const MEMBER_ON_ARRAY = 'member_on_array';
+    public const RUN_ON_CONSTRUCT = 'run_on_construct';
 
     public function __construct(
         public readonly string $kind,

@@ -143,6 +143,11 @@ final class LegacyParityTest extends TestCase
         // `mixed_close`, `shout_paired`, `upper_paired` and `upper_wraps_dir` are
         // `unknown_paired` in other cases rather than new shapes: CONSTRUCTION_PATTERN carries
         // /si and closes with a backreference, so legacy swallows the block whatever the case.
+        // The `brace_top_*` three are a consequence of the run-on divergence rather than a
+        // new decision: where the regex swallows a directive, it never EVALUATES it either,
+        // so a value this engine refuses on is one legacy never looked at. They appear here
+        // only in the variable sets carrying such a value.
+        'brace_top_trans', 'brace_top_two', 'brace_top_var',
         'cross_unclosed', 'depend_dot', 'mixed_close', 'nest_empty_dep', 'nest_empty_if',
         'shout_paired', 'unknown_paired', 'upper_paired', 'upper_var_dot', 'upper_wraps_dir',
         'var_digit', 'var_dot', 'var_paired', 'var_underscore',
@@ -214,14 +219,24 @@ final class LegacyParityTest extends TestCase
     public function testSurfaceDivergentCasesStillRenderSafely(array $case): void
     {
         $engine = TemplateEngine::compatible();
-        $actual = $engine->render($case['template'], self::variablesFor($case));
+        // A refusal emits nothing, so there is nothing unsafe in it to check - but it still
+        // has to be the same outcome twice, which is what the comparison below is for.
+        $render = static function () use ($engine, $case): ?string {
+            try {
+                return $engine->render($case['template'], self::variablesFor($case));
+            } catch (TemplateError) {
+                return null;
+            }
+        };
+
+        $actual = $render();
+        self::assertSame($actual, $render(), 'rendering is not deterministic: ' . $case['id']);
+
+        if ($actual === null) {
+            return;
+        }
 
         self::assertStringNotContainsString('<?php', $actual);
-        self::assertSame(
-            $actual,
-            $engine->render($case['template'], self::variablesFor($case)),
-            'rendering is not deterministic: ' . $case['id']
-        );
         // The engine may legitimately differ from legacy here, but it may not invent a
         // directive: whatever comes out must contain no construct legacy would have run.
         self::assertNoLiveDirectiveSurvived($actual, $case);
@@ -341,6 +356,13 @@ final class LegacyParityTest extends TestCase
      *   unknown_paired / var_paired
      *       `{{foo}}x{{/foo}}` and `{{var a}}Y{{/var}}` - the optional closing group swallows
      *       a body for directives that have no body at all.
+     *   brace_top_var / brace_top_trans / brace_top_two
+     *       One missing brace at top level. The lazy `(.*?)}}` swallows the broken opener and
+     *       the intact directive after it, so legacy renders neither and never reaches the
+     *       value; this engine renders the intact one, and refuses when THAT value is one it
+     *       refuses on. Not a second decision - the same declared divergence, seen from the
+     *       refusal side. Where the swallowed stretch costs legacy a paired directive it
+     *       raises instead, and those are refused here too, which is the other test.
      */
     public function testExtraRefusalsAreOnlyTheDocumentedShapes(): void
     {

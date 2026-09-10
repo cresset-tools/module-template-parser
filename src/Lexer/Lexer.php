@@ -39,8 +39,30 @@ final class Lexer
     /**
      * @return Token[]
      */
+    /**
+     * Run-on sites from the last tokenize(): offset, candidate name, and the swallowed span.
+     *
+     * Capped, and deliberately so. The rescan after a run-on starts one byte along, so a
+     * document that is mostly broken openers produces a run-on at nearly every one of them,
+     * and an uncapped list is the same unbounded allocation that a match table was. The
+     * parser refuses on the first site it cares about, so a handful is all any caller reads.
+     *
+     * @return list<array{0:int,1:string,2:string}>
+     */
+    public function runOns(): array
+    {
+        return $this->runOns;
+    }
+
+    /** @var list<array{0:int,1:string,2:string}> */
+    private array $runOns = [];
+
+    private const MAX_RUN_ONS = 16;
+
     public function tokenize(string $source): array
     {
+        $this->runOns = [];
+
         $tokens = [];
         $length = strlen($source);
         $cursor = 0;
@@ -132,6 +154,16 @@ final class Lexer
             // honouring it would hide the {{else}} and both branches would render again.
             // closeOutsideQuotes() returning a position is the proof that they balance.
             if (self::openerInsideSpan($source, $afterOpen, $close, $quotesClose)) {
+                // Where this engine and the legacy regex part company, so the parser is told.
+                // Here the opener is text and the directive after it renders; there, the lazy
+                // `(.*?)}}` swallows the opener, everything after it and that directive too,
+                // out to whatever `}}` it reaches first. Sometimes that merely loses output -
+                // and sometimes it leaves a paired directive with no body or a closer with no
+                // opener, which is a legacy fatal. The parser decides which; the lexer only
+                // knows where it happened.
+                if (count($this->runOns) < self::MAX_RUN_ONS) {
+                    $this->runOns[] = [$open, $candidate[1], substr($source, $afterOpen, $close - $afterOpen)];
+                }
                 $cursor = $open + 1;
                 continue;
             }

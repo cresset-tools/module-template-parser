@@ -93,7 +93,28 @@ const SURFACE_DIVERGENT = ['template','inlinecss','css','store','block','widget'
  * rendering-equality with legacy.
  */
 
-function parityEligible(string $tpl): bool {
+/**
+ * Constructs where this engine deliberately reads the source differently from the regex.
+ *
+ * One missing brace, at TOP level, with a later `}}` somewhere in the document. Legacy's
+ * `(.*?)}}` is lazy but it is not fussy: it swallows the broken opener, everything after it
+ * and the next intact directive, all the way to whatever `}}` it reaches first, and renders
+ * the lot as one unresolvable construct - so `Hi {{var a}, bye {{var a}}` comes out as
+ * `Hi ` and the rest of the line is gone. This engine treats the opener that never closed as
+ * text and renders the intact directive after it, which is the ruling already made for
+ * `{{A{{var x}}`: text, then directive.
+ *
+ * Keeping the cases and dropping only the equality is the point. They still have to render,
+ * still have to be safe, and still have to hold the line that nothing legacy CRASHES on is
+ * rendered here - and four of the seven shapes recorded are exactly that, because legacy
+ * fatals on them rather than swallowing.
+ */
+const KNOWN_DIVERGENT_CASES = ['brace_top_var', 'brace_top_trans', 'brace_top_two'];
+
+function parityEligible(string $tpl, string $id = ''): bool {
+    foreach (KNOWN_DIVERGENT_CASES as $case) {
+        if ($id === $case || str_starts_with($id, $case . '/')) { return false; }
+    }
     foreach (SURFACE_DIVERGENT as $name) {
         if (preg_match('/\{\{\/?' . $name . '\b/i', $tpl)) { return false; }
     }
@@ -308,6 +329,17 @@ $constructs = [
     // directive's parameters: the {{if}} looks unclosed, and with an {{else}} in the way BOTH
     // branches render - `width="width="180"` from one deleted brace in the stock header.
     'brace_short'     => '[{{if a}}Y{{var a}N{{/if}}]',
+    // The same missing brace at TOP level, where a later `}}` in the document is the one the
+    // lazy `(.*?)}}` reaches. The contained form above is SAME; these are where the run-on
+    // rule and the legacy regex part company, so they belong in the corpus rather than in an
+    // argument about it.
+    'brace_top_var'   => '[Hi {{var a}, bye {{var a}}]',
+    'brace_top_if'    => '[Hi {{var a}, {{if a}}Y{{/if}}]',
+    'brace_top_mid'   => '[A{{if a} B {{var a}} C]',
+    'brace_top_trans' => '[A{{trans "hello"} B {{var a}} C]',
+    'brace_top_dep'   => '[A{{depend a} B {{var a}} C]',
+    'brace_top_two'   => '[{{var a} {{var a} {{var a}}]',
+    'brace_top_close' => '[{{if a}}Y{{/if} {{var a}}]',
     'brace_short_else'=> '[{{if a}}Y{{var a}N{{else}}E{{/if}}]',
     'brace_short_dep' => '[{{depend a}}Y{{var a}N{{/depend}}]',
     // {{trans}}. Excluded from parity until the recorder grew a transDirective, so none of
@@ -375,13 +407,13 @@ foreach ($values as $vlabel => $v) {
             $tpl,
             ['a' => $v],
             $isObject ? substr($vlabel, 1) : null,
-            parityEligible($tpl)
+            parityEligible($tpl, $clabel)
         );
     }
 }
 // no-variables path, which legacy treats specially
 foreach ($constructs as $clabel => $tpl) {
-    $cases[] = recordBoth("$clabel/novars", $tpl, [], null, parityEligible($tpl));
+    $cases[] = recordBoth("$clabel/novars", $tpl, [], null, parityEligible($tpl, $clabel));
 }
 // the real harvested templates, rendered with a realistic variable set
 $realVars = ['customer_name'=>'Jan Jansen','store_name'=>'Demo','name'=>'Jan','a'=>1,
