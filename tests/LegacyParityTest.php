@@ -132,6 +132,45 @@ final class LegacyParityTest extends TestCase
     }
 
     /**
+     * The README quotes three numbers about this corpus, and they had gone stale.
+     *
+     * A headline nobody recomputes is a claim that decays: it read 3176/323/2199 against a
+     * corpus of 4199/649/2679, understating the fatals by half. Asserted here so growing the
+     * corpus fails the suite until the sentence is updated with it - the same bargain the
+     * language documentation makes.
+     */
+    public function testTheReadmeHeadlineMatchesTheCorpus(): void
+    {
+        $cases = self::recordedCases();
+        $fatal = 0;
+        $comparable = 0;
+
+        foreach ($cases as [$case]) {
+            if ($case['outcome'] === 'throw') {
+                $fatal++;
+                continue;
+            }
+            if ($case['parity'] && !in_array(explode('/', $case['id'])[0], self::DELIBERATE_OVER_REFUSALS, true)) {
+                $comparable++;
+            }
+        }
+
+        $readme = (string)file_get_contents(dirname(__DIR__) . '/README.md');
+
+        foreach ([
+            'total cases'      => sprintf('**%d cases recorded', count($cases)),
+            'legacy fatals'    => sprintf('%d of them constructs the legacy filter cannot render', $fatal),
+            'compared cases'   => sprintf('the %d cases where both engines render', $comparable),
+        ] as $what => $sentence) {
+            self::assertStringContainsString(
+                $sentence,
+                $readme,
+                sprintf('the README headline is stale for %s - expected "%s"', $what, $sentence)
+            );
+        }
+    }
+
+    /**
      * Shapes compatible mode deliberately refuses even though legacy renders them.
      *
      * Every one is fail-closed. See testExtraRefusalsAreOnlyTheDocumentedShapes for what

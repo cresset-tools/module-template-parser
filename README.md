@@ -190,8 +190,8 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**3176 cases recorded, 323 of them constructs the legacy filter cannot render at all. Over
-the 2199 cases where both engines render, the surfaces are comparable and compatible mode
+**4199 cases recorded, 649 of them constructs the legacy filter cannot render at all. Over
+the 2679 cases where both engines render, the surfaces are comparable and compatible mode
 does not deliberately refuse, output is byte-identical.**
 
 Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
@@ -283,6 +283,17 @@ Quirks it does not reproduce:
   `{{if}}` with no body, or `{{/if}}` with no opener — the filter raises a TypeError instead
   of rendering, and those are refused here rather than rendered, which is what keeps the
   guarantee below intact.
+- **A host that raises.** `{{block class="No\Such\Klass"}}`, `{{template config_path=""}}`,
+  a layout handle that cannot be built: the port raises, this engine renders that directive as
+  nothing and the rest of the template as normal. `Email\Model\Template\Filter::filter()`
+  catches `\Exception` around the WHOLE render, so on the old filter one broken include
+  replaces the entire email with `Error filtering template: …`. Losing one directive rather
+  than the whole document is the better failure, so this is deliberate — and the engine's own
+  diagnostics are exempt from it, re-thrown by the adapter rather than swallowed, because
+  those are the product. It is a genuine exception to the guarantee below: the filter dies
+  where this renders. The absolute is asserted over the constructs the *filter itself*
+  implements, which is what the corpus records; a port raising is the host's failure, not a
+  construct.
 - **A fatal in a branch that is discarded.** The legacy filter runs every directive processor
   over the whole source and collects the results before applying any, so a construct inside a
   false `{{depend}}` is still evaluated by another processor's independent pass — and if it is
