@@ -116,6 +116,15 @@ final class Lexer
                     $knownClose = -1;        // the cache holds the naive closer; drop it
                     $quotesClose = true;
                 }
+            } else {
+                // Balance is what the flag below actually needs, and the walk is not the only
+                // thing that proves it: closerMayBeQuoted() says no precisely when the span
+                // holds no quote at all or an EVEN number of each with no escape. Reading
+                // the flag as "the walk ran" instead left an unterminated `{{` inside a
+                // quoted value unsheltered, so `{{trans "50{{ off"}}` - which the filter
+                // renders as `50&#123;&#123; off` - was re-scanned from the inner brace and
+                // refused for a directive name that does not start with a letter.
+                $quotesClose = true;
             }
 
             // Quotes only shelter a `{{` when they are quotes. In `{{var c}"{{else}}` the

@@ -146,6 +146,18 @@ final class EvaluatorTest extends TestCase
         self::assertSame('a {{b}}', TemplateEngine::lenient()->render('{{trans "a {{b}}"}}'));
         self::assertSame('has }} inside', TemplateEngine::compatible()->render("{{trans 'has }} inside'}}"));
 
+        // An UNTERMINATED `{{` inside a quoted value, which is a different case: here the
+        // naive closer is already outside quotes, so the quote-aware walk never ran - and
+        // the flag it sets was being read as "quotes may be respected". They balance either
+        // way, so this was re-scanned from the inner brace and came out as a REFUSAL
+        // claiming the filter raises a TypeError on it. The filter renders it, and so does
+        // this: byte for byte, `{{` encoded on the way out as any directive output is.
+        self::assertSame('a &#123;&#123;b', TemplateEngine::compatible()->render('{{trans "a {{b"}}'));
+        self::assertSame('50&#123;&#123; off', TemplateEngine::compatible()->render('{{trans "50{{ off"}}'));
+        self::assertSame('&#123;&#123; x', TemplateEngine::compatible()->render('{{trans "{{ x"}}'));
+        self::assertSame('Ab &#123;&#123;c D', TemplateEngine::compatible()->render('A{{trans "b {{c"}} D'));
+        self::assertSame('a {{b', TemplateEngine::lenient()->render('{{trans "a {{b"}}'));
+
         // An unterminated quote falls back to the naive closer, as the filter reads it: the
         // text will not parse, so the directive renders nothing.
         self::assertSame('', TemplateEngine::compatible()->render('{{trans "unterminated}}'));

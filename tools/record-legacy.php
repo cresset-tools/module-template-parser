@@ -330,6 +330,19 @@ $constructs = [
     'trans_pipe_text' => '[{{trans "a|b"}}]',
     'trans_unquoted'  => '[{{trans T %a}}]',
     'trans_unterm'    => '[{{trans "T}}]',
+    // An UNTERMINATED `{{` inside a quoted value. Distinct from `{{trans "a {{b}}"}}`, which
+    // is the documented case where this engine does more: here the closer is already outside
+    // quotes, so the lexer's quote-aware walk never runs, and reading "the walk ran" as
+    // "quotes balance" made these re-scan from the inner brace - one silently verbatim, the
+    // other a refusal claiming a legacy TypeError that does not happen. The filter renders
+    // all of them, so they belong in the corpus and not in a comment.
+    'trans_open_q'    => '[{{trans "a {{b"}}]',
+    'trans_open_q_ns' => '[{{trans "50{{ off"}}]',
+    'trans_open_q_st' => '[{{trans "{{ x"}}]',
+    'trans_open_q_mid'=> '[A{{trans "b {{c"}} D]',
+    'trans_open_q_sq' => "[{{trans '50{{ off'}}]",
+    'trans_open_two'  => '[{{trans "a {{b {{c"}}]',
+    'trans_open_q_var'=> '[{{trans "a {{var x"}}]',
     'trans_no_space'  => '[{{trans "T %a"a=$a}}]',
     'trans_backslash' => '[{{trans "a\b \"q\" %a" a=$a}}]',
     'trans_empty'     => '[{{trans ""}}]',

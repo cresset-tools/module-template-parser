@@ -1194,6 +1194,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/true",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/true",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/true",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/true",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/true",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/true",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/true",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/true",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -2512,6 +2617,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/false",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/false",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/false",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/false",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/false",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/false",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/false",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/false",
@@ -3862,6 +4072,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/zero",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/zero",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/zero",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/zero",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/zero",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/zero",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/zero",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/zero",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -5208,6 +5523,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/one",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/one",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/one",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/one",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/one",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/one",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/one",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/one",
@@ -6558,6 +6978,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/answer",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/answer",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/answer",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/answer",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/answer",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/answer",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/answer",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/answer",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -7906,6 +8431,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/strzero",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/strzero",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/strzero",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/strzero",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/strzero",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/strzero",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/strzero",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/strzero",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -9224,6 +9854,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/emptystr",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/emptystr",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/emptystr",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/emptystr",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/emptystr",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/emptystr",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/emptystr",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/emptystr",
@@ -10574,6 +11309,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/word",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/word",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/word",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/word",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/word",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/word",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/word",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/word",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -11892,6 +12732,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/null",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/null",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/null",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/null",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/null",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/null",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/null",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/null",
@@ -13242,6 +14187,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/floatzero",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/floatzero",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/floatzero",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/floatzero",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/floatzero",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/floatzero",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/floatzero",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/floatzero",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -14590,6 +15640,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/float",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/float",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/float",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/float",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/float",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/float",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/float",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/float",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -15920,6 +17075,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/emptyarr",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/emptyarr",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/emptyarr",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/emptyarr",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/emptyarr",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/emptyarr",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/emptyarr",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/emptyarr",
@@ -17572,6 +18832,132 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/list",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/list",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/list",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/list",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/list",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/list",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/list",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/list",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -19158,6 +20544,125 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/assoc",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/assoc",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/assoc",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/assoc",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/assoc",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/assoc",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/assoc",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/assoc",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -20730,6 +22235,125 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/assocempty",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/assocempty",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/assocempty",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/assocempty",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/assocempty",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/assocempty",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/assocempty",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/assocempty",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -22104,6 +23728,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/html",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/html",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/html",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/html",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/html",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/html",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/html",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/html",
@@ -23600,6 +25329,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/directive",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/directive",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/directive",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/directive",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/directive",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/directive",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/directive",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/directive",
@@ -25154,6 +26988,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/blockpayload",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/blockpayload",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/blockpayload",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/blockpayload",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/blockpayload",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/blockpayload",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/blockpayload",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/blockpayload",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -26538,6 +28477,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/longstr",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/longstr",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/longstr",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/longstr",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/longstr",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/longstr",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/longstr",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/longstr",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -27884,6 +29928,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/spaces",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/spaces",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/spaces",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/spaces",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/spaces",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/spaces",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/spaces",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/spaces",
@@ -29234,6 +31383,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/entities",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/entities",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/entities",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/entities",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/entities",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/entities",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/entities",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/entities",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -30580,6 +32834,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/newlines",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/newlines",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/newlines",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/newlines",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/newlines",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/newlines",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/newlines",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/newlines",
@@ -32072,6 +34431,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/brace_lead",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/brace_lead",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/brace_lead",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/brace_lead",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/brace_lead",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/brace_lead",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/brace_lead",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/brace_lead",
@@ -33600,6 +36064,111 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/brace_trail",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/brace_trail",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/brace_trail",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/brace_trail",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/brace_trail",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/brace_trail",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/brace_trail",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/brace_trail",
@@ -35154,6 +37723,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/brace_both",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/brace_both",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/brace_both",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/brace_both",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/brace_both",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/brace_both",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/brace_both",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/brace_both",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -36706,6 +39380,111 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/brace_solo",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/brace_solo",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/brace_solo",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/brace_solo",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/brace_solo",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/brace_solo",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/brace_solo",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/brace_solo",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": {
@@ -37850,6 +40629,97 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/@dataobject",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/@dataobject",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/@dataobject",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/@dataobject",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/@dataobject",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/@dataobject",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/@dataobject",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/@dataobject",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": [],
@@ -38930,6 +41800,97 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/@stringable",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/@stringable",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/@stringable",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/@stringable",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/@stringable",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/@stringable",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/@stringable",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/@stringable",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": [],
@@ -40008,6 +42969,97 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/@plainobject",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/@plainobject",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/@plainobject",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/@plainobject",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/@plainobject",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/@plainobject",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/@plainobject",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/@plainobject",
@@ -41102,6 +44154,97 @@
         "parity": true
     },
     {
+        "id": "trans_open_q/@arrayofobject",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/@arrayofobject",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/@arrayofobject",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/@arrayofobject",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/@arrayofobject",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/@arrayofobject",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/@arrayofobject",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
+    },
+    {
         "id": "trans_no_space/@arrayofobject",
         "template": "[{{trans \"T %a\"a=$a}}]",
         "variables": [],
@@ -42180,6 +45323,97 @@
         "outcome": "ok",
         "expected": "[]",
         "parity": true
+    },
+    {
+        "id": "trans_open_q/novars",
+        "template": "[{{trans \"a {{b\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b]"
+        }
+    },
+    {
+        "id": "trans_open_q_ns/novars",
+        "template": "[{{trans \"50{{ off\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_q_st/novars",
+        "template": "[{{trans \"{{ x\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123; x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{ x]"
+        }
+    },
+    {
+        "id": "trans_open_q_mid/novars",
+        "template": "[A{{trans \"b {{c\"}} D]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Ab &#123;&#123;c D]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[Ab {{c D]"
+        }
+    },
+    {
+        "id": "trans_open_q_sq/novars",
+        "template": "[{{trans '50{{ off'}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[50&#123;&#123; off]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[50{{ off]"
+        }
+    },
+    {
+        "id": "trans_open_two/novars",
+        "template": "[{{trans \"a {{b {{c\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;b &#123;&#123;c]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{b {{c]"
+        }
+    },
+    {
+        "id": "trans_open_q_var/novars",
+        "template": "[{{trans \"a {{var x\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a &#123;&#123;var x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[a {{var x]"
+        }
     },
     {
         "id": "trans_no_space/novars",
