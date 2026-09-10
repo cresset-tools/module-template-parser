@@ -86,6 +86,10 @@ renders the store when `store` is a string.
 {{var a%2Eb}}                  a={"b":"deep"}         → deep      # the path is rawurldecode()d before it is split
 {{var a.b}}                    a="scalar"             → scalar    # strict raises UnknownVariableError; member access is not attempted on a scalar, so the parent itself is the result
 {{var a.b.c}}                  a={"b":{"c":"deep"}}   → deep      # paths nest freely
+{{var a b}}                    ab="AB"                → AB        # whitespace ANYWHERE in a name is skipped, not just at the edges
+{{var a()}}                    a="Ada"                → Ada       # a call at the HEAD of a path is the variable itself - the type is ignored there
+{{var c.get()}}                c=DataObject           → Array     # strict: (nothing); .get() maps to getData("") and hands back the whole data bag
+{{var a.getB(}}                a={"b":1}              → !Error    # strict raises UnknownVariableError; an UNCLOSED call is still a call - on an array parent legacy raises, so this is refused
 ```
 <!-- /generated -->
 

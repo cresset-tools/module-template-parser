@@ -107,6 +107,28 @@ final class EvaluatorTest extends TestCase
         );
     }
 
+    /**
+     * Whitespace anywhere in a name is skipped, not just at the ends.
+     *
+     * Tokenizer\Variable::isWhiteSpace() skips " \t\n\r\0\x0B" at every position, so
+     * `{{var a b}}` reads the variable `ab`. Trimming the segment ends instead made it read
+     * one literally called `a b` - both resolve, to different data, which is the quiet kind
+     * of divergence. The corpus cannot reach this: it has no variable whose name differs
+     * from another only by an interior space.
+     */
+    public function testWhitespaceInsideANameIsSkipped(): void
+    {
+        $variables = ['ab' => 'TIGHT', 'a b' => 'SPACED'];
+        $engine = TemplateEngine::compatible();
+
+        self::assertSame('TIGHT', $engine->render('{{var a b}}', $variables));
+        self::assertSame('TIGHT', $engine->render("{{var a\tb}}", $variables));
+        self::assertSame('TIGHT', $engine->render("{{var a\x00b}}", $variables));
+
+        // And through a path segment, not only the head.
+        self::assertSame('DEEP', $engine->render('{{var x.a b}}', ['x' => ['ab' => 'DEEP']]));
+    }
+
     public function testUnknownDirectiveIsEmittedVerbatimInLenientMode(): void
     {
         // No handler registered for `layout`; it must round-trip rather than vanish or run.

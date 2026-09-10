@@ -189,6 +189,10 @@ $sections = [
     example('{{var a%2Eb}}', ['a' => ['b' => 'deep']], 'the path is rawurldecode()d before it is split'),
     example('{{var a.b}}', ['a' => 'scalar'], 'member access is not attempted on a scalar, so the parent itself is the result'),
     example('{{var a.b.c}}', ['a' => ['b' => ['c' => 'deep']]], 'paths nest freely'),
+    example('{{var a b}}', ['ab' => 'AB'], 'whitespace ANYWHERE in a name is skipped, not just at the edges'),
+    example('{{var a()}}', ['a' => 'Ada'], 'a call at the HEAD of a path is the variable itself - the type is ignored there'),
+    example('{{var c.get()}}', ['c' => $customer], '.get() maps to getData("") and hands back the whole data bag'),
+    example('{{var a.getB(}}', ['a' => ['b' => 1]], 'an UNCLOSED call is still a call - on an array parent legacy raises, so this is refused', divergent: true),
 ],
 'modifiers' => [
     example('{{var a|raw}}', ['a' => '<b>'], 'the default escape is replaced, not added to'),

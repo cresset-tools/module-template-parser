@@ -276,6 +276,13 @@ $constructs = [
     'getter_args'     => '[{{var a.getB("x")}}]',
     'var_ws_path'     => '[{{var a . b}}]',
     'var_lead_dot'    => '[{{var .a}}]',
+    // A call at the HEAD of a path is the variable itself; `.get()` maps to getData('') and
+    // returns the whole bag; and an UNCLOSED call is still a call, which on an array parent
+    // is a fatal there. The last one was a fail-open hole - it rendered nothing here.
+    'var_call_head'   => '[{{var a()}}]',
+    'var_get_bag'     => '[{{var a.get()}}]',
+    'var_call_open'   => '[{{var a.getB(}}]',
+    'var_call_extra'  => '[{{var a.getB()}}]',
     // {{trans}}. Excluded from parity until the recorder grew a transDirective, so none of
     // these rules were ever measured - and four of them were wrong here.
     'trans'           => '[{{trans "T"}}]',

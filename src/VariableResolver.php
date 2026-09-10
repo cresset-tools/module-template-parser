@@ -30,7 +30,6 @@ final class VariableResolver
     /** Argument arrays nested deeper than this are refused; legacy segfaults instead. */
     private const MAX_ARGUMENT_DEPTH = 64;
 
-    private const METHOD_CALL = '/^([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)$/s';
 
     /** @var ?\Closure(object,string,list<mixed>,Context):?Resolution */
     private ?\Closure $methodCallServer = null;
@@ -68,7 +67,15 @@ final class VariableResolver
             return Resolution::missing();
         }
 
-        $head = array_shift($parts);
+        $head = self::stripInnerWhitespace(array_shift($parts));
+
+        // A call at the HEAD of a path is the variable itself. StrictResolver's first-segment
+        // branch tests only the token's NAME against the scope and ignores its type, so
+        // `{{var a()}}` and `{{var a}}` read the same variable.
+        $call = strpos($head, '(');
+        if ($call !== false) {
+            $head = substr($head, 0, $call);
+        }
 
         if (!$context->has($head)) {
             return Resolution::missing($head);
@@ -94,6 +101,19 @@ final class VariableResolver
         }
 
         return $this->result($value);
+    }
+
+    /**
+     * isWhiteSpace() skips whitespace ANYWHERE in a name, not only at its edges.
+     *
+     * So `{{var a b}}` reads the variable `ab` there, and trimming the segment ends instead
+     * made it read one called `a b` - both resolve, to different data, which is the quiet
+     * kind of divergence. The set is trim()'s, so NUL and vertical tab count and form feed
+     * does not.
+     */
+    private static function stripInnerWhitespace(string $name): string
+    {
+        return strtr($name, [' ' => '', "\t" => '', "\n" => '', "\r" => '', "\0" => '', "\x0B" => '']);
     }
 
     /** Convenience for existence tests, which never raise. */
@@ -183,14 +203,30 @@ final class VariableResolver
 
     private function step(mixed $value, string $part, Context $context): Resolution
     {
-        return preg_match(self::METHOD_CALL, $part, $m) === 1
-            ? $this->callAccessor($value, $m[1], $m[2], $context)
-            : $this->member($value, $part);
+        // A name ends at the FIRST `(` in Tokenizer\Variable, and getMethodArgs() consumes
+        // to the closing `)` or to the end of the string - it does not require one to be
+        // there. Matching a full `name(...)` shape instead made `{{var a.getB(}}` a plain
+        // member read, which renders nothing where legacy raises `Call to a member function
+        // getData() on array`: a fail-open hole in the one refusal this engine states
+        // absolutely, and one the corpus could not see because it has no such expression.
+        $paren = strpos($part, '(');
+        if ($paren === false) {
+            return $this->member($value, $part);
+        }
+
+        // isWhiteSpace() skips whitespace anywhere in a name, so `g etB()` is `getB()`.
+        $name = self::stripInnerWhitespace(substr($part, 0, $paren));
+
+        // Everything after the `(`; parseValues() stops at the first top-level `)` on its
+        // own, exactly as getMethodArgs() does.
+        return $this->callAccessor($value, $name, substr($part, $paren + 1), $context);
     }
 
     /** `foo.bar` - an array key, a data bag entry, a real getter, or a public property. */
     private function member(mixed $value, string $key): Resolution
     {
+        $key = self::stripInnerWhitespace($key);
+
         if (is_array($value)) {
             // array_key_exists, not ??, so a key holding null is found rather than missing.
             return array_key_exists($key, $value)
@@ -275,7 +311,9 @@ final class VariableResolver
 
         // StrictResolver::handleDataAccess only acts on a `get` prefix; anything else leaves
         // the variable unset and resolves to null.
-        $isGetter = str_starts_with($method, 'get') && $method !== 'get';
+        // `substr($name, 0, 3) == 'get'` there, with no exclusion for the bare word - so
+        // `.get()` maps to getData('') and DataObject hands back its WHOLE data bag.
+        $isGetter = str_starts_with($method, 'get');
 
         if ($this->hasDataBag($value) && $isGetter) {
             $key = $this->dataKeyFromGetter($method);

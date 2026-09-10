@@ -819,6 +819,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/true",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/true",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/true",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/true",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
         "id": "trans/true",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -1921,6 +1965,50 @@
     {
         "id": "var_lead_dot/false",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/false",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/false",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/false",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/false",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": false
         },
@@ -3057,6 +3145,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/zero",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/zero",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/zero",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/zero",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "trans/zero",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -4175,6 +4307,50 @@
     {
         "id": "var_lead_dot/one",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/one",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/one",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/one",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/one",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": 1
         },
@@ -5311,6 +5487,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/answer",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/answer",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/answer",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/answer",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[42]",
+        "parity": true
+    },
+    {
         "id": "trans/answer",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -6438,6 +6658,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/strzero",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/strzero",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/strzero",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/strzero",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "trans/strzero",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -7540,6 +7804,50 @@
     {
         "id": "var_lead_dot/emptystr",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/emptystr",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/emptystr",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/emptystr",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/emptystr",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": ""
         },
@@ -8676,6 +8984,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/word",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/word",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/word",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/word",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x]",
+        "parity": true
+    },
+    {
         "id": "trans/word",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -9778,6 +10130,50 @@
     {
         "id": "var_lead_dot/null",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/null",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/null",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/null",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/null",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": null
         },
@@ -10914,6 +11310,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/floatzero",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/floatzero",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/floatzero",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/floatzero",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[0]",
+        "parity": true
+    },
+    {
         "id": "trans/floatzero",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -12041,6 +12481,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/float",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/float",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/float",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/float",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[1.5]",
+        "parity": true
+    },
+    {
         "id": "trans/float",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -13149,6 +13633,50 @@
         "object": null,
         "outcome": "ok",
         "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/emptyarr",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/emptyarr",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/emptyarr",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/emptyarr",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
         "parity": true
     },
     {
@@ -14479,6 +15007,62 @@
         "object": null,
         "outcome": "ok",
         "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/list",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/list",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/list",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/list",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
         "parity": true
     },
     {
@@ -15823,6 +16407,58 @@
         "parity": true
     },
     {
+        "id": "var_call_head/assoc",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/assoc",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/assoc",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/assoc",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
         "id": "trans/assoc",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -17136,6 +17772,58 @@
         "parity": true
     },
     {
+        "id": "var_call_head/assocempty",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/assocempty",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/assocempty",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/assocempty",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
         "id": "trans/assocempty",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -18310,6 +18998,50 @@
     {
         "id": "var_lead_dot/html",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/html",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/html",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/html",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/html",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": "<b>&\"x\"</b>"
         },
@@ -19533,6 +20265,66 @@
     {
         "id": "var_lead_dot/directive",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;var a}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{var a}}]"
+        }
+    },
+    {
+        "id": "var_call_head/directive",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;var a}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{var a}}]"
+        }
+    },
+    {
+        "id": "var_get_bag/directive",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;var a}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{var a}}]"
+        }
+    },
+    {
+        "id": "var_call_open/directive",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;var a}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{var a}}]"
+        }
+    },
+    {
+        "id": "var_call_extra/directive",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": "{{var a}}"
         },
@@ -20853,6 +21645,66 @@
         }
     },
     {
+        "id": "var_call_head/blockpayload",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;block class=Evil}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{block class=Evil}}]"
+        }
+    },
+    {
+        "id": "var_get_bag/blockpayload",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;block class=Evil}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{block class=Evil}}]"
+        }
+    },
+    {
+        "id": "var_call_open/blockpayload",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;block class=Evil}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{block class=Evil}}]"
+        }
+    },
+    {
+        "id": "var_call_extra/blockpayload",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;&#123;block class=Evil}}]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{{block class=Evil}}]"
+        }
+    },
+    {
         "id": "trans/blockpayload",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -22040,6 +22892,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/longstr",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/longstr",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/longstr",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/longstr",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[abababababababababababababababababababababababababababababababababababababababab]",
+        "parity": true
+    },
+    {
         "id": "trans/longstr",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -23158,6 +24054,50 @@
     {
         "id": "var_lead_dot/spaces",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/spaces",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/spaces",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/spaces",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[  padded  ]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/spaces",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": "  padded  "
         },
@@ -24294,6 +25234,50 @@
         "parity": true
     },
     {
+        "id": "var_call_head/entities",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/entities",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/entities",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/entities",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[Tom &amp; Jerry &nbsp;]",
+        "parity": true
+    },
+    {
         "id": "trans/entities",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -25412,6 +26396,50 @@
     {
         "id": "var_lead_dot/newlines",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/newlines",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/newlines",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/newlines",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[a\nb\nc]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/newlines",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": "a\nb\nc"
         },
@@ -26655,6 +27683,66 @@
     {
         "id": "var_lead_dot/brace_lead",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x]"
+        }
+    },
+    {
+        "id": "var_call_head/brace_lead",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x]"
+        }
+    },
+    {
+        "id": "var_get_bag/brace_lead",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x]"
+        }
+    },
+    {
+        "id": "var_call_open/brace_lead",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x]"
+        }
+    },
+    {
+        "id": "var_call_extra/brace_lead",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": "{x"
         },
@@ -27914,6 +29002,66 @@
     {
         "id": "var_lead_dot/brace_trail",
         "template": "[{{var .a}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[x{]"
+        }
+    },
+    {
+        "id": "var_call_head/brace_trail",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[x{]"
+        }
+    },
+    {
+        "id": "var_get_bag/brace_trail",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[x{]"
+        }
+    },
+    {
+        "id": "var_call_open/brace_trail",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[x{]"
+        }
+    },
+    {
+        "id": "var_call_extra/brace_trail",
+        "template": "[{{var a.getB()}}]",
         "variables": {
             "a": "x{"
         },
@@ -29234,6 +30382,66 @@
         }
     },
     {
+        "id": "var_call_head/brace_both",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x{]"
+        }
+    },
+    {
+        "id": "var_get_bag/brace_both",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x{]"
+        }
+    },
+    {
+        "id": "var_call_open/brace_both",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x{]"
+        }
+    },
+    {
+        "id": "var_call_extra/brace_both",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;x&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{x{]"
+        }
+    },
+    {
         "id": "trans/brace_both",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -30541,6 +31749,66 @@
         }
     },
     {
+        "id": "var_call_head/brace_solo",
+        "template": "[{{var a()}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{]"
+        }
+    },
+    {
+        "id": "var_get_bag/brace_solo",
+        "template": "[{{var a.get()}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{]"
+        }
+    },
+    {
+        "id": "var_call_open/brace_solo",
+        "template": "[{{var a.getB(}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{]"
+        }
+    },
+    {
+        "id": "var_call_extra/brace_solo",
+        "template": "[{{var a.getB()}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[&#123;]",
+        "parity": true,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[{]"
+        }
+    },
+    {
         "id": "trans/brace_solo",
         "template": "[{{trans \"T\"}}]",
         "variables": {
@@ -31566,6 +32834,42 @@
         "parity": true
     },
     {
+        "id": "var_call_head/@dataobject",
+        "template": "[{{var a()}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/@dataobject",
+        "template": "[{{var a.get()}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[Array]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/@dataobject",
+        "template": "[{{var a.getB(}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[deep]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/@dataobject",
+        "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[deep]",
+        "parity": true
+    },
+    {
         "id": "trans/@dataobject",
         "template": "[{{trans \"T\"}}]",
         "variables": [],
@@ -32468,6 +33772,42 @@
     {
         "id": "var_lead_dot/@stringable",
         "template": "[{{var .a}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/@stringable",
+        "template": "[{{var a()}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/@stringable",
+        "template": "[{{var a.get()}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/@stringable",
+        "template": "[{{var a.getB(}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/@stringable",
+        "template": "[{{var a.getB()}}]",
         "variables": [],
         "object": "stringable",
         "outcome": "ok",
@@ -33384,6 +34724,42 @@
         "parity": true
     },
     {
+        "id": "var_call_head/@plainobject",
+        "template": "[{{var a()}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/@plainobject",
+        "template": "[{{var a.get()}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/@plainobject",
+        "template": "[{{var a.getB(}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/@plainobject",
+        "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": true
+    },
+    {
         "id": "trans/@plainobject",
         "template": "[{{trans \"T\"}}]",
         "variables": [],
@@ -34286,6 +35662,42 @@
     {
         "id": "var_lead_dot/@arrayofobject",
         "template": "[{{var .a}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/@arrayofobject",
+        "template": "[{{var a()}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/@arrayofobject",
+        "template": "[{{var a.get()}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/@arrayofobject",
+        "template": "[{{var a.getB(}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "Error",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/@arrayofobject",
+        "template": "[{{var a.getB()}}]",
         "variables": [],
         "object": "arrayofobject",
         "outcome": "throw",
@@ -35199,6 +36611,42 @@
         "object": null,
         "outcome": "ok",
         "expected": "[{{var .a}}]",
+        "parity": true
+    },
+    {
+        "id": "var_call_head/novars",
+        "template": "[{{var a()}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a()}}]",
+        "parity": true
+    },
+    {
+        "id": "var_get_bag/novars",
+        "template": "[{{var a.get()}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a.get()}}]",
+        "parity": true
+    },
+    {
+        "id": "var_call_open/novars",
+        "template": "[{{var a.getB(}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a.getB(}}]",
+        "parity": true
+    },
+    {
+        "id": "var_call_extra/novars",
+        "template": "[{{var a.getB()}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{var a.getB()}}]",
         "parity": true
     },
     {
