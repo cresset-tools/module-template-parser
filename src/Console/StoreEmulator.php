@@ -20,6 +20,22 @@ namespace Cresset\TemplateParser\Console;
  */
 class StoreEmulator
 {
+    /**
+     * How many emulations deep this is.
+     *
+     * Magento's own Emulation refuses to NEST - a second startEnvironmentEmulation() is a
+     * no-op - but stopEnvironmentEmulation() restores unconditionally, so an inner stop tears
+     * down the outer emulation and everything after it runs unemulated. That is not
+     * hypothetical: the legacy renderer emulates the store the way processTemplate() does, the
+     * Auditor calls it from INSIDE this, and the result was `{{css}}` and `{{view}}` resolving
+     * against `_view` instead of the store's theme for every case after the first.
+     *
+     * So this counts, and only the outermost call actually starts or stops. Which means every
+     * emulation in the package has to come through here - the counter is per-instance and the
+     * thing it guards is process-wide, so callers share one of these.
+     */
+    private int $depth = 0;
+
     public function __construct(private readonly MagentoContext $magento)
     {
     }
@@ -41,15 +57,27 @@ class StoreEmulator
             return $work();
         }
 
+        if ($this->depth > 0) {
+            $this->depth++;
+            try {
+                return $work();
+            } finally {
+                $this->depth--;
+            }
+        }
+
         try {
             $emulation->startEnvironmentEmulation($storeId, \Magento\Framework\App\Area::AREA_FRONTEND, true);
         } catch (\Throwable) {
             return $work();              // an un-emulatable store should not stop the check
         }
 
+        $this->depth = 1;
+
         try {
             return $work();
         } finally {
+            $this->depth = 0;
             try {
                 $emulation->stopEnvironmentEmulation();
             } catch (\Throwable) {

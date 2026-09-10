@@ -81,6 +81,11 @@ class AssetStylesheetLoader implements StylesheetLoader
         // under store emulation that is the emulated one, which is the point.
         $theme = $this->design->getDesignTheme();
 
+        // An empty `theme` is PASSED, not dropped, because getDesignParams() passes it and
+        // Asset\Repository reads it with isset() - so `theme => ''` gives a path with no theme
+        // segment, `frontend/en_US/css/email.less`, and that is the path the filter resolves.
+        // Filtering the empties out looks like a fix and is a divergence: it falls back to
+        // getThemePath(), which yields `_view`, and every stylesheet in the store then differs.
         return [
             'area' => $this->design->getArea(),
             'theme' => $theme->getCode(),

@@ -48,7 +48,7 @@ class EngineFactory
         $spec = new DirectiveSpec();
         $evaluator = new Evaluator(spec: $spec, options: $options);
 
-        HostDirectives::register($evaluator, $this->services($storeId), new Parser($spec, $options));
+        HostDirectives::register($evaluator, $this->hostServices($storeId), new Parser($spec, $options));
 
         return new TemplateEngine(new Parser($spec, $options), $evaluator);
     }
@@ -59,7 +59,14 @@ class EngineFactory
         return $this->create(Mode::Lenient, $storeId)->evaluator()->registered();
     }
 
-    private function services(?int $storeId): HostServices
+    /**
+     * The ports this host can supply, exposed so a tool can wrap them.
+     *
+     * `tools/record-store-ports.php` decorates each one to record what the engine asks for,
+     * which is the only way to capture the guard decisions offline - the ports themselves
+     * need a store, and the fixtures they produce must not.
+     */
+    public function hostServices(?int $storeId = null): HostServices
     {
         if (!$this->magento->isAvailable()) {
             return new HostServices();

@@ -202,6 +202,20 @@ circular.
 the 2710 cases where both engines render, the surfaces are comparable and compatible mode
 does not deliberately refuse, output is byte-identical.**
 
+That corpus is recorded from a filter built out of a handful of files and no application, so
+it reaches the seven directives that need no host. The other twelve — `store`, `media`, `view`,
+`protocol`, `block`, `widget`, `layout`, `config`, `customvar`, `template`, `css`, `inlinecss`
+— are recorded separately against a **real store** by `tools/record-store-ports.php`, and what
+is replayed for them is the *tape*: every question the engine asked its ports and the answer it
+got. The port boundary is where this engine's responsibility ends, which makes the tape exactly
+its observable decisions — what it let through, what it refused by never asking, what it
+forwarded alongside. A tape needs no store, so it is a fixture rather than a manual check.
+
+That split matters because it is where the bugs have been. Until those twelve were recorded,
+five directives out of nineteen were actually compared, and every security defect adversarial
+fuzzing has found in this package lived in the other fourteen. Deleting the fix for the live
+`javascript:` scheme now fails twelve store-tape cases.
+
 Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
 class of divergence, and the honest reading is that the corpus bounds what is known rather
 than what is true. Two properties are asserted absolutely and are worth more than the
@@ -294,16 +308,21 @@ Quirks it does not reproduce:
   of rendering, and those are refused here rather than rendered, which is what keeps the
   guarantee below intact.
 - **A host that raises.** `{{block class="No\Such\Klass"}}`, `{{template config_path=""}}`,
-  a layout handle that cannot be built: the port raises, this engine renders that directive as
-  nothing and the rest of the template as normal. `Email\Model\Template\Filter::filter()`
-  catches `\Exception` around the WHOLE render, so on the old filter one broken include
-  replaces the entire email with `Error filtering template: …`. Losing one directive rather
-  than the whole document is the better failure, so this is deliberate — and the engine's own
-  diagnostics are exempt from it, re-thrown by the adapter rather than swallowed, because
-  those are the product. It is a genuine exception to the guarantee below: the filter dies
-  where this renders. The absolute is asserted over the constructs the *filter itself*
-  implements, which is what the corpus records; a port raising is the host's failure, not a
-  construct.
+  a layout handle that cannot be built: the port raises and the exception comes **out of
+  `render()`**. The engine does not catch it, because a host failing is not something the
+  engine can meaningfully paper over — a misconfigured block that silently vanished from
+  every email would be worse than one that says so.
+
+  `TemplateFilterAdapter` then degrades exactly as `Email\Model\Template\Filter::filter()`
+  does, catching `\Exception` and substituting `Error filtering template: …`, so a store
+  behind the Magento integration sees what it sees today. Its own diagnostics are exempt and
+  re-thrown, because those are the product. Call `render()` directly and you get the
+  exception; that is the seam where a host decides its own policy.
+
+  This is a genuine exception to the guarantee below: the filter dies where this raises, and
+  a caller that catches broadly renders where the filter died. The absolute is asserted over
+  the constructs the *filter itself* implements, which is what the corpus records; a port
+  raising is the host's failure, not a construct.
 - **A fatal in a branch that is discarded.** The legacy filter runs every directive processor
   over the whole source and collects the results before applying any, so a construct inside a
   false `{{depend}}` is still evaluated by another processor's independent pass — and if it is

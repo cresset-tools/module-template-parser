@@ -84,6 +84,30 @@ The `Parity drift` workflow does exactly this against Mage-OS `main` on a weekly
 fixtures going stale surfaces as a failing job rather than as an unnoticed assumption. It
 re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 
+### The store recording
+
+`tests/fixtures/legacy/store-ports.json` covers the twelve directives that need a host, which
+`record-legacy.php` cannot reach. Re-record it from inside a store:
+
+```sh
+cd /path/to/store && php vendor/cresset-tools/module-template-parser/tools/record-store-ports.php
+```
+
+It writes next to the package it is run from, so copy the result back if the store holds a
+copy rather than a symlink. Read the diff: a tape that changed is the engine having changed
+its mind about what reaches the host, and that is either the point of your change or a bug.
+
+Two fields in it are context rather than assertions. `legacy` and `agreed` record what the old
+filter rendered for the same template on the same store, but
+`AbstractTemplate::getProcessedTemplate()` applies its own design config and cancels it again,
+so in a long-lived CLI process an isolated `{{css}}` or `{{view}}` can resolve a different
+theme than the same directive inside a real template. `template-parser diff` renders whole
+templates end to end and is the parity measure; this file exists for the tapes.
+
+Anything below the port boundary — `StoreUrlBuilder`, `AssetStylesheetLoader` and the rest of
+`src/Magento/` — is invisible to a tape by construction, and needs its own unit test. That is
+not a gap in the tape; it is the boundary doing its job.
+
 ## What the suite covers
 
 | Test | Covers |

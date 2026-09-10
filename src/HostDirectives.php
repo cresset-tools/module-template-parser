@@ -342,8 +342,20 @@ final class HostDirectives
 
             $evaluator->register('store', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $params = $e->params($n, $c);
-                $path = $params['url'] ?? ($params['direct_url'] ?? '');
+
+                // storeDirective keeps these apart, and so must this. `url` is a route path
+                // that the URL model routes; `direct_url` becomes `_direct`, which
+                // getRouteUrl() concatenates onto the base URL with no routing at all.
+                // Collapsing them, as this did, made `{{store direct_url="customer/account"}}`
+                // render a ROUTED url - `.../customer/account/` - where the filter emits the
+                // base URL plus that text verbatim. Guarded either way; only the meaning
+                // differed.
+                $direct = $params['direct_url'] ?? null;
+                $path = $direct !== null ? '' : ($params['url'] ?? '');
                 unset($params['url'], $params['direct_url']);
+                if ($direct !== null) {
+                    $params['_direct'] = $direct;
+                }
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
                     return '';
                 }

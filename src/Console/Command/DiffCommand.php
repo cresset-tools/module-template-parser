@@ -48,7 +48,12 @@ HELP);
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $magento = $this->magento();
-        $legacy = new LegacyRenderer($magento);
+        // ONE emulator for the process. Magento's Emulation does not nest, and its stop
+        // restores unconditionally - so a renderer with its own would tear down the Auditor's
+        // and every template after the first would resolve {{css}} and {{view}} against no
+        // theme at all.
+        $stores = new StoreEmulator($magento);
+        $legacy = new LegacyRenderer($magento, $stores);
 
         if (!$legacy->isAvailable()) {
             $output->writeln('<error>diff needs a Magento store to compare against.</error>');
@@ -62,7 +67,7 @@ HELP);
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
         $width = max(20, (int)$input->getOption('show'));
 
-        $auditor = new Auditor(new EngineFactory($magento, $this->layoutHandles($input)), new StoreEmulator($magento));
+        $auditor = new Auditor(new EngineFactory($magento, $this->layoutHandles($input)), $stores);
         $render = static fn (TemplateSubject $subject): ?LegacyRender => $legacy->render(
             $subject->content,
             $subject->variables,

@@ -25,8 +25,16 @@ namespace Cresset\TemplateParser\Console;
  */
 class LegacyRenderer
 {
-    public function __construct(private readonly MagentoContext $magento)
-    {
+    /**
+     * @param ?StoreEmulator $stores the ONE emulator in the process. Magento's Emulation does
+     *        not nest - an inner stop tears down an outer emulation - so this renderer must
+     *        not start its own alongside a caller's. Pass the caller's; a fresh one here would
+     *        have its own depth counter and reintroduce exactly that.
+     */
+    public function __construct(
+        private readonly MagentoContext $magento,
+        private readonly ?StoreEmulator $stores = null
+    ) {
     }
 
     public function isAvailable(): bool
@@ -99,35 +107,15 @@ class LegacyRenderer
         // processTemplate() runs the whole render inside store emulation - that is what
         // applyDesignConfig() does, and it is the only reason DesignInterface has a theme to
         // resolve {{css}} and {{view}} against. Calling getProcessedTemplate() on its own
-        // skips it, so the filter resolved assets against an empty theme and every stock
-        // template carrying a stylesheet reported as a divergence. applyDesignConfig() is
-        // protected, so the emulation it performs is done here instead.
-        $emulation = $this->magento->get(\Magento\Store\Model\App\Emulation::class);
-        $emulationStore = $storeId ?? $this->currentStoreId();
-        $emulating = false;
-        if ($emulation !== null && $emulationStore !== null) {
-            try {
-                $emulation->startEnvironmentEmulation(
-                    $emulationStore,
-                    \Magento\Framework\App\Area::AREA_FRONTEND,
-                    true
-                );
-                $emulating = true;
-            } catch (\Throwable) {
-                // A store that cannot be emulated is still worth comparing without it.
-            }
-        }
+        // skips it. applyDesignConfig() is protected, so the emulation is performed through
+        // the package's emulator instead - never directly, because Magento's Emulation does
+        // not nest and an inner stop would tear down a caller's.
+        $stores = $this->stores ?? new StoreEmulator($this->magento);
 
-        try {
-            return $this->renderEmailIn($model, $template, $variables);
-        } finally {
-            if ($emulating) {
-                try {
-                    $emulation->stopEnvironmentEmulation();
-                } catch (\Throwable) {
-                }
-            }
-        }
+        return $stores->around(
+            $storeId ?? $this->currentStoreId(),
+            fn (): LegacyRender => $this->renderEmailIn($model, $template, $variables)
+        );
     }
 
     /**
