@@ -283,6 +283,15 @@ $constructs = [
     'var_get_bag'     => '[{{var a.get()}}]',
     'var_call_open'   => '[{{var a.getB(}}]',
     'var_call_extra'  => '[{{var a.getB()}}]',
+    // Every stray {{/...}} is a legacy fatal, whatever its spelling: the name capture is
+    // [a-z]{0,10}, a leading `/` leaves it empty, and ProcessorPool::get(null) raises. The
+    // lexer only recognised some spellings, so the rest rendered as text - a fail-open hole.
+    'close_upper'     => '[{{/A}}]',
+    'close_word'      => '[{{/Items}}]',
+    'close_name_case' => '[{{/ifA}}]',
+    'close_params'    => '[{{/var a}}]',
+    'close_dotted'    => '[{{/a.b}}]',
+    'close_slash'     => '[{{/a/}}]',
     // {{trans}}. Excluded from parity until the recorder grew a transDirective, so none of
     // these rules were ever measured - and four of them were wrong here.
     'trans'           => '[{{trans "T"}}]',

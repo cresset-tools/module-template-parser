@@ -79,6 +79,7 @@ final class Parser
         }
 
         $this->assertNoStrayElse($children);
+        $this->refuseStrayClosingTagsInText($children, $source);
 
         return new RootNode($children, $source, $this->incompatibilities);
     }
@@ -316,6 +317,63 @@ final class Parser
                     $name
                 )
             );
+        }
+    }
+
+    /**
+     * A `{{/…}}` this parser did not consume as a closing tag is a legacy fatal.
+     *
+     * CONSTRUCTION_PATTERN captures the name as `[a-z]{0,10}`, so a leading `/` leaves it
+     * EMPTY. LegacyDirective then reflects `Directive`, gets a ReflectionException, falls
+     * back to SimpleDirective - whose own pattern requires `{{[a-z]` and cannot match a
+     * close - and hands `ProcessorPool::get(null)` a null. Uncaught TypeError, every time,
+     * for every spelling.
+     *
+     * This engine already refused the spellings its lexer recognised as closes: `{{/if}}`,
+     * `{{/if }}`, `{{/}}`. The ones it did not - `{{/A}}`, `{{/Items}}`, `{{/a b}}`,
+     * `{{/a.b}}`, `{{/var a}}`, `{{/a/}}` - fell through to text and rendered, which is a
+     * fail-open hole in the claim this project states without qualification: nothing the
+     * legacy filter crashes on is rendered here.
+     *
+     * Walking the TREE rather than the source: a close that was consumed became structure
+     * and is not in a text node, so whatever is still spelled `{{/…}}` here is one legacy
+     * would have died on. A `{{/` with no `}}` after it is left alone - CONSTRUCTION_PATTERN
+     * needs the closer to match at all.
+     *
+     * @param Node[] $nodes
+     */
+    private function refuseStrayClosingTagsInText(array $nodes, string $source): void
+    {
+        if (!$this->options->legacyQuirks || !str_contains($source, '{{/')) {
+            return;
+        }
+
+        foreach ($nodes as $node) {
+            if ($node instanceof DirectiveNode) {
+                $this->refuseStrayClosingTagsInText($node->children(), $source);
+                if ($node->hasAlternate()) {
+                    $this->refuseStrayClosingTagsInText($node->alternate(), $source);
+                }
+                continue;
+            }
+            if (!$node instanceof TextNode) {
+                continue;
+            }
+
+            foreach ($this->matches('/\{\{\/[^{}]*\}\}/', $node->text()) as $match) {
+                $spelling = $match[0][0];
+                $at = strpos($source, $spelling);
+
+                $this->refuseIfLegacyCannotRender(
+                    $at === false ? 0 : $at,
+                    LegacyIncompatibility::STRAY_CLOSING_TAG,
+                    sprintf(
+                        '%s is not a closing tag the legacy filter can dispatch - it captures '
+                        . 'an empty directive name and raises a TypeError',
+                        $spelling
+                    )
+                );
+            }
         }
     }
 
