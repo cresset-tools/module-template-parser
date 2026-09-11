@@ -161,6 +161,54 @@ namespace Magento\Framework\View {
         }
     }
 }
+namespace Magento\Framework\Filter\SimpleDirective {
+    if (!interface_exists(ProcessorInterface::class)) {
+        interface ProcessorInterface {
+            public function getName(): string;
+            public function process($value, array $parameters, ?string $html): string;
+            public function getDefaultFilters(): ?array;
+        }
+    }
+    // Faithful in the one way that matters: the contents are PRIVATE with only get($name), so
+    // nothing but reflection can enumerate them - which is the whole reason HostExtensions
+    // uses it.
+    if (!class_exists(ProcessorPool::class)) {
+        class ProcessorPool {
+            private $processors;
+            public function __construct(array $processors = []) { $this->processors = $processors; }
+            public function get(string $name): ProcessorInterface
+            {
+                if (empty($this->processors[$name])) {
+                    throw new \InvalidArgumentException('Processor with key "' . $name . '" has not been defined');
+                }
+                return $this->processors[$name];
+            }
+        }
+    }
+}
+namespace Magento\Framework\Filter\DirectiveProcessor {
+    if (!interface_exists(FilterInterface::class)) {
+        interface FilterInterface {
+            public function filterValue(string $value, array $params): string;
+            public function getName(): string;
+        }
+    }
+}
+namespace Magento\Framework\Filter\DirectiveProcessor\Filter {
+    if (!class_exists(FilterPool::class)) {
+        class FilterPool {
+            private $filters;
+            public function __construct(array $filters = []) { $this->filters = $filters; }
+            public function get(string $name): \Magento\Framework\Filter\DirectiveProcessor\FilterInterface
+            {
+                if (empty($this->filters[$name])) {
+                    throw new \InvalidArgumentException('Filter with key "' . $name . '" has not been defined');
+                }
+                return $this->filters[$name];
+            }
+        }
+    }
+}
 namespace Magento\Store\Model\App {
     if (!class_exists(Emulation::class)) {
         class Emulation {

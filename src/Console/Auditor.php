@@ -23,6 +23,7 @@ class Auditor
     public function __construct(
         private readonly EngineFactory $engines,
         private readonly StoreEmulator $stores,
+        private readonly ?HostExtensions $extensions = null,
     ) {
         $this->fixer = new Fixer();
     }
@@ -43,31 +44,50 @@ class Auditor
                 $engine = $this->engines->create($mode, $store);
                 $context = new Context($subject->variables, $policy ?? RenderPolicy::unrestricted());
 
+                // Worked out before the render, because a template using one of these may well
+                // REFUSE - a paired custom directive leaves a `{{/mydir}}` this engine has no
+                // opener for - and that is the case where the reason is least obvious.
+                $extension = $this->extensions?->noteFor($subject->content);
+                $extensionFinding = $extension === null ? [] : [new Finding(
+                    severity: Finding::WARNING,
+                    subject: $subject,
+                    summary: $extension,
+                    fix: 'This engine implements neither of Magento\'s template extension '
+                        . 'points. Until it does, a template using one renders differently '
+                        . 'here than on this store - so either keep that template on the '
+                        . 'old filter, or replace the construct.',
+                )];
+
                 try {
                     $engine->render($subject->content, context: $context);
                 } catch (TemplateError $e) {
                     [$severity, $fix] = $this->fixer->advise($e);
 
-                    return [new Finding(
+                    return array_merge($extensionFinding, [new Finding(
                         severity: $severity,
                         subject: $subject,
                         summary: $this->firstLine($e->getMessage()),
                         detail: $e->getMessage(),
                         fix: $fix,
                         line: $e->sourceLine ?? null,
-                    )];
+                    )]);
                 } catch (\Throwable $e) {
-                    return [new Finding(
+                    return array_merge($extensionFinding, [new Finding(
                         severity: Finding::ERROR,
                         subject: $subject,
                         summary: sprintf('%s: %s', (new \ReflectionClass($e))->getShortName(), $e->getMessage()),
                         detail: $e->getMessage(),
                         fix: 'This is not a template error - the engine or a wired port raised it. '
                             . 'Worth reporting if the template itself looks reasonable.',
-                    )];
+                    )]);
                 }
 
-                $findings = [];
+                // A directive the STORE has and this engine does not comes back as its own
+                // text - exactly what a store without that extension would do - so the
+                // difference is invisible unless someone says it. Not an error: the template
+                // renders, and on a store without the extension it renders identically.
+                $findings = $extensionFinding;
+
                 foreach ($context->violations() as $violation) {
                     $findings[] = new Finding(
                         severity: Finding::NOTE,
@@ -155,8 +175,13 @@ class Auditor
                 }
 
                 if ($ourFailure !== null) {
-                    return new Divergence($subject, $legacyOutput, null,
-                        'renders today, refused here - ' . $ourFailure);
+                    // The extension note belongs MOST here. A paired custom directive makes
+                    // this engine refuse the stray `{{/mydir}}`, and "closes nothing here" is
+                    // a puzzling thing to read about a directive your own store implements.
+                    return new Divergence($subject, $legacyOutput, null, implode('; ', array_filter([
+                        'renders today, refused here - ' . $ourFailure,
+                        $this->extensions?->noteFor($subject->content),
+                    ])));
                 }
 
                 if ($legacyOutput === null) {
@@ -168,7 +193,7 @@ class Auditor
                     return null;
                 }
 
-                return new Divergence($subject, $legacyOutput, $ours, $this->divergenceNote($legacyOutput, $ours, $engine));
+                return new Divergence($subject, $legacyOutput, $ours, $this->divergenceNote($subject->content, $legacyOutput, $ours, $engine));
             });
 
             if ($divergence !== null) {
@@ -180,11 +205,12 @@ class Auditor
     }
 
     /** Both notes a difference can carry: a port this tool lacks, and one the filter lacks. */
-    private function divergenceNote(string $legacyOutput, string $ours, TemplateEngine $engine): ?string
+    private function divergenceNote(string $source, string $legacyOutput, string $ours, TemplateEngine $engine): ?string
     {
         $notes = array_filter([
             $this->unwiredPortNote($ours, $engine),
             $this->surfaceGapNote($legacyOutput, $ours, $engine),
+            $this->extensions?->noteFor($source),
         ]);
 
         return $notes === [] ? null : implode('; ', $notes);

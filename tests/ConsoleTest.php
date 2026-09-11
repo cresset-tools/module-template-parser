@@ -7,6 +7,7 @@ use Cresset\TemplateParser\Console\Application;
 use Cresset\TemplateParser\Console\Auditor;
 use Cresset\TemplateParser\Console\LegacyRender;
 use Cresset\TemplateParser\Console\EngineFactory;
+use Cresset\TemplateParser\Console\HostExtensions;
 use Cresset\TemplateParser\Console\Finding;
 use Cresset\TemplateParser\Console\MagentoContext;
 use Cresset\TemplateParser\Console\Mode;
@@ -157,6 +158,120 @@ final class ConsoleTest extends TestCase
 
         self::assertCount(1, $divergences);
         self::assertStringNotContainsString('capability gained', (string)$divergences[0]->note);
+    }
+
+    /**
+     * A template refusing because of a directive the STORE implements says so.
+     *
+     * This is the case the note matters most for, and the one it originally missed: a paired
+     * custom directive leaves a `{{/mydir}}` with no opener this engine knows, so the render
+     * is REFUSED - and "closes nothing here" is a puzzling thing to read about a directive
+     * your own store registers a processor for. It was computed after the render at first,
+     * which meant the refusal path returned before it was ever reached.
+     */
+    public function testARefusalCausedByAHostExtensionSaysSo(): void
+    {
+        $auditor = new Auditor(
+            new EngineFactory(MagentoContext::unavailable('no store')),
+            new StoreEmulator(MagentoContext::unavailable('no store')),
+            $this->extensionsWith(['mydir'])
+        );
+        $subject = new TemplateSubject(
+            id: 'x', label: 'x', origin: 'test',
+            content: 'A{{mydir "v"}}body{{/mydir}}B'
+        );
+
+        $findings = $auditor->check([$subject], Mode::Compatible);
+        $summaries = array_map(static fn ($f): string => $f->summary, $findings);
+
+        self::assertNotEmpty($findings);
+        // Asserted on words only the EXTENSION note uses. `{{mydir}}` alone would pass on the
+        // refusal message too - "{{/mydir}} closes nothing here" contains it - so the first
+        // version of this test could not fail.
+        self::assertStringContainsString(
+            'registers a directive processor for',
+            implode(' | ', $summaries),
+            'a refusal caused by a store extension must name it as the cause'
+        );
+    }
+
+    /** And diff says it on the refusal path too, where the reason is least obvious. */
+    public function testADivergenceFromAHostExtensionSaysSo(): void
+    {
+        $auditor = new Auditor(
+            new EngineFactory(MagentoContext::unavailable('no store')),
+            new StoreEmulator(MagentoContext::unavailable('no store')),
+            $this->extensionsWith(['mydir'])
+        );
+        $subject = new TemplateSubject(
+            id: 'x', label: 'x', origin: 'test',
+            content: 'A{{mydir "v"}}body{{/mydir}}B'
+        );
+
+        $divergences = $auditor->diff(
+            [$subject],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender('AYDOBPVB', [])
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertStringContainsString(
+            'registers a directive processor for',
+            (string)$divergences[0]->note
+        );
+    }
+
+    /**
+     * And when BOTH sides render, which is the void form.
+     *
+     * `{{mydir "v"}}` with no closing tag parses here as an unknown directive and comes back
+     * as its own text, while the store renders the processor's output - so there is an
+     * ordinary byte difference, and it is worth saying what caused it.
+     */
+    public function testABothRenderedDivergenceFromAHostExtensionSaysSo(): void
+    {
+        $auditor = new Auditor(
+            new EngineFactory(MagentoContext::unavailable('no store')),
+            new StoreEmulator(MagentoContext::unavailable('no store')),
+            $this->extensionsWith(['mydir'])
+        );
+        $subject = new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: 'A{{mydir "v"}}B');
+
+        $divergences = $auditor->diff(
+            [$subject],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender('AVB', [])
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertStringContainsString(
+            'registers a directive processor for',
+            (string)$divergences[0]->note
+        );
+    }
+
+    /** @param string[] $names */
+    private function extensionsWith(array $names): HostExtensions
+    {
+        $processors = [];
+        foreach ($names as $name) {
+            $processors[$name] = new class ($name) implements \Magento\Framework\Filter\SimpleDirective\ProcessorInterface {
+                public function __construct(private string $name) {}
+                public function getName(): string { return $this->name; }
+                public function process($value, array $parameters, ?string $html): string { return ''; }
+                public function getDefaultFilters(): ?array { return null; }
+            };
+        }
+
+        return new HostExtensions(MagentoContext::fromObjectManager(new class ($processors) {
+            public function __construct(private array $processors) {}
+            public function get(string $class): ?object
+            {
+                return $class === \Magento\Framework\Filter\SimpleDirective\ProcessorPool::class
+                    ? new \Magento\Framework\Filter\SimpleDirective\ProcessorPool($this->processors)
+                    : null;
+            }
+        }));
     }
 
     /** A difference with no unwired directive in it gets no such excuse. */

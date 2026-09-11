@@ -5,6 +5,7 @@ namespace Cresset\TemplateParser\Console\Command;
 
 use Cresset\TemplateParser\Console\Auditor;
 use Cresset\TemplateParser\Console\EngineFactory;
+use Cresset\TemplateParser\Console\HostExtensions;
 use Cresset\TemplateParser\Console\Finding;
 use Cresset\TemplateParser\Console\Mode;
 use Cresset\TemplateParser\Console\Source\CodebaseEmailTemplates;
@@ -52,7 +53,11 @@ HELP);
         $mode = Mode::parse((string)$input->getOption('mode'));
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
 
-        $auditor = new Auditor(new EngineFactory($magento, $this->layoutHandles($input)), new StoreEmulator($magento));
+        $auditor = new Auditor(
+            new EngineFactory($magento, $this->layoutHandles($input)),
+            new StoreEmulator($magento),
+            new HostExtensions($magento)
+        );
 
         $path = $input->getArgument('path');
         if ($path !== null) {

@@ -6,6 +6,7 @@ namespace Cresset\TemplateParser\Console\Command;
 use Cresset\TemplateParser\Console\Auditor;
 use Cresset\TemplateParser\Console\Divergence;
 use Cresset\TemplateParser\Console\EngineFactory;
+use Cresset\TemplateParser\Console\HostExtensions;
 use Cresset\TemplateParser\Console\LegacyRender;
 use Cresset\TemplateParser\Console\LegacyRenderer;
 use Cresset\TemplateParser\Console\Mode;
@@ -67,7 +68,11 @@ HELP);
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
         $width = max(20, (int)$input->getOption('show'));
 
-        $auditor = new Auditor(new EngineFactory($magento, $this->layoutHandles($input)), $stores);
+        $auditor = new Auditor(
+            new EngineFactory($magento, $this->layoutHandles($input)),
+            $stores,
+            new HostExtensions($magento)
+        );
         $render = static fn (TemplateSubject $subject): ?LegacyRender => $legacy->render(
             $subject->content,
             $subject->variables,
