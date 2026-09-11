@@ -272,7 +272,7 @@ Quirks it reproduces:
 
 | Quirk | Legacy behaviour |
 |---|---|
-| truthiness | `resolve(...) == ''`, so on PHP 8 `0`, `'0'` and `[]` are truthy |
+| truthiness | `resolve(...) == ''`, so on PHP 8 `0`, `'0'`, `0.0` and `[]` are truthy — and `false` and `null` are not |
 | partial paths | member access is only attempted on an array or DataObject parent, so a scalar parent yields itself (`{{var store.frontend_name}}` renders the store) |
 | missing keys | an array parent with a missing key yields nothing, not the parent |
 | arrays | cast to the literal string `Array` |
@@ -509,9 +509,17 @@ The engine uses standard PHP truthiness. The legacy filter tests `resolve(...) =
 on PHP 8 makes `0`, `'0'` and `[]` all truthy — so `{{if qty}}` runs its true branch for a
 zero quantity.
 
-Only `0` and `0.0` are new. `0 == ''` was true on PHP 7 and became false in PHP 8, so those
-two silently flipped on upgrade; `'0'` and `[]` never equalled `''` on either version and
-have always been truthy here. Measured on 7.4.33 and 8.3.33. See `KnownDivergenceTest`.
+Only `0` and `0.0` are new. `0 == ''` was true on PHP 7 and became false in PHP 8 — the
+["Saner string to number comparisons"](https://wiki.php.net/rfc/string_to_number_comparison)
+RFC — so those two silently flipped on upgrade; `'0'` and `[]` never equalled `''` on either
+version and have always been truthy here. `false` and `null` *do* equal `''`, so the filter
+takes the false branch for them, which is what this engine does anyway.
+
+The live half of that is pinned rather than asserted in prose:
+`KnownDivergenceTest::testTheComparisonLegacyTruthinessRestsOn` checks the comparison itself on
+every supported version, and `LegacyParityTest` checks that the branch it predicts is the
+branch the filter was *recorded* taking. If PHP changes loose comparison again, a test says so.
+The PHP 7 half is history — this project supports 8.3 and up, so it is not re-measurable here.
 
 ### Nesting
 

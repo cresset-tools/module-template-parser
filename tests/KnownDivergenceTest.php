@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Test;
 
 use Cresset\TemplateParser\TemplateEngine;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -59,6 +60,50 @@ final class KnownDivergenceTest extends TestCase
         // Unchanged from legacy for the cases that already agreed.
         self::assertSame('N', $this->engine->render('{{if a}}Y{{else}}N{{/if}}', ['a' => '']));
         self::assertSame('Y', $this->engine->render('{{if a}}Y{{else}}N{{/if}}', ['a' => 'x']));
+    }
+
+    /**
+     * The comparison the whole truthiness quirk rests on, pinned on the running version.
+     *
+     * `IfDirective` tests `resolve(...) == ''`, and that is a LOOSE comparison whose meaning
+     * PHP has already changed once: before 8.0's "Saner string to number comparisons", `0 == ''`
+     * was true, so a zero quantity took the false branch; after it the same template takes the
+     * true branch. Stores got that on upgrade without touching a template.
+     *
+     * The claim was in prose in three places and asserted nowhere, which is the category of
+     * statement this suite exists to stop making. Pinned here so a release that changes
+     * comparison semantics again fails a test rather than a merchant's email - and complete,
+     * because the prose only ever named the three values that are TRUTHY and never said that
+     * `false` and `null` are falsy on the filter too.
+     *
+     * @param mixed $value
+     */
+    #[DataProvider('loosleyComparedValues')]
+    public function testTheComparisonLegacyTruthinessRestsOn(mixed $value, bool $takesFalseBranch): void
+    {
+        self::assertSame(
+            $takesFalseBranch,
+            $value == '',
+            sprintf('`%s == \'\'` changed meaning on PHP %s', var_export($value, true), PHP_VERSION)
+        );
+    }
+
+    /** @return array<string,array{0:mixed,1:bool}> */
+    public static function loosleyComparedValues(): array
+    {
+        return [
+            // Falsy on the filter, and on this engine too - so no divergence from these.
+            "empty string" => ['', true],
+            "null"         => [null, true],
+            "false"        => [false, true],
+            // Truthy on the filter and FALSY here: the documented divergence.
+            "int zero"     => [0, false],
+            "string zero"  => ['0', false],
+            "float zero"   => [0.0, false],
+            "empty array"  => [[], false],
+            // Truthy on both.
+            "a word"       => ['x', false],
+        ];
     }
 
     /**

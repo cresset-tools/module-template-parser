@@ -393,6 +393,54 @@ final class LegacyParityTest extends TestCase
     }
 
     /**
+     * The truthiness quirk, checked against what the filter RECORDED rather than against prose.
+     *
+     * `{{if}}` tests `resolve(...) == ''`, so the branch it takes is decided by a loose
+     * comparison - and `KnownDivergenceTest` pins that comparison on every supported version.
+     * This ties the two together: for each value, the branch the comparison predicts has to be
+     * the branch the filter was actually recorded taking. If PHP changes the comparison again,
+     * one test says the mechanism moved and this one says the behaviour moved with it.
+     */
+    public function testTheRecordedTruthinessMatchesTheComparisonThatCausesIt(): void
+    {
+        $cases = self::recordedCases();
+        $checked = 0;
+
+        foreach ([
+            'if/emptystr' => '',
+            'if/zero' => 0,
+            'if/strzero' => '0',
+            'if/emptyarr' => [],
+            'if/word' => 'x',
+        ] as $id => $value) {
+            if (!isset($cases[$id])) {
+                continue;
+            }
+
+            $case = $cases[$id][0];
+            $expected = ($value == '') ? '[]' : '[Y]';
+
+            self::assertSame(
+                $expected,
+                $case['expected'],
+                sprintf(
+                    '%s: `%s == \'\'` is %s on PHP %s, so the filter should have taken the %s '
+                    . 'branch - but it was recorded rendering %s',
+                    $id,
+                    var_export($value, true),
+                    var_export($value == '', true),
+                    PHP_VERSION,
+                    ($value == '') ? 'false' : 'true',
+                    var_export($case['expected'], true)
+                )
+            );
+            $checked++;
+        }
+
+        self::assertGreaterThanOrEqual(4, $checked, 'the truthiness cases left the corpus');
+    }
+
+    /**
      * The other direction, stated honestly: compatible mode refuses a SUPERSET.
      *
      * Every extra refusal is fail-closed - the construct is reported rather than rendered
