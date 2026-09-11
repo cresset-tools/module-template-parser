@@ -87,7 +87,12 @@ re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
 ### The store recording
 
 `tests/fixtures/legacy/store-ports.json` covers the twelve directives that need a host, which
-`record-legacy.php` cannot reach. Re-record it from inside a store:
+`record-legacy.php` cannot reach. It is recorded against a store with **sample data and real
+orders**, because that is what `{{layout}}` needs to render anything: the five handles the
+stock sales emails use produce between 289 bytes and 2.3KB of item table each, and a store
+without orders agrees with the filter on all of them vacuously.
+
+Re-record it from inside a store:
 
 ```sh
 cd /path/to/store && php vendor/cresset-tools/module-template-parser/tools/record-store-ports.php

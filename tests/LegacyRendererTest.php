@@ -109,6 +109,47 @@ final class LegacyRendererTest extends TestCase
         self::assertLessThan($built, $flag, 'the flag was set after the filter had already read it');
     }
 
+    /**
+     * The area is ensured here, not assumed to have been set by whoever called first.
+     *
+     * An email template model will not render without one. EngineFactory sets it when it
+     * builds its ports, so the Auditor - which creates the engine before calling this - worked
+     * by accident of ordering. Called on its own, the first render of the process threw, was
+     * swallowed, and came back as null, which reads downstream as a divergence in the engine.
+     */
+    public function testTheAreaIsEnsuredRatherThanAssumed(): void
+    {
+        $asked = [];
+        $context = MagentoContext::fromObjectManager(new class ($this->model(), $asked) {
+            public function __construct(private object $model, private array &$asked) {}
+            public function get(string $class): ?object
+            {
+                $this->asked[] = $class;
+                if ($class === \Magento\Email\Model\TemplateFactory::class) {
+                    return new class ($this->model) {
+                        public function __construct(private object $model) {}
+                        public function create(array $data = []): object { return $this->model; }
+                    };
+                }
+                if ($class === \Magento\Framework\App\State::class) {
+                    return new class {
+                        public function getAreaCode() { return null; }
+                        public function setAreaCode($code) {}
+                    };
+                }
+                return null;
+            }
+        });
+
+        (new LegacyRenderer($context))->render('X', []);
+
+        self::assertContains(
+            \Magento\Framework\App\State::class,
+            $asked,
+            'the renderer never asked for App\\State, so it cannot have ensured an area'
+        );
+    }
+
     /** The filter really is the thing being compared, not the model's own output. */
     public function testTheLegacyRenderIsTheFiltersOwn(): void
     {

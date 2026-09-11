@@ -236,7 +236,7 @@ fuzzing has found in this package lived in the other thirteen. Deleting the fix 
 `javascript:` scheme now fails twelve store-tape cases.
 
 Agreement with the filter is asserted, not merely noted: `legacy` is a recorded constant and
-the candidate is recomputed from the tape each run, so the 136 store cases that agreed when
+the candidate is recomputed from the tape each run, so the 175 store cases that agreed when
 recorded have to keep agreeing, offline, with no store. The *count* is pinned too — otherwise a
 guard that starts refusing something the filter renders just leaves a smaller agreeing set and
 every remaining assertion still passes.
@@ -245,10 +245,11 @@ Every directive but one now has an asserted comparison against the filter somewh
 exception is `{{for}}`, which is a declared divergence for the reason given above. Two caveats
 worth stating plainly:
 
-- `{{layout}}`'s corpus cases agree **vacuously** — the base filter has no `layoutDirective`
-  and the test engine has no port, so both sides emit the directive verbatim. Its real
-  comparison is `template-parser diff --allow-layout-handle=stock-email`, which renders the
-  sixteen stock sales emails through both engines and finds them identical.
+- `{{layout}}`'s *corpus* cases agree vacuously — the base filter has no `layoutDirective`
+  and that test engine has no port, so both sides emit the directive verbatim. Its real
+  comparison is in the store recording, against a store with sample data and real orders in
+  it: all five handles the stock sales emails use render between 289 bytes and 2.3KB of item
+  table and agree byte for byte.
 - `{{widget}}` cannot be compared on the email surface at all, that filter having no
   `widgetDirective`; it is compared on the CMS surface, which does.
 

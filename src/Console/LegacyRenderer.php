@@ -86,6 +86,13 @@ class LegacyRenderer
             return null;
         }
 
+        // An email template model needs an area before it will render, and this class must not
+        // depend on something else having set one. EngineFactory does it when it builds its
+        // ports, so the Auditor - which creates the engine first - worked by accident of
+        // ordering; called on its own, the FIRST render of the process threw, was swallowed
+        // here, and came back as null, which reads downstream as a divergence.
+        $this->magento->ensureAreaCode(\Magento\Framework\App\Area::AREA_FRONTEND);
+
         $model = $factory->create();
         $model->setTemplateType(\Magento\Framework\App\TemplateTypesInterface::TYPE_HTML);
         $model->setTemplateText($template);

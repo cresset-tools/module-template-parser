@@ -188,7 +188,20 @@ const CONSTRUCTS = [
     'widget_cms_block'   => '{{widget type="Magento\\Cms\\Block\\Widget\\Block" template="widget/static_block/default.phtml" block_id="1"}}',
     // Not Page\Link: that block generates a random DOM id per render, so it can never agree
     // with anything, including itself. A nondeterministic construct is not a fixture.
-    'layout_handle'      => '{{layout handle="sales_email_order_items" order_id="1"}}',
+    // The four stock item-table handles, against REAL orders. A handle that renders nothing
+    // agrees with the filter vacuously and proves nothing, which is what {{layout}} coverage
+    // was until this store had sample data in it: these produce ~2.3KB of item table each.
+    'layout_order'       => '{{layout handle="sales_email_order_items" order_id="1"}}',
+    'layout_order_two'   => '{{layout handle="sales_email_order_items" order_id="2"}}',
+    'layout_invoice'     => '{{layout handle="sales_email_order_invoice_items" invoice_id="1" order_id="1"}}',
+    'layout_shipment'    => '{{layout handle="sales_email_order_shipment_items" shipment_id="1" order_id="1"}}',
+    'layout_ship_track'  => '{{layout handle="sales_email_order_shipment_track" shipment_id="1" order_id="1"}}',
+    'layout_creditmemo'  => '{{layout handle="sales_email_order_creditmemo_items" creditmemo_id="1" order_id="2"}}',
+    // No order at all, and a handle nobody allowed: the guard, and the empty case.
+    'layout_no_order'    => '{{layout handle="sales_email_order_items"}}',
+    'layout_denied'      => '{{layout handle="customer_account_edit" order_id="1"}}',
+    'layout_area_admin'  => '{{layout handle="sales_email_order_items" order_id="1" area="adminhtml"}}',
+    'layout_template'    => '{{layout handle="sales_email_order_items" order_id="1" template="Magento_Backend::page/js/require_js.phtml"}}',
     'layout_absent'      => '{{layout}}',
 ];
 
@@ -207,7 +220,15 @@ const VARIABLE_SETS = [
     ],
 ];
 
-$factory = new EngineFactory($magento, ['sales_email_order_items']);
+// The handles the stock sales emails use - the same list `--allow-layout-handle=stock-email`
+// supplies, because the point is to measure what a store already does.
+$factory = new EngineFactory($magento, [
+    'sales_email_order_items',
+    'sales_email_order_invoice_items',
+    'sales_email_order_shipment_items',
+    'sales_email_order_shipment_track',
+    'sales_email_order_creditmemo_items',
+]);
 $stores = new StoreEmulator($magento);
 // The SAME emulator. Magento's Emulation does not nest and its stop restores unconditionally,
 // so a renderer holding its own would tear down the one this tool renders inside, and every
