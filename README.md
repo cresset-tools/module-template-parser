@@ -236,7 +236,7 @@ fuzzing has found in this package lived in the other thirteen. Deleting the fix 
 `javascript:` scheme now fails twelve store-tape cases.
 
 Agreement with the filter is asserted, not merely noted: `legacy` is a recorded constant and
-the candidate is recomputed from the tape each run, so the 175 store cases that agreed when
+the candidate is recomputed from the tape each run, so the 190 store cases that agreed when
 recorded have to keep agreeing, offline, with no store. The *count* is pinned too — otherwise a
 guard that starts refusing something the filter renders just leaves a smaller agreeing set and
 every remaining assertion still passes.

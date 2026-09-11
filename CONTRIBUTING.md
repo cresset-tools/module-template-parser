@@ -92,6 +92,15 @@ orders**, because that is what `{{layout}}` needs to render anything: the five h
 stock sales emails use produce between 289 bytes and 2.3KB of item table each, and a store
 without orders agrees with the filter on all of them vacuously.
 
+Each case is recorded in a process of its own, which takes about 45 seconds for the lot and is
+not an optimisation to remove. Magento's services are shared and stateful: a hostile case can
+leave one in a mode that changes every render after it, and `{{store _type="../.."}}` does
+exactly that — the filter hands the type to the URL model, which keeps it, and every later
+legacy `{{store}}` in the process then fails with "Invalid base url type". Fifteen cases were
+recorded against a poisoned model before the isolation went in, each with a `legacy` value that
+is not what that template does. A run is reproducible byte for byte; if two runs differ,
+something is leaking.
+
 Re-record it from inside a store:
 
 ```sh

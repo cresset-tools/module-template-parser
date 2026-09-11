@@ -249,10 +249,33 @@ foreach (['blocks', 'translator', 'templates', 'config', 'customVariables', 'url
 $spec = new DirectiveSpec();
 $cases = [];
 
+/**
+ * The one case this process was asked for, or null to drive the whole run.
+ *
+ * Magento's services are shared and stateful, and a hostile case can leave one in a mode that
+ * changes every render after it. `{{store _type="../.."}}` does exactly that: the filter hands
+ * the type to the URL model, which keeps it, and every subsequent legacy {{store}} in the
+ * process then fails with "Invalid base url type". Fifteen cases were recorded against a
+ * poisoned model before this - a `legacy` value that is not what that template does.
+ *
+ * So a case is recorded in a process of its own. Bootstrapping this store costs 0.06s, which
+ * is a price worth paying for a fixture whose whole value is that its recorded values are
+ * true.
+ */
+$only = null;
+foreach ($argv as $arg) {
+    if (str_starts_with($arg, '--case=')) {
+        $only = substr($arg, 7);
+    }
+}
+
 foreach (VARIABLE_SETS as $vlabel => $variables) {
     foreach (CONSTRUCTS as $clabel => $template) {
         foreach ([false, true] as $plainText) {
             $id = sprintf('%s/%s%s', $clabel, $vlabel, $plainText ? '/plain' : '');
+            if ($only !== null && $only !== $id) {
+                continue;
+            }
 
             $tape = new PortTape();
 
@@ -334,6 +357,10 @@ foreach (VARIABLE_SETS as $vlabel => $variables) {
  * Once per construct: a CMS render takes no variables and has no plain-text mode.
  */
 foreach (CONSTRUCTS as $clabel => $template) {
+    if ($only !== null && $only !== $clabel . '/cms') {
+        continue;
+    }
+
     $tape = new PortTape();
 
     [$render, $ours] = $stores->around($storeId, static function () use (
@@ -371,6 +398,64 @@ foreach (CONSTRUCTS as $clabel => $template) {
         'legacy' => $legacyOutput,
         'agreed' => $legacyOutput !== null && $ours[0] === 'ok' && $legacyOutput === $ours[1],
     ];
+}
+
+// A child has exactly one case by now, and prints it for the driver to collect.
+if ($only !== null) {
+    if ($cases === []) {
+        fwrite(STDERR, "no such case: " . $only . "\n");
+        exit(1);
+    }
+    echo json_encode($cases[0], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
+    exit(0);
+}
+
+/*
+ * Driving mode: one child process per case, so no case can see what another left behind.
+ *
+ * The children are this same file with `--case=`, which keeps the case definitions in one
+ * place. A child prints one JSON object; anything else on its stdout is a bug in the child and
+ * is reported rather than swallowed, because a case silently missing from the fixture is a
+ * case silently not tested.
+ */
+if ($only === null) {
+    $ids = [];
+    foreach (VARIABLE_SETS as $vlabel => $variables) {
+        foreach (CONSTRUCTS as $clabel => $template) {
+            foreach ([false, true] as $plainText) {
+                $ids[] = sprintf('%s/%s%s', $clabel, $vlabel, $plainText ? '/plain' : '');
+            }
+        }
+    }
+    foreach (CONSTRUCTS as $clabel => $template) {
+        $ids[] = $clabel . '/cms';
+    }
+
+    $cases = [];
+    $failed = [];
+    foreach ($ids as $id) {
+        $command = sprintf(
+            '%s %s --case=%s 2>/dev/null',
+            escapeshellarg(PHP_BINARY),
+            escapeshellarg(__FILE__),
+            escapeshellarg($id)
+        );
+        $raw = (string)shell_exec($command);
+        $decoded = json_decode(trim($raw), true);
+        if (!is_array($decoded) || !isset($decoded['id'])) {
+            $failed[$id] = trim(substr($raw, 0, 160));
+            continue;
+        }
+        $cases[] = $decoded;
+    }
+
+    if ($failed !== []) {
+        fwrite(STDERR, sprintf("FATAL: %d case(s) produced no result:\n", count($failed)));
+        foreach (array_slice($failed, 0, 5, true) as $id => $why) {
+            fwrite(STDERR, sprintf("  %s: %s\n", $id, $why === '' ? '(no output)' : $why));
+        }
+        exit(1);
+    }
 }
 
 $out = [

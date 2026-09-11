@@ -1156,8 +1156,8 @@
             },
             "plain_text": false,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account",
             "tape": [
                 {
                     "port": "urls",
@@ -1168,11 +1168,11 @@
                             "_direct": "customer/account"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account",
+            "agreed": true
         },
         {
             "id": "store_direct/empty/plain",
@@ -1180,8 +1180,8 @@
             "variables": [],
             "plain_text": true,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account",
             "tape": [
                 {
                     "port": "urls",
@@ -1192,7 +1192,7 @@
                             "_direct": "customer/account"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account"
                 }
             ],
             "legacy": null,
@@ -1218,7 +1218,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "http://template-parser-sales.bougie.run:7080/../../app/etc/env.php",
             "agreed": false
         },
         {
@@ -1253,7 +1253,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/index/anything/..%2F..%2F../",
             "agreed": false
         },
         {
@@ -1285,8 +1285,8 @@
             },
             "plain_text": false,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
             "tape": [
                 {
                     "port": "urls",
@@ -1298,11 +1298,11 @@
                             "q": "a b"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
+            "agreed": true
         },
         {
             "id": "store_escape_off/empty/plain",
@@ -1310,8 +1310,8 @@
             "variables": [],
             "plain_text": true,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
             "tape": [
                 {
                     "port": "urls",
@@ -1323,7 +1323,7 @@
                             "q": "a b"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/"
                 }
             ],
             "legacy": null,
@@ -4260,7 +4260,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "http://template-parser-sales.bougie.run:7080/static/version1789111079/../../../_view/en_US/css/email.css",
+            "legacy": "Error filtering template: Path \"../../../_view/en_US/map.json\" cannot be used with directory \"/home/jelle/template-parser-sales/pub/static/\"",
             "agreed": false
         },
         {
@@ -4951,8 +4951,8 @@
             },
             "plain_text": false,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account",
             "tape": [
                 {
                     "port": "urls",
@@ -4963,11 +4963,11 @@
                             "_direct": "customer/account"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account",
+            "agreed": true
         },
         {
             "id": "store_direct/values/plain",
@@ -4979,8 +4979,8 @@
             },
             "plain_text": true,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account",
             "tape": [
                 {
                     "port": "urls",
@@ -4991,7 +4991,7 @@
                             "_direct": "customer/account"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account"
                 }
             ],
             "legacy": null,
@@ -5020,7 +5020,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "http://template-parser-sales.bougie.run:7080/../../app/etc/env.php",
             "agreed": false
         },
         {
@@ -5062,7 +5062,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/index/anything/..%2F..%2F../",
             "agreed": false
         },
         {
@@ -5101,8 +5101,8 @@
             },
             "plain_text": false,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
             "tape": [
                 {
                     "port": "urls",
@@ -5114,11 +5114,11 @@
                             "q": "a b"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
+            "agreed": true
         },
         {
             "id": "store_escape_off/values/plain",
@@ -5130,8 +5130,8 @@
             },
             "plain_text": true,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
             "tape": [
                 {
                     "port": "urls",
@@ -5143,7 +5143,7 @@
                             "q": "a b"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/"
                 }
             ],
             "legacy": null,
@@ -6891,7 +6891,7 @@
                     "threw": "ValidatorException"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "Error filtering template: Invalid template file: 'Magento_Backend::page/js/require_js.phtml' in module: '' block's name: 'magento\\framework\\view\\element\\template_1'",
             "agreed": false
         },
         {
@@ -8385,7 +8385,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "http://template-parser-sales.bougie.run:7080/static/version1789111079/../../../_view/en_US/css/email.css",
+            "legacy": "Error filtering template: Path \"../../../_view/en_US/map.json\" cannot be used with directory \"/home/jelle/template-parser-sales/pub/static/\"",
             "agreed": false
         },
         {
@@ -8902,8 +8902,8 @@
             },
             "plain_text": false,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/?name=%22%3E%3Cscript%3Ealert%281%29%3C%2Fscript%3E",
             "tape": [
                 {
                     "port": "urls",
@@ -8914,11 +8914,11 @@
                             "_query_name": "\"><script>alert(1)</script>"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/?name=%22%3E%3Cscript%3Ealert%281%29%3C%2Fscript%3E"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/?name=%22%3E%3Cscript%3Ealert%281%29%3C%2Fscript%3E",
+            "agreed": true
         },
         {
             "id": "store_query_text/hostile/plain",
@@ -8930,8 +8930,8 @@
             },
             "plain_text": true,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/?name=%22%3E%3Cscript%3Ealert%281%29%3C%2Fscript%3E",
             "tape": [
                 {
                     "port": "urls",
@@ -8942,7 +8942,7 @@
                             "_query_name": "\"><script>alert(1)</script>"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/?name=%22%3E%3Cscript%3Ealert%281%29%3C%2Fscript%3E"
                 }
             ],
             "legacy": null,
@@ -9076,8 +9076,8 @@
             },
             "plain_text": false,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account",
             "tape": [
                 {
                     "port": "urls",
@@ -9088,11 +9088,11 @@
                             "_direct": "customer/account"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account",
+            "agreed": true
         },
         {
             "id": "store_direct/hostile/plain",
@@ -9104,8 +9104,8 @@
             },
             "plain_text": true,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account",
             "tape": [
                 {
                     "port": "urls",
@@ -9116,7 +9116,7 @@
                             "_direct": "customer/account"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account"
                 }
             ],
             "legacy": null,
@@ -9145,7 +9145,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "http://template-parser-sales.bougie.run:7080/../../app/etc/env.php",
             "agreed": false
         },
         {
@@ -9187,7 +9187,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/index/anything/..%2F..%2F../",
             "agreed": false
         },
         {
@@ -9226,8 +9226,8 @@
             },
             "plain_text": false,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
             "tape": [
                 {
                     "port": "urls",
@@ -9239,11 +9239,11 @@
                             "q": "a b"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
+            "agreed": true
         },
         {
             "id": "store_escape_off/hostile/plain",
@@ -9255,8 +9255,8 @@
             },
             "plain_text": true,
             "surface": "email",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
             "tape": [
                 {
                     "port": "urls",
@@ -9268,7 +9268,7 @@
                             "q": "a b"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/"
                 }
             ],
             "legacy": null,
@@ -11016,7 +11016,7 @@
                     "threw": "ValidatorException"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "Error filtering template: Invalid template file: 'Magento_Backend::page/js/require_js.phtml' in module: '' block's name: 'magento\\framework\\view\\element\\template_1'",
             "agreed": false
         },
         {
@@ -12116,7 +12116,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "http://template-parser-sales.bougie.run:7080/static/version1789111079/../../../Magento/luma/en_US/css/email.css",
+            "legacy": "Error filtering template: Path \"../../../Magento/luma/en_US/map.json\" cannot be used with directory \"/home/jelle/template-parser-sales/pub/static/\"",
             "agreed": false
         },
         {
@@ -12140,7 +12140,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "http://template-parser-sales.bougie.run:7080/static/version1789111079/frontend/../../../en_US/css/email.css",
+            "legacy": "Error filtering template: Path \"frontend/../../../en_US/map.json\" cannot be used with directory \"/home/jelle/template-parser-sales/pub/static/\"",
             "agreed": false
         },
         {
@@ -12210,8 +12210,8 @@
                     "returned": "http://template-parser-sales.bougie.run:7080/customer/account/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/",
+            "agreed": true
         },
         {
             "id": "store_empty/cms",
@@ -12232,8 +12232,8 @@
                     "returned": "http://template-parser-sales.bougie.run:7080/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/",
+            "agreed": true
         },
         {
             "id": "store_absent/cms",
@@ -12254,8 +12254,8 @@
                     "returned": "http://template-parser-sales.bougie.run:7080/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/",
+            "agreed": true
         },
         {
             "id": "store_query/cms",
@@ -12279,8 +12279,8 @@
                     "returned": "http://template-parser-sales.bougie.run:7080/customer/account/?id=7&token=abc"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/?id=7&token=abc",
+            "agreed": true
         },
         {
             "id": "store_query_text/cms",
@@ -12303,8 +12303,8 @@
                     "returned": "http://template-parser-sales.bougie.run:7080/customer/account/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/",
+            "agreed": true
         },
         {
             "id": "store_type/cms",
@@ -12348,8 +12348,8 @@
             "variables": [],
             "plain_text": false,
             "surface": "cms",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account",
             "tape": [
                 {
                     "port": "urls",
@@ -12360,11 +12360,11 @@
                             "_direct": "customer/account"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account",
+            "agreed": true
         },
         {
             "id": "store_direct_walk/cms",
@@ -12375,7 +12375,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "http://template-parser-sales.bougie.run:7080/../../app/etc/env.php",
             "agreed": false
         },
         {
@@ -12387,7 +12387,7 @@
             "outcome": "ok",
             "expected": "",
             "tape": [],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/index/anything/..%2F..%2F../",
             "agreed": false
         },
         {
@@ -12396,8 +12396,8 @@
             "variables": [],
             "plain_text": false,
             "surface": "cms",
-            "outcome": "throw",
-            "expected": "InvalidArgumentException",
+            "outcome": "ok",
+            "expected": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
             "tape": [
                 {
                     "port": "urls",
@@ -12409,11 +12409,11 @@
                             "q": "a b"
                         }
                     ],
-                    "threw": "InvalidArgumentException"
+                    "returned": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/index/q/a%20b/",
+            "agreed": true
         },
         {
             "id": "store_nosid/cms",
@@ -12436,8 +12436,8 @@
                     "returned": "http://template-parser-sales.bougie.run:7080/customer/account/"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
-            "agreed": false
+            "legacy": "http://template-parser-sales.bougie.run:7080/customer/account/",
+            "agreed": true
         },
         {
             "id": "protocol_bare/cms",
@@ -13012,7 +13012,7 @@
                     "threw": "ValidatorException"
                 }
             ],
-            "legacy": "Error filtering template: Invalid base url type",
+            "legacy": "Error filtering template: Invalid template file: 'Magento_Backend::page/js/require_js.phtml' in module: '' block's name: 'magento\\framework\\view\\element\\template_0'",
             "agreed": false
         },
         {
