@@ -130,7 +130,15 @@ class Auditor
                     // so anything this one refused on policy would be reported as a divergence
                     // in the engine rather than as the posture it is. The policy that matters
                     // is the one the host sets at render time; this is a measurement.
-                    $ours = $engine->render($subject->content, context: new Context($variables, RenderPolicy::unrestricted()));
+                    $ours = $engine->render($subject->content, context: new Context(
+                        $variables,
+                        RenderPolicy::unrestricted(),
+                        false,
+                        // The design the filter resolved its stylesheets against. Looking it
+                        // up here would give a different theme: the model cancels its own
+                        // emulation before filter() returns.
+                        $legacyRender?->designParams ?? []
+                    ));
                     // Whatever the host does to a finished render, it does to both.
                     if ($legacyRender?->finish !== null) {
                         $ours = ($legacyRender->finish)($ours);

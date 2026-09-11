@@ -163,7 +163,8 @@ class LegacyRenderer
         return new LegacyRender(
             (string)$filter->filter($template),
             $this->variablesUsedBy($model, $variables),
-            method_exists($filter, 'applyInlineCss') ? $finish : null
+            method_exists($filter, 'applyInlineCss') ? $finish : null,
+            $this->designParamsOf($filter)
         );
     }
 
@@ -216,6 +217,40 @@ class LegacyRenderer
         }
 
         return $fallback;
+    }
+
+    /**
+     * The design the filter was given, which is not the design in force by now.
+     *
+     * getProcessedTemplate() sets these inside its own emulation and cancels the emulation
+     * before returning, so reading DesignInterface here would give a different theme than the
+     * filter used - which is the whole reason this travels back rather than being looked up.
+     *
+     * @return array<string,mixed>
+     */
+    private function designParamsOf(object $filter): array
+    {
+        if (!method_exists($filter, 'getDesignParams')) {
+            return [];
+        }
+
+        try {
+            $params = $filter->getDesignParams();
+        } catch (\Throwable) {
+            // The CMS filter inherits the getter and is never given any; it raises rather
+            // than returning empty, which is itself the answer.
+            return [];
+        }
+
+        if (!is_array($params)) {
+            return [];
+        }
+
+        // Scalars only, and `themeModel` is the one that matters: it is a Theme OBJECT, which
+        // no fixture can carry and no replay can rebuild. Dropping it costs nothing, because
+        // Asset\Repository::updateDesignParams() re-resolves the model from `theme` when it is
+        // absent - so what travels is a portable description of the same design.
+        return array_filter($params, static fn (mixed $v): bool => is_scalar($v) || $v === null);
     }
 
     private function currentStoreId(): ?int

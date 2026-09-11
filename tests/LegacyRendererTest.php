@@ -69,6 +69,15 @@ final class LegacyRendererTest extends TestCase
         $filter = new class ($templateVars) extends \Magento\Framework\Filter\Template {
             public function __construct(array $vars) { $this->templateVars = $vars; }
             public function filter($value) { return 'LEGACY:' . $value; }
+            public function getDesignParams()
+            {
+                return [
+                    'area' => 'frontend',
+                    'theme' => 'Magento/luma',
+                    'themeModel' => new \stdClass(),
+                    'locale' => 'en_US',
+                ];
+            }
         };
 
         return new class ($filter) {
@@ -157,6 +166,39 @@ final class LegacyRendererTest extends TestCase
 
         self::assertNotNull($render);
         self::assertSame('LEGACY:X', $render->output);
+    }
+
+    /**
+     * The design the filter used travels back, because nothing downstream can look it up.
+     *
+     * getProcessedTemplate() takes it inside the model's own emulation and cancels that
+     * emulation before returning, so a caller reading DesignInterface afterwards resolves a
+     * different theme than the filter did - which made the same template resolve a different
+     * stylesheet depending on who rendered it.
+     */
+    public function testTheDesignTheFilterUsedTravelsBack(): void
+    {
+        $render = (new LegacyRenderer($this->context($this->model())))->render('X', []);
+
+        self::assertNotNull($render);
+        self::assertSame('frontend', $render->designParams['area']);
+        self::assertSame('Magento/luma', $render->designParams['theme']);
+        self::assertSame('en_US', $render->designParams['locale']);
+    }
+
+    /**
+     * And `themeModel` is dropped, because it is an object.
+     *
+     * No fixture can carry one and no replay can rebuild it - it serialised to `[]` and made
+     * the recorded tape unreproducible. Asset\Repository re-resolves the model from `theme`
+     * when it is absent, so what travels is a portable description of the same design.
+     */
+    public function testTheUnportableThemeModelIsNotCarried(): void
+    {
+        $render = (new LegacyRenderer($this->context($this->model())))->render('X', []);
+
+        self::assertNotNull($render);
+        self::assertArrayNotHasKey('themeModel', $render->designParams);
     }
 
     /**

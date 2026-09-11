@@ -112,9 +112,9 @@ final class TapedServices
             } : null,
             stylesheets: $has('stylesheets') ? new class ($tape, $live?->stylesheets) implements StylesheetLoader {
                 use TapedPort;
-                public function load(string $file): ?string
+                public function load(string $file, array $designParams = []): ?string
                 {
-                    $v = $this->call('stylesheets', 'load', [$file]);
+                    $v = $this->call('stylesheets', 'load', [$file, $designParams]);
                     return $v === null ? null : (string)$v;
                 }
             } : null,

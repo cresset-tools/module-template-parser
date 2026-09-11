@@ -459,7 +459,7 @@ final class HostDirectives
                 if (!PathGuard::isSafeRelativePath($file)) {
                     return '/* invalid file parameter */';
                 }
-                return (string)($stylesheets->load($file) ?? '');
+                return (string)($stylesheets->load($file, $c->designParams()) ?? '');
             });
         }
 

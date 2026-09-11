@@ -154,7 +154,7 @@ final class StorePortParityTest extends TestCase
         ));
 
         self::assertSame(
-            190,
+            193,
             $agreed,
             sprintf(
                 'the number of store cases agreeing with the legacy filter changed (%d of %d '
@@ -213,7 +213,11 @@ final class StorePortParityTest extends TestCase
         $context = new Context(
             $case['variables'],
             RenderPolicy::unrestricted(),
-            (bool)$case['plain_text']
+            (bool)$case['plain_text'],
+            // The design the filter resolved against, recorded with the case. Without it a
+            // replay asks its ports a different question than the recording did, which the
+            // tape reports as a changed guard - correctly, since it IS a different question.
+            $case['design_params'] ?? []
         );
 
         try {

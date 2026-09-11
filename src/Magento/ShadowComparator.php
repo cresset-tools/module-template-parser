@@ -41,7 +41,8 @@ class ShadowComparator
         string $legacyResult,
         array $variables = [],
         bool $plainTemplateMode = false,
-        ?callable $finish = null
+        ?callable $finish = null,
+        array $designParams = []
     ): string {
         if (!$this->enabled) {
             return $legacyResult;
@@ -50,6 +51,7 @@ class ShadowComparator
         try {
             $candidate = $this->adapter
                 ->setPlainTemplateMode($plainTemplateMode)
+                ->setDesignParams($designParams)
                 ->setVariables($variables)
                 ->filter($source);
 

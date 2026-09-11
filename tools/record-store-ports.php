@@ -310,7 +310,7 @@ foreach (VARIABLE_SETS as $vlabel => $variables) {
                 try {
                     $out = $engine->render(
                         $template,
-                        context: new Context($rendered, RenderPolicy::unrestricted(), $plainText)
+                        context: new Context($rendered, RenderPolicy::unrestricted(), $plainText, $render?->designParams ?? [])
                     );
                 } catch (\Throwable $e) {
                     return [$render, ['throw', (new ReflectionClass($e))->getShortName()], $rendered];
@@ -335,6 +335,7 @@ foreach (VARIABLE_SETS as $vlabel => $variables) {
                 'variables' => scalarsOnly($rendered),
                 'plain_text' => $plainText,
                 'surface' => 'email',
+                'design_params' => $render?->designParams ?? [],
                 'outcome' => $ours[0],
                 'expected' => $ours[1],
                 'tape' => $tape->entries(),
@@ -392,6 +393,7 @@ foreach (CONSTRUCTS as $clabel => $template) {
         'variables' => [],
         'plain_text' => false,
         'surface' => 'cms',
+        'design_params' => $render?->designParams ?? [],
         'outcome' => $ours[0],
         'expected' => $ours[1],
         'tape' => $tape->entries(),

@@ -118,6 +118,11 @@ Entries say what changed and why it mattered. A line that only names a file has 
   render on the filter and were refused here with a message asserting a `TypeError` that
   cannot happen in that position.
 
+- `{{css}}` resolved its design at render time where the filter carries a snapshot, so the
+  same template got a different stylesheet depending on who rendered it and when. The design
+  is passed now — `Port\StylesheetLoader::load()` takes it, `Context` carries it, and the
+  plugin captures `setDesignParams()` the way it captures the variables.
+
 ### Security
 
 Nothing here has been released, so none of this reached a deployed store.

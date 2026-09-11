@@ -30,6 +30,19 @@ interface TemplateFilterInterface
      */
     public function setPlainTemplateMode(bool $plain): static;
 
+    /**
+     * The area, theme and locale the next render resolves {{css}} against.
+     *
+     * Named as Email\Model\Template\Filter names it, for the same reason setPlainTemplateMode
+     * is: AbstractTemplate::getProcessedTemplate() calls exactly this on the filter it holds,
+     * with a snapshot taken inside the model's own emulation. That emulation is cancelled
+     * before filter() runs, so a stylesheet resolved from the live design at render time is
+     * resolved against a different theme than the filter used.
+     *
+     * @param array<string,mixed> $designParams
+     */
+    public function setDesignParams(array $designParams): static;
+
     public function filter(string $value): string;
 
     /** @return array<int,array{kind:string,payload:array}> deferred work from the last render */

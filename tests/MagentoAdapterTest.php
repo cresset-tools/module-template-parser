@@ -250,12 +250,72 @@ final class MagentoAdapterTest extends TestCase
         self::assertSame([['greeting', false], ['greeting', true]], $seen);
     }
 
+    /**
+     * The design a stylesheet resolves against is PASSED, not looked up.
+     *
+     * `Email\Model\Template\Filter` carries a snapshot the template model handed it inside the
+     * model's own emulation, and `getProcessedTemplate()` cancels that emulation before
+     * `filter()` runs - so an implementation reading `DesignInterface` at render time resolves
+     * a different theme than the filter used, and the same template gets a different stylesheet
+     * depending on who called it and when. It disagreed in both directions before this: on the
+     * email surface the filter had the theme and this did not, and on the CMS surface the
+     * reverse.
+     */
+    public function testTheDesignForAStylesheetComesFromTheCaller(): void
+    {
+        $seen = [];
+        $loader = new class ($seen) implements StylesheetLoader {
+            public function __construct(private array &$seen) {}
+            public function load(string $file, array $designParams = []): ?string
+            {
+                $this->seen[] = $designParams;
+                return 'css-for-' . ($designParams['theme'] ?? 'no-theme');
+            }
+        };
+
+        $adapter = new TemplateFilterAdapter(services: new HostServices(stylesheets: $loader));
+
+        self::assertSame('css-for-no-theme', $adapter->filter('{{css file="email.css"}}'));
+
+        $adapter->setDesignParams(['area' => 'frontend', 'theme' => 'Magento/luma', 'locale' => 'en_US']);
+        self::assertSame('css-for-Magento/luma', $adapter->filter('{{css file="email.css"}}'));
+
+        self::assertSame(
+            [[], ['area' => 'frontend', 'theme' => 'Magento/luma', 'locale' => 'en_US']],
+            $seen
+        );
+    }
+
+    /** An include is part of the same document, so it resolves against the same design. */
+    public function testTheDesignIsInheritedByIncludes(): void
+    {
+        $seen = [];
+        $adapter = new TemplateFilterAdapter(services: new HostServices(
+            stylesheets: new class ($seen) implements StylesheetLoader {
+                public function __construct(private array &$seen) {}
+                public function load(string $file, array $designParams = []): ?string
+                {
+                    $this->seen[] = $designParams['theme'] ?? null;
+                    return '';
+                }
+            },
+            templates: new class implements TemplateLoader {
+                public function load(string $configPath): ?string { return '{{css file="inner.css"}}'; }
+            }
+        ));
+        $adapter->setDesignParams(['theme' => 'Magento/luma']);
+
+        $adapter->filter('{{template config_path="design/email/footer"}}');
+
+        self::assertSame(['Magento/luma'], $seen);
+    }
+
     /** A stylesheet has nothing to inline into a text/plain body, so neither renders at all. */
     public function testPlainTemplateModeSilencesTheStylesheetDirectives(): void
     {
         $adapter = new TemplateFilterAdapter(services: new HostServices(
             stylesheets: new class implements StylesheetLoader {
-                public function load(string $file): ?string { return 'body{color:red}'; }
+                public function load(string $file, array $designParams = []): ?string { return 'body{color:red}'; }
             }
         ));
 

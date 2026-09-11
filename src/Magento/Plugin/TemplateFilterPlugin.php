@@ -34,6 +34,9 @@ class TemplateFilterPlugin
 
     private bool $plainTemplateMode = false;
 
+    /** @var array<string,mixed> */
+    private array $designParams = [];
+
     /**
      * The state each in-flight filter() call captured, innermost last.
      *
@@ -80,6 +83,20 @@ class TemplateFilterPlugin
     }
 
     /**
+     * Captured for the same reason the variables and the plain flag are: it is set on the
+     * subject, and by the time filter() returns the emulation it was taken inside is gone.
+     *
+     * @param array<string,mixed> $designParams
+     * @return array{0:array<string,mixed>}
+     */
+    public function beforeSetDesignParams(LegacyTemplate $subject, array $designParams): array
+    {
+        $this->designParams = $designParams;
+
+        return [$designParams];
+    }
+
+    /**
      * Snapshots the scope this invocation will be compared against.
      *
      * Taken on the way IN, because by the time filter() returns an include may have replaced
@@ -89,7 +106,7 @@ class TemplateFilterPlugin
      */
     public function beforeFilter(LegacyTemplate $subject, $value): array
     {
-        $this->inFlight[] = [$this->variables, $this->plainTemplateMode];
+        $this->inFlight[] = [$this->variables, $this->plainTemplateMode, $this->designParams];
 
         return [$value];
     }
@@ -131,9 +148,9 @@ class TemplateFilterPlugin
             : null;
 
         // Whatever THIS invocation was called with, not whatever the last one left behind.
-        [$variables, $plainTemplateMode] = array_pop($this->inFlight)
-            ?? [$this->variables, $this->plainTemplateMode];
+        [$variables, $plainTemplateMode, $designParams] = array_pop($this->inFlight)
+            ?? [$this->variables, $this->plainTemplateMode, $this->designParams];
 
-        return $this->comparator->compare($value, $result, $variables, $plainTemplateMode, $finish);
+        return $this->comparator->compare($value, $result, $variables, $plainTemplateMode, $finish, $designParams);
     }
 }

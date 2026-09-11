@@ -65,7 +65,7 @@ final class FullDirectiveSurfaceTest extends TestCase
             },
             stylesheets: new class ($record) implements StylesheetLoader {
                 public function __construct(private $r) {}
-                public function load(string $file): ?string
+                public function load(string $file, array $designParams = []): ?string
                 { ($this->r)('css', [$file]); return 'body{color:red}'; }
             },
             layouts: new class ($record) implements LayoutRenderer {

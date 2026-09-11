@@ -213,7 +213,48 @@ final class MagentoUrlAdapterTest extends TestCase
         self::assertSame(['body{color:red}'], $processed, 'the raw asset must reach the processor');
     }
 
-    /** A missing or unreadable asset yields null rather than taking the render down. */
+    /**
+     * The design the CALLER supplies wins over the one this can see.
+     *
+     * `Email\Model\Template\Filter` resolves a stylesheet against a snapshot the template
+     * model handed it inside the model's own emulation, and `getProcessedTemplate()` cancels
+     * that emulation before `filter()` runs - so reading `DesignInterface` here resolves a
+     * different theme than the filter used, and the same template gets a different stylesheet
+     * depending on who called it and when. It disagreed in BOTH directions before this: on the
+     * email surface the filter had the theme and this did not, and on the CMS surface the
+     * reverse.
+     */
+    public function testAGivenDesignBeatsTheOneTheLoaderCanSee(): void
+    {
+        $seen = [];
+        $repository = new class ($seen) extends Repository {
+            public function __construct(private array &$seen) {}
+            public function createAsset($fileId, array $params = [])
+            {
+                $this->seen[] = $params;
+                return new class { public function getContent() { return 'CSS'; } };
+            }
+        };
+        $design = new class implements \Magento\Framework\View\DesignInterface {
+            public function getArea() { return 'frontend'; }
+            public function getLocale() { return 'de_DE'; }
+            public function getDesignTheme()
+            {
+                return new class { public function getCode() { return 'Live/theme'; } };
+            }
+        };
+
+        $loader = new AssetStylesheetLoader(new Processor(), $repository, $design);
+
+        $loader->load('css/email.css', ['area' => 'frontend', 'theme' => 'Given/theme', 'locale' => 'en_US']);
+        $loader->load('css/email.css');
+
+        self::assertSame('Given/theme', $seen[0]['theme'], 'the given design was ignored');
+        self::assertSame('en_US', $seen[0]['locale']);
+        self::assertSame('Live/theme', $seen[1]['theme'], 'with none given, the live design is the fallback');
+    }
+
+    /** A missing or unreadable asset yields null rather than taking the render down. */    /** A missing or unreadable asset yields null rather than taking the render down. */
     public function testAnAssetThatCannotBeLoadedYieldsNull(): void
     {
         $repository = new class extends Repository {

@@ -11,6 +11,7 @@ use Cresset\TemplateParser\Magento\TemplateFilterInterface;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\Port\BlockRenderer;
 use Cresset\TemplateParser\Port\CustomVariableReader;
+use Cresset\TemplateParser\Port\StylesheetLoader;
 use Cresset\TemplateParser\RenderPolicy;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 use PHPUnit\Framework\TestCase;
@@ -330,7 +331,49 @@ final class MagentoIntegrationTest extends TestCase
         self::assertSame([], $lines, 'the plugin did not put the candidate through applyInlineCss');
     }
 
-    /** A finisher that raises must not take a shadow run down with it. */
+    /**
+     * Design params are set on the SUBJECT, so the plugin captures them like the rest.
+     *
+     * And per-invocation, because filter() is re-entrant: an include's child model sets its own
+     * before the parent's comparison runs.
+     */
+    public function testThePluginCapturesDesignParamsPerInvocation(): void
+    {
+        $lines = [];
+        $seen = [];
+        $adapter = new TemplateFilterAdapter(new HostServices(
+            stylesheets: new class ($seen) implements StylesheetLoader {
+                public function __construct(private array &$seen) {}
+                public function load(string $file, array $designParams = []): ?string
+                {
+                    $this->seen[] = $designParams['theme'] ?? 'none';
+                    return 'CSS';
+                }
+            }
+        ), Options::compatible());
+        $plugin = new TemplateFilterPlugin(new ShadowComparator($adapter, $this->logger($lines), true));
+        $subject = new LegacyTemplate();
+
+        self::assertSame(
+            [['theme' => 'Magento/luma']],
+            $plugin->beforeSetDesignParams($subject, ['theme' => 'Magento/luma'])
+        );
+        $plugin->beforeSetVariables($subject, []);
+        $plugin->beforeFilter($subject, '{{css file="a.css"}}');
+
+        // A child render with a design of its own, in the middle of the parent's.
+        $plugin->beforeSetDesignParams($subject, ['theme' => 'Vendor/child']);
+        $plugin->beforeFilter($subject, '{{css file="b.css"}}');
+        $plugin->afterFilter($subject, 'CSS', '{{css file="b.css"}}');
+
+        // The parent must still be compared against ITS design, not the child's.
+        $plugin->afterFilter($subject, 'CSS', '{{css file="a.css"}}');
+
+        self::assertSame(['Vendor/child', 'Magento/luma'], $seen);
+        self::assertSame([], $lines);
+    }
+
+    /** A finisher that raises must not take a shadow run down with it. */    /** A finisher that raises must not take a shadow run down with it. */
     public function testAFinisherThatRaisesStillLeavesTheLegacyResultStanding(): void
     {
         $lines = [];

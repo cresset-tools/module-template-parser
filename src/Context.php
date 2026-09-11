@@ -45,7 +45,8 @@ final class Context
     public function __construct(
         array $variables = [],
         ?RenderPolicy $policy = null,
-        private readonly bool $plainText = false
+        private readonly bool $plainText = false,
+        private readonly array $designParams = []
     ) {
         $this->variables = $variables;
         $this->policy = $policy ?? RenderPolicy::restricted();
@@ -63,6 +64,21 @@ final class Context
     public function plainText(): bool
     {
         return $this->plainText;
+    }
+
+    /**
+     * The area, theme and locale {{css}} resolves against.
+     *
+     * A property of the render rather than of the engine, and passed rather than looked up: the
+     * filter carries a snapshot taken inside the template model's emulation, and that emulation
+     * is gone by the time anything downstream could look the design up for itself. Empty when
+     * the caller has none to offer, which is the CMS surface.
+     *
+     * @return array<string,mixed>
+     */
+    public function designParams(): array
+    {
+        return $this->designParams;
     }
 
     public function policy(): RenderPolicy
@@ -102,7 +118,7 @@ final class Context
     {
         // Plain-text mode is inherited for the same reason the policy is: it describes the
         // document being produced, and an included template is part of that same document.
-        $clone = new self($this->variables + [], null, $this->plainText);
+        $clone = new self($this->variables + [], null, $this->plainText, $this->designParams);
         foreach ($variables as $k => $v) {
             $clone->variables[$k] = $v;
         }

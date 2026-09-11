@@ -17,11 +17,16 @@ class LegacyRender
     /**
      * @param array<string,mixed> $variables
      * @param ?\Closure(string):string $finish the host's post-filter step, if it has one
+     * @param array<string,mixed> $designParams the area, theme and locale the filter resolved
+     *        {{css}} against. Travels back for the same reason the variables do: the model
+     *        takes them inside its own emulation and cancels that emulation before filter()
+     *        runs, so nothing downstream can look them up for itself afterwards.
      */
     public function __construct(
         public readonly string $output,
         public readonly array $variables,
         public readonly ?\Closure $finish = null,
+        public readonly array $designParams = [],
     ) {
     }
 }

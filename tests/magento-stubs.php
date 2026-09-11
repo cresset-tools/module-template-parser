@@ -152,6 +152,15 @@ namespace Magento\Framework\App {
         }
     }
 }
+namespace Magento\Framework\View {
+    if (!interface_exists(DesignInterface::class)) {
+        interface DesignInterface {
+            public function getArea();
+            public function getLocale();
+            public function getDesignTheme();
+        }
+    }
+}
 namespace Magento\Store\Model\App {
     if (!class_exists(Emulation::class)) {
         class Emulation {
