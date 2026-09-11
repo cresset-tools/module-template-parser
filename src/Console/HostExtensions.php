@@ -4,20 +4,29 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Console;
 
 /**
- * The directives and modifiers a store has that this engine does not implement.
+ * The directives a store has that this engine does not implement.
  *
  * Magento is extensible in two places the template language reaches, and both are easy to
  * miss because nothing in a stock install uses them:
  *
- *   - `SimpleDirective\ProcessorPool` registers a NAMED directive, so a module adding `mydir`
- *     makes `{{mydir "v" p=1}}body{{/mydir}}` render on that store.
- *   - `DirectiveProcessor\Filter\FilterPool` registers a MODIFIER, so one adding `foofilter`
- *     makes `{{var x|foofilter}}` render.
+ * `SimpleDirective\ProcessorPool` registers a NAMED directive, so a module adding `mydir`
+ * makes `{{mydir "v" p=1}}body{{/mydir}}` render on that store and nowhere else. An unknown
+ * directive comes back verbatim here, which is exactly what the filter does on a store with no
+ * such module - so nothing distinguishes "this store has no such directive" from "this store
+ * has one and we ignored it" without asking the store.
  *
- * This engine implements neither mechanism, and an unknown directive comes back verbatim
- * while an unknown modifier is skipped - both silently, both identical to what the filter
- * does on a store that has no such extension. So the difference is invisible unless someone
- * asks the store what it has, which is what this does.
+ * `FilterPool` registers a MODIFIER, and it is deliberately NOT reported. Measured on a store
+ * that registers one: `{{var x|foofilter}}` renders `ab<c>` on the filter and `ab<c>` here -
+ * the pool is never consulted for `{{var}}`, because `Email\Model\Template\Filter::varDirective`
+ * uses its own `$_modifiers` map and skips a name that is not in it. Every surface this package
+ * replaces - email, CMS and newsletter - inherits that override, so a FilterPool modifier only
+ * ever reaches a SimpleDirective, and those this engine now renders itself. Reporting it as a
+ * gap was a false positive: it warned about a difference that does not exist, on the strength
+ * of reading a registry rather than measuring what consults it.
+ *
+ * It would matter to a host rendering through a bare `Framework\Filter\Template`, whose
+ * `VarDirective` does go through the pool. Nothing here does, and if something ever should,
+ * this is the note that says what to restore and why it was taken out.
  *
  * Reflection, for the same reason `LegacyRenderer` uses it on `templateVars`: both pools keep
  * their contents in a private property with no getter, and `get($name)` answers only about a
@@ -25,9 +34,6 @@ namespace Cresset\TemplateParser\Console;
  */
 class HostExtensions
 {
-    /** Modifiers this engine implements itself, so a pool entry for one of these is no gap. */
-    private const IMPLEMENTED_MODIFIERS = ['escape', 'nl2br', 'raw'];
-
     public function __construct(private readonly MagentoContext $magento)
     {
     }
@@ -49,19 +55,6 @@ class HostExtensions
     }
 
     /**
-     * Modifier names the store applies and this engine skips.
-     *
-     * @return string[]
-     */
-    public function modifiers(): array
-    {
-        return array_values(array_diff(
-            $this->namesIn(\Magento\Framework\Filter\DirectiveProcessor\Filter\FilterPool::class, 'filters'),
-            self::IMPLEMENTED_MODIFIERS
-        ));
-    }
-
-    /**
      * The extensions a template actually uses, as `{{name}}` / `|name` spellings.
      *
      * Matched the way the store matches them: a directive name is `[a-z]+` immediately after
@@ -69,7 +62,7 @@ class HostExtensions
      * false positive costs a note nobody needed, and a false negative costs the silence this
      * exists to end.
      *
-     * @return array{directives:string[],modifiers:string[]}
+     * @return string[]
      */
     public function usedBy(string $template): array
     {
@@ -80,14 +73,7 @@ class HostExtensions
             }
         }
 
-        $modifiers = [];
-        foreach ($this->modifiers() as $name) {
-            if (preg_match('/\|\s*' . preg_quote($name, '/') . '(?![a-z0-9_])/i', $template) === 1) {
-                $modifiers[] = $name;
-            }
-        }
-
-        return ['directives' => $directives, 'modifiers' => $modifiers];
+        return $directives;
     }
 
     /**
@@ -103,8 +89,7 @@ class HostExtensions
      */
     public function noteFor(string $template, array $rendered = []): ?string
     {
-        ['directives' => $directives, 'modifiers' => $modifiers] = $this->usedBy($template);
-        $directives = array_values(array_diff($directives, $rendered));
+        $directives = array_values(array_diff($this->usedBy($template), $rendered));
 
         $parts = [];
         if ($directives !== []) {
@@ -118,43 +103,7 @@ class HostExtensions
                 implode('}}, {{', $directives)
             );
         }
-        if ($modifiers !== []) {
-            $parts[] = sprintf(
-                '|%s, which this store registers a filter for and this engine skips',
-                implode(', |', $modifiers)
-            );
-        }
-
         return $parts === [] ? null : 'this template uses ' . implode('; and ', $parts);
     }
 
-    /**
-     * @param class-string $class
-     * @return string[]
-     */
-    private function namesIn(string $class, string $property): array
-    {
-        $pool = $this->magento->get($class);
-        if ($pool === null) {
-            return [];
-        }
-
-        try {
-            $registered = (new \ReflectionProperty($class, $property))->getValue($pool);
-        } catch (\Throwable) {
-            // A tree whose pool is shaped differently tells us nothing, which is not the same
-            // as telling us there is nothing. Reporting no extension is the safe direction:
-            // it under-claims rather than inventing a name.
-            return [];
-        }
-
-        if (!is_array($registered)) {
-            return [];
-        }
-
-        $names = array_filter(array_keys($registered), 'is_string');
-        sort($names);
-
-        return $names;
-    }
 }

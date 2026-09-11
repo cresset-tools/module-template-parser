@@ -145,13 +145,9 @@ as a port, so a host that does not want it simply does not wire it and gets `get
 
 ## Magento's own extension points
 
-Magento is extensible in two places the template language reaches, and this engine implements
-neither:
-
-- `SimpleDirective\ProcessorPool` registers a **named directive**, so a module adding `mydir`
-  makes `{{mydir "v" p=1}}body{{/mydir}}` render on that store.
-- `DirectiveProcessor\Filter\FilterPool` registers a **modifier**, so one adding `foofilter`
-  makes `{{var x|foofilter}}` render.
+Magento is extensible in two places the template language reaches. `SimpleDirective\ProcessorPool`
+registers a **named directive**, so a module adding `mydir` makes `{{mydir "v" p=1}}body{{/mydir}}`
+render on that store; `DirectiveProcessor\Filter\FilterPool` registers a **modifier**.
 
 **`{{mydir}}` is implemented.** The engine asks the store's pool what it registered, teaches
 those names to the parser, and renders them through `CustomDirectiveRenderer` — the value, the
@@ -175,9 +171,20 @@ template naming any modifier *suppresses* the processor's defaults, so `{{mydir 
 applies nothing at all and comes out unfiltered, while `{{mydir "v"}}` goes through
 `getDefaultFilters()`.
 
-**Modifiers are still a gap.** A `FilterPool` entry used as `{{var x|foofilter}}` is skipped
-here. `check` and `diff` ask the store what its pools hold and report what this engine cannot
-render — which is now the modifiers, and any directive whose port a host has not wired.
+**Modifiers turn out not to be a gap at all**, which is worth stating because the registry
+makes it look like one. A `FilterPool` entry never reaches `{{var}}` on any surface this package
+replaces: `Email\Model\Template\Filter::varDirective` uses its own `$_modifiers` map and skips
+a name that is not in it, and the CMS and newsletter filters inherit that override. Measured on
+a store registering `foofilter`, `{{var x|foofilter}}` renders `ab<c>` on the filter and `ab<c>`
+here — the modifier is skipped by both, which is the documented *unknown modifiers* quirk. A
+`FilterPool` entry only ever reaches a `SimpleDirective`, and those this engine now renders
+itself, applying the modifiers through the pool.
+
+It *would* matter to a host rendering through a bare `Framework\Filter\Template`, whose
+`VarDirective` does go through the pool. Nothing in this integration does.
+
+`check` and `diff` ask the store what its pool holds and report any directive whose port a host
+has not wired.
 
 ## Per-render capability policy
 

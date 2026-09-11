@@ -61,34 +61,9 @@ final class HostExtensionsTest extends TestCase
         $extensions = $this->extensions([], ['escape' => $this->filter('escape'), 'nl2br' => $this->filter('nl2br')]);
 
         self::assertSame([], $extensions->directives());
-        self::assertSame([], $extensions->modifiers(), 'the modifiers this engine implements are not a gap');
         self::assertNull($extensions->noteFor('{{var x|escape}}{{if a}}Y{{/if}}'));
     }
 
-    public function testARegisteredDirectiveIsReportedWhenATemplateUsesIt(): void
-    {
-        $extensions = $this->extensions(['mydir' => $this->processor('mydir')]);
-
-        self::assertSame(['mydir'], $extensions->directives());
-        self::assertSame(['directives' => ['mydir'], 'modifiers' => []], $extensions->usedBy('a{{mydir "v" p=1}}b{{/mydir}}'));
-
-        $note = $extensions->noteFor('a{{mydir "v"}}b');
-        self::assertNotNull($note);
-        self::assertStringContainsString('{{mydir}}', $note);
-        self::assertStringContainsString('does not implement', $note);
-    }
-
-    public function testARegisteredModifierIsReportedWhenATemplateUsesIt(): void
-    {
-        $extensions = $this->extensions([], ['foofilter' => $this->filter('foofilter')]);
-
-        self::assertSame(['foofilter'], $extensions->modifiers());
-
-        $note = $extensions->noteFor('{{var x|foofilter}}');
-        self::assertNotNull($note);
-        self::assertStringContainsString('|foofilter', $note);
-        self::assertStringContainsString('skips', $note);
-    }
 
     /**
      * The note says the store has it, not what this engine does with it.
@@ -109,34 +84,26 @@ final class HostExtensionsTest extends TestCase
         }
     }
 
+
     /**
      * A directive the ENGINE renders is not reported, even though the store registered it.
      *
      * Once the custom directive port is wired this engine renders these itself, and warning
      * about one it just rendered correctly is worse than noise: it trains a reader to ignore
-     * the warning that still matters. The modifier half is unaffected, because a FilterPool
-     * modifier on `{{var x}}` really is still skipped here.
+     * the warning that still matters.
      */
     public function testADirectiveTheEngineCanRenderIsNotReported(): void
     {
-        $extensions = $this->extensions(
-            ['mydir' => $this->processor('mydir')],
-            ['foofilter' => $this->filter('foofilter')]
-        );
+        $extensions = $this->extensions(['mydir' => $this->processor('mydir')]);
 
         self::assertNull($extensions->noteFor('{{mydir "v"}}', ['mydir', 'var', 'if']));
         self::assertNotNull($extensions->noteFor('{{mydir "v"}}', ['var', 'if']));
-
-        // The modifier is still a gap whatever the engine renders.
-        $note = $extensions->noteFor('{{var x|foofilter}}', ['mydir', 'var']);
-        self::assertNotNull($note);
-        self::assertStringContainsString('|foofilter', $note);
     }
 
     /** A store that has an extension is only interesting for templates that USE it. */
     public function testAnUnusedExtensionIsNotReported(): void
     {
-        $extensions = $this->extensions(['mydir' => $this->processor('mydir')], ['foofilter' => $this->filter('foofilter')]);
+        $extensions = $this->extensions(['mydir' => $this->processor('mydir')]);
 
         self::assertNull($extensions->noteFor('{{var x}}{{if a}}Y{{/if}}'));
     }
@@ -194,7 +161,6 @@ final class HostExtensionsTest extends TestCase
         $extensions = new HostExtensions(MagentoContext::unavailable('no store in tests'));
 
         self::assertSame([], $extensions->directives());
-        self::assertSame([], $extensions->modifiers());
         self::assertNull($extensions->noteFor('{{mydir}}'));
     }
 }

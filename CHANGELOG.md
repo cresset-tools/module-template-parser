@@ -135,6 +135,11 @@ Entries say what changed and why it mattered. A line that only names a file has 
   `{{mydir "v"}}` and `{{mydir}}body{{/mydir}}`. Nesting one in itself is refused, because the
   filter's lazy body strands the outer closing tag and raises.
 
+- The reporting added alongside that no longer warns about `FilterPool` modifiers. It was a
+  false positive: a registered modifier never reaches `{{var}}` on any surface this package
+  replaces, because `Email\Model\Template\Filter::varDirective` uses its own modifier map, so
+  both engines skip it identically.
+
 ### Security
 
 Nothing here has been released, so none of this reached a deployed store.
