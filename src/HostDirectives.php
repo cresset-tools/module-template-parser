@@ -33,6 +33,34 @@ final class HostDirectives
      *
      * @param array<string,string> $parameters
      */
+    /**
+     * Splits a custom directive's text the way `SimpleDirective` splits it.
+     *
+     * Its pattern is `{{name "value" parameters|filters}}`, where every part after the name is
+     * optional - so the three are pulled off in that order and whatever is left is parameters.
+     * The quote handling is the pattern's: either quote character, and a backslash escapes it.
+     *
+     * @return array{0:?string,1:string,2:string[]} value, parameter text, modifiers
+     */
+    private static function splitCustomDirective(string $params): array
+    {
+        $text = ltrim($params);
+
+        $value = null;
+        if (preg_match('/^([\'"])((?:(?!\1).)*?)(?<!\\\\)\1/s', $text, $m) === 1) {
+            $value = $m[2];
+            $text = substr($text, strlen($m[0]));
+        }
+
+        $modifiers = [];
+        if (preg_match('/((?:\|[a-z0-9:_-]+)+)\s*$/i', $text, $m) === 1) {
+            $modifiers = array_values(array_filter(explode('|', ltrim($m[1], '|'))));
+            $text = substr($text, 0, -strlen($m[1]));
+        }
+
+        return [$value, $text, $modifiers];
+    }
+
     /** Parameters that are flags, scopes or query carriers rather than path segments. */
     private const NON_PATH_PARAMETERS = [
         '_query', '_nosid', '_absolute', '_secure', '_escape_params', '_scope', '_scope_to_url',
@@ -437,6 +465,34 @@ final class HostDirectives
 
                 return $scheme;
             });
+        }
+
+        if ($services->customDirectives !== null) {
+            $custom = $services->customDirectives;
+            foreach ($custom->names() as $name) {
+                $evaluator->register(
+                    $name,
+                    static function (DirectiveNode $n, Context $c, Evaluator $e) use ($custom, $name): string {
+                        [$value, $parameterText, $modifiers] = self::splitCustomDirective($n->params());
+
+                        // `$name` values resolve, exactly as extractParameters() resolves them,
+                        // and nothing else about a parameter is interpreted.
+                        $parameters = $e->params(
+                            new DirectiveNode($n->name(), $parameterText, $n->fullRaw(), $n->offset()),
+                            $c
+                        );
+
+                        // The body reaches the host RENDERED. The filter renders it too -
+                        // `$filter->filter($construction['content'])` - so a processor sees a
+                        // resolved variable rather than the directive text that produced it.
+                        // Null, not '', when the directive had no body at all: the two are
+                        // different arguments to a processor and the filter keeps them apart.
+                        $body = $n->children() === [] ? null : $e->renderNodes($n->children(), $c);
+
+                        return (string)($custom->render($name, $value, $parameters, $body, $modifiers) ?? '');
+                    }
+                );
+            }
         }
 
         if ($services->stylesheets !== null) {

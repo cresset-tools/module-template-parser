@@ -87,6 +87,11 @@
             <argument name="layouts" xsi:type="object">Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer</argument>
             <argument name="widgets" xsi:type="object">Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer</argument>
             <argument name="templateUrls" xsi:type="object">Cresset\TemplateParser\Magento\TemplateModelUrlBuilder</argument>
+            <!--
+                {{mydir}} through the store's own SimpleDirective\ProcessorPool. Renders
+                nothing on a store that registered no processor, which is every stock one.
+            -->
+            <argument name="customDirectives" xsi:type="object">Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer</argument>
         </arguments>
     </type>
 

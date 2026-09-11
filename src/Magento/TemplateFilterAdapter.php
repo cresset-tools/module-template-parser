@@ -66,11 +66,19 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         // 85 times on that alone before this. Pass Options explicitly to choose otherwise.
         $this->options = $options ?? Options::compatible();
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
-        $parser = new Parser(options: $this->options);
+        // The host's own directive names belong in the SPEC, not just the handler table: they
+        // decide whether `{{/mydir}}` is a closing tag or a stray one, and so whether a
+        // template using a paired custom directive renders or is refused.
+        $spec = new \Cresset\TemplateParser\DirectiveSpec(
+            [],
+            [],
+            $services->customDirectives?->names() ?? []
+        );
+        $parser = new Parser($spec, $this->options);
         $evaluator = new Evaluator(
             new \Cresset\TemplateParser\VariableResolver($this->options->legacyQuirks),
             new \Cresset\TemplateParser\ParameterParser(),
-            new \Cresset\TemplateParser\DirectiveSpec(),
+            $spec,
             $this->options
         );
         HostDirectives::register($evaluator, $services, $parser);

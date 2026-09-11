@@ -176,7 +176,15 @@ final class Parser
             );
         }
 
-        if (!$this->spec->isBlock($token->name)) {
+        // An optionally-paired directive is a block only when it is actually closed, which is
+        // what `(?:(?P<content>.*?){{\/(?P=directiveName)}})?` means: the body is optional and
+        // LAZY, so it runs to the first matching close or the construct has no body at all.
+        // Deciding it here rather than in the lexer keeps the lookahead over tokens, where a
+        // close is already a token rather than a string that might be one.
+        $paired = $this->spec->isBlock($token->name)
+            || ($this->spec->isOptionalBlock($token->name) && self::closesLater($tokens, $index, $token->name));
+
+        if (!$paired) {
             $index++;
             return new DirectiveNode($token->name, $token->params, $token->raw, $token->offset);
         }
@@ -556,6 +564,27 @@ final class Parser
                 $this->loopBodySpans[] = [$offset, $offset + strlen($body)];
             }
         }
+    }
+
+    /**
+     * Whether a matching close for this name appears later in the token stream.
+     *
+     * The FIRST one, with no regard for nesting, because that is what a lazy body does: in
+     * `{{mydir}}a{{mydir}}b{{/mydir}}c{{/mydir}}` the filter pairs the first opener with the
+     * first closer and leaves the rest as text. Looking for a balanced pair would read that
+     * template differently from the store.
+     *
+     * @param Token[] $tokens
+     */
+    private static function closesLater(array $tokens, int $index, string $name): bool
+    {
+        for ($i = $index + 1, $n = count($tokens); $i < $n; $i++) {
+            if ($tokens[$i]->type === TokenType::DirectiveClose && $tokens[$i]->name === $name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function refuseIfLegacyCannotRender(int $offset, string $kind, string $message): void

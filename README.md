@@ -153,17 +153,31 @@ neither:
 - `DirectiveProcessor\Filter\FilterPool` registers a **modifier**, so one adding `foofilter`
   makes `{{var x|foofilter}}` render.
 
-Nothing in a stock install uses either, and the difference is invisible by default: an unknown
-directive comes back as its own text here and an unknown modifier is skipped — which is exactly
-what the filter does on a store *without* that extension. So nothing distinguishes "this store
-has no such directive" from "this store has one and we ignored it". `check` and `diff` ask your
-store what its pools hold and say so when a template uses one: `check` reports it as a warning,
-`diff` names it as the cause.
+**`{{mydir}}` is implemented.** The engine asks the store's pool what it registered, teaches
+those names to the parser, and renders them through `CustomDirectiveRenderer` — the value, the
+parameters with `$name` resolved, the body *already rendered*, and the modifiers the template
+named. Measured byte-identical to the filter across the void form, the paired form, `$`-valued
+parameters, an escaped quote in the value, and a rendered body.
 
-The note stops short of saying what this engine does with the directive, because that depends
-on the shape — the void form renders as text, and the paired form is *refused*, the closing tag
-having no opener this engine knows. Rendering them properly needs a third directive kind, since
-Magento's regex makes the body optional and the same name is legal both ways.
+That needed a third directive kind. `SimpleDirective`'s pattern ends
+`(?:(?P<content>.*?){{\/(?P=directiveName)}})?` — an optional, lazily matched body — so one
+registration gives a template *both* `{{mydir "v"}}` and `{{mydir}}body{{/mydir}}`, which
+neither of the other kinds can express: `{{if}}` without its closer is an error and `{{var}}`
+with one is a stray tag. A name registered this way is a block when it is closed and a void
+directive when it is not.
+
+Lazily, and that matters: nesting one in itself is a **legacy fatal**, because the body ends at
+the *inner* closer and strands the outer one. This engine refuses it rather than rendering the
+structure as written — which it happily did until the behaviour was measured on a store.
+
+Applying the modifiers is the host's job, because the rule belongs with the registry: a
+template naming any modifier *suppresses* the processor's defaults, so `{{mydir "v"|raw}}`
+applies nothing at all and comes out unfiltered, while `{{mydir "v"}}` goes through
+`getDefaultFilters()`.
+
+**Modifiers are still a gap.** A `FilterPool` entry used as `{{var x|foofilter}}` is skipped
+here. `check` and `diff` ask the store what its pools hold and report what this engine cannot
+render — which is now the modifiers, and any directive whose port a host has not wired.
 
 ## Per-render capability policy
 

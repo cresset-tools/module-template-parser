@@ -8,6 +8,7 @@ use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\LayoutInterface;
 use Cresset\TemplateParser\HostServices;
 use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\CustomDirectiveRenderer;
 use Cresset\TemplateParser\Port\CustomVariableReader;
 use Cresset\TemplateParser\Port\StylesheetLoader;
 use Cresset\TemplateParser\Port\TemplateLoader;
@@ -215,6 +216,29 @@ final class MagentoAdapterTest extends TestCase
             $adapter->setVariables(['other' => 1])->filter('Dear {{var nobody_set_this}},'),
             'an unknown variable must render empty, as the filter renders it'
         );
+    }
+
+    /**
+     * A host's directive names have to reach the SPEC, not just the handler table.
+     *
+     * They decide whether `{{/mydir}}` is a closing tag or a stray one - so with the handler
+     * registered but the spec left bare, the void form renders and the PAIRED form is refused,
+     * which is the shape this bug actually took.
+     */
+    public function testAHostsDirectiveNamesReachTheParserNotJustTheHandlers(): void
+    {
+        $adapter = new TemplateFilterAdapter(services: new HostServices(
+            customDirectives: new class implements CustomDirectiveRenderer {
+                public function names(): array { return ['mydir']; }
+                public function render(string $n, ?string $v, array $p, ?string $b, array $m): ?string
+                {
+                    return '[' . $n . ':' . ($b ?? 'NULL') . ']';
+                }
+            }
+        ));
+
+        self::assertSame('[mydir:NULL]', $adapter->filter('{{mydir "v"}}'));
+        self::assertSame('[mydir:BODY]', $adapter->filter('{{mydir "v"}}BODY{{/mydir}}'));
     }
 
     /**

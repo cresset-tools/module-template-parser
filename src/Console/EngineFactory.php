@@ -14,6 +14,7 @@ use Cresset\TemplateParser\Magento\TemplateModelUrlBuilder;
 use Cresset\TemplateParser\Magento\ConfigTemplateLoader;
 use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
 use Cresset\TemplateParser\Magento\PhraseTranslator;
+use Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer;
 use Cresset\TemplateParser\Magento\StoreUrlBuilder;
 use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
 use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
@@ -45,10 +46,16 @@ class EngineFactory
     public function create(Mode $mode, ?int $storeId = null): TemplateEngine
     {
         $options = $mode->options();
-        $spec = new DirectiveSpec();
+        $services = $this->hostServices($storeId);
+
+        // The host's own directive names go into the SPEC, not just the handler table. They
+        // decide what the parser treats as a directive at all - and whether `{{/mydir}}` is a
+        // closing tag or a stray one, which is the difference between rendering the body and
+        // refusing the template. So the services have to be built before the spec is.
+        $spec = new DirectiveSpec([], [], $services->customDirectives?->names() ?? []);
         $evaluator = new Evaluator(spec: $spec, options: $options);
 
-        HostDirectives::register($evaluator, $this->hostServices($storeId), new Parser($spec, $options));
+        HostDirectives::register($evaluator, $services, new Parser($spec, $options));
 
         return new TemplateEngine(new Parser($spec, $options), $evaluator);
     }
@@ -143,6 +150,22 @@ class EngineFactory
                     : null),
             // No dependencies of its own: it calls getUrl() on the template model already
             // in scope, which is exactly what the legacy resolver does.
+            customDirectives: $this->build(function (MagentoContext $m): ?object {
+                $pool = $m->get(\Magento\Framework\Filter\SimpleDirective\ProcessorPool::class);
+                if ($pool === null) {
+                    return null;
+                }
+
+                $renderer = new PoolCustomDirectiveRenderer(
+                    $pool,
+                    $m->get(\Magento\Framework\Filter\DirectiveProcessor\Filter\FilterPool::class)
+                );
+
+                // A store that registered nothing gets no port at all. Equivalent to handing
+                // back a renderer with no names - the spec learns nothing and the handler loop
+                // registers nothing either way - so this is for the reader, not the behaviour.
+                return $renderer->names() === [] ? null : $renderer;
+            }),
             templateUrls: new TemplateModelUrlBuilder(),
             layouts: $this->build(fn (MagentoContext $m): ?object
                 => $this->allowedLayoutHandles !== []

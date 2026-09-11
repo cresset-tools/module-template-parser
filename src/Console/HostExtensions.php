@@ -39,10 +39,13 @@ class HostExtensions
      */
     public function directives(): array
     {
-        return $this->namesIn(
-            \Magento\Framework\Filter\SimpleDirective\ProcessorPool::class,
-            'processors'
-        );
+        $pool = $this->magento->get(\Magento\Framework\Filter\SimpleDirective\ProcessorPool::class);
+
+        // Asked of the renderer rather than read here, so the tooling that REPORTS these names
+        // is asking the same thing that renders them and the two cannot drift apart.
+        return $pool === null
+            ? []
+            : (new \Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer($pool))->names();
     }
 
     /**
@@ -87,10 +90,21 @@ class HostExtensions
         return ['directives' => $directives, 'modifiers' => $modifiers];
     }
 
-    /** One sentence naming what a template uses and what it costs, or null when it uses none. */
-    public function noteFor(string $template): ?string
+    /**
+     * One sentence naming what a template uses that the ENGINE cannot render, or null.
+     *
+     * @param string[] $rendered the directive names this engine has a handler for
+     *
+     * The second argument is why this is not simply "what the store has". Once the custom
+     * directive port is wired the engine renders these itself, and warning about a directive
+     * it just rendered correctly would be noise - worse, it would train a reader to ignore the
+     * warning that still matters. A host that wires the port partially, or not at all, still
+     * gets told.
+     */
+    public function noteFor(string $template, array $rendered = []): ?string
     {
         ['directives' => $directives, 'modifiers' => $modifiers] = $this->usedBy($template);
+        $directives = array_values(array_diff($directives, $rendered));
 
         $parts = [];
         if ($directives !== []) {

@@ -109,6 +109,30 @@ final class HostExtensionsTest extends TestCase
         }
     }
 
+    /**
+     * A directive the ENGINE renders is not reported, even though the store registered it.
+     *
+     * Once the custom directive port is wired this engine renders these itself, and warning
+     * about one it just rendered correctly is worse than noise: it trains a reader to ignore
+     * the warning that still matters. The modifier half is unaffected, because a FilterPool
+     * modifier on `{{var x}}` really is still skipped here.
+     */
+    public function testADirectiveTheEngineCanRenderIsNotReported(): void
+    {
+        $extensions = $this->extensions(
+            ['mydir' => $this->processor('mydir')],
+            ['foofilter' => $this->filter('foofilter')]
+        );
+
+        self::assertNull($extensions->noteFor('{{mydir "v"}}', ['mydir', 'var', 'if']));
+        self::assertNotNull($extensions->noteFor('{{mydir "v"}}', ['var', 'if']));
+
+        // The modifier is still a gap whatever the engine renders.
+        $note = $extensions->noteFor('{{var x|foofilter}}', ['mydir', 'var']);
+        self::assertNotNull($note);
+        self::assertStringContainsString('|foofilter', $note);
+    }
+
     /** A store that has an extension is only interesting for templates that USE it. */
     public function testAnUnusedExtensionIsNotReported(): void
     {
@@ -124,6 +148,44 @@ final class HostExtensionsTest extends TestCase
 
         self::assertNull($extensions->noteFor('{{mydir "v"}}'));
         self::assertNotNull($extensions->noteFor('{{my "v"}}'));
+    }
+
+    /**
+     * And an engine built by EngineFactory renders them, paired form included.
+     *
+     * The names have to reach the spec the PARSER uses, not only the handler table: with the
+     * handler registered and the spec bare, the void form renders and `{{mydir}}x{{/mydir}}`
+     * is refused for a closing tag that closes nothing.
+     */
+    public function testAnEngineFromTheFactoryRendersAHostsDirectives(): void
+    {
+        $context = MagentoContext::fromObjectManager(new class {
+            public function get(string $class): ?object
+            {
+                if ($class === ProcessorPool::class) {
+                    return new ProcessorPool(['mydir' => new class implements \Magento\Framework\Filter\SimpleDirective\ProcessorInterface {
+                        public function getName(): string { return 'mydir'; }
+                        public function process($value, array $parameters, ?string $html): string
+                        {
+                            return '[' . $value . ':' . ($html ?? 'NULL') . ']';
+                        }
+                        public function getDefaultFilters(): ?array { return null; }
+                    }]);
+                }
+                return null;
+            }
+        });
+
+        $engine = (new \Cresset\TemplateParser\Console\EngineFactory($context))
+            ->create(\Cresset\TemplateParser\Console\Mode::Compatible);
+
+        $render = static fn (string $t): string => $engine->render($t, context: new \Cresset\TemplateParser\Context(
+            [],
+            \Cresset\TemplateParser\RenderPolicy::unrestricted()
+        ));
+
+        self::assertSame('[v:NULL]', $render('{{mydir "v"}}'));
+        self::assertSame('[v:BODY]', $render('{{mydir "v"}}BODY{{/mydir}}'));
     }
 
     /** No store, or a pool this cannot read, reports nothing rather than guessing. */

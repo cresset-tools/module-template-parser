@@ -129,6 +129,12 @@ Entries say what changed and why it mattered. A line that only names a file has 
   and an unknown modifier is skipped, which is exactly what the filter does on a store without
   that extension.
 
+- `{{mydir}}` — directives a module registers through `SimpleDirective\ProcessorPool` — is
+  implemented, through a `CustomDirectiveRenderer` port. This needed a third directive kind:
+  Magento's pattern makes the body optional, so one registration gives a template both
+  `{{mydir "v"}}` and `{{mydir}}body{{/mydir}}`. Nesting one in itself is refused, because the
+  filter's lazy body strands the outer closing tag and raises.
+
 ### Security
 
 Nothing here has been released, so none of this reached a deployed store.

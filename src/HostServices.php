@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser;
 
 use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\CustomDirectiveRenderer;
 use Cresset\TemplateParser\Port\ConfigReader;
 use Cresset\TemplateParser\Port\CustomVariableReader;
 use Cresset\TemplateParser\Port\LayoutRenderer;
@@ -33,7 +34,8 @@ final class HostServices
         public readonly ?StylesheetLoader $stylesheets = null,
         public readonly ?LayoutRenderer $layouts = null,
         public readonly ?WidgetRenderer $widgets = null,
-        public readonly ?TemplateUrlBuilder $templateUrls = null
+        public readonly ?TemplateUrlBuilder $templateUrls = null,
+        public readonly ?CustomDirectiveRenderer $customDirectives = null
     ) {
     }
 }

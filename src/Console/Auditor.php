@@ -47,7 +47,7 @@ class Auditor
                 // Worked out before the render, because a template using one of these may well
                 // REFUSE - a paired custom directive leaves a `{{/mydir}}` this engine has no
                 // opener for - and that is the case where the reason is least obvious.
-                $extension = $this->extensions?->noteFor($subject->content);
+                $extension = $this->extensions?->noteFor($subject->content, $engine->evaluator()->registered());
                 $extensionFinding = $extension === null ? [] : [new Finding(
                     severity: Finding::WARNING,
                     subject: $subject,
@@ -180,7 +180,7 @@ class Auditor
                     // a puzzling thing to read about a directive your own store implements.
                     return new Divergence($subject, $legacyOutput, null, implode('; ', array_filter([
                         'renders today, refused here - ' . $ourFailure,
-                        $this->extensions?->noteFor($subject->content),
+                        $this->extensions?->noteFor($subject->content, $engine->evaluator()->registered()),
                     ])));
                 }
 
@@ -210,7 +210,7 @@ class Auditor
         $notes = array_filter([
             $this->unwiredPortNote($ours, $engine),
             $this->surfaceGapNote($legacyOutput, $ours, $engine),
-            $this->extensions?->noteFor($source),
+            $this->extensions?->noteFor($source, $engine->evaluator()->registered()),
         ]);
 
         return $notes === [] ? null : implode('; ', $notes);
