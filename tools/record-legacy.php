@@ -242,6 +242,32 @@ $constructs = [
     'stray_close'     => 'a{{/if}}b',
     'unclosed'        => 'a{{if a}}b',
     'empty_braces'    => 'a{{}}b',
+    // The same degenerate constructs INSIDE a loop body, where none of them is a fatal.
+    // ForDirective does not render its body: it str_replaces each construct with the variable
+    // resolution of that construct's parameter text, so ProcessorPool::get() is never reached
+    // and `{{}}`, `{{/if}}` and `{{var1 x}}` are reads of '', '/if' and '1 x'. Every refusal
+    // this engine raised for them was claiming a crash that cannot happen in this position,
+    // and the guard against exactly that missed it because every case here was top level.
+    'loop_empty'      => '[{{for i in a}}{{}}A{{/for}}]',
+    'loop_close_if'   => '[{{for i in a}}{{/if}}A{{/for}}]',
+    'loop_close_var'  => '[{{for i in a}}{{/var}}A{{/for}}]',
+    'loop_open_if'    => '[{{for i in a}}{{if a}}A{{/for}}]',
+    'loop_name_dot'   => '[{{for i in a}}{{var.a}}A{{/for}}]',
+    'loop_lead_space' => '[{{for i in a}}{{ a}}A{{/for}}]',
+    'loop_digit_name' => '[{{for i in a}}{{var1 a}}A{{/for}}]',
+    'loop_else'       => '[{{for i in a}}{{else}}A{{/for}}]',
+    // And where the exemption STOPS. An unclosed loop matches no loop pattern, so its contents
+    // are ordinary source; anything after the close is outside; and a nested loop strands the
+    // outer {{/for}}, which is why the filter cannot express one.
+    'loop_unclosed'   => '[{{for i in a}}{{}}A]',
+    'loop_after'      => '[{{for i in a}}A{{/for}}{{}}B]',
+    'loop_before'     => '[{{}}B{{for i in a}}A{{/for}}]',
+    'loop_nested'     => '[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]',
+    // TWO loops, which is what pins the body match as lazy rather than greedy. A greedy one
+    // would make the whole stretch between the first {{for}} and the last {{/for}} a body, so
+    // the construct BETWEEN them - which the filter dies on - would be exempted.
+    'loop_between'    => '[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]',
+    'loop_two_bodies' => '[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]',
     'html_around'     => '<p class="x">{{var a}}</p>',
     // Modifiers - the first corpus had none, which is why the escaping bugs hid.
     'var_raw'         => '[{{var a|raw}}]',

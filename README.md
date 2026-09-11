@@ -217,7 +217,7 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**4354 cases recorded, 649 of them constructs the legacy filter cannot render at all. Over
+**4788 cases recorded, 804 of them constructs the legacy filter cannot render at all. Over
 the 2710 cases where both engines render, the surfaces are comparable and compatible mode
 does not deliberately refuse, output is byte-identical.**
 
@@ -333,6 +333,15 @@ Quirks it does not reproduce:
   does *more* than the filter rather than less. `{{trans "a }}b"}}` is the same divergence
   from the other side: `a }}b` here, `b"}}` there. Both are recorded as corpus cases with the
   equality dropped, rather than kept out of the corpus.
+- **Anything inside a `{{for}}` body.** `ForDirective` does not render its body — it
+  `str_replace`s each construct with the variable resolution of that construct's *parameter
+  text* — so nothing in there ever reaches a directive processor, and nothing in there can be
+  a legacy fatal. `{{}}`, `{{/if}}`, `{{var.a}}` and `{{var1 x}}` are reads of `''`, `/if`,
+  `.a` and `1 x`; every one resolves to nothing and renders. This engine parses the body
+  properly instead, so those constructs come out as text. The exemption stops exactly where
+  the filter's does: an unclosed `{{for}}` matches no loop pattern, anything after the close is
+  outside it, and a nested loop strands the outer `{{/for}}` — which is why the filter cannot
+  express a nested loop at all, and why this still refuses one.
 - **One missing brace, at top level.** `Hi {{var name}, bye {{var name}}` reads here as text,
   then the intact directive — the same reading as `{{A{{var x}}`. The legacy regex is lazier
   and less fussy: `(.*?)}}` swallows the broken opener, everything after it and the intact

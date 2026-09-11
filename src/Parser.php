@@ -62,6 +62,8 @@ final class Parser
         $this->source = $source;
         $this->maxNestingDepth = $maxNestingDepth ?? $this->options->maxNestingDepth;
         $this->incompatibilities = [];
+        // Before any refusal is raised: the spans decide which of them apply.
+        $this->findLoopBodies($source);
         $this->refuseLegacyParsingDifferences($source);
 
         $tokens = $this->lexer->tokenize($source);
@@ -482,9 +484,87 @@ final class Parser
         return null;
     }
 
+    /**
+     * The legacy filter's own loop pattern, which is what decides where a body begins and ends.
+     *
+     * Lazy on both halves, so it runs from the first `{{for …}}` to the FIRST `{{/for}}` - and
+     * that is the behaviour, not an approximation of it. A nested loop leaves the outer
+     * `{{/for}}` stranded outside any body, which is why the filter dies on nested loops.
+     */
+    private const LEGACY_LOOP_PATTERN =
+        '/{{for(?P<loopItem>.*? )(in)(?P<loopData>.*?)}}(?P<loopBody>.*?){{\/for}}/si';
+
+    /** @var list<array{0:int,1:int}> half-open [from, to) offsets of each loop body */
+    private array $loopBodySpans = [];
+
+    /**
+     * Nothing inside a `{{for}}` body reaches a directive processor, so nothing there can be a
+     * legacy fatal.
+     *
+     * ForDirective does not render its body. It runs CONSTRUCTION_PATTERN over the raw text and
+     * str_replaces each construct it finds with the VARIABLE RESOLUTION of that construct's
+     * parameter text - so `{{}}`, `{{/if}}`, `{{var.a}}` and `{{var1 x}}` are all just variable
+     * reads of `''`, `/if`, `.a` and `1 x`, every one of which resolves to nothing and renders.
+     * ProcessorPool::get() is never called, so the TypeError this engine was warning about
+     * cannot happen there.
+     *
+     * Refusing them anyway was an over-refusal carrying a claim that is simply false in this
+     * position - the failure mode testNoRefusalClaimsACrashTheFilterDoesNotHave exists to
+     * prevent, missed because every corpus case put these constructs at the top level.
+     *
+     * The exemption stops exactly where the filter's does. An UNCLOSED `{{for}}` matches no
+     * loop pattern, so its contents are ordinary source and still fatal; so is anything after
+     * a `{{/for}}`; and so is the outer `{{/for}}` of a nested pair, which is left stranded by
+     * the lazy body and is why the filter dies on nested loops.
+     */
+    private function insideLoopBody(int $offset): bool
+    {
+        // With ONE exception, and it is the construct that creates the body in the first
+        // place. LOOP_PATTERN is lazy on both halves, so a nested loop runs from the outer
+        // `{{for}}` to the INNER `{{/for}}` and leaves the outer one stranded outside any
+        // body - an empty directive name, and a TypeError. So the filter cannot express a
+        // nested loop at all, and a `{{for}}` inside a loop body is exactly the thing that
+        // must still be refused. Everything else in there is a variable read that renders.
+        if (str_starts_with(substr($this->source, $offset, 7), '{{for')
+            || str_starts_with(substr($this->source, $offset, 8), '{{/for}}')
+        ) {
+            return false;
+        }
+
+        foreach ($this->loopBodySpans as [$from, $to]) {
+            if ($offset >= $from && $offset < $to) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Walked one match at a time: a match table over a large source is how this once OOMed. */
+    private function findLoopBodies(string $source): void
+    {
+        $this->loopBodySpans = [];
+
+        if (stripos($source, '{{for') === false) {
+            return;
+        }
+
+        foreach ($this->matches(self::LEGACY_LOOP_PATTERN, $source) as $match) {
+            // The named group is also numbered; 4 is loopBody in the pattern above.
+            [$body, $offset] = $match['loopBody'] ?? $match[4] ?? ['', -1];
+            if ($offset >= 0) {
+                $this->loopBodySpans[] = [$offset, $offset + strlen($body)];
+            }
+        }
+    }
+
     private function refuseIfLegacyCannotRender(int $offset, string $kind, string $message): void
     {
         if (!$this->options->legacyQuirks) {
+            return;
+        }
+
+        if ($this->insideLoopBody($offset)) {
             return;
         }
 

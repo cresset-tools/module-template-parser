@@ -111,6 +111,13 @@ Entries say what changed and why it mattered. A line that only names a file has 
   `knownNames()` — which `diff`'s notes and the render policy are built from — claim a
   directive nobody can write.
 
+- Every legacy-fatal refusal fired inside a `{{for}}` body, where none of them is true.
+  `ForDirective` never renders its body — it substitutes each construct with the variable
+  resolution of that construct's parameter text — so nothing there reaches a directive
+  processor and nothing there can crash. `{{}}`, `{{/if}}`, `{{var.a}}` and `{{var1 x}}` all
+  render on the filter and were refused here with a message asserting a `TypeError` that
+  cannot happen in that position.
+
 ### Security
 
 Nothing here has been released, so none of this reached a deployed store.

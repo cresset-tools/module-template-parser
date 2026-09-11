@@ -275,6 +275,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/true",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/true",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/true",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/true",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/true",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/true",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/true",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/true",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/true",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/true",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/true",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/true",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/true",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/true",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": true
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/true",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -1868,6 +2022,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/false",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/false",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/false",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/false",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/false",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/false",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/false",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/false",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/false",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/false",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/false",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/false",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/false",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/false",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/false",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -3431,6 +3739,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/zero",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/zero",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/zero",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/zero",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/zero",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/zero",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/zero",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/zero",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/zero",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/zero",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/zero",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/zero",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/zero",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/zero",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/zero",
@@ -5026,6 +5488,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/one",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/one",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/one",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/one",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/one",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/one",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/one",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/one",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/one",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/one",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/one",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/one",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/one",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/one",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": 1
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/one",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -6617,6 +7233,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/answer",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/answer",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/answer",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/answer",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/answer",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/answer",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/answer",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/answer",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/answer",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/answer",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/answer",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/answer",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/answer",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/answer",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": 42
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/answer",
@@ -8212,6 +8982,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/strzero",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/strzero",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/strzero",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/strzero",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/strzero",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/strzero",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/strzero",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/strzero",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/strzero",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/strzero",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/strzero",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/strzero",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/strzero",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/strzero",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "0"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/strzero",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -9805,6 +10729,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/emptystr",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/emptystr",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/emptystr",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/emptystr",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/emptystr",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/emptystr",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/emptystr",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/emptystr",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/emptystr",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/emptystr",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/emptystr",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/emptystr",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/emptystr",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/emptystr",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/emptystr",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -11368,6 +12446,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/word",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/word",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/word",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/word",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/word",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/word",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/word",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/word",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/word",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/word",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/word",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/word",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/word",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/word",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/word",
@@ -12963,6 +14195,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/null",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/null",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/null",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/null",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/null",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/null",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/null",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/null",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/null",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/null",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/null",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/null",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/null",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/null",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": null
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/null",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -14526,6 +15912,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/floatzero",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/floatzero",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/floatzero",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/floatzero",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/floatzero",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/floatzero",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/floatzero",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/floatzero",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/floatzero",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/floatzero",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/floatzero",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/floatzero",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/floatzero",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/floatzero",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/floatzero",
@@ -16121,6 +17661,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/float",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/float",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/float",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/float",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/float",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/float",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/float",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/float",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/float",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/float",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/float",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/float",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/float",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/float",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": 1.5
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/float",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -17712,6 +19406,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/emptyarr",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/emptyarr",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/emptyarr",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/emptyarr",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/emptyarr",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/emptyarr",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/emptyarr",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/emptyarr",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/emptyarr",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/emptyarr",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/emptyarr",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/emptyarr",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/emptyarr",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/emptyarr",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": []
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[B]",
+        "parity": false
     },
     {
         "id": "html_around/emptyarr",
@@ -19364,6 +21212,202 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/list",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/list",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/list",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/list",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/list",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/list",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/list",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/list",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/list",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/list",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/list",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/list",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/list",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/list",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": [
+                1,
+                2
+            ]
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[B]",
+        "parity": false
     },
     {
         "id": "html_around/list",
@@ -21335,6 +23379,188 @@
         "parity": true
     },
     {
+        "id": "loop_empty/assoc",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/assoc",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/assoc",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/assoc",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/assoc",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/assoc",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/assoc",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/assoc",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/assoc",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/assoc",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/assoc",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/assoc",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/assoc",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/assoc",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": {
+                "b": "deep"
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[B]",
+        "parity": false
+    },
+    {
         "id": "html_around/assoc",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -23190,6 +25416,188 @@
         "parity": true
     },
     {
+        "id": "loop_empty/assocempty",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/assocempty",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/assocempty",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/assocempty",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/assocempty",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/assocempty",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/assocempty",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/assocempty",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/assocempty",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/assocempty",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/assocempty",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/assocempty",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/assocempty",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/assocempty",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": {
+                "b": ""
+            }
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[B]",
+        "parity": false
+    },
+    {
         "id": "html_around/assocempty",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -24995,6 +27403,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/html",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/html",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/html",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/html",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/html",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/html",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/html",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/html",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/html",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/html",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/html",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/html",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/html",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/html",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/html",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -26606,6 +29168,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/directive",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/directive",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/directive",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/directive",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/directive",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/directive",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/directive",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/directive",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/directive",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/directive",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/directive",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/directive",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/directive",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/directive",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "{{var a}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/directive",
@@ -28401,6 +31117,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/blockpayload",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/blockpayload",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/blockpayload",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/blockpayload",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/blockpayload",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/blockpayload",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/blockpayload",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/blockpayload",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/blockpayload",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/blockpayload",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/blockpayload",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/blockpayload",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/blockpayload",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/blockpayload",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "{{block class=Evil}}"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/blockpayload",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -30162,6 +33032,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/longstr",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/longstr",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/longstr",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/longstr",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/longstr",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/longstr",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/longstr",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/longstr",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/longstr",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/longstr",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/longstr",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/longstr",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/longstr",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/longstr",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "abababababababababababababababababababababababababababababababababababababababab"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/longstr",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -31753,6 +34777,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/spaces",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/spaces",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/spaces",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/spaces",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/spaces",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/spaces",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/spaces",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/spaces",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/spaces",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/spaces",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/spaces",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/spaces",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/spaces",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/spaces",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "  padded  "
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/spaces",
@@ -33348,6 +36526,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/entities",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/entities",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/entities",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/entities",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/entities",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/entities",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/entities",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/entities",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/entities",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/entities",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/entities",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/entities",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/entities",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/entities",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "Tom &amp; Jerry &nbsp;"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/entities",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -34939,6 +38271,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/newlines",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/newlines",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/newlines",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/newlines",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/newlines",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/newlines",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/newlines",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/newlines",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/newlines",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/newlines",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/newlines",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/newlines",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/newlines",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/newlines",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "a\nb\nc"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/newlines",
@@ -36568,6 +40054,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/brace_lead",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/brace_lead",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/brace_lead",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/brace_lead",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/brace_lead",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/brace_lead",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/brace_lead",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/brace_lead",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/brace_lead",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/brace_lead",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/brace_lead",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/brace_lead",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/brace_lead",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/brace_lead",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "{x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/brace_lead",
@@ -38317,6 +41957,160 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/brace_trail",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/brace_trail",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/brace_trail",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/brace_trail",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/brace_trail",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/brace_trail",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/brace_trail",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/brace_trail",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/brace_trail",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/brace_trail",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/brace_trail",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/brace_trail",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/brace_trail",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/brace_trail",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/brace_trail",
@@ -40116,6 +43910,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/brace_both",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/brace_both",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/brace_both",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/brace_both",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/brace_both",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/brace_both",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/brace_both",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/brace_both",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/brace_both",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/brace_both",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/brace_both",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/brace_both",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/brace_both",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/brace_both",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "{x{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/brace_both",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -41913,6 +45861,160 @@
         "parity": true
     },
     {
+        "id": "loop_empty/brace_solo",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/brace_solo",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/brace_solo",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/brace_solo",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/brace_solo",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/brace_solo",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/brace_solo",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/brace_solo",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/brace_solo",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/brace_solo",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/brace_solo",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/brace_solo",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/brace_solo",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/brace_solo",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": {
+            "a": "{"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/brace_solo",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": {
@@ -43624,6 +47726,132 @@
         "parity": true
     },
     {
+        "id": "loop_empty/@dataobject",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/@dataobject",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/@dataobject",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/@dataobject",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/@dataobject",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/@dataobject",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/@dataobject",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/@dataobject",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/@dataobject",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/@dataobject",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/@dataobject",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/@dataobject",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/@dataobject",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/@dataobject",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": [],
+        "object": "dataobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/@dataobject",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": [],
@@ -44909,6 +49137,132 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/@stringable",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/@stringable",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/@stringable",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/@stringable",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/@stringable",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/@stringable",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/@stringable",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/@stringable",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/@stringable",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/@stringable",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/@stringable",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/@stringable",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/@stringable",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/@stringable",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": [],
+        "object": "stringable",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/@stringable",
@@ -46198,6 +50552,132 @@
         "parity": true
     },
     {
+        "id": "loop_empty/@plainobject",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/@plainobject",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/@plainobject",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/@plainobject",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/@plainobject",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/@plainobject",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/@plainobject",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/@plainobject",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/@plainobject",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/@plainobject",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/@plainobject",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/@plainobject",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/@plainobject",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/@plainobject",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": [],
+        "object": "plainobject",
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
+    },
+    {
         "id": "html_around/@plainobject",
         "template": "<p class=\"x\">{{var a}}</p>",
         "variables": [],
@@ -47483,6 +51963,132 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/@arrayofobject",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/@arrayofobject",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/@arrayofobject",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/@arrayofobject",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/@arrayofobject",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/@arrayofobject",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/@arrayofobject",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/@arrayofobject",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/@arrayofobject",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/@arrayofobject",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/@arrayofobject",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/@arrayofobject",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/@arrayofobject",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/@arrayofobject",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": [],
+        "object": "arrayofobject",
+        "outcome": "ok",
+        "expected": "[B]",
+        "parity": false
     },
     {
         "id": "html_around/@arrayofobject",
@@ -48782,6 +53388,132 @@
         "outcome": "throw",
         "expected": "TypeError",
         "parity": true
+    },
+    {
+        "id": "loop_empty/novars",
+        "template": "[{{for i in a}}{{}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_if/novars",
+        "template": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/if}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_close_var/novars",
+        "template": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{/var}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_open_if/novars",
+        "template": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{if a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_name_dot/novars",
+        "template": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var.a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_lead_space/novars",
+        "template": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{ a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_digit_name/novars",
+        "template": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{var1 a}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_else/novars",
+        "template": "[{{for i in a}}{{else}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{else}}A{{/for}}]",
+        "parity": false
+    },
+    {
+        "id": "loop_unclosed/novars",
+        "template": "[{{for i in a}}{{}}A]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_after/novars",
+        "template": "[{{for i in a}}A{{/for}}{{}}B]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_before/novars",
+        "template": "[{{}}B{{for i in a}}A{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_nested/novars",
+        "template": "[{{for i in a}}{{for j in a}}{{}}A{{/for}}{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_between/novars",
+        "template": "[{{for i in a}}A{{/for}}{{}}B{{for j in a}}C{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "throw",
+        "expected": "TypeError",
+        "parity": false
+    },
+    {
+        "id": "loop_two_bodies/novars",
+        "template": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{}}A{{/for}}B{{for j in a}}{{}}C{{/for}}]",
+        "parity": false
     },
     {
         "id": "html_around/novars",

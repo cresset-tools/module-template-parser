@@ -53,6 +53,21 @@ final class LegacyParityTest extends TestCase
         );
     }
 
+    /**
+     * Every case the filter RENDERED, comparable surface or not.
+     *
+     * `parity` answers "may these two outputs be compared", which is a different question from
+     * "did the filter crash". A refusal claiming a crash is wrong wherever the filter rendered,
+     * and filtering this by parity is why the claim went unchecked for every {{for}} case in
+     * the corpus - the one construct where it turned out to be false.
+     *
+     * @return array<string,array{0:array}>
+     */
+    public static function everyRenderedCase(): array
+    {
+        return array_filter(self::recordedCases(), static fn ($c) => $c[0]['outcome'] === 'ok');
+    }
+
     /** Legacy rendered it, but the engines implement different directives for it. */
     public static function surfaceDivergentCases(): array
     {
@@ -225,7 +240,7 @@ final class LegacyParityTest extends TestCase
      * The corpus knows the answer for every case it holds: `outcome` records what the filter
      * really did. So a strong claim is only allowed where the corpus does not contradict it.
      */
-    #[DataProvider('renderingCases')]
+    #[DataProvider('everyRenderedCase')]
     public function testNoRefusalClaimsACrashTheFilterDoesNotHave(array $case): void
     {
         try {
