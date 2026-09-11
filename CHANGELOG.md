@@ -123,6 +123,12 @@ Entries say what changed and why it mattered. A line that only names a file has 
   is passed now — `Port\StylesheetLoader::load()` takes it, `Context` carries it, and the
   plugin captures `setDesignParams()` the way it captures the variables.
 
+- `check` and `diff` now ask the store what its `SimpleDirective\ProcessorPool` and
+  `FilterPool` hold, and say so when a template uses one. Neither extension point is
+  implemented here, and the gap was invisible: an unknown directive comes back as its own text
+  and an unknown modifier is skipped, which is exactly what the filter does on a store without
+  that extension.
+
 ### Security
 
 Nothing here has been released, so none of this reached a deployed store.

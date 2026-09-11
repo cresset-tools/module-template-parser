@@ -143,6 +143,28 @@ and its `$store` argument overwritten by the scope's. That single exception is w
 "log into your account" link in every stock Magento email comes from, so it is reproduced —
 as a port, so a host that does not want it simply does not wire it and gets `getData('url')`.
 
+## Magento's own extension points
+
+Magento is extensible in two places the template language reaches, and this engine implements
+neither:
+
+- `SimpleDirective\ProcessorPool` registers a **named directive**, so a module adding `mydir`
+  makes `{{mydir "v" p=1}}body{{/mydir}}` render on that store.
+- `DirectiveProcessor\Filter\FilterPool` registers a **modifier**, so one adding `foofilter`
+  makes `{{var x|foofilter}}` render.
+
+Nothing in a stock install uses either, and the difference is invisible by default: an unknown
+directive comes back as its own text here and an unknown modifier is skipped — which is exactly
+what the filter does on a store *without* that extension. So nothing distinguishes "this store
+has no such directive" from "this store has one and we ignored it". `check` and `diff` ask your
+store what its pools hold and say so when a template uses one: `check` reports it as a warning,
+`diff` names it as the cause.
+
+The note stops short of saying what this engine does with the directive, because that depends
+on the shape — the void form renders as text, and the paired form is *refused*, the closing tag
+having no opener this engine knows. Rendering them properly needs a third directive kind, since
+Magento's regex makes the body optional and the same name is legal both ways.
+
 ## Per-render capability policy
 
 Capability belongs to the template, not the application. A stock transactional email and a
