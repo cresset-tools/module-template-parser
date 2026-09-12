@@ -32,11 +32,14 @@ composer require cresset-tools/module-template-parser
 That puts `vendor/bin/template-parser` in place too, which is what the CLI section below runs.
 
 Requires PHP 8.3, 8.4 or 8.5. The engine is plain PHP with no Magento dependency; the Magento
-bindings sit behind ports in `src/Magento/`.
+bindings sit behind narrow interfaces — *ports* — in `src/Magento/`.
+
+Pre-1.0, not yet used in production, and the API may change. [What that means before you
+switch a store over](#status).
 
 Looking for what a directive actually does, rather than what this engine does with it?
 [**docs/directives.md**](docs/directives.md) is a reference for the template language itself —
-every example in it rendered through the real filter to produce it.
+every example in it was produced by rendering that example through the real filter.
 
 ## Why
 
@@ -78,7 +81,7 @@ Strictness has three independent axes — syntax, directives and variables — s
 TemplateEngine::withOptions(Options::strict()->withVariables(false));
 ```
 
-The safety properties are structural and apply in every mode.
+All of that holds in every mode; the modes differ in what they refuse, never in what they run.
 
 ## Using it as a Magento module
 
@@ -118,16 +121,17 @@ because a rendered email holds a customer's name and address.
 One render is deliberately skipped, and one is adjusted before the diff. A **child** template —
 anything reached through `{{template}}` — is skipped, because the filter defers a directive it
 cannot finish in a child by emitting a signed placeholder for the parent to resolve, and the
-signature is random per render; this engine records that deferral structurally instead, so a
-child can never match. The parent's comparison covers the same content.
+signature is random per render. This engine records that deferral structurally instead, so a
+child's output can never be byte-equal to the filter's, whatever either engine does. The
+parent's comparison covers the same content.
 
-The adjustment: the candidate is put through the subject's own `applyInlineCss()` before the
-diff, because the legacy result it is being compared against is a finished document and this
+The adjustment: this engine's output goes through the subject's own `applyInlineCss()` before
+the diff, because the legacy result it is being compared against is a finished document and this
 engine defers that step to its host.
 
-Measured on a stock store: that skip, that adjustment and the wiring below take the 48 stock
-email templates from 203 engine failures and 118 reported divergences to **zero of both**,
-rendered through the model that sends them with the plugin live.
+Measured on a stock store, rendering the 48 stock email templates through the model that
+sends them with the plugin live: that skip, that adjustment and the port wiring above take
+them from 203 engine failures and 118 reported divergences to **zero of both**.
 
 ### Directive surface
 
@@ -151,7 +155,8 @@ and unit-testable.
 | `css` | `StylesheetLoader` | `AssetStylesheetLoader` | `PathGuard` |
 | `{{var this.getUrl(...)}}` | `TemplateUrlBuilder` *(optional)* | `TemplateModelUrlBuilder` | the receiver has to be a template model, and the store argument comes from the scope rather than the template; `PathGuard` on the route AND on `_direct`, which reaches the base URL unfiltered |
 
-Three of these change behaviour for the plain-text part of an email, as the filter's do:
+Three of these change behaviour for the plain-text part of an email, exactly as the
+filter's own implementations do:
 `{{customvar}}` reads a variable's text value rather than its HTML one, and `{{css}}` and
 `{{inlinecss}}` render nothing at all. Tell the engine which it is with
 `Context`'s `$plainText`, or — behind Magento — with `setPlainTemplateMode()` on the adapter,
@@ -164,7 +169,7 @@ where every "log into your account" link in every stock Magento email comes from
 reproduced — as a port, so a host that does not want it simply does not wire it and gets
 `getData('url')`.
 
-## Magento's own extension points
+### Magento's own extension points
 
 Magento is extensible in two places the template language reaches. `SimpleDirective\ProcessorPool`
 registers a **named directive**, so a module adding `mydir` makes `{{mydir "v" p=1}}body{{/mydir}}`
@@ -183,21 +188,21 @@ neither of the other kinds can express: `{{if}}` without its closer is an error 
 with one is a stray tag. A name registered this way is a block when it is closed and a void
 directive when it is not.
 
-Lazily, and that matters: nesting one in itself is a **legacy fatal**, because the body ends at
-the *inner* closer and strands the outer one. This engine refuses it rather than rendering the
-structure as written — which it happily did until the behaviour was measured on a store.
+The laziness matters: nesting one of these in itself is a **legacy fatal**, because the body
+ends at the *inner* closer and strands the outer one. This engine refuses that rather than
+rendering the structure as written.
 
 Applying the modifiers is the host's job, because the rule belongs with the registry: a
 template naming any modifier *suppresses* the processor's defaults, so `{{mydir "v"|raw}}`
 applies nothing at all and comes out unfiltered, while `{{mydir "v"}}` goes through
 `getDefaultFilters()`.
 
-**Modifiers turn out not to be a gap at all**, which is worth stating because the registry
-makes it look like one. A `FilterPool` entry never reaches `{{var}}` on any surface this package
-replaces: `Email\Model\Template\Filter::varDirective` uses its own `$_modifiers` map and skips
-a name that is not in it, and the CMS and newsletter filters inherit that override. Measured on
-a store registering `foofilter`, `{{var x|foofilter}}` renders `ab<c>` on the filter and `ab<c>`
-here — the modifier is skipped by both, which is the documented *unknown modifiers* quirk. A
+**Modifiers are not a gap, though the registry makes them look like one.** A `FilterPool`
+entry never reaches `{{var}}` on any surface this package replaces:
+`Email\Model\Template\Filter::varDirective` uses its own `$_modifiers` map and skips a name
+that is not in it, and the CMS and newsletter filters inherit that override. Measured on
+a store registering `foofilter`, `{{var x|foofilter}}` renders `ab<c>` on both sides — the
+modifier is skipped either way, which is the documented *unknown modifiers* quirk. A
 `FilterPool` entry only ever reaches a `SimpleDirective`, and those this engine now renders
 itself, applying the modifiers through the pool.
 
@@ -238,6 +243,12 @@ foreach ($context->violations() as $v) {
 }
 ```
 
+The signature is
+`render(string $source, array $variables = [], ?Context $context = null, ?RenderPolicy $policy = null)`.
+A `Context` carries its own variables and policy, so passing one alongside either of the
+others raises rather than picking a winner — a caller tightening a render by adding a policy
+argument would otherwise get no error and no policy.
+
 The allowlist is checked before the port, so a refused class is never constructed.
 `{{widget}}` shares the block allowlist, since a widget is a block by another name.
 
@@ -258,14 +269,19 @@ take down an order email, but it must not pass unnoticed either. For template va
 CI, `Options::withFailOnPolicyViolation(true)` makes it fatal. A nested `{{template}}` inherits
 the policy, so an include cannot widen it.
 
-Two further properties are deliberate. A directive that needs a port and has none stays
-unregistered, so the host grants capabilities one at a time rather than inheriting the whole
-surface. (`{{trans}}` is the exception: it has a built-in handler and renders with or without
-a `Translator`, since substitution needs nothing from the host.) And
-`PathGuard` and the identifier checks are applied by the directive handlers rather than left
-to each implementation, so a host cannot forget one; `FullDirectiveSurfaceTest` asserts the
-port is never reached for rejected input. Refusing after the fact is the mistake that made
-`BlockFactory` exploitable.
+A policy also carries the nesting and include bounds, which are per-render for the same
+reason — see [Nesting and include bounds](#nesting-and-include-bounds).
+
+Two further properties are deliberate.
+
+- **A directive that needs a port and has none stays unregistered**, so the host grants
+  capabilities one at a time rather than inheriting the whole surface. `{{trans}}` is the
+  exception: it has a built-in handler and renders with or without a `Translator`, since
+  substitution needs nothing from the host.
+- **The guards are in the handlers, not the ports.** `PathGuard` and the identifier checks
+  run before a port is called rather than being left to each implementation, so a host cannot
+  forget one; `FullDirectiveSurfaceTest` asserts the port is never reached for rejected input.
+  Refusing after the fact is the mistake that made `BlockFactory` exploitable.
 
 The legacy filter has no such guards: `mediaDirective` is literally
 `getBaseUrl(MEDIA) . $params['url']`, and `protocolDirective` is
@@ -281,9 +297,9 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**4788 cases recorded, 804 of them constructs the legacy filter cannot render at all. Output
-is byte-identical over the 2710 cases where both engines render, the surfaces are comparable
-and compatible mode does not deliberately refuse.**
+**4788 cases recorded. 804 are constructs the legacy filter cannot render at all, 843 put the
+two engines on surfaces that cannot be compared, and 431 are shapes compatible mode refuses on
+purpose. Over the remaining 2710 cases, where both engines render, output is byte-identical.**
 
 That corpus is recorded from a filter built out of a handful of files and no application, so
 the directives it can compare are the six the base `Framework\Filter\Template` implements:
@@ -296,19 +312,20 @@ its observable decisions — what it let through, what it refused by never askin
 forwarded alongside. A tape needs no store, so it is a fixture rather than a manual check.
 
 That split matters because it is where the bugs have been. Until those twelve were recorded,
-five directives out of eighteen were actually compared, and every security defect adversarial
-fuzzing has found in this package lived in the other thirteen. Deleting the fix for the live
+six directives out of eighteen were actually compared, and every security defect adversarial
+fuzzing has found in this package lived in the other twelve. Deleting the fix for the live
 `javascript:` scheme now fails twelve store-tape cases.
 
 Agreement with the filter is asserted, not merely noted: `legacy` is a recorded constant and
-the candidate is recomputed from the tape each run, so the 193 store cases that agreed when
-recorded have to keep agreeing, offline, with no store. The *count* is pinned too — otherwise a
+the candidate is recomputed from the tape each run, so the store cases that agreed when
+recorded have to keep agreeing, offline, with no store
+(`StorePortParityTest::testTheAgreementSetHasNotShrunk`). The *count* is pinned too — otherwise a
 guard that starts refusing something the filter renders just leaves a smaller agreeing set and
 every remaining assertion still passes.
 
 Every directive but one now has an asserted comparison against the filter somewhere. The
 exception is `{{for}}`, which is a declared divergence for the reason
-[given below](#for-is-a-deliberate-divergence). Two caveats worth stating plainly:
+[given below](#for-is-a-deliberate-divergence). Two caveats:
 
 - `{{layout}}`'s *corpus* cases agree vacuously — the base filter has no `layoutDirective`
   and that test engine has no port, so both sides emit the directive verbatim. Its real
@@ -320,8 +337,7 @@ exception is `{{for}}`, which is a declared divergence for the reason
 
 Take that as measured, not proven. Every round of adversarial fuzzing so far has found a new
 class of divergence, and the honest reading is that the corpus bounds what is known rather
-than what is true. Two properties are asserted absolutely and are worth more than the
-headline number:
+than what is true. Two properties are asserted absolutely:
 
 - **Nothing the legacy filter crashes on is rendered here.** A construct the old filter died
   on is one nobody has ever seen the output of, so rendering it would be inventing behaviour,
@@ -393,8 +409,8 @@ Quirks it does not reproduce:
   well-formed is the better answer, so the divergence is deliberate and the corpus records it
   as one. Where that swallowed stretch would cost the filter a *paired* directive — leaving
   `{{if}}` with no body, or `{{/if}}` with no opener — the filter raises a TypeError instead
-  of rendering, and those are refused here rather than rendered, which is what keeps the
-  guarantee below intact.
+  of rendering, and those are refused here rather than rendered, which is what keeps
+  "nothing the legacy filter crashes on is rendered here" intact.
 - **A host that raises.** `{{block class="No\Such\Klass"}}`, `{{template config_path=""}}`,
   a layout handle that cannot be built: the port raises and the exception comes **out of
   `render()`**. The engine does not catch it, because a host failing is not something the
@@ -407,7 +423,7 @@ Quirks it does not reproduce:
   re-thrown, because those are the product. Call `render()` directly and you get the
   exception; that is the seam where a host decides its own policy.
 
-  This is a genuine exception to the guarantee below: the filter dies where this raises, and
+  This is a genuine exception to that same absolute: the filter dies where this raises, and
   a caller that catches broadly renders where the filter died. The absolute is asserted over
   the constructs the *filter itself* implements, which is what the corpus records; a port
   raising is the host's failure, not a construct.
@@ -419,14 +435,16 @@ Quirks it does not reproduce:
   for a processor's pass to reach inside, plus a construct that is genuinely fatal for the
   values in scope, and it is the one accepted gap in "nothing the filter crashes on is
   rendered here".
-- the security behaviour, which is structural: a value is never re-parsed as source, in any mode;
-- reflection dispatch of arbitrary filter methods;
-- `{{layout}}` without an allowlist. A layout handle decides which blocks get built, so the
-  `LayoutRenderer` port takes the handles it may render and refuses the rest;
-- `{{var x|modifier}}` rendering empty. That is a defect in `Framework\Filter\Template`, whose
-  `varDirective` hands `VarDirective` a legacy-shaped construction so the expression resolved
-  is `" x|raw"`. `Email\Model\Template\Filter` overrides `varDirective` and handles modifiers
-  correctly, and that is the filter templates actually render through.
+- **A value re-parsed as source.** Never, in any mode. This one is structural rather than a
+  mode setting, which is why it is not in the table above.
+- **Reflection dispatch of arbitrary filter methods.** There is none here; every directive
+  reaches a named handler.
+- **`{{layout}}` without an allowlist.** A layout handle decides which blocks get built, so
+  the `LayoutRenderer` port takes the handles it may render and refuses the rest.
+- **`{{var x|modifier}}` rendering empty.** That is a defect in `Framework\Filter\Template`,
+  whose `varDirective` hands `VarDirective` a legacy-shaped construction so the expression
+  resolved is `" x|raw"`. `Email\Model\Template\Filter` overrides `varDirective` and handles
+  modifiers correctly, and that is the filter templates actually render through.
 
 ### Which legacy filter?
 
@@ -453,7 +471,8 @@ flag does nothing outside compatible mode.
 
 ### What it refuses
 
-The relationship is a superset, and the direction matters.
+This engine refuses a strict superset of what the legacy filter refuses. Both halves of that
+are asserted, and they are different claims.
 
 **Every construct the legacy filter cannot render is refused.** Twelve conditions, each
 verified against the real filter:
@@ -495,22 +514,23 @@ back verbatim. Those render here too.
         Options::$refuseLegacyIncompatible to allow it
 ```
 
-**Ten shapes are refused that legacy does render**, in fourteen spellings. Each is a place where legacy's regex does
-something by accident that this parser will not build in:
+**Four families of construct are refused that legacy does render**, 17 spellings in all. Each
+is a place where legacy's regex does something by accident that this parser will not build in:
 
 | Shape | What legacy does |
 |---|---|
 | `{{var.a}}`, `{{var_a}}`, `{{var2 a}}`, `{{depend.a}}Y{{/depend}}`, `{{VAR.a}}` | punctuation after a name is read as a parameter separator, which makes `{{var.a}}` a live variable read — case-insensitively, so `{{VAR.a}}` too. `{{depend.a}}` needs its body and closing tag to render; without them it is a TypeError there too |
 | `{{if}}{{if}}{{/if}}`, its `{{depend}}` twin, `{{if}}{{depend}}x{{/if}}` | nesting collapses to `''` by accident of the lazy body match |
-| `{{foo}}x{{/foo}}`, `{{Foo}}x{{/Foo}}`, `{{var a}}Y{{/var}}` | the optional closing group swallows a body for a directive that has none — case-insensitively, since it closes with a backreference under `/si`, so `{{Wrap}}A{{if x}}B{{/if}}C{{/Wrap}}` comes back verbatim with its `{{if}}` un-executed |
+| `{{foo}}x{{/foo}}`, `{{Foo}}x{{/Foo}}`, `{{FOO}}x{{/FOO}}`, `{{foo}}x{{/Foo}}`, `{{var a}}Y{{/var}}`, `{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}` | the optional closing group swallows a body for a directive that has none — case-insensitively, since it closes with a backreference under `/si`, so the last of those comes back verbatim with its `{{if}}` un-executed |
+| `[Hi {{var a}, bye {{var a}}]`, and two more like it | the fourth family is not a decision of its own: one missing brace makes legacy's lazy match run on to the *next* construct's closer, so the directive it swallows is never evaluated — and a value this engine refuses on is one legacy never looked at |
 
 `LegacyParityTest` asserts the two halves separately, because they are different claims:
 `testEveryLegacyFatalIsRefused` allows no exceptions, and
-`testExtraRefusalsAreOnlyTheDocumentedShapes` pins the ten so the list cannot grow without a
-test failing.
+`testExtraRefusalsAreOnlyTheDocumentedShapes` pins all seventeen against the observed set, so
+the list cannot grow without a test failing.
 
-Compatible means bug-for-bug; `lenient` and `strict` are the modes for wanting the
-improvement. It is also what keeps a rollback to the legacy filter possible. To render the
+Compatible means bug-for-bug. Use `lenient` or `strict` if you want the fixes. It is also what
+keeps a rollback to the legacy filter possible. To render the
 refused constructs anyway and log which templates did it, opt out:
 
 ```php
@@ -586,7 +606,7 @@ every supported version, and `LegacyParityTest` checks that the branch it predic
 branch the filter was *recorded* taking. If PHP changes loose comparison again, a test says so.
 The PHP 7 half is history — this project supports 8.3 and up, so it is not re-measurable here.
 
-### Nesting
+## Nesting and include bounds
 
 The grammar nests to any depth, unlike the legacy filter, where each directive has its own
 regex and so cannot contain *itself*. `{{if}}` inside `{{if}}` is a fatal `TypeError` in stock
@@ -733,6 +753,9 @@ ObjectManager instead of booting a second one.
 
 ### With bougie
 
+[bougie](https://bougie.run) runs a project's PHP toolchain in a pinned environment, and this
+package's own CI uses it. If you do too:
+
 ```sh
 bougie tool run cresset-tools/module-template-parser check --source=codebase
 bougie run -- vendor/bin/n98-magerun2 template-parser:diff --source=email
@@ -740,7 +763,8 @@ bougie run -- vendor/bin/n98-magerun2 template-parser:diff --source=email
 
 ## Speed
 
-Faster than the legacy filter, which was not a goal.
+Faster than the legacy filter where it matters and slower where it does not, neither of
+which was a goal.
 
 `tools/benchmark.php` renders the same templates through both engines, each constructed once
 outside the timing loop, since in Magento both are DI instances reused across a request. It
@@ -748,53 +772,62 @@ times **only** templates where the two produce byte-identical output — a speed
 templates where one side is doing less work is not a speed number.
 
 ```
-300 iterations per template, PHP 8.4, 48 of 48 templates byte-identical output
+iterations per template: 200
+PHP 8.4.24
 
-                                         legacy  compatible   ratio
-ProductAlert...price_alert               3.13ms      3.18ms   1.02x   flat
-Wishlist...share_notification            6.82ms      6.61ms   0.97x   flat
-Customer...password_new                 14.51ms      7.02ms   0.48x   nested
-Customer...account_new_confirmation     13.67ms      6.54ms   0.48x   nested
-synthetic: variables                    99.78ms     83.09ms   0.83x
-synthetic: loop                        188.02ms    148.05ms   0.79x
-synthetic: plain text                    0.61ms      0.41ms   0.68x
-synthetic: conditionals                135.55ms     90.55ms   0.67x
+template                                                 legacy compatible    lenient    ratio
+------------------------------------------------------------------------------------------------
+Wishlist__view__frontend__email__share_notification       4.52ms      6.46ms      5.26ms    1.43x
+SendFriend__view__frontend__email__product_share          4.71ms      5.82ms      4.77ms    1.24x
+ProductAlert__view__frontend__email__price_alert          2.09ms      2.43ms      2.30ms    1.16x
+Customer__view__frontend__email__account_new_confirm      9.57ms      5.59ms      5.10ms    0.58x
+Customer__view__frontend__email__password_reset_conf      9.76ms      5.35ms      5.26ms    0.55x
+Customer__view__frontend__email__password_new             9.50ms      5.20ms      5.02ms    0.55x
+synthetic: variables                                     68.24ms     60.57ms     58.42ms    0.89x
+synthetic: loop                                         127.01ms    110.28ms    104.13ms    0.87x
+synthetic: conditionals                                  89.56ms     69.94ms     64.32ms    0.78x
+synthetic: plain text                                     0.40ms      0.31ms      0.21ms    0.77x
 
-TOTAL                                 1091.57ms    700.72ms   0.64x
-per render: legacy 76us, compatible 49us      peak memory 2.0 MB
+TOTAL (48 templates)                                    733.44ms    578.30ms    507.99ms    0.79x
+
+same output as legacy: 48 of 48 timed templates
+per render: legacy 76.4us, compatible 60.2us (-16.2us)
+of which parsing: 271.42ms of 507.99ms lenient (53%), evaluation 236.56ms
+peak memory: 4.0 MB
+
+excluded from timing:
+  one side raises    1
 ```
 
-The total is stable across runs at 0.64x. Individual flat templates are within noise of each
-other, so their relative order shifts between runs and the fastest of them lands either side
-of 1.00x; the flat-versus-nested gap does not move.
+The ratio is stable across runs at 0.79x. The three flat templates are *slower* here, by 15%
+to 43%: on a template with no nesting the legacy filter's regex pass is cheaper than a lex,
+a parse and a tree walk, and there is nothing to win back. The win is the nested ones —
+`password_new` at 0.55x — and it is structural rather than clever: the legacy filter runs a
+regex pass per directive processor over the whole string and then re-runs the entire engine
+over substrings to handle nesting, so a nested template is scanned several times. This lexes
+and parses once.
 
-About **1.6x faster**, and the reason is structural rather than clever: the legacy filter runs
-a regex pass per directive processor over the whole string, and re-runs the entire engine over
-substrings to handle nesting, so a template with a nested directive is scanned several times.
-This lexes and parses once, then walks the tree. The spread is the tell — a flat template like
-`price_alert` is 1.02x, no win at all, while `password_new`, which nests, is 0.48x. The win is
-proportional to how much re-scanning the old engine was doing.
+**About 1.3x faster overall**, and the spread is the tell. Half the remaining time is parsing,
+and that half is cacheable — an AST keyed by template hash would remove it. The legacy
+filter's regex work is not cacheable the same way, since it interleaves matching with
+resolution.
 
-51% of the remaining time is parsing, and that half is cacheable — an AST keyed by template
-hash would remove it. The legacy filter's regex work is not cacheable in the same way, since
-it interleaves matching with resolution.
+This section has read 0.56x, then 0.64x, and now 0.79x. The first change was a broken tool:
+`tools/benchmark.php` referenced an unqualified `Escaper` that resolved to nothing, so every
+template using `|escape` raised and was silently excluded — 27 templates timed instead of 48.
+The second is the engine genuinely getting slower, by about 22% per render, which is the price
+of the fidelity work: two hand-written scanners replaced by faithful ports of Magento's
+tokenizers, `$name` parameter resolution on every directive rather than one, percent-decoding
+on every variable path, and a guard on every route parameter. Legacy's own per-render figure
+has not moved across any of it, at 76µs.
 
-These numbers are worse than the ones this section carried until September 2026, which read
-0.56x and 1.8x. That was not drift: `tools/benchmark.php` had been broken since the tools were
-restructured, and its stub referenced an unqualified `Escaper` that resolved to nothing, so
-every template using `|escape` raised and was silently counted as excluded — 27 templates
-timed instead of 48. With it repaired the engine really is slower than it was, by about 15%,
-which is the price of the fidelity work: two hand-written scanners replaced by faithful ports
-of Magento's tokenizers, `$name` parameter resolution on every directive rather than one, and
-percent-decoding on every variable path.
-
-Caveats worth stating. Both engines are timed on the same machine, same PHP, same run. One
-corpus template is excluded because the legacy filter crashes on it. Neither side resolves
-`{{template}}` includes — legacy needs Magento's config and this engine needs a
-`TemplateLoader` port — so legacy's include processor is stubbed to leave the construct
-alone, matching an unregistered directive here; without that the two fail differently and 35
-of the 48 templates, including every Sales order and invoice email, drop out of the
-comparison. Reproduce with `MAGENTO_ROOT=/path/to/magento php tools/benchmark.php`.
+Three caveats. Both engines are timed on the same machine, same PHP, same run. One corpus
+template is excluded because the legacy filter crashes on it — that is the `one side raises`
+line. And neither side resolves `{{template}}` includes: legacy needs Magento's config and
+this engine needs a `TemplateLoader` port, so legacy's include processor is stubbed to leave
+the construct alone, matching an unregistered directive here. Without that the two fail
+differently and 35 of the 48 templates, every Sales order and invoice email among them, drop
+out of the comparison. Reproduce with `MAGENTO_ROOT=/path/to/magento php tools/benchmark.php`.
 
 ## Status
 
@@ -804,7 +837,7 @@ Merchant templates live in databases and cannot be audited ahead of time, and th
 corpus bounds what is known rather than what is true — each round of adversarial fuzzing has
 found a further class of divergence. Run shadow mode over your own content before switching
 anything, and read [what compatible mode refuses](#what-it-refuses) first: it is a superset,
-and ten shapes that render on the legacy filter are refused here by design.
+and constructs that render on the legacy filter are refused here by design.
 
 ## Testing
 

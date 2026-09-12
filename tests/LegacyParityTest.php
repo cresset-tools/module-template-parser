@@ -161,6 +161,8 @@ final class LegacyParityTest extends TestCase
     {
         $cases = self::recordedCases();
         $fatal = 0;
+        $incomparable = 0;
+        $overRefused = 0;
         $comparable = 0;
         $preHardening = 0;
 
@@ -172,18 +174,33 @@ final class LegacyParityTest extends TestCase
             if (isset($case['pre_hardening'])) {
                 $preHardening++;
             }
-            if ($case['parity'] && !in_array(explode('/', $case['id'])[0], self::DELIBERATE_OVER_REFUSALS, true)) {
+            if (!$case['parity']) {
+                $incomparable++;
+            } elseif (in_array(explode('/', $case['id'])[0], self::DELIBERATE_OVER_REFUSALS, true)) {
+                $overRefused++;
+            } else {
                 $comparable++;
             }
         }
+
+        // The headline quotes all four, and a reader who subtracts has to land on the fourth.
+        // It quoted only three for a while, and 4788 - 804 came out 1274 short of 2710.
+        self::assertSame(
+            count($cases),
+            $fatal + $incomparable + $overRefused + $comparable,
+            'the four figures the README quotes must account for every recorded case'
+        );
 
         $root = dirname(__DIR__);
 
         $expected = [
             'README.md' => [
                 'total cases'    => sprintf('**%d cases recorded', count($cases)),
-                'legacy fatals'  => sprintf('%d of them constructs the legacy filter cannot render', $fatal),
-                'compared cases' => sprintf('the %d cases where both engines render', $comparable),
+                'legacy fatals'  => sprintf('%d are constructs the legacy filter cannot render', $fatal),
+                'incomparable'   => sprintf('%d put the', $incomparable),
+                'over-refused'   => sprintf('%d are shapes compatible mode refuses', $overRefused),
+                'compared cases' => sprintf('the remaining %d cases, where both engines render', $comparable),
+                'over-refusals'  => sprintf('%d spellings in all', count(self::DELIBERATE_OVER_REFUSALS)),
                 'replayed'       => sprintf('replays the %d recorded cases', count($cases)),
                 'pre-hardening'  => sprintf('%d cases carry a second expectation', $preHardening),
             ],
