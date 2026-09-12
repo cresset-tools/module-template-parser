@@ -94,7 +94,6 @@ final class StyleSmugglerDifferentialTest extends TestCase
         ];
     }
 
-    /** @param callable():TemplateEngine $factory */
     /**
      * The payload runs with {{block}} EXPLICITLY PERMITTED.
      *
@@ -107,6 +106,8 @@ final class StyleSmugglerDifferentialTest extends TestCase
      * Granting the capability strips that away. The only thing left between the attacker's
      * directive and execution is the property this engine actually claims: a value is never
      * parsed as source. If that breaks, this fails.
+     *
+     * @param callable():TemplateEngine $factory
      */
     #[DataProvider('modes')]
     public function testThisEngineNeverExecutesTheSmuggledBlock(callable $factory): void

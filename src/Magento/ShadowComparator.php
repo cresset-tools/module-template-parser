@@ -24,12 +24,10 @@ class ShadowComparator
 
     /**
      * @param array<string,mixed> $variables
-     * @return string the LEGACY result, always
-     */
-    /**
      * @param ?callable(string):string $finish whatever the host does to a FINISHED render
+     * @return string the LEGACY result, always
      *
-     * The last one matters more than it looks. `Email\Model\Template\Filter::filter()` runs
+     * `$finish` matters more than it looks. `Email\Model\Template\Filter::filter()` runs
      * Emogrifier over the whole document before returning, so the legacy result handed to this
      * method has its stylesheets inlined; this engine defers that step to its host and returns
      * the document without it. Comparing the two directly reported a divergence for every

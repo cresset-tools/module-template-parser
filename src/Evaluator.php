@@ -24,8 +24,9 @@ final class Evaluator
      * Email\Model\Template\Filter::TRANS_DIRECTIVE_REGEX, verbatim but for the pointless /i.
      *
      * `[^\1]` is not a backreference - inside a character class `\1` is the octal escape for
-     * chr(1) - so it reads "any character except chr(1)", which under /s is every character
-     * a template will ever hold. Kept as legacy writes it so the one input it does refuse is
+     * chr(1) - so it reads "any character except chr(1)", which is every character a template
+     * will ever hold. The /s is for the trailing `.*`, not for the class: a class matches
+     * newlines either way. Kept as legacy writes it so the one input it does refuse is
      * refused here too.
      */
     private const TRANS_BODY_PATTERN = '/^\s*([\'"])([^\1]*?)(?<!\\\)\1(\s.*)?$/s';
@@ -35,15 +36,7 @@ final class Evaluator
 
     private string $source = '';
 
-    /*
-     * Nullable, not `= new X()`.
-     *
-     * Magento's DI compiler stores a constructor default verbatim and writes it into
-     * generated/metadata with var_export(), which emits `X::__set_state(...)` for an object.
-     * No class here defines __set_state, so that file - loaded on every request in
-     * production mode - is a fatal. Developer mode consumes the default directly and never
-     * notices, so this shipped green.
-     */
+    /* Nullable, not `= new X()` - a constructor default is fatal under the DI compiler. See TemplateEngine. */
     private readonly VariableResolver $variables;
 
     private readonly ParameterParser $parameters;
@@ -436,9 +429,8 @@ final class Evaluator
             // and takes the render with it.
             if (is_object($values)) {
                 // Not just Generator. Any Traversable is host code: an IteratorAggregate
-                // whose getIterator() throws, or an Iterator whose current() throws, raises
-                // something that is not a TemplateError and so escapes even lenient mode.
-                // A Magento collection that fails to load is exactly this shape.
+                // whose getIterator() throws, or an Iterator whose current() throws. A
+                // Magento collection that fails to load is exactly this shape.
                 try {
                     $values = iterator_to_array($values, false);
                 } catch (\Throwable $x) {
@@ -598,8 +590,8 @@ final class Evaluator
      * would make `{{trans "a|b"}}` render differently here than on the filter this engine
      * is measured against.
      *
-     * Legacy's default modifier for {{trans}} is `escape`, which is where an unmodified
-     * {{trans}}'s escaping comes from.
+     * The `['escape']` default is legacy's, not a hardening choice here: transDirective()
+     * calls explodeModifiers($construction[2], 'escape').
      *
      * @return array{0:string,1:string[]}
      */
@@ -715,7 +707,6 @@ final class Evaluator
                 . (count($available) > 12 ? ', …' : '');
     }
 
-    /** @return array{0:string,1:string[]} */
     /**
      * Splits `expr|mod|mod` the way explodeModifiers() plus applyModifiers() do.
      *
@@ -942,15 +933,14 @@ final class Evaluator
     /**
      * Standard PHP truthiness.
      *
-     * The legacy filter tests `resolve(...) == ''`, which on PHP 8 makes 0, '0' and []
+     * The legacy filter tests `resolve(...) == ''`, which on PHP 8 makes 0, 0.0, '0' and []
      * truthy — almost certainly not what a template author means by {{if qty}}. See
      * KnownDivergenceTest.
      */
     private function truthy(mixed $value): bool
     {
         if ($this->options->legacyQuirks) {
-            // Exactly what IfDirective/DependDirective do: `resolve(...) == ''`.
-            // On PHP 8 that makes 0, '0' and [] truthy.
+            // Exactly what IfDirective and DependDirective do.
             return !($value == '');
         }
 

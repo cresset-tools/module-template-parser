@@ -30,11 +30,12 @@ by accident.
 
 Two rules surprise people. A variable that does not exist renders as nothing, silently — no
 warning, no marker, so a typo survives for years. And when the filter has been given **no
-variables at all**, the four variable-reading directives — `var`, `if`, `depend` and `for` —
-are passed through verbatim instead: that is the path Magento uses to validate a template
-without rendering it, and it means an empty variable set is not the same as a missing
-variable. Only those four. `{{trans}}` and `{{template}}` have no such short-circuit and run
-as normal.
+variables at all**, `{{var}}`, `{{if}}` and `{{depend}}` are passed through verbatim instead:
+that is the path Magento uses to validate a template without rendering it, and it means an
+empty variable set is not the same as a missing variable. Only those three. `{{trans}}` and
+`{{template}}` have no such short-circuit and run as normal, and neither does `{{for}}` — it
+comes back verbatim here for an unrelated reason, because `ForDirective::process` returns the
+construction whenever the collection is not iterable and an unset path resolves to nothing.
 
 <!-- generated:var -->
 ```
@@ -119,8 +120,8 @@ The implemented modifiers are `escape` and `nl2br`; the escape types are `html` 
 default), `htmlentities` and `url`. **`raw` is not one of them** — no `raw` filter exists in
 Magento at all. It works by being an unknown modifier that gets skipped, which is the same
 fail-open path as `|typo` above: it does not strip the escaping so much as replace it with
-nothing. This engine reproduces all four unescaped cases in
-compatible mode and fails closed everywhere else, which is what the `strict:` comments show.
+nothing. This engine reproduces every one of the accidental cases above in compatible mode and
+fails closed everywhere else, which is what the `strict:` comments show.
 
 <!-- generated:modifiers -->
 ```
@@ -151,9 +152,9 @@ variable being looked up is called `a == 1`. Both render silently, which is how 
 can be wrong for years without anyone noticing. Strict mode raises instead, which is usually
 how someone finds out.
 
-Truthiness is `resolve(...) == ''` — a loose comparison against the empty string. On PHP 8
-that makes `0`, `'0'` and `[]` all **true**. On PHP 7 it did not: `0 == ''` was true there, so
-a template written before the upgrade may have changed meaning during it.
+A value is false when `resolve(...) == ''` — a loose comparison against the empty string. On
+PHP 8 that makes `0`, `'0'` and `[]` all **true**. On PHP 7 it did not: `0 == ''` was true
+there, so a template written before the upgrade may have changed meaning during it.
 
 `{{else}}` divides an `{{if}}`. It is not a directive in its own right, and `{{depend}}` does
 not accept one.
@@ -161,7 +162,7 @@ not accept one.
 <!-- generated:if -->
 ```
 {{if a}}Y{{/if}}                 a=1           → Y
-{{if a}}Y{{else}}N{{/if}}        -             → {{if a}}Y{{else}}N{{/if}}  # strict raises UnknownVariableError; with NO variables at all every directive passes through - the template-validation path
+{{if a}}Y{{else}}N{{/if}}        -             → {{if a}}Y{{else}}N{{/if}}  # strict raises UnknownVariableError; with NO variables at all the whole construction comes back verbatim, {{else}} and body included - the template-validation path
 {{if a}}Y{{else}}N{{/if}}        a=""          → N
 {{if a}}Y{{else}}N{{/if}}        a=0           → Y                         # strict: N; the test is `== ''`, and on PHP 8 that is false for 0
 {{if a}}Y{{else}}N{{/if}}        a="0"         → Y                         # strict: N; the string zero is truthy too
@@ -199,7 +200,7 @@ scans the raw body text for `{{…}}` constructions, resolves each one *as a var
 string-replaces the result. So a nested `{{if i.b}}Y{{/if}}` inside a loop body does not take
 a branch — the whole construction is read as the variable `i.b` and replaced with its value.
 
-Three consequences worth knowing:
+Three consequences:
 
 - **Nothing in the body is escaped.** The substitution is a raw `str_replace`.
 - **An item that is not an array or a DataObject is skipped**, so looping a list of strings
@@ -348,10 +349,10 @@ sharp consequence: **a directive cannot contain another of the same name.** The 
 tag ends the outer construction, and what is left over is usually a fatal.
 
 Different names nest, but not freely: `{{for}}` scans its body rather than rendering it, so
-nothing nests *through* a `{{for}}` and a `{{for}}` whose collection is not a list of rows
-comes back verbatim, taking whatever was inside it along. Three distinct names reach three
-levels when the innermost is not a `{{for}}` — or when it is one with a collection it can
-actually walk.
+nothing nests *through* a `{{for}}`, and a `{{for}}` whose collection is not iterable comes
+back verbatim, taking whatever was inside it along. Three distinct names reach three levels
+when the innermost is not a `{{for}}` — or when it is one with a collection it can actually
+walk.
 
 <!-- generated:nesting -->
 ```

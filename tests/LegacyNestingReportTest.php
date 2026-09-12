@@ -98,8 +98,8 @@ final class LegacyNestingReportTest extends TestCase
         ];
     }
 
-    /** Three levels exceeds legacy even when the innermost name is new. */
-    public function testThreeLevelsIsRefused(): void
+    /** A directive inside itself is refused even when the argument differs and an {{if}} sits between. */
+    public function testARepeatedNameIsRefusedWithADifferentArgument(): void
     {
         $this->expectException(LegacyIncompatibleError::class);
         TemplateEngine::compatible()->render(

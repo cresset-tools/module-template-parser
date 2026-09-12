@@ -20,8 +20,12 @@ use Cresset\TemplateParser\Port\WidgetRenderer;
  *
  * Recording needs a store and replaying must not, so the same wrappers do both: with a live
  * set behind them they record, with none they answer from the tape. A port the recording host
- * did not have stays null, so replaying reproduces that host exactly rather than inventing a
- * capability it did not offer.
+ * did not have stays null, so replaying offers exactly the capabilities the recording run had
+ * rather than inventing one it did not.
+ *
+ * customDirectives is the port not wrapped, on either side. The recorder builds a plain
+ * DirectiveSpec, so a host's own directive is not a directive to the recording engine either
+ * and there is nothing to record; covering them means changing both.
  */
 final class TapedServices
 {

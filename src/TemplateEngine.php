@@ -50,6 +50,28 @@ final class TemplateEngine
         return self::withOptions(Options::compatible());
     }
 
+    /**
+     * Builds an engine on a host's ports, with the host's own directive names in the spec.
+     *
+     * The names have to reach the DirectiveSpec and not just the handler table: the spec
+     * decides what the parser treats as a directive at all, and so whether `{{/mydir}}` is a
+     * closing tag or a stray one - the difference between rendering a paired custom
+     * directive's body and refusing the template. Which is why the services are built first.
+     *
+     * @param Options|null $options strictness for both stages; the strict default when omitted
+     */
+    public static function forHost(HostServices $services, ?Options $options = null): self
+    {
+        $spec = new DirectiveSpec([], [], $services->customDirectives?->names() ?? []);
+        $parser = new Parser($spec, $options);
+        $evaluator = new Evaluator(spec: $spec, options: $options);
+        // The same Parser renders {{template}} includes: parse() resets its state, so a
+        // nested render has nothing to collide with.
+        HostDirectives::register($evaluator, $services, $parser);
+
+        return new self($parser, $evaluator);
+    }
+
     /** @param array<string,mixed> $variables */
     public function render(
         string $source,
@@ -77,10 +99,5 @@ final class TemplateEngine
     public function evaluator(): Evaluator
     {
         return $this->evaluator;
-    }
-
-    public function parser(): Parser
-    {
-        return $this->parser;
     }
 }

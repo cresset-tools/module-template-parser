@@ -47,7 +47,7 @@ class TemplateFilterPlugin
      * which reported 79 divergences on a stock store, none of them a disagreement between the
      * engines. A stack because the nesting is a stack.
      *
-     * @var list<array{0:array<string,mixed>,1:bool}>
+     * @var list<array{0:array<string,mixed>,1:bool,2:array<string,mixed>}>
      */
     private array $inFlight = [];
 

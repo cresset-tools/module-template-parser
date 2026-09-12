@@ -4,10 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento;
 
 use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\Evaluator;
-use Cresset\TemplateParser\HostDirectives;
 use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Parser;
 use Cresset\TemplateParser\RenderPolicy;
 use Cresset\TemplateParser\HostServices;
 use Cresset\TemplateParser\TemplateEngine;
@@ -66,24 +63,7 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         // 85 times on that alone before this. Pass Options explicitly to choose otherwise.
         $this->options = $options ?? Options::compatible();
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
-        // The host's own directive names belong in the SPEC, not just the handler table: they
-        // decide whether `{{/mydir}}` is a closing tag or a stray one, and so whether a
-        // template using a paired custom directive renders or is refused.
-        $spec = new \Cresset\TemplateParser\DirectiveSpec(
-            [],
-            [],
-            $services->customDirectives?->names() ?? []
-        );
-        $parser = new Parser($spec, $this->options);
-        $evaluator = new Evaluator(
-            new \Cresset\TemplateParser\VariableResolver($this->options->legacyQuirks),
-            new \Cresset\TemplateParser\ParameterParser(),
-            $spec,
-            $this->options
-        );
-        HostDirectives::register($evaluator, $services, $parser);
-
-        $this->engine = new TemplateEngine($parser, $evaluator);
+        $this->engine = TemplateEngine::forHost($services, $this->options);
         $this->context = new Context();
     }
 
@@ -97,7 +77,6 @@ class TemplateFilterAdapter implements TemplateFilterInterface
     public function setVariables(array $variables): static
     {
         $this->variables = $variables;
-        $this->context = new Context($variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode, $this->designParams);
         return $this;
     }
 
@@ -173,6 +152,14 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         return $this->context->incompatibilities();
     }
 
+    /**
+     * The engine underneath, for a caller that needs past the filter shape.
+     *
+     * The constructor builds the spec, parser and evaluator itself and takes no engine, so
+     * this is the only route to evaluator()->unregister() and evaluator()->registered() -
+     * the calls Auditor and tools/differential.php make on a bare engine. Deliberately not
+     * on TemplateFilterInterface, which is Magento's filter shape and has no engine in it.
+     */
     public function engine(): TemplateEngine
     {
         return $this->engine;

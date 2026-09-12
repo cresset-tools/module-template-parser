@@ -211,7 +211,7 @@ $sections = [
 ],
 'if' => [
     example('{{if a}}Y{{/if}}', ['a' => 1]),
-    example('{{if a}}Y{{else}}N{{/if}}', [], 'with NO variables at all every directive passes through - the template-validation path'),
+    example('{{if a}}Y{{else}}N{{/if}}', [], 'with NO variables at all the whole construction comes back verbatim, {{else}} and body included - the template-validation path'),
     example('{{if a}}Y{{else}}N{{/if}}', ['a' => '']),
     example('{{if a}}Y{{else}}N{{/if}}', ['a' => 0], 'the test is `== \'\'`, and on PHP 8 that is false for 0'),
     example('{{if a}}Y{{else}}N{{/if}}', ['a' => '0'], 'the string zero is truthy too'),
@@ -318,6 +318,8 @@ foreach ($sections as $name => $cases) {
             $stale[] = '  ' . $case['template'] . ' is marked divergent but now agrees';
         }
 
+        // No template port is wired here, so this column would read "strict raises
+        // UnknownDirectiveError" on every row - the missing port, not the directive.
         $hideStrict = $name === 'template';
         $rows[] = [
             $case['template'],

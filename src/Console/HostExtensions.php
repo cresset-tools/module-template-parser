@@ -28,8 +28,8 @@ namespace Cresset\TemplateParser\Console;
  * `VarDirective` does go through the pool. Nothing here does, and if something ever should,
  * this is the note that says what to restore and why it was taken out.
  *
- * Reflection, for the same reason `LegacyRenderer` uses it on `templateVars`: both pools keep
- * their contents in a private property with no getter, and `get($name)` answers only about a
+ * Reflection, for the same reason `LegacyRenderer` uses it on `templateVars`: the pool keeps
+ * its contents in a private property with no getter, and `get($name)` answers only about a
  * name you already suspect. A pool this cannot read reports nothing rather than guessing.
  */
 class HostExtensions
@@ -55,12 +55,12 @@ class HostExtensions
     }
 
     /**
-     * The extensions a template actually uses, as `{{name}}` / `|name` spellings.
+     * The extensions a template actually uses, as `{{name}}` spellings.
      *
-     * Matched the way the store matches them: a directive name is `[a-z]+` immediately after
-     * `{{`, and a modifier follows a `|` inside a construct. Deliberately not clever - a
-     * false positive costs a note nobody needed, and a false negative costs the silence this
-     * exists to end.
+     * Matched the way the store matches them: a registered name immediately after `{{`, and
+     * not a longer name that merely starts with it - the store's `[a-z]{0,10}` is greedy, so
+     * `{{mydir}}` is not `my`. Deliberately not clever - a false positive costs a note nobody
+     * needed, and a false negative costs the silence this exists to end.
      *
      * @return string[]
      */
@@ -90,20 +90,18 @@ class HostExtensions
     public function noteFor(string $template, array $rendered = []): ?string
     {
         $directives = array_values(array_diff($this->usedBy($template), $rendered));
-
-        $parts = [];
-        if ($directives !== []) {
-            // Deliberately silent about WHAT this engine does with it, because that depends on
-            // the shape: `{{mydir "v"}}` renders as its own text, while
-            // `{{mydir}}x{{/mydir}}` is refused - the closing tag has no opener this engine
-            // knows. Naming one outcome would be wrong half the time.
-            $parts[] = sprintf(
-                '{{%s}}, which this store registers a directive processor for and this engine '
-                . 'does not implement',
-                implode('}}, {{', $directives)
-            );
+        if ($directives === []) {
+            return null;
         }
-        return $parts === [] ? null : 'this template uses ' . implode('; and ', $parts);
-    }
 
+        // Deliberately silent about WHAT this engine does with it, because that depends on
+        // the shape: `{{mydir "v"}}` renders as its own text, while
+        // `{{mydir}}x{{/mydir}}` is refused - the closing tag has no opener this engine
+        // knows. Naming one outcome would be wrong half the time.
+        return sprintf(
+            'this template uses {{%s}}, which this store registers a directive processor for '
+            . 'and this engine has no handler for',
+            implode('}}, {{', $directives)
+        );
+    }
 }

@@ -14,11 +14,12 @@ namespace Cresset\TemplateParser\Testing;
  * That matters because the ports need a store and the fixtures must not. Recording the tape
  * against a real store and replaying it without one is what lets the twelve port-backed
  * directives be covered by the suite at all; before this they were excluded from the corpus
- * by construction, and every security bug found by fuzzing them lived in that gap.
+ * by construction, and every security bug adversarial fuzzing has found in this package
+ * lived in that gap.
  */
 final class PortTape
 {
-    /** @var list<array{port:string,method:string,args:array<int,mixed>,returned:mixed}> */
+    /** @var list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string}> */
     private array $entries = [];
 
     private int $position = 0;
@@ -85,8 +86,6 @@ final class PortTape
         $this->position++;
 
         if (isset($expected['threw'])) {
-            // The class alone, because that is all the tape can hold and all the engine's
-            // behaviour turns on - whether it lets the throw out, or catches and renders.
             throw new ReplayedPortFailure($expected['threw']);
         }
 
@@ -99,13 +98,13 @@ final class PortTape
         return array_slice($this->entries, $this->position);
     }
 
-    /** @return list<array{port:string,method:string,args:array<int,mixed>,returned:mixed}> */
+    /** @return list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string}> */
     public function entries(): array
     {
         return $this->entries;
     }
 
-    /** @param list<array{port:string,method:string,args:array<int,mixed>,returned:mixed}> $entries */
+    /** @param list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string}> $entries */
     public static function fromEntries(array $entries): self
     {
         $tape = new self();

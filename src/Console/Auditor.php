@@ -52,10 +52,13 @@ class Auditor
                     severity: Finding::WARNING,
                     subject: $subject,
                     summary: $extension,
-                    fix: 'This engine implements neither of Magento\'s template extension '
-                        . 'points. Until it does, a template using one renders differently '
-                        . 'here than on this store - so either keep that template on the '
-                        . 'old filter, or replace the construct.',
+                    fix: 'No CustomDirectiveRenderer is wired in this run, so the store '
+                        . 'renders this directive and the engine has no handler for it. '
+                        . 'etc/di.xml supplies PoolCustomDirectiveRenderer, and a port that '
+                        . 'cannot be constructed is skipped rather than fatal - start there. '
+                        . 'Until one is wired, {{mydir "v"}} comes back as its own text and '
+                        . '{{mydir}}body{{/mydir}} is refused, because the closing tag has no '
+                        . 'opener this engine knows.',
                 )];
 
                 try {

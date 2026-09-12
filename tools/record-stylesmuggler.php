@@ -8,8 +8,8 @@
  * variable. Both stages share one SignatureProvider and one FilteringDepthMeter, exactly as
  * they do inside a single request.
  *
- * A benign canary replaces layout->createBlock: it records the class name and constructs
- * nothing, so this never builds the attacker's object.
+ * The blockDirective override here records the `class` parameter and returns a placeholder
+ * rather than reaching Layout::createBlock(), so this never builds the attacker's object.
  */
 declare(strict_types=1);
 // Marks this as a directly-invoked tool. Magento's DI compiler require_once's any

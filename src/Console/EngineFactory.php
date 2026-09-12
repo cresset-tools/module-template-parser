@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace Cresset\TemplateParser\Console;
 
-use Cresset\TemplateParser\DirectiveSpec;
-use Cresset\TemplateParser\Evaluator;
-use Cresset\TemplateParser\HostDirectives;
 use Cresset\TemplateParser\HostServices;
 use Cresset\TemplateParser\Magento\AllowlistedConfigReader;
 use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
@@ -18,8 +15,6 @@ use Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer;
 use Cresset\TemplateParser\Magento\StoreUrlBuilder;
 use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
 use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Parser;
 use Cresset\TemplateParser\TemplateEngine;
 
 /**
@@ -45,19 +40,7 @@ class EngineFactory
 
     public function create(Mode $mode, ?int $storeId = null): TemplateEngine
     {
-        $options = $mode->options();
-        $services = $this->hostServices($storeId);
-
-        // The host's own directive names go into the SPEC, not just the handler table. They
-        // decide what the parser treats as a directive at all - and whether `{{/mydir}}` is a
-        // closing tag or a stray one, which is the difference between rendering the body and
-        // refusing the template. So the services have to be built before the spec is.
-        $spec = new DirectiveSpec([], [], $services->customDirectives?->names() ?? []);
-        $evaluator = new Evaluator(spec: $spec, options: $options);
-
-        HostDirectives::register($evaluator, $services, new Parser($spec, $options));
-
-        return new TemplateEngine(new Parser($spec, $options), $evaluator);
+        return TemplateEngine::forHost($this->hostServices($storeId), $mode->options());
     }
 
     /** Which directives the current host can actually resolve, for reporting. */
@@ -148,8 +131,6 @@ class EngineFactory
                     && ($config = $m->get(\Magento\Framework\ObjectManager\ConfigInterface::class))
                     ? new TypeCheckedWidgetRenderer($layout, $config)
                     : null),
-            // No dependencies of its own: it calls getUrl() on the template model already
-            // in scope, which is exactly what the legacy resolver does.
             customDirectives: $this->build(function (MagentoContext $m): ?object {
                 $pool = $m->get(\Magento\Framework\Filter\SimpleDirective\ProcessorPool::class);
                 if ($pool === null) {
@@ -166,6 +147,8 @@ class EngineFactory
                 // registers nothing either way - so this is for the reader, not the behaviour.
                 return $renderer->names() === [] ? null : $renderer;
             }),
+            // No dependencies of its own: it calls getUrl() on the template model already
+            // in scope, which is exactly what the legacy resolver does.
             templateUrls: new TemplateModelUrlBuilder(),
             layouts: $this->build(fn (MagentoContext $m): ?object
                 => $this->allowedLayoutHandles !== []

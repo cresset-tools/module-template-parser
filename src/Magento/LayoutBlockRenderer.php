@@ -19,9 +19,9 @@ use Cresset\TemplateParser\Port\BlockRenderer;
  * 2. The method the template may invoke is an allowlist. The legacy `output=` parameter
  *    accepted any public no-argument method on the block.
  *
- * And the three the store's own filter applies, which this class did not and which made it
- * strictly MORE permissive than the thing it replaces - the wrong way round for a package
- * whose argument is safety:
+ * And the three the store's own filter applies. Skipping them would make this class strictly
+ * MORE permissive than the thing it replaces - the wrong way round for a package whose
+ * argument is safety:
  *
  * 3. `Filter\BlockDirectivePolicy`, the deny list Mage-OS added for exactly this directive.
  *    It denies `\Block\Adminhtml\`, `\Block\Backend\` and friends - 919 of the 1480 block
@@ -100,14 +100,6 @@ class LayoutBlockRenderer implements BlockRenderer
         return (string)$block->{$method}();
     }
 
-    /**
-     * Whether the store's own policy refuses this class.
-     *
-     * Deliberately not a reimplementation of the patterns: a store that adds a rule to its
-     * di.xml gets it here for free, and a store whose Magento predates the policy gets the
-     * behaviour it has today. Any failure is treated as a refusal - a policy that cannot
-     * answer is not a licence to instantiate.
-     */
     private function isAllowedClass(string $class): bool
     {
         foreach ($this->allowedClasses ?? [] as $allowed) {
@@ -119,6 +111,14 @@ class LayoutBlockRenderer implements BlockRenderer
         return false;
     }
 
+    /**
+     * Whether the store's own policy refuses this class.
+     *
+     * Deliberately not a reimplementation of the patterns: a store that adds a rule to its
+     * di.xml gets it here for free, and a store whose Magento predates the policy gets the
+     * behaviour it has today. Any failure is treated as a refusal - a policy that cannot
+     * answer is not a licence to instantiate.
+     */
     private function isRestricted(string $class): bool
     {
         if ($this->blockDirectivePolicy === null) {

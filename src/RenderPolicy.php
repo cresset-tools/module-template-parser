@@ -32,9 +32,8 @@ final class RenderPolicy
     /**
      * Overrides the engine's nesting bound for this render.
      *
-     * Depth is a property of the content, not the installation: a stock transactional
-     * template and a merchant-edited CMS block have different shapes and deserve different
-     * limits. Null leaves the engine's Options default in force.
+     * Depth is a property of the content, not the installation: the Options default is sized
+     * for stock templates, which reach depth 2. Null leaves that default in force.
      */
     public function withMaxNestingDepth(?int $depth): self
     {
@@ -157,15 +156,5 @@ final class RenderPolicy
     public function permitsBlock(string $class): bool
     {
         return $this->blocks === null || in_array(ltrim($class, '\\'), $this->blocks, true);
-    }
-
-    public function restrictsDirectives(): bool
-    {
-        return $this->directives !== null;
-    }
-
-    public function restrictsBlocks(): bool
-    {
-        return $this->blocks !== null;
     }
 }

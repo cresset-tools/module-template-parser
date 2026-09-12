@@ -12,9 +12,12 @@ use Symfony\Component\Console\Command\Command;
 /**
  * The standalone CLI.
  *
- * Commands are built here and nowhere else, so the n98-magerun2 module can register exactly
- * the same list without this class - see commands(). Anything that only works in one of the
- * two entrypoints is a bug.
+ * The command list is written twice: commands() here, and customCommands in
+ * n98-magerun2.yaml, which names the Console\Magerun\* subclasses instead - magerun registers
+ * classes and builds them itself, so it can inject the ObjectManager it has already booted.
+ * Those subclasses only rename and inject, so anything that only works in one of the two
+ * entrypoints is a bug; ConsoleTest::testEveryCommandIsAvailableInBothEntrypoints holds the
+ * two lists together.
  */
 class Application extends ConsoleApplication
 {
@@ -31,20 +34,10 @@ class Application extends ConsoleApplication
     /**
      * Every command this package provides.
      *
-     * @param MagentoContext|null $context an already-booted Magento, when the host has one
      * @return Command[]
      */
-    public static function commands(?MagentoContext $context = null): array
+    public static function commands(): array
     {
-        $commands = [new ReplCommand(), new CheckCommand(), new DiffCommand()];
-
-        if ($context !== null) {
-            foreach ($commands as $command) {
-                /** @phpstan-ignore-next-line every command in this list uses MagentoAware */
-                $command->setMagentoContext($context);
-            }
-        }
-
-        return $commands;
+        return [new ReplCommand(), new CheckCommand(), new DiffCommand()];
     }
 }

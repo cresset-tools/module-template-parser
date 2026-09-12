@@ -53,6 +53,20 @@ function parityLegacyFilter(array $vars): LegacyTemplate {
 function parityAttempt(callable $fn): string {
     try { return 'OK:' . $fn(); } catch (\Throwable $e) { return 'THROW:' . get_class($e); }
 }
+/**
+ * The legacy half of one comparison, with legacy's own notices swallowed.
+ *
+ * `VarDirective::process()` casts a resolved array to string and
+ * `StrictResolver::handleDataAccess()` reads an array key that is not there, so the matrix
+ * below draws 36 "Array to string conversion" / "Undefined array key" warnings ahead of the
+ * two reports. The guard is deliberately on this side only: a notice out of the new engine is
+ * a finding, and parityAttempt() must not eat it.
+ */
+function parityLegacy(string $tpl, array $vars): string {
+    set_error_handler(static fn () => true);
+    try { return parityAttempt(static fn () => parityLegacyFilter($vars)->filter($tpl)); }
+    finally { restore_error_handler(); }
+}
 
 $values = [
     'true'=>true, 'false'=>false, 'int 1'=>1, 'int 0'=>0, 'int 42'=>42,
@@ -78,7 +92,7 @@ foreach (['lenient' => TemplateEngine::lenient(), 'compatible' => TemplateEngine
     foreach ($values as $vlabel => $v) {
         foreach ($templates as $tlabel => $tpl) {
             $vars = ['a' => $v];
-            $l = parityAttempt(static fn () => parityLegacyFilter($vars)->filter($tpl));
+            $l = parityLegacy($tpl, $vars);
             $n = parityAttempt(static fn () => $engine->render($tpl, $vars));
             if ($l === $n) { $same++; } else { $diff++; $rows[] = [$tlabel, $vlabel, $l, $n]; }
         }

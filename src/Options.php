@@ -94,14 +94,16 @@ final class Options
      */
     public static function compatible(): self
     {
-        return new self(false, false, false, self::DEFAULT_MAX_NESTING_DEPTH, true, true, false, true);
+        return self::lenient()->with(
+            legacyQuirks: true,
+            refuseLegacyIncompatible: true,
+            neutralizeDirectiveOutput: true
+        );
     }
 
     public function withLegacyQuirks(bool $enabled): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
-            $this->maxNestingDepth, $enabled, $this->refuseLegacyIncompatible,
-            $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
+        return $this->with(legacyQuirks: $enabled);
     }
 
     /**
@@ -119,9 +121,7 @@ final class Options
      */
     public function withRefuseLegacyIncompatible(bool $refuse): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
-            $this->maxNestingDepth, $this->legacyQuirks, $refuse, $this->failOnPolicyViolation,
-            $this->neutralizeDirectiveOutput);
+        return $this->with(refuseLegacyIncompatible: $refuse);
     }
 
     /**
@@ -133,36 +133,62 @@ final class Options
      */
     public function withFailOnPolicyViolation(bool $fail): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
-            $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $fail,
-            $this->neutralizeDirectiveOutput);
+        return $this->with(failOnPolicyViolation: $fail);
     }
 
     public function withMaxNestingDepth(int $depth): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables, $depth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
+        return $this->with(maxNestingDepth: $depth);
     }
 
     public function withSyntax(bool $strict): self
     {
-        return new self($strict, $this->strictDirectives, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
+        return $this->with(strictSyntax: $strict);
     }
 
     public function withDirectives(bool $strict): self
     {
-        return new self($this->strictSyntax, $strict, $this->strictVariables, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
+        return $this->with(strictDirectives: $strict);
     }
 
     /** Targets a Mage-OS tree from before the StyleSmuggler hardening. */
     public function withOutputNeutralizer(bool $enabled): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $this->strictVariables,
-            $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible,
-            $this->failOnPolicyViolation, $enabled);
+        return $this->with(neutralizeDirectiveOutput: $enabled);
     }
 
     public function withVariables(bool $strict): self
     {
-        return new self($this->strictSyntax, $this->strictDirectives, $strict, $this->maxNestingDepth, $this->legacyQuirks, $this->refuseLegacyIncompatible, $this->failOnPolicyViolation, $this->neutralizeDirectiveOutput);
+        return $this->with(strictVariables: $strict);
+    }
+
+    /**
+     * The one place a field is carried over, so a `with*()` cannot set a neighbour instead.
+     *
+     * Seven of the eight fields are bool, so a positional constructor call that transposed
+     * two of them type-checks and quietly returns options with the wrong flag set. Every
+     * caller names its field; null leaves a field as it is, which loses nothing because no
+     * field is nullable and so none can legitimately be set to null.
+     */
+    private function with(
+        ?bool $strictSyntax = null,
+        ?bool $strictDirectives = null,
+        ?bool $strictVariables = null,
+        ?int $maxNestingDepth = null,
+        ?bool $legacyQuirks = null,
+        ?bool $refuseLegacyIncompatible = null,
+        ?bool $failOnPolicyViolation = null,
+        ?bool $neutralizeDirectiveOutput = null
+    ): self {
+        return new self(
+            strictSyntax: $strictSyntax ?? $this->strictSyntax,
+            strictDirectives: $strictDirectives ?? $this->strictDirectives,
+            strictVariables: $strictVariables ?? $this->strictVariables,
+            maxNestingDepth: $maxNestingDepth ?? $this->maxNestingDepth,
+            legacyQuirks: $legacyQuirks ?? $this->legacyQuirks,
+            refuseLegacyIncompatible: $refuseLegacyIncompatible ?? $this->refuseLegacyIncompatible,
+            failOnPolicyViolation: $failOnPolicyViolation ?? $this->failOnPolicyViolation,
+            neutralizeDirectiveOutput: $neutralizeDirectiveOutput ?? $this->neutralizeDirectiveOutput
+        );
     }
 }

@@ -1,18 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Stub leaves for the tools, in one namespace.
- *
- * One namespace per file, deliberately: Magento's DI class scanner assembles a name from
- * whatever namespace tokens it has seen and returns the first class in the file, so several
- * braced namespaces in one file made it invent "HarnessLaminas\Filter\FilterInterface" and
- * abort setup:di:compile. A module installed from git ships tools/, so that is not
- * hypothetical.
- *
- * Every declaration is guarded: inside a real installation the genuine classes exist and
- * redeclaring them is fatal.
- */
+/** The \Harness namespace - helpers shared by the tools in this directory. */
 
 namespace Harness;
 
@@ -29,43 +18,4 @@ function neutralizerFor(
     $class = \Magento\Framework\Filter\Template\DirectiveOutputNeutralizer::class;
 
     return class_exists($class) ? new $class($signatures, $enabled) : null;
-}
-
-// Canary: records block instantiation without constructing anything.
-if (!class_exists(Canary::class)) {
-    class Canary
-    {
-        public static $hits = [];
-
-        public static function reset(): void
-        {
-            self::$hits = [];
-        }
-
-        public static function hit(string $class, array $args): void
-        {
-            self::$hits[] = ['class' => $class, 'args' => $args];
-        }
-    }
-
-    class CanaryLayout
-    {
-        public function createBlock($type, $name = '', array $arguments = [])
-        {
-            Canary::hit((string)$type, $arguments);
-
-            return new CanaryBlock();
-        }
-    }
-
-    class CanaryBlock
-    {
-        private $d = [];
-
-        public function setBlockParams($p) { return $this; }
-        public function setDataUsingMethod($k, $v = null) { $this->d[$k] = $v; return $this; }
-        public function hasData($k) { return isset($this->d[$k]); }
-        public function getCacheKey() { return 'canary'; }
-        public function toHtml() { return '[CANARY-BLOCK-RENDERED]'; }
-    }
 }

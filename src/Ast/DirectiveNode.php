@@ -90,9 +90,10 @@ final class DirectiveNode implements Node
             $out .= $child instanceof self ? $child->fullRaw() : $child->raw();
         }
         if ($this->alternate !== null) {
-            // The tag as written, not a canonical one: {{ELSE}} and {{else }} both reach
-            // here, and rewriting them would make fullRaw() lossy for the one construct
-            // whose whole job is to hand a directive back exactly as the author typed it.
+            // The tag as written, not a canonical one: {{ELSE}} reaches here (a padded
+            // {{else }} does not - splitOnElse() reports it as a typo), and rewriting it
+            // would make fullRaw() lossy for the one construct whose whole job is to hand a
+            // directive back exactly as the author typed it.
             $out .= $this->alternateRaw;
             foreach ($this->alternate as $child) {
                 $out .= $child instanceof self ? $child->fullRaw() : $child->raw();

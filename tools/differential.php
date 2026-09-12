@@ -1,10 +1,17 @@
 <?php
 /**
- * Renders every corpus template through BOTH engines and reports divergence.
+ * Renders the checked-in corpus through BOTH engines and reports where they differ.
  *
- * This is the shadow-mode tool: you cannot audit the templates sitting in merchant
- * databases ahead of time, so the only honest way to size a migration is to run both
- * engines over real content and measure where they differ.
+ * The store-free half of the divergence measurement: a Magento checkout is all this needs,
+ * no database and no installed store. The price of that is what it measures - 45 stock
+ * templates against the ten variables below - so most of what it reports is a directive the
+ * bare Framework\Filter\Template surface does not implement rather than a disagreement
+ * between the engines: on the last run, 35 of the 36 divergences were {{template}} or
+ * {{layout}}.
+ *
+ * The templates that decide a migration are the ones merchants edited, and those live in the
+ * database. `template-parser diff --store=N` renders those through both engines, and
+ * ShadowComparator measures them against live traffic while still returning legacy's output.
  *
  * Usage: php tools/differential.php   (set MAGENTO_ROOT to a Magento checkout)
  */
@@ -73,7 +80,7 @@ printf("mode             : %s\n", $mode);
 foreach (['trans', 'inlinecss', 'else'] as $name) {
     $engine->evaluator()->unregister($name);
 }
-$files = glob(PKGROOT . '/tests/fixtures/corpus/*') ?: [];
+$files = glob(PKGROOT . '/tests/fixtures/corpus/*.html') ?: [];
 $same = $diff = $legacyThrew = $newThrew = 0;
 $divergences = [];
 

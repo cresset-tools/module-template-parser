@@ -16,9 +16,9 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - A parse-to-AST template engine for the `{{…}}` language, replacing
   `Magento\Framework\Filter\Template`'s regex passes. The whole stock directive surface is
   implemented — `var`, `if`, `depend`, `for`, `else`, `trans`, `template`, `inlinecss`, `css`,
-  `block`, `widget`, `layout`, `media`, `store`, `view`, `protocol`, `config`, `customvar`,
-  `filter` — with the guards in the directive handlers rather than in each host adapter, so a
-  host cannot forget one.
+  `block`, `widget`, `layout`, `media`, `store`, `view`, `protocol`, `config`, `customvar` —
+  with the guards in the directive handlers rather than in each host adapter, so a host cannot
+  forget one.
 - Three modes. `compatible` reproduces the legacy filter, including quirks that are defects;
   `strict` and `lenient` exist so a host that does not need a rollback path is not stuck with
   them.
@@ -93,7 +93,6 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - `bin/template-parser diff` reported differences that were the tool's own: it never set
   `setUseAbsoluteLinks`, never applied store emulation, and replaced an empty variable
   read-back with the caller's set — so its "today" column matched no pipeline the store runs.
-
 - The documented adoption path did not work. Following the README produced an adapter with
   **no host ports wired at all** — every Magento adapter was written, tested and connected to
   nothing — so `{{css}}`, `{{template}}` and the rest raised "No handler registered", and the
@@ -103,42 +102,36 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - `TemplateFilterPlugin` kept a single slot of captured state, and `filter()` is re-entrant: a
   `{{template}}` include's child model overwrote the parent's variables before the parent's
   comparison ran, so the parent was compared against the child's scope.
-
 - `{{filter}}` was listed as a stock directive and is not one. Magento's two extension points
   are easy to confuse: `SimpleDirective\ProcessorPool` registers arbitrary *named* directives
   (`mydir` → `{{mydir}}`), and `DirectiveProcessor\Filter\FilterPool` registers *modifiers*
   (`foofilter` → `{{var x|foofilter}}`). Neither produces a `{{filter}}`. Listing it made
   `knownNames()` — which `diff`'s notes and the render policy are built from — claim a
   directive nobody can write.
-
 - Every legacy-fatal refusal fired inside a `{{for}}` body, where none of them is true.
   `ForDirective` never renders its body — it substitutes each construct with the variable
   resolution of that construct's parameter text — so nothing there reaches a directive
   processor and nothing there can crash. `{{}}`, `{{/if}}`, `{{var.a}}` and `{{var1 x}}` all
   render on the filter and were refused here with a message asserting a `TypeError` that
   cannot happen in that position.
-
 - `{{css}}` resolved its design at render time where the filter carries a snapshot, so the
   same template got a different stylesheet depending on who rendered it and when. The design
   is passed now — `Port\StylesheetLoader::load()` takes it, `Context` carries it, and the
   plugin captures `setDesignParams()` the way it captures the variables.
-
 - `check` and `diff` now ask the store what its `SimpleDirective\ProcessorPool` and
-  `FilterPool` hold, and say so when a template uses one. Neither extension point is
-  implemented here, and the gap was invisible: an unknown directive comes back as its own text
-  and an unknown modifier is skipped, which is exactly what the filter does on a store without
-  that extension.
-
+  `FilterPool` hold, and say so when a template uses one. A registration this engine has no
+  handler for is otherwise invisible: an unknown directive comes back as its own text and an
+  unknown modifier is skipped, which is exactly what the filter does on a store without that
+  extension.
 - `{{mydir}}` — directives a module registers through `SimpleDirective\ProcessorPool` — is
   implemented, through a `CustomDirectiveRenderer` port. This needed a third directive kind:
   Magento's pattern makes the body optional, so one registration gives a template both
   `{{mydir "v"}}` and `{{mydir}}body{{/mydir}}`. Nesting one in itself is refused, because the
   filter's lazy body strands the outer closing tag and raises.
-
-- The reporting added alongside that no longer warns about `FilterPool` modifiers. It was a
-  false positive: a registered modifier never reaches `{{var}}` on any surface this package
-  replaces, because `Email\Model\Template\Filter::varDirective` uses its own modifier map, so
-  both engines skip it identically.
+- `check` and `diff` no longer warn about `FilterPool` modifiers. It was a false positive: a
+  registered modifier never reaches `{{var}}` on any surface this package replaces, because
+  `Email\Model\Template\Filter::varDirective` uses its own modifier map, so both engines skip
+  it identically.
 
 ### Security
 

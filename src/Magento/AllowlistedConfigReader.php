@@ -57,8 +57,8 @@ class AllowlistedConfigReader implements ConfigReader
      *
      * `general/store_information/country_id` holds `NL` and renders `Netherlands`;
      * `region_id` holds a numeric id and renders the region's name. Returning the stored
-     * value instead - which this did - puts a country code in the footer of every email that
-     * uses the directive, which is most of them.
+     * value instead puts a country code in the footer of every email that uses the directive,
+     * which is most of them.
      *
      * The asymmetry is legacy's and is reproduced: country is replaced UNCONDITIONALLY, so an
      * unresolvable one renders empty rather than falling back to the code, while region falls

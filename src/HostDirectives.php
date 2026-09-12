@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser;
 
 use Cresset\TemplateParser\Ast\DirectiveNode;
-use Cresset\TemplateParser\Ast\DirectiveNode as Node;
 
 /**
  * Registers the directives that need something from the host application.
@@ -12,33 +11,21 @@ use Cresset\TemplateParser\Ast\DirectiveNode as Node;
  * Everything here is opt-in: a directive with no port supplied stays unregistered, which
  * means it is reported in strict mode and rendered verbatim in lenient mode. Nothing is
  * ever dispatched by reflection.
+ *
+ * Values reach the guards as written; PathGuard does the decoding, so the ORIGINAL value is
+ * what reaches the port - `a&amp;b` arrives as `a&b`, which is what legacy emits.
  */
 final class HostDirectives
 {
-/**
- * Guards take the value as written and PathGuard does the decoding.
- *
- * It decodes percent-escapes AND HTML entities, repeatedly, because a browser will:
- * decoding once here instead made the guard see `&#46;&#46;/x` as safe while the browser
- * still saw `../x`, so a value encoded twice walked through. Doing it inside the guard
- * also means the ORIGINAL value is what reaches the port, which is what legacy emits -
- * `a&amp;b` used to arrive as `a&b`.
- */
-    /**
-     * Parameters forwarded to a UrlBuilder that Magento treats as path fragments.
-     *
-     * `_direct` is the one that matters: Url::getRouteUrl() concatenates it onto the base
-     * URL unfiltered. The rest are checked because they are forwarded verbatim and an
-     * implementation is entitled to assume the handler already looked.
-     *
-     * @param array<string,string> $parameters
-     */
     /**
      * Splits a custom directive's text the way `SimpleDirective` splits it.
      *
      * Its pattern is `{{name "value" parameters|filters}}`, where every part after the name is
      * optional - so the three are pulled off in that order and whatever is left is parameters.
-     * The quote handling is the pattern's: either quote character, and a backslash escapes it.
+     * The quote handling is the pattern's, down to the shape of the group: `(?:(?!\1).)*?`
+     * cannot consume the quote it is looking for, so nothing escapes one - `{{mydir "a\"b"}}`
+     * fails the match outright and the whole text stays parameters. The lookbehind's only
+     * effect is refusing a value that ends in a backslash.
      *
      * @return array{0:?string,1:string,2:string[]} value, parameter text, modifiers
      */
@@ -336,10 +323,9 @@ final class HostDirectives
                 // storeDirective keeps these apart, and so must this. `url` is a route path
                 // that the URL model routes; `direct_url` becomes `_direct`, which
                 // getRouteUrl() concatenates onto the base URL with no routing at all.
-                // Collapsing them, as this did, made `{{store direct_url="customer/account"}}`
-                // render a ROUTED url - `.../customer/account/` - where the filter emits the
-                // base URL plus that text verbatim. Guarded either way; only the meaning
-                // differed.
+                // Collapsing them makes `{{store direct_url="customer/account"}}` render a
+                // ROUTED url - `.../customer/account/` - where the filter emits the base URL
+                // plus that text verbatim. Guarded either way; only the meaning differs.
                 $direct = $params['direct_url'] ?? null;
                 $path = $direct !== null ? '' : ($params['url'] ?? '');
                 unset($params['url'], $params['direct_url']);
@@ -391,8 +377,8 @@ final class HostDirectives
 
                 // Legacy's order: url wins over the pair, and with neither the directive is
                 // just the word 'http' or 'https' - which is the form stock templates use,
-                // as `{{protocol}}://{{store url=''}}`. Returning '' for it, as this did,
-                // silently unschemed every link in those templates.
+                // as `{{protocol}}://{{store url=''}}`. Returning '' for it silently
+                // unschemes every link in those templates.
                 if (isset($params['url'])) {
                     $host = (string)$params['url'];
                     // Legacy is `$protocol . '://' . $params['url']` with no checking at all,

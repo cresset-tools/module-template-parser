@@ -88,6 +88,13 @@ foreach ([
 // *.php under an installed module - never see a class declaration in tools/ at all. A module
 // installed from git ships this directory, and playing whack-a-mole with each scanner in turn
 // is a losing game; giving them nothing to find is not.
+//
+// One namespace per file is the older half of the same defence, and it is why the stubs are
+// split the way they are rather than collected into one: ClassesScanner builds a class name
+// out of whatever namespace tokens it has seen and then returns the first class in the file,
+// so several braced namespaces in one file made it invent "HarnessLaminas\Filter\FilterInterface"
+// and abort setup:di:compile. That split alone did not finish the job - PhpScanner went on
+// failing on a \Harness class it could not map to a file - which is what the extension settled.
 require __DIR__ . '/stubs/Harness.php.stub';
 require __DIR__ . '/stubs/LaminasFilter.php.stub';
 require __DIR__ . '/stubs/MagentoFramework.php.stub';

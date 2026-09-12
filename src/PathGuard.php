@@ -17,8 +17,8 @@ final class PathGuard
      * Every reading of the value a consumer downstream might arrive at.
      *
      * Null when the value disqualifies itself outright, which is only the leading- or
-     * trailing-whitespace case - a guard cannot meaningfully reason about a value whose
-     * every ^-anchored check a browser is about to shift out from under it.
+     * trailing-whitespace case - whitespace a browser strips before fetching moves the value
+     * out from under every anchored check below, so no reading of it is worth examining.
      *
      * @return string[]|null
      */
@@ -207,15 +207,19 @@ final class PathGuard
         '_type',
     ];
 
-    /** @var array<string,string> */
-    private const DESIGN_PARAMETER_SHAPES = [
-        'area' => '/^[a-zA-Z0-9_]{1,64}$/',
-        'locale' => '/^[a-zA-Z0-9_-]{1,32}$/',
-        'module' => '/^[a-zA-Z0-9_]{1,128}$/',
-        'theme' => '#^[a-zA-Z0-9_]{1,64}/[a-zA-Z0-9_-]{1,64}$#',
-        'themeId' => '/^[0-9]{1,10}$/',
-    ];
-
+    /**
+     * Whether every parameter bound for a UrlBuilder can be concatenated into a path.
+     *
+     * `_direct` is the one that matters most: `Url::getRouteUrl()` returns
+     * `getBaseUrl() . $routeParams['_direct']` with no routing and no filtering at all, so it
+     * is a second route wearing a different name. But it is not special - see the loop.
+     *
+     * Called from both sinks template text can reach: `{{store url=}}` and
+     * `{{var this.getUrl(...)}}`. They had a guard each until the second was found still
+     * carrying the superseded version of a fix made to the first.
+     *
+     * @param array<string,mixed> $parameters
+     */
     public static function routeParametersAreSafe(array $parameters): bool
     {
         // `_type` picks which base URL the result is built on, so it is a name from a fixed
@@ -241,9 +245,8 @@ final class PathGuard
 
             // Everything else is a route parameter, and Url::_getRouteParams() appends those
             // as `$key . '/' . $value . '/'` - so the KEY is a path segment as much as the
-            // value is. Naming only `_direct`, `_fragment` and `_escape_params`, as this did,
-            // guarded three spellings out of an open set: `{{store url="x" a="../../.."}}`
-            // walked straight past it.
+            // value is. Naming three spellings guards three spellings out of an open set:
+            // `{{store url="x" a="../../.."}}` walks straight past such a list.
             if (!self::isSafeRelativePath((string)$key) || !self::isSafeRelativePath($value)) {
                 return false;
             }
@@ -252,7 +255,7 @@ final class PathGuard
         return true;
     }
 
-    /** A config path is a dotted/slashed identifier, nothing more. */
+    /** A config path is a slash-separated identifier, nothing more. */
     public static function isSafeConfigPath(string $path): bool
     {
         return $path !== '' && (bool)preg_match('#^[a-zA-Z0-9_]+(/[a-zA-Z0-9_]+)*$#', $path);

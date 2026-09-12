@@ -25,9 +25,4 @@ class Finding
         public readonly ?int $line = null,
     ) {
     }
-
-    public function isError(): bool
-    {
-        return $this->severity === self::ERROR;
-    }
 }

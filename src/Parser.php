@@ -28,15 +28,7 @@ final class Parser
     /** @var LegacyIncompatibility[] */
     private array $incompatibilities = [];
 
-    /*
-     * Nullable, not `= new X()`.
-     *
-     * Magento's DI compiler stores a constructor default verbatim and writes it into
-     * generated/metadata with var_export(), which emits `X::__set_state(...)` for an object.
-     * No class here defines __set_state, so that file - loaded on every request in
-     * production mode - is a fatal. Developer mode consumes the default directly and never
-     * notices, so this shipped green.
-     */
+    /* Nullable, not `= new X()` - a constructor default is fatal under the DI compiler. See TemplateEngine. */
     private readonly DirectiveSpec $spec;
 
     private readonly Options $options;
@@ -270,12 +262,6 @@ final class Parser
         return new UnclosedDirective($node);
     }
 
-    /**
-     * Refuses, or records, a construct the legacy filter cannot render.
-     *
-     * Only meaningful in compatible mode: strict already rejects most of these as syntax
-     * errors, and lenient deliberately recovers from them.
-     */
     /**
      * Constructs the legacy filter reads differently from this parser.
      *
@@ -528,11 +514,10 @@ final class Parser
     private function insideLoopBody(int $offset): bool
     {
         // With ONE exception, and it is the construct that creates the body in the first
-        // place. LOOP_PATTERN is lazy on both halves, so a nested loop runs from the outer
-        // `{{for}}` to the INNER `{{/for}}` and leaves the outer one stranded outside any
-        // body - an empty directive name, and a TypeError. So the filter cannot express a
-        // nested loop at all, and a `{{for}}` inside a loop body is exactly the thing that
-        // must still be refused. Everything else in there is a variable read that renders.
+        // place: a `{{for}}` or a `{{/for}}` in here means a nested pair, and the lazy match
+        // strands the outer closer (see LEGACY_LOOP_PATTERN). A stranded closer captures an
+        // empty directive name and raises, so both still refuse. Everything else in there is
+        // a variable read that renders.
         if (str_starts_with(substr($this->source, $offset, 7), '{{for')
             || str_starts_with(substr($this->source, $offset, 8), '{{/for}}')
         ) {
@@ -587,6 +572,12 @@ final class Parser
         return false;
     }
 
+    /**
+     * Refuses, or records, a construct the legacy filter cannot render.
+     *
+     * Only meaningful in compatible mode: strict already rejects most of these as syntax
+     * errors, and lenient deliberately recovers from them.
+     */
     private function refuseIfLegacyCannotRender(int $offset, string $kind, string $message): void
     {
         if (!$this->options->legacyQuirks) {
@@ -632,27 +623,21 @@ final class Parser
             return;
         }
 
-        $incompatibility = null;
-        if (in_array($token->name, $openStack, true)) {
-            $incompatibility = LegacyIncompatibility::at(
-                $this->source,
-                $token->offset,
-                LegacyIncompatibility::SAME_NAME_NESTING,
-                sprintf(
-                    '{{%s}} nested inside {{%s}} - the legacy filter cannot nest a directive in '
-                    . 'itself: its lazy body match ends the outer construct at the INNER closing '
-                    . 'tag, so what renders there is not the structure written here',
-                    $token->name,
-                    $token->name
-                )
-            );
-        }
-
-        if ($incompatibility === null) {
+        if (!in_array($token->name, $openStack, true)) {
             return;
         }
 
-        $this->refuseIfLegacyCannotRender($token->offset, $incompatibility->kind, $incompatibility->message);
+        $this->refuseIfLegacyCannotRender(
+            $token->offset,
+            LegacyIncompatibility::SAME_NAME_NESTING,
+            sprintf(
+                '{{%s}} nested inside {{%s}} - the legacy filter cannot nest a directive in '
+                . 'itself: its lazy body match ends the outer construct at the INNER closing '
+                . 'tag, so what renders there is not the structure written here',
+                $token->name,
+                $token->name
+            )
+        );
     }
 
     /**
@@ -701,7 +686,7 @@ final class Parser
 
     /**
      * @param Node[] $body
-     * @return array{0: Node[], 1: Node[]}|null
+     * @return array{0: Node[], 1: Node[], 2: string}|null
      */
     private function splitOnElse(array $body): ?array
     {

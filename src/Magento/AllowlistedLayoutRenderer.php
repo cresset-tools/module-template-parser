@@ -56,10 +56,9 @@ class AllowlistedLayoutRenderer implements LayoutRenderer
 
             // The parameters ARE the directive. `{{layout handle="sales_email_order_items"
             // order_id=$order_id}}` is how every stock order, invoice, shipment and credit
-            // memo email builds its item table, and dropping them - as this did, accepting
-            // $parameters and never reading it - rendered that table for no order at all.
-            // Legacy sets them on every block in the handle, not just the root, because the
-            // block that needs the id is generally a child.
+            // memo email builds its item table, and dropping them renders that table for no
+            // order at all. Legacy sets them on every block in the handle, not just the root,
+            // because the block that needs the id is generally a child.
             $rootBlock = null;
             foreach ($layout->getAllBlocks() as $block) {
                 if ($rootBlock === null && !$block->getParentBlock()) {

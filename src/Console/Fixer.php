@@ -50,9 +50,8 @@ class Fixer
             ],
             $error instanceof SyntaxError => [
                 Finding::ERROR,
-                'The template does not parse. The caret above points at the construct; the usual '
-                . 'causes are an unclosed {{if}} or {{depend}}, or a closing tag whose name does '
-                . 'not match the one it closes.',
+                'The template does not parse. The usual causes are an unclosed {{if}} or '
+                . '{{depend}}, or a closing tag whose name does not match the one it closes.',
             ],
             default => [Finding::ERROR, null],
         };

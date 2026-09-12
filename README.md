@@ -16,6 +16,21 @@ echo $engine->render('Dear {{var name}},', ['name' => 'Ada']);
 Everything in this README lives under `Cresset\TemplateParser\`; later snippets leave the
 `use` lines out.
 
+It is not on Packagist, so the repository goes in the project's `composer.json` before
+Composer will find the package:
+
+```json
+"repositories": [
+    {"type": "vcs", "url": "https://github.com/cresset-tools/module-template-parser"}
+]
+```
+
+```sh
+composer require cresset-tools/module-template-parser
+```
+
+That puts `vendor/bin/template-parser` in place too, which is what the CLI section below runs.
+
 Requires PHP 8.3, 8.4 or 8.5. The engine is plain PHP with no Magento dependency; the Magento
 bindings sit behind ports in `src/Magento/`.
 
@@ -55,20 +70,20 @@ Three presets, differing only in how much they refuse:
 |---|---|---|
 | `new TemplateEngine()` | strict: unparseable input, unknown directives and unknown variables all raise | templates being authored or validated |
 | `TemplateEngine::lenient()` | recovers instead of raising; unknown constructs render verbatim | content already stored in a database |
-| `TemplateEngine::compatible()` | lenient, plus the legacy filter's rendering quirks | shadow comparison, and switching a store over |
+| `TemplateEngine::compatible()` | lenient, plus the legacy filter's rendering quirks; refuses what the filter crashes on | shadow comparison, and switching a store over |
 
-Strictness has three independent axes, so you can mix them:
+Strictness has three independent axes — syntax, directives and variables — so you can mix them:
 
 ```php
 TemplateEngine::withOptions(Options::strict()->withVariables(false));
-TemplateEngine::withOptions(Options::strict()->withMaxNestingDepth(5));
 ```
 
 The safety properties are structural and apply in every mode.
 
 ## Using it as a Magento module
 
-The package is a `magento2-module` with `registration.php` and `etc/`.
+The package is a `magento2-module` with `registration.php` and `etc/`, so
+`bin/magento setup:upgrade` after the `composer require` above adds it to `app/etc/config.php`.
 **Installing it changes no rendering behaviour**: `etc/di.xml` declares no preference for
 `Magento\Framework\Filter\Template`.
 
@@ -85,6 +100,9 @@ project module against whichever filter you want to cover:
 </type>
 ```
 
+The plugin is inert until the comparator is enabled, which is a second entry in the same
+`di.xml`:
+
 ```xml
 <type name="Cresset\TemplateParser\Magento\ShadowComparator">
     <arguments><argument name="enabled" xsi:type="boolean">true</argument></arguments>
@@ -97,17 +115,19 @@ nothing a customer sees. It logs the policy violations and legacy incompatibilit
 divergence, not just a byte offset, and it hashes the template rather than logging its content,
 because a rendered email holds a customer's name and address.
 
-Two renders are deliberately not compared. A **child** template — anything reached through
-`{{template}}` — is skipped, because the filter defers a directive it cannot finish in a child
-by emitting a signed placeholder for the parent to resolve, and the signature is random per
-render; this engine records that deferral structurally instead, so a child can never match.
-The parent's comparison covers the same content. And the candidate is put through the
-subject's own `applyInlineCss()` first, because the legacy result it is being compared against
-is a finished document and this engine defers that step to its host.
+One render is deliberately skipped, and one is adjusted before the diff. A **child** template —
+anything reached through `{{template}}` — is skipped, because the filter defers a directive it
+cannot finish in a child by emitting a signed placeholder for the parent to resolve, and the
+signature is random per render; this engine records that deferral structurally instead, so a
+child can never match. The parent's comparison covers the same content.
 
-Measured on a stock store: those two exemptions plus the wiring below take the 48 stock email
-templates from 203 engine failures and 118 reported divergences to **zero of both**, rendered
-through the model that sends them with the plugin live.
+The adjustment: the candidate is put through the subject's own `applyInlineCss()` before the
+diff, because the legacy result it is being compared against is a finished document and this
+engine defers that step to its host.
+
+Measured on a stock store: that skip, that adjustment and the wiring below take the 48 stock
+email templates from 203 engine failures and 118 reported divergences to **zero of both**,
+rendered through the model that sends them with the plugin live.
 
 ### Directive surface
 
@@ -137,11 +157,12 @@ Three of these change behaviour for the plain-text part of an email, as the filt
 `Context`'s `$plainText`, or — behind Magento — with `setPlainTemplateMode()` on the adapter,
 which is the name `AbstractTemplate::getProcessedTemplate()` already calls.
 
-The last row is not a directive. `StrictResolver` maps every `getFoo()` to `getData('foo')`
-except one: `getUrl` on an `AbstractTemplate` is really invoked, with its arguments parsed
-and its `$store` argument overwritten by the scope's. That single exception is where every
-"log into your account" link in every stock Magento email comes from, so it is reproduced —
-as a port, so a host that does not want it simply does not wire it and gets `getData('url')`.
+The last row is not a directive. Magento's `StrictResolver` maps every `getFoo()` to
+`getData('foo')` except one: `getUrl` on an `AbstractTemplate` is really invoked, with its
+arguments parsed and its `$store` argument overwritten by the scope's. That single exception is
+where every "log into your account" link in every stock Magento email comes from, so it is
+reproduced — as a port, so a host that does not want it simply does not wire it and gets
+`getData('url')`.
 
 ## Magento's own extension points
 
@@ -183,8 +204,8 @@ itself, applying the modifiers through the pool.
 It *would* matter to a host rendering through a bare `Framework\Filter\Template`, whose
 `VarDirective` does go through the pool. Nothing in this integration does.
 
-`check` and `diff` ask the store what its pool holds and report any directive whose port a host
-has not wired.
+The `check` and `diff` commands ask the store what its pool holds and report any directive
+whose port a host has not wired.
 
 ## Per-render capability policy
 
@@ -260,12 +281,13 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**4788 cases recorded, 804 of them constructs the legacy filter cannot render at all. Over
-the 2710 cases where both engines render, the surfaces are comparable and compatible mode
-does not deliberately refuse, output is byte-identical.**
+**4788 cases recorded, 804 of them constructs the legacy filter cannot render at all. Output
+is byte-identical over the 2710 cases where both engines render, the surfaces are comparable
+and compatible mode does not deliberately refuse.**
 
 That corpus is recorded from a filter built out of a handful of files and no application, so
-it reaches the six directives that need no host. The other twelve — `store`, `media`, `view`,
+the directives it can compare are the six the base `Framework\Filter\Template` implements:
+`var`, `if`, `depend`, `for`, `trans` and `else`. The other twelve — `store`, `media`, `view`,
 `protocol`, `block`, `widget`, `layout`, `config`, `customvar`, `template`, `css`, `inlinecss`
 — are recorded separately against a **real store** by `tools/record-store-ports.php`, and what
 is replayed for them is the *tape*: every question the engine asked its ports and the answer it
@@ -285,8 +307,8 @@ guard that starts refusing something the filter renders just leaves a smaller ag
 every remaining assertion still passes.
 
 Every directive but one now has an asserted comparison against the filter somewhere. The
-exception is `{{for}}`, which is a declared divergence for the reason given above. Two caveats
-worth stating plainly:
+exception is `{{for}}`, which is a declared divergence for the reason
+[given below](#for-is-a-deliberate-divergence). Two caveats worth stating plainly:
 
 - `{{layout}}`'s *corpus* cases agree vacuously — the base filter has no `layoutDirective`
   and that test engine has no port, so both sides emit the directive verbatim. Its real
@@ -305,7 +327,7 @@ headline number:
   on is one nobody has ever seen the output of, so rendering it would be inventing behaviour,
   not reproducing it.
 - **Where both render, they agree byte for byte** — for every case in the corpus except the
-  declared divergences named above, each of which is *recorded* as a case rather than left
+  declared divergences named below, each of which is *recorded* as a case rather than left
   out of one, so the disagreement is measured and pinned rather than avoided.
 
 Everything else is a superset of refusals, enumerated below. Before switching a store over,
@@ -332,29 +354,6 @@ Quirks it reproduces:
 
 Unknown modifiers and unknown escape types are reproduced only in compatible mode. Everywhere
 else they fail closed.
-
-#### Which legacy filter?
-
-Mage-OS shipped StyleSmuggler hardening in September 2026. Part of it,
-`Template\DirectiveOutputNeutralizer`, encodes `{{` in resolved directive output so it can
-never be re-parsed by a later pass — which changes observable rendering:
-
-```
-{{var a}}  with  a = '{{block class=Evil}}'
-  before the hardening:  [{{block class=Evil}}]
-  after:                 [&#123;&#123;block class=Evil}}]
-```
-
-Both trees are in the field, so compatible mode targets either. It follows the current filter
-by default; for a tree from before the hardening:
-
-```php
-TemplateEngine::withOptions(Options::compatible()->withOutputNeutralizer(false));
-```
-
-The corpus records both, and 751 cases carry a second expectation for the older behaviour.
-This engine needs none of it — a value is never re-parsed here whatever the setting — so the
-flag does nothing outside compatible mode.
 
 Quirks it does not reproduce:
 
@@ -428,6 +427,29 @@ Quirks it does not reproduce:
   `varDirective` hands `VarDirective` a legacy-shaped construction so the expression resolved
   is `" x|raw"`. `Email\Model\Template\Filter` overrides `varDirective` and handles modifiers
   correctly, and that is the filter templates actually render through.
+
+### Which legacy filter?
+
+Mage-OS shipped StyleSmuggler hardening in September 2026. Part of it,
+`Template\DirectiveOutputNeutralizer`, encodes `{{` in resolved directive output so it can
+never be re-parsed by a later pass — which changes observable rendering:
+
+```
+{{var a}}  with  a = '{{block class=Evil}}'
+  before the hardening:  [{{block class=Evil}}]
+  after:                 [&#123;&#123;block class=Evil}}]
+```
+
+Both trees are in the field, so compatible mode targets either. It follows the current filter
+by default; for a tree from before the hardening:
+
+```php
+TemplateEngine::withOptions(Options::compatible()->withOutputNeutralizer(false));
+```
+
+The corpus records both, and 751 cases carry a second expectation for the older behaviour.
+This engine needs none of it — a value is never re-parsed here whatever the setting — so the
+flag does nothing outside compatible mode.
 
 ### What it refuses
 
@@ -549,8 +571,8 @@ A variable that *does* resolve is never an error; it is tested for truthiness. `
 reports a collection that resolves to something non-iterable.
 
 The engine uses standard PHP truthiness. The legacy filter tests `resolve(...) == ''`, which
-on PHP 8 makes `0`, `'0'` and `[]` all truthy — so `{{if qty}}` runs its true branch for a
-zero quantity.
+on PHP 8 makes `0`, `0.0`, `'0'` and `[]` all truthy — so `{{if qty}}` runs its true branch
+for a zero quantity.
 
 Only `0` and `0.0` are new. `0 == ''` was true on PHP 7 and became false in PHP 8 — the
 ["Saner string to number comparisons"](https://wiki.php.net/rfc/string_to_number_comparison)
@@ -568,8 +590,8 @@ The PHP 7 half is history — this project supports 8.3 and up, so it is not re-
 
 The grammar nests to any depth, unlike the legacy filter, where each directive has its own
 regex and so cannot contain *itself*. `{{if}}` inside `{{if}}` is a fatal `TypeError` in stock
-Magento; only `{{depend}}` around `{{if}}` works, which is why core templates are written that
-way and cap out at two levels.
+Magento; only *distinct* names nest, which is why core templates pair `{{depend}}` with
+`{{if}}` and cap out at two levels.
 
 Depth is bounded by policy rather than by accident, defaulting to 3 and settable per render:
 
@@ -621,9 +643,17 @@ compatible> {{media url="wysiwyg/banner.jpg"}}
 http://shop.example/media/wysiwyg/banner.jpg
 compatible> {{media url="../../../app/etc/env.php"}}
 (empty)
+compatible> :set customer_name=Ada
+  customer_name = string  'Ada'
 compatible> :mode strict
-compatible> {{var custmer_name}}
+  strict - unknown directives and variables are errors
+strict> {{var custmer_name}}
 Unknown variable "custmer_name" in {{var custmer_name}}
+  on line 1, column 1:
+
+  1 | {{var custmer_name}}
+    | ^
+
   hint: did you mean {{var customer_name}}?
 ```
 
@@ -710,7 +740,7 @@ bougie run -- vendor/bin/n98-magerun2 template-parser:diff --source=email
 
 ## Speed
 
-Faster than the legacy filter, which is nice to have on top of the strictness benefits.
+Faster than the legacy filter, which was not a goal.
 
 `tools/benchmark.php` renders the same templates through both engines, each constructed once
 outside the timing loop, since in Magento both are DI instances reused across a request. It

@@ -94,8 +94,9 @@ class ReplCommand extends Command
      * script and in this package's own tests. Symfony's QuestionHelper does neither: it
      * returns the default the moment input is not interactive, so a piped REPL exited
      * immediately.
+     *
+     * @param resource $stream
      */
-    /** @param resource $stream */
     private function readLine(Mode $mode, bool $interactive, OutputInterface $output, $stream): ?string
     {
         $prompt = sprintf('%s> ', $mode->value);
@@ -210,9 +211,10 @@ HELP);
     <comment>:set o={"a":1}</comment>      array    (JSON, associative)
     <comment>:set name=Ada</comment>       string   (a bare word)
 
-  On PHP 8 the legacy filter treats int 0 as TRUTHY and string "0" as truthy too,
-  while this engine uses standard PHP truthiness and calls both falsy. Being able
-  to set one and not the other is the point.
+  On PHP 8 the legacy filter tests == '', which makes int 0 and string "0" both
+  TRUTHY. Compatible mode - the default here - reproduces that; strict and lenient
+  use standard PHP truthiness and call both falsy. Being able to set one and not
+  the other is the point, and <comment>:mode</comment> switches which answer you get.
 TYPES);
                 return true;
 

@@ -396,12 +396,6 @@ $constructs = [
     'trans_pipe_text' => '[{{trans "a|b"}}]',
     'trans_unquoted'  => '[{{trans T %a}}]',
     'trans_unterm'    => '[{{trans "T}}]',
-    // An UNTERMINATED `{{` inside a quoted value. Distinct from `{{trans "a {{b}}"}}`, which
-    // is the documented case where this engine does more: here the closer is already outside
-    // quotes, so the lexer's quote-aware walk never runs, and reading "the walk ran" as
-    // "quotes balance" made these re-scan from the inner brace - one silently verbatim, the
-    // other a refusal claiming a legacy TypeError that does not happen. The filter renders
-    // all of them, so they belong in the corpus and not in a comment.
     // A `}}` INSIDE a quoted value. The lexer here reads it as part of the value; the regex
     // stops at it wherever it falls. Recorded across several directives so what legacy does
     // with the truncated construct is measured rather than assumed - it renders for some and
@@ -411,6 +405,12 @@ $constructs = [
     'close_q_tpl'     => '[{{template config_path="design/email/}}x"}}]',
     'close_q_tpl_two' => '[{{template config_path="design/email/}}x"}} {{template config_path="design/email/header_template"}}]',
     'close_q_if'      => '[{{if "a }}b"}}Y{{/if}}]',
+    // An UNTERMINATED `{{` inside a quoted value. Distinct from `{{trans "a {{b}}"}}`, which
+    // is the documented case where this engine does more: here the closer is already outside
+    // quotes, so the lexer's quote-aware walk never runs, and reading "the walk ran" as
+    // "quotes balance" made these re-scan from the inner brace - one silently verbatim, the
+    // other a refusal claiming a legacy TypeError that does not happen. The filter renders
+    // all of them, so they belong in the corpus and not in a comment.
     'trans_open_q'    => '[{{trans "a {{b"}}]',
     'trans_open_q_ns' => '[{{trans "50{{ off"}}]',
     'trans_open_q_st' => '[{{trans "{{ x"}}]',

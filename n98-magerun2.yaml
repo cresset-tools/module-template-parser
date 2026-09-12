@@ -2,7 +2,7 @@
 #
 # Copy or symlink this package into ~/.n98-magerun2/modules/template-parser/, or point
 # magerun at it with `--config` / a project n98-magerun2.yaml. magerun boots Magento before
-# it builds commands, so MagentoBridge hands that already-booted ObjectManager over rather
+# it builds commands, so MagerunBridge hands that already-booted ObjectManager over rather
 # than letting the commands detect and boot a second one.
 autoloaders_psr4:
   Cresset\TemplateParser\: '%module%/src'

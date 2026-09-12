@@ -8,6 +8,10 @@ namespace Cresset\TemplateParser;
  *
  * Distinguishes "resolved to null" from "does not resolve at all", which is what lets
  * strict mode report an unknown variable instead of silently rendering nothing.
+ *
+ * $failedAt names the segment the walk stopped on, so a missing `b` in `{{var a.b.c}}` is
+ * reported as `b` rather than as the whole expression. Left empty, the error names the
+ * expression instead.
  */
 final class Resolution
 {

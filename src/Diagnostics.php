@@ -10,10 +10,9 @@ final class Diagnostics
 {
     private const CONTEXT_LINES = 2;
 
-    /** Line-start offsets for the most recently located source. */
     private static ?string $indexedSource = null;
 
-    /** @var int[] */
+    /** @var int[] Line-start offsets for the most recently located source. */
     private static array $lineStarts = [];
 
     /**
@@ -54,10 +53,7 @@ final class Diagnostics
      */
     private static function lineStarts(string $source): array
     {
-        if (self::$indexedSource !== null
-            && strlen(self::$indexedSource) === strlen($source)
-            && self::$indexedSource === $source
-        ) {
+        if (self::$indexedSource !== null && self::$indexedSource === $source) {
             return self::$lineStarts;
         }
 

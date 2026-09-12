@@ -26,10 +26,8 @@ final class VariableResolver
 {
     private const ACCESSOR = '/^(get|has|is)[A-Z0-9_]/';
 
-    /** `getBar()`, and also `getBar("x")` - legacy parses arguments and then ignores them. */
     /** Argument arrays nested deeper than this are refused; legacy segfaults instead. */
     private const MAX_ARGUMENT_DEPTH = 64;
-
 
     /** @var ?\Closure(object,string,list<mixed>,Context):?Resolution */
     private ?\Closure $methodCallServer = null;
@@ -116,12 +114,6 @@ final class VariableResolver
         return strtr($name, [' ' => '', "\t" => '', "\n" => '', "\r" => '', "\0" => '', "\x0B" => '']);
     }
 
-    /** Convenience for existence tests, which never raise. */
-    public function value(string $expression, Context $context): mixed
-    {
-        return $this->resolve($expression, $context)->value;
-    }
-
     /**
      * Splits an expression into its segments, on the dots that actually separate them.
      *
@@ -184,6 +176,12 @@ final class VariableResolver
 
     /**
      * Whether legacy would attempt member access on this value at all.
+     *
+     * Wider than shouldHandleDataAccess(), which advances only past an array, a DataObject or
+     * an AbstractTemplate - classes this package will not name, so hasDataBag() duck-types
+     * getData() instead. A plain object is therefore walked where legacy's cursor stops;
+     * member() refuses it there, and the caller turns that into the same null the stranded
+     * cursor yields.
      */
     private function allowsDataAccess(mixed $value): bool
     {
@@ -583,32 +581,32 @@ final class VariableResolver
         try {
             return Resolution::of($reflection->invoke($value));
         } catch (\Throwable $e) {
-            // A template must not be able to take the render down with a host exception, or
-            // surface an internal message through it. Everything else here is fail-soft (an
-            // object with no __toString yields ''), so this is too - as a TemplateError, so a
-            // caller's existing catch still covers it.
-            throw AccessorError::at(
-                '',
-                0,
-                sprintf('reading %s() on the host object raised %s', $method, $e::class),
-                'the template cannot be responsible for this - it is a defect in the host object'
-            );
+            throw $this->accessorFailure($method, $e);
         }
     }
 
     /** Whether this object keeps its values in a DataObject-style bag. */
     private function hasDataBag(object $value): bool
     {
-        if (!method_exists($value, 'getData')) {
+        return $this->takesOptionalStringKey($value, 'getData');
+    }
+
+    /**
+     * Whether a method accepts a key and also tolerates being called without one.
+     *
+     * Both halves are load-bearing: a `getData(int $i = 0)` has no REQUIRED parameters yet
+     * raises a TypeError the moment a string key reaches it, and a `getData()` taking none at
+     * all silently returns the whole bag for every member. hasData() is held to the same
+     * shape, because it is reached with a key the same way.
+     */
+    private function takesOptionalStringKey(object $value, string $method): bool
+    {
+        if (!method_exists($value, $method)) {
             return false;
         }
 
-        $reflection = new \ReflectionMethod($value, 'getData');
+        $reflection = new \ReflectionMethod($value, $method);
 
-        // It must accept a key as well as tolerate being called without one: a
-        // `getData(int $i = 0)` has no REQUIRED parameters yet raises a TypeError the moment
-        // a string key reaches it, and a `getData()` taking none at all silently returns the
-        // whole bag for every member.
         return $reflection->isPublic()
             && !$reflection->isStatic()
             && $reflection->getNumberOfRequiredParameters() === 0
@@ -629,29 +627,18 @@ final class VariableResolver
     /** Whether the bag holds this key, using hasData() when the object offers one. */
     private function bagHas(object $value, string $key): bool
     {
-        if (method_exists($value, 'hasData')) {
-            $reflection = new \ReflectionMethod($value, 'hasData');
-            // Same shape check getData() gets. Without acceptsStringKey() a
-            // `hasData(int $key = 0)` raises a TypeError from inside the resolver.
-            if ($reflection->isPublic()
-                && !$reflection->isStatic()
-                && $reflection->getNumberOfRequiredParameters() === 0
-                && $reflection->getNumberOfParameters() >= 1
-                && $this->acceptsStringKey($reflection)
-            ) {
-                if ((bool)$this->callHost($value, 'hasData', $key)) {
-                    return true;
-                }
-
-                // hasData() is `array_key_exists($key, $this->_data)` and knows nothing about
-                // the `a/b/c` path syntax getData() implements - getData falls back to
-                // getDataByPath() whenever a direct lookup comes back null and the key holds
-                // a slash. Trusting hasData for those keys made `{{var order.billing/city}}`
-                // resolve on the filter and to nothing here. The asymmetry is DataObject's;
-                // only slash keys are widened, so a key that is genuinely absent is still
-                // missing rather than null.
-                return str_contains($key, '/') && $this->readBag($value, $key) !== null;
+        if ($this->takesOptionalStringKey($value, 'hasData')) {
+            if ((bool)$this->callHost($value, 'hasData', $key)) {
+                return true;
             }
+
+            // hasData() is `array_key_exists($key, $this->_data)` and knows nothing about the
+            // `a/b/c` path syntax getData() implements - getData falls back to getDataByPath()
+            // whenever a direct lookup comes back null and the key holds a slash. Trusting
+            // hasData for those keys made `{{var order.billing/city}}` resolve on the filter
+            // and to nothing here. The asymmetry is DataObject's; only slash keys are widened,
+            // so a key that is genuinely absent is still missing rather than null.
+            return str_contains($key, '/') && $this->readBag($value, $key) !== null;
         }
 
         return $this->readBag($value, $key) !== null;
@@ -666,22 +653,33 @@ final class VariableResolver
      * Calls a host data-bag method, converting anything it raises into an AccessorError.
      *
      * getData() and hasData() are host code as much as a real accessor is - Magento models
-     * routinely override getData() with lazy loading - so they need the same treatment
-     * invokeAccessor() gives, or a template can take the render down with a host exception
-     * and surface its message.
+     * routinely override getData() with lazy loading - so they are wrapped like one.
      */
     private function callHost(object $value, string $method, string $key): mixed
     {
         try {
             return $value->{$method}($key);
         } catch (\Throwable $e) {
-            throw AccessorError::at(
-                '',
-                0,
-                sprintf('reading %s() on the host object raised %s', $method, $e::class),
-                'the template cannot be responsible for this - it is a defect in the host object'
-            );
+            throw $this->accessorFailure($method, $e);
         }
+    }
+
+    /**
+     * What an exception out of a host method becomes.
+     *
+     * Everything else in this resolver is fail-soft - an object with no __toString yields ''
+     * - so a method that raises is too, rather than taking the render down or surfacing an
+     * internal message through the output. A TemplateError, so a caller's existing catch
+     * still covers it.
+     */
+    private function accessorFailure(string $method, \Throwable $e): AccessorError
+    {
+        return AccessorError::at(
+            '',
+            0,
+            sprintf('reading %s() on the host object raised %s', $method, $e::class),
+            'the template cannot be responsible for this - it is a defect in the host object'
+        );
     }
 
     /** first_name -> FirstName */

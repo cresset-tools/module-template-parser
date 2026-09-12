@@ -124,7 +124,7 @@ Anything below the port boundary — `StoreUrlBuilder`, `AssetStylesheetLoader` 
 `src/Magento/` — is invisible to a tape by construction, and needs its own unit test. That is
 not a gap in the tape; it is the boundary doing its job. Verified: deleting the country-name
 substitution or the custom-variable truthiness quirk passes `StorePortParityTest` and fails the
-suite, which is the arrangement working rather than a hole in it.
+suite.
 
 Two numbers move when you re-record. `StorePortParityTest::testTheAgreementSetHasNotShrunk`
 pins how many cases agree with the filter, and the README quotes the same figure. Both are

@@ -118,7 +118,7 @@ final class Context
     {
         // Plain-text mode is inherited for the same reason the policy is: it describes the
         // document being produced, and an included template is part of that same document.
-        $clone = new self($this->variables + [], null, $this->plainText, $this->designParams);
+        $clone = new self($this->variables, null, $this->plainText, $this->designParams);
         foreach ($variables as $k => $v) {
             $clone->variables[$k] = $v;
         }
@@ -203,8 +203,9 @@ final class Context
     }
 
     /**
-     * Merge a child render's deferred work into this scope. Explicit hand-back up one
-     * level; composes recursively without any shared or request-scoped state.
+     * Merge a child render's deferred work, incompatibilities and policy violations into this
+     * scope. A child holds no reference to its parent, so the caller hands all three up one
+     * level explicitly rather than into a registry shared across the render.
      */
     public function absorb(self $child): void
     {

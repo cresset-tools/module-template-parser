@@ -8,8 +8,7 @@ use Cresset\TemplateParser\Port\StylesheetLoader;
 /**
  * {{css}} the way Email\Model\Template\Filter resolves it.
  *
- * Three details decide whether this returns the same bytes the store's filter returns, and
- * the first version of this class had none of them:
+ * Three details decide whether this returns the same bytes the store's filter returns:
  *
  *  - The asset is created WITH design params. Without them it resolves against whatever
  *    theme happens to be current rather than the one the email is being rendered for.

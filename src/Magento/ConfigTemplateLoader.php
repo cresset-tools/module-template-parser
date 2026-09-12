@@ -14,8 +14,8 @@ use Magento\Store\Model\ScopeInterface;
  * The config value is an IDENTIFIER, not template text. `design/email/header_template` holds
  * something like `design_email_header_template`, which Magento then resolves - numerically to
  * a row in email_template when a merchant has customised it, and otherwise to a file
- * registered in email_templates.xml. Returning the config value itself, as this class first
- * did, renders the identifier into the email as literal text.
+ * registered in email_templates.xml. Returning the config value itself renders the identifier
+ * into the email as literal text.
  *
  * Only paths under a configured prefix are readable, so a template cannot name an arbitrary
  * configuration path.

@@ -2,13 +2,8 @@
 declare(strict_types=1);
 
 /**
- * Stub leaves for the tools, in one namespace.
- *
- * One namespace per file, deliberately: Magento's DI class scanner assembles a name from
- * whatever namespace tokens it has seen and returns the first class in the file, so several
- * braced namespaces in one file made it invent "HarnessLaminas\Filter\FilterInterface" and
- * abort setup:di:compile. A module installed from git ships tools/, so that is not
- * hypothetical.
+ * Framework\App\ObjectManager, cut down to the registry Template::varDirective() resolves
+ * VarDirective out of.
  *
  * Every declaration is guarded: inside a real installation the genuine classes exist and
  * redeclaring them is fatal.

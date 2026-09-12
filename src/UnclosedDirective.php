@@ -16,11 +16,6 @@ final class UnclosedDirective implements Node
     {
     }
 
-    public function inner(): DirectiveNode
-    {
-        return $this->inner;
-    }
-
     public function raw(): string
     {
         return $this->inner->fullRaw();

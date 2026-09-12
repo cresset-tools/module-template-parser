@@ -25,20 +25,15 @@ final class Lexer
     private readonly \Cresset\TemplateParser\DirectiveSpec $spec;
 
     /*
-     * Nullable, not `= new DirectiveSpec()`. Magento's DI compiler stores a constructor
-     * default verbatim and writes generated/metadata with var_export(), which emits
-     * `DirectiveSpec::__set_state(...)` for an object - a fatal on every production request,
-     * and invisible in developer mode. This one was missed when the others were fixed
-     * because the sweep that checked for it could not resolve classes in subdirectories.
+     * Nullable, not `= new DirectiveSpec()` - a constructor default is fatal under the DI
+     * compiler. See TemplateEngine. This one was missed when the others were fixed because
+     * the sweep that checked for it could not resolve classes in subdirectories.
      */
     public function __construct(?\Cresset\TemplateParser\DirectiveSpec $spec = null)
     {
         $this->spec = $spec ?? new \Cresset\TemplateParser\DirectiveSpec();
     }
 
-    /**
-     * @return Token[]
-     */
     /**
      * Run-on sites from the last tokenize(): offset, candidate name, and the swallowed span.
      *
@@ -59,6 +54,7 @@ final class Lexer
 
     private const MAX_RUN_ONS = 16;
 
+    /** @return Token[] */
     public function tokenize(string $source): array
     {
         $this->runOns = [];
@@ -93,9 +89,6 @@ final class Lexer
             // directive resolve is both more useful and what this engine already does one
             // character along, for `{{A{{var x}}`.
             //
-            // Advance ONE byte, not two: in `{{{` the inner opener overlaps the outer, so
-            // skipping the whole `{{` would step straight over it. peek() is O(1) on the
-            // window, so a run of braces stays linear.
             // Applies to a well-formed-looking name too, not only a degenerate one. A span
             // ends at the first `}}`, so one missing brace makes a directive run on and
             // swallow whatever structure follows:
@@ -104,9 +97,10 @@ final class Lexer
             //
             // The closing tag vanishes into the parameters and the {{if}} looks unclosed;
             // with `{{else}}` in the way it is worse, because BOTH branches then render.
-            // Nothing legitimate puts a `{{` inside a directive's parameters - legacy's own
-            // lazy capture mangles that too - so the run-on reading is never the right one.
-            $quotesClose = false;
+            // Nothing legitimate puts an UNQUOTED `{{` inside a directive's parameters -
+            // legacy's own lazy capture mangles that too - so the run-on reading is never the
+            // right one. A quoted one is a different matter, and openerInsideSpan() below
+            // does not count it.
 
             // Only a plausible construct needs the closer located.
             if ($knownClose <= $open) {
@@ -128,6 +122,7 @@ final class Lexer
             // span actually holds a quote, so the common case keeps the plain strpos and the
             // cached closer.
             $spanLength = $close - $afterOpen;
+            $quotesClose = false;
             if (self::closerMayBeQuoted($source, $afterOpen, $spanLength)) {
                 // An unterminated quote falls back to the naive closer rather than eating
                 // the rest of the document: `{{trans "unterminated}}` is malformed either
@@ -164,6 +159,10 @@ final class Lexer
                 if (count($this->runOns) < self::MAX_RUN_ONS) {
                     $this->runOns[] = [$open, $candidate[1], substr($source, $afterOpen, $close - $afterOpen)];
                 }
+
+                // Advance ONE byte, not two: in `{{{` the inner opener overlaps the outer, so
+                // skipping the whole `{{` would step straight over it. peek() is O(1) on the
+                // window, so a run of braces stays linear.
                 $cursor = $open + 1;
                 continue;
             }
@@ -195,11 +194,6 @@ final class Lexer
         return $tokens;
     }
 
-    /**
-     * Cheap pre-classification from the first few bytes after `{{`.
-     *
-     * @return array{0:TokenType,1:string}|null null when this is certainly not a construct
-     */
     /**
      * Whether the naive closer might be inside a quoted value, cheaply.
      *
@@ -303,7 +297,7 @@ final class Lexer
 
             // A quoted value may hold `{{` legitimately - `{{trans "a {{b}}"}}` - so an
             // opener only counts when it is part of the construct rather than of its text.
-            if ($respectQuotes && ($char === '"' || $char === "'")) {
+            if ($char === '"' || $char === "'") {
                 $quote = $char;
             } elseif ($char === '{' && ($span[$i + 1] ?? '') === '{') {
                 return true;
@@ -313,6 +307,11 @@ final class Lexer
         return false;
     }
 
+    /**
+     * Cheap pre-classification from the first few bytes after `{{`.
+     *
+     * @return array{0:TokenType,1:string}|null null when this is certainly not a construct
+     */
     private function peek(string $window): ?array
     {
         if ($window === '') {
