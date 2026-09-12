@@ -504,7 +504,9 @@ The `{{100}}` row is narrower than it looks. `CONSTRUCTION_PATTERN` is case-inse
 back verbatim. Those render here too.
 
 ```text
-{{if}} nested inside {{if}} - the legacy filter raises a TypeError here
+{{if}} nested inside {{if}} - the legacy filter cannot nest a directive in itself: its
+lazy body match ends the outer construct at the INNER closing tag, so what renders there
+is not the structure written here
   on line 1, column 10:
 
   1 | {{if a}}X{{if b}}Y{{/if}}{{/if}}
@@ -513,6 +515,8 @@ back verbatim. Those render here too.
   hint: this renders here but not on the legacy filter; unset
         Options::$refuseLegacyIncompatible to allow it
 ```
+
+(Wrapped here; the engine prints the summary and the hint each on one line.)
 
 **Four families of construct are refused that legacy does render**, 17 spellings in all. Each
 is a place where legacy's regex does something by accident that this parser will not build in:
@@ -584,6 +588,11 @@ goes unnoticed:
 
 ```text
 Unknown variable "custmer" in {{if custmer}}
+  on line 1, column 1:
+
+  1 | {{if custmer}}x{{/if}}
+    | ^
+
   hint: did you mean {{var customer}}?
 ```
 
@@ -769,7 +778,9 @@ which was a goal.
 `tools/benchmark.php` renders the same templates through both engines, each constructed once
 outside the timing loop, since in Magento both are DI instances reused across a request. It
 times **only** templates where the two produce byte-identical output — a speed number over
-templates where one side is doing less work is not a speed number.
+templates where one side is doing less work is not a speed number. Its 48 are the 45 harvested
+corpus templates plus four synthetic ones, less the one the filter crashes on; not the 48 stock
+email templates measured further up, which are a different set that happens to be the same size.
 
 ```
 iterations per template: 200

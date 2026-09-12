@@ -40,6 +40,8 @@ final class HostDirectives
         }
 
         $modifiers = [];
+        // `\s*$` and `\s*\z` read the same: the `\s*` has already taken any trailing
+        // newline. This splits, it does not guard - the guards use `\z`, see PathGuard.
         if (preg_match('/((?:\|[a-z0-9:_-]+)+)\s*$/i', $text, $m) === 1) {
             $modifiers = array_values(array_filter(explode('|', ltrim($m[1], '|'))));
             $text = substr($text, 0, -strlen($m[1]));

@@ -398,6 +398,8 @@ final class Evaluator
         };
 
         $this->handlers['for'] = function (DirectiveNode $n, Context $c, self $e): string {
+            // The `\s*` before the `$` already consumes a trailing newline, so this reads
+            // the same as `\z` would. A guard on a value would need `\z` - see PathGuard.
             if (!preg_match('/^\s*(\S+)\s+in\s+(\S+)\s*$/', $n->params(), $m)) {
                 // `{{for i xs}}`, `{{for}}`, `{{for i IN xs}}` - rendering '' for these hides
                 // a template that will never loop, which is the kind of defect strict mode

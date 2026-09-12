@@ -16,7 +16,14 @@ final class Lexer
     private const OPEN = '{{';
     private const CLOSE = '}}';
 
-    /** Directive names Magento accepts: lower-case, bounded length. */
+    /**
+     * Directive names Magento accepts: lower-case, bounded length.
+     *
+     * `$` rather than `\z` is safe here only because the subject is always a capture from
+     * `[A-Za-z][A-Za-z0-9_]*`, which cannot hold a newline. The guards in PathGuard and
+     * HostDirectives take values straight from template text and use `\z`, because there `$`
+     * also matches before a trailing newline and let one through.
+     */
     private const NAME_PATTERN = '/^[a-z][a-z0-9_]{0,31}$/';
 
     /** Enough to see any legal directive name plus its delimiter. */

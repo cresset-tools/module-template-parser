@@ -423,8 +423,8 @@ MAGENTO_ROOT=/tmp/mageos php tools/document-language.php
 
 It refuses to write when this engine's compatible mode disagrees with the filter on a
 documented example, and equally when an example marked as a deliberate divergence has quietly
-stopped diverging. Both failures have already caught wrong claims in this file — including one
-that sent me to fix the engine instead.
+stopped diverging. Both failures have already caught wrong claims in this file, including
+one that turned out to be a gap in the engine rather than in the prose.
 
 Regenerate after changing the case list, and commit the result; CI re-runs it and fails on
 drift, exactly as it does for the parity fixtures.
