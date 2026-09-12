@@ -371,8 +371,8 @@ walk.
 
 ## The output neutralizer
 
-Since the September 2026 StyleSmuggler hardening, Mage-OS encodes `{{` in resolved directive
-output, so a value can never be re-parsed as source by a later pass. A single `{` at either
+Since the [StyleSmuggler](https://sansec.io/research/stylesmuggler-0day) hardening in Mage-OS
+3.5.0, Mage-OS encodes `{{` in resolved directive output, so a value can never be re-parsed as source by a later pass. A single `{` at either
 edge of the output is encoded too, because concatenation with a neighbour could otherwise form
 an opener. One in the middle is left alone.
 

@@ -46,10 +46,10 @@ final class Options
          * Encode `{{` in resolved directive output, as Mage-OS's
          * Template\DirectiveOutputNeutralizer does.
          *
-         * Added upstream with the StyleSmuggler hardening, and it changes observable
-         * rendering: a variable whose value contains `{{` comes back with the braces encoded.
-         * On by default in compatible mode, because that is the filter merchants run once
-         * they update; turn it off to target a tree from before the hardening.
+         * Added upstream with the StyleSmuggler hardening, in Mage-OS 3.5.0, and it changes
+         * observable rendering: a variable whose value contains `{{` comes back with the
+         * braces encoded. On by default in compatible mode, because that is the filter
+         * merchants run once they update; turn it off to target a tree from before it.
          *
          * This engine needs none of it - a value is never re-parsed here whatever the
          * setting - so outside compatible mode it does nothing.
@@ -152,7 +152,7 @@ final class Options
         return $this->with(strictDirectives: $strict);
     }
 
-    /** Targets a Mage-OS tree from before the StyleSmuggler hardening. */
+    /** Targets a Mage-OS tree from before the StyleSmuggler hardening, so earlier than 3.5.0. */
     public function withOutputNeutralizer(bool $enabled): self
     {
         return $this->with(neutralizeDirectiveOutput: $enabled);

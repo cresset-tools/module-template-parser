@@ -49,8 +49,8 @@ by re-running the whole engine over substrings, which means a child render somet
 directive belonging to its parent. The only channel back up is the output text, so deferred
 directives are marked in-band with a per-request signature. An in-band marker sitting in the
 same buffer as attacker-controlled data can be relocated, which is the StyleSmuggler class of
-bug that Sansec reported. The signing mechanism it subverts was itself added in 2022 to fix an
-earlier bug of the same shape.
+bug [Sansec reported](https://sansec.io/research/stylesmuggler-0day). The signing mechanism it
+subverts was itself added in 2022 to fix an earlier bug of the same shape.
 
 This engine removes the conditions rather than tightening the check:
 
@@ -448,9 +448,9 @@ Quirks it does not reproduce:
 
 ### Which legacy filter?
 
-Mage-OS shipped StyleSmuggler hardening in September 2026. Part of it,
-`Template\DirectiveOutputNeutralizer`, encodes `{{` in resolved directive output so it can
-never be re-parsed by a later pass — which changes observable rendering:
+Mage-OS shipped the [StyleSmuggler](https://sansec.io/research/stylesmuggler-0day) hardening
+in 3.5.0. Part of it, `Template\DirectiveOutputNeutralizer`, encodes `{{` in resolved directive
+output so it can never be re-parsed by a later pass — which changes observable rendering:
 
 ```
 {{var a}}  with  a = '{{block class=Evil}}'

@@ -49,8 +49,8 @@ the 45 real templates in `tests/fixtures/corpus/`. Those templates are harvested
 Magento/Mage-OS tree and include `.html` files whose `{{` sequences are not directives at all,
 such as translation strings and JS templates. 4788 cases in total, 804 of which crash the
 stock filter. 751 carry a second expectation for the filter as it was before the
-September 2026 StyleSmuggler hardening, which compatible mode can target with
-`Options::withOutputNeutralizer(false)`.
+[StyleSmuggler](https://sansec.io/research/stylesmuggler-0day) hardening in Mage-OS 3.5.0,
+which compatible mode can target with `Options::withOutputNeutralizer(false)`.
 
 ### Re-recording
 
