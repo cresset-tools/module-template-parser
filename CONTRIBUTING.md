@@ -17,7 +17,7 @@ The `composer` image rather than `php:8.3-cli`: the suite needs the autoloader a
 Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console tests, and
 that image's 128M `memory_limit` is below what `GuardTripwireTest` needs.
 
-4524 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
+12818 tests. 431 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ### Mutation testing, without taking the machine down
@@ -46,8 +46,8 @@ recordings, so the differential runs anywhere with no Magento installation.
 The corpus is a matrix of value shapes against construct shapes, plus a no-variables pass and
 the 45 real templates in `tests/fixtures/corpus/`. Those templates are harvested from the
 Magento/Mage-OS tree and include `.html` files whose `{{` sequences are not directives at all,
-such as translation strings and JS templates. 3176 cases in total, 323 of which crash the
-stock filter. 364 carry a second expectation for the filter as it was before the
+such as translation strings and JS templates. 4788 cases in total, 804 of which crash the
+stock filter. 751 carry a second expectation for the filter as it was before the
 September 2026 StyleSmuggler hardening, which compatible mode can target with
 `Options::withOutputNeutralizer(false)`.
 
@@ -150,14 +150,21 @@ something the filter renders cannot erode the agreeing set one case at a time in
 ### The sensitivity canary
 
 Green assertions mean nothing if the corpus cannot tell a correct engine from a broken one, so
-each deliberate mis-configuration must produce divergences over the 2199 rendering-comparable
+each deliberate mis-configuration must produce divergences over the 2710 rendering-comparable
 cases:
 
 | Engine | Divergences |
 |---|---|
 | compatible (control) | 0 |
-| lenient (legacy quirks off) | 686 |
-| strict (default) | 1038 |
+| lenient (legacy quirks off) | 1103 |
+| standard truthiness (quirks and variables off) | 1103 |
+| strict (default) | 1519 |
+
+Only the control's 0 is asserted exactly. The others are asserted as floors — 40, 20 and 20 —
+because the point is that the corpus still *notices*, and a figure pinned to the byte would
+fail on every case added to the corpus. The two 1103s are the same number because the second
+mutation turns off a superset of what `lenient()` does; it is kept as a separate row because
+it is a separate switch, and either one going quiet is the signal this test exists for.
 
 ## Benchmarking
 
@@ -197,10 +204,10 @@ Not every commit needs one. A change a reader of the package would notice — a 
 guard, a public API, a divergence from the legacy filter — does. Refactors and test-only
 changes do not.
 
-Two numbers in the README are checked against the corpus by
-`LegacyParityTest::testTheReadmeHeadlineMatchesTheCorpus`, so adding cases fails the suite
-until the sentence is updated with them. The changelog's own count is written as "at the time
-of writing" and is not checked, a changelog being historical by nature.
+The corpus figures in the README and in this file are checked against the corpus itself by
+`LegacyParityTest::testTheProseMatchesTheCorpus`, so adding cases fails the suite until both
+are updated with them. The changelog's own count is written as "at the time of writing" and is
+not checked, a changelog being historical by nature.
 
 ## Reporting a security issue
 

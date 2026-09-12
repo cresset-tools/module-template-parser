@@ -147,42 +147,91 @@ final class LegacyParityTest extends TestCase
     }
 
     /**
-     * The README quotes three numbers about this corpus, and they had gone stale.
+     * The prose quotes numbers about this corpus, and they go stale.
      *
-     * A headline nobody recomputes is a claim that decays: it read 3176/323/2199 against a
-     * corpus of 4199/649/2679, understating the fatals by half. Asserted here so growing the
-     * corpus fails the suite until the sentence is updated with it - the same bargain the
-     * language documentation makes.
+     * A headline nobody recomputes is a claim that decays: the README read 3176/323/2199
+     * against a corpus of 4199/649/2679, understating the fatals by half. CONTRIBUTING is
+     * covered too, because that is where every stale figure survived the round that caught
+     * the README - it was not being read by anything.
+     *
+     * Asserted here so growing the corpus fails the suite until the sentences are updated
+     * with it - the same bargain the language documentation makes.
      */
-    public function testTheReadmeHeadlineMatchesTheCorpus(): void
+    public function testTheProseMatchesTheCorpus(): void
     {
         $cases = self::recordedCases();
         $fatal = 0;
         $comparable = 0;
+        $preHardening = 0;
 
         foreach ($cases as [$case]) {
             if ($case['outcome'] === 'throw') {
                 $fatal++;
                 continue;
             }
+            if (isset($case['pre_hardening'])) {
+                $preHardening++;
+            }
             if ($case['parity'] && !in_array(explode('/', $case['id'])[0], self::DELIBERATE_OVER_REFUSALS, true)) {
                 $comparable++;
             }
         }
 
-        $readme = (string)file_get_contents(dirname(__DIR__) . '/README.md');
+        $root = dirname(__DIR__);
 
-        foreach ([
-            'total cases'      => sprintf('**%d cases recorded', count($cases)),
-            'legacy fatals'    => sprintf('%d of them constructs the legacy filter cannot render', $fatal),
-            'compared cases'   => sprintf('the %d cases where both engines render', $comparable),
-        ] as $what => $sentence) {
-            self::assertStringContainsString(
-                $sentence,
-                $readme,
-                sprintf('the README headline is stale for %s - expected "%s"', $what, $sentence)
-            );
+        $expected = [
+            'README.md' => [
+                'total cases'    => sprintf('**%d cases recorded', count($cases)),
+                'legacy fatals'  => sprintf('%d of them constructs the legacy filter cannot render', $fatal),
+                'compared cases' => sprintf('the %d cases where both engines render', $comparable),
+                'replayed'       => sprintf('replays the %d recorded cases', count($cases)),
+                'pre-hardening'  => sprintf('%d cases carry a second expectation', $preHardening),
+            ],
+            'CONTRIBUTING.md' => [
+                'total cases'    => sprintf('%d cases in total', count($cases)),
+                'legacy fatals'  => sprintf('%d of which crash the', $fatal),
+                'pre-hardening'  => sprintf('%d carry a second expectation', $preHardening),
+                'compared cases' => sprintf('over the %d rendering-comparable', $comparable),
+            ],
+        ];
+
+        foreach ($expected as $file => $sentences) {
+            $prose = (string)file_get_contents($root . '/' . $file);
+            foreach ($sentences as $what => $sentence) {
+                self::assertStringContainsString(
+                    $sentence,
+                    $prose,
+                    sprintf('%s is stale for %s - expected "%s"', $file, $what, $sentence)
+                );
+            }
         }
+    }
+
+    /**
+     * The two files also quote the suite's own size, which they cannot compute.
+     *
+     * Not a count of tests - PHPUnit knows that and this does not - but the two files have to
+     * agree with each other, which is what actually went wrong: they were updated one at a
+     * time and drifted to different figures for the same run.
+     */
+    public function testBothFilesQuoteTheSameSuiteSize(): void
+    {
+        $figures = [];
+        foreach (['README.md', 'CONTRIBUTING.md'] as $file) {
+            $prose = (string)file_get_contents(dirname(__DIR__) . '/' . $file);
+            self::assertSame(
+                1,
+                preg_match('/^(\d+) tests\./m', $prose, $m),
+                $file . ' should state the suite size once, as "N tests."'
+            );
+            $figures[$file] = $m[1];
+        }
+
+        self::assertSame(
+            $figures['README.md'],
+            $figures['CONTRIBUTING.md'],
+            'the two files disagree about how many tests there are'
+        );
     }
 
     /**
@@ -329,9 +378,9 @@ final class LegacyParityTest extends TestCase
      * Where legacy raises a fatal, compatible mode refuses.
      *
      * This is the bug-for-bug contract: an engine that renders what the old one crashes on
-     * is a better engine, not a compatible one. 323 of the recorded cases crash the stock
-     * filter - degenerate directive names, stray closing tags, unclosed blocks - and
-     * compatible mode declines all of them, with a diagnostic rather than a TypeError.
+     * is a better engine, not a compatible one. The cases that crash the stock filter -
+     * degenerate directive names, stray closing tags, unclosed blocks - are declined here,
+     * with a diagnostic rather than a TypeError.
      */
     #[DataProvider('legacyFatalCases')]
     public function testCompatibleModeRefusesWhatLegacyCannotRender(array $case): void

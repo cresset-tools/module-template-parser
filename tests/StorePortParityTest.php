@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  * `tools/record-legacy.php` builds a filter out of a handful of required files and no
  * application, so it cannot reach {{store}}, {{media}}, {{view}}, {{protocol}}, {{block}},
  * {{widget}}, {{layout}}, {{config}}, {{customvar}}, {{template}}, {{css}} or {{inlinecss}}.
- * They were excluded from the parity corpus by construction - twelve of nineteen directives -
+ * They were excluded from the parity corpus by construction - twelve of eighteen directives -
  * and that is where every security bug adversarial fuzzing has found in this package has
  * been: four URL guard holes, three missing {{block}} controls, a {{layout}} that discarded
  * every parameter it was handed.

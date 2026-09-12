@@ -6,7 +6,7 @@ declare(strict_types=1);
  *
  *   php tools/record-store-ports.php            (run from inside a Magento/Mage-OS store)
  *
- * Twelve of the nineteen directives need a host to resolve at all - {{store}}, {{media}},
+ * Twelve of the eighteen directives need a host to resolve at all - {{store}}, {{media}},
  * {{view}}, {{protocol}}, {{block}}, {{widget}}, {{layout}}, {{config}}, {{customvar}},
  * {{template}}, {{css}}, {{inlinecss}} - so tools/record-legacy.php, which builds a filter out
  * of a handful of required files and no application, cannot reach them. They were excluded

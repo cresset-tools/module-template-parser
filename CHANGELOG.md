@@ -40,7 +40,7 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - `docs/directives.md`, generated from a live legacy filter rather than written by hand. The
   generator refuses to write the file when an example disagrees with the filter and the
   disagreement has not been declared.
-- A recorded corpus — 4354 cases at the time of writing, 649 of them constructs the legacy
+- A recorded corpus — 4788 cases at the time of writing, 804 of them constructs the legacy
   filter cannot render at all — replayed by the test suite, so parity is measured against
   recorded behaviour rather than asserted. Plus a benchmark against the legacy filter and
   mutation tripwires for the guards.

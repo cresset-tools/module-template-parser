@@ -265,7 +265,7 @@ the 2710 cases where both engines render, the surfaces are comparable and compat
 does not deliberately refuse, output is byte-identical.**
 
 That corpus is recorded from a filter built out of a handful of files and no application, so
-it reaches the seven directives that need no host. The other twelve — `store`, `media`, `view`,
+it reaches the six directives that need no host. The other twelve — `store`, `media`, `view`,
 `protocol`, `block`, `widget`, `layout`, `config`, `customvar`, `template`, `css`, `inlinecss`
 — are recorded separately against a **real store** by `tools/record-store-ports.php`, and what
 is replayed for them is the *tape*: every question the engine asked its ports and the answer it
@@ -352,7 +352,7 @@ by default; for a tree from before the hardening:
 TemplateEngine::withOptions(Options::compatible()->withOutputNeutralizer(false));
 ```
 
-The corpus records both, and 364 cases carry a second expectation for the older behaviour.
+The corpus records both, and 751 cases carry a second expectation for the older behaviour.
 This engine needs none of it — a value is never re-parsed here whatever the setting — so the
 flag does nothing outside compatible mode.
 
@@ -783,10 +783,10 @@ composer install
 vendor/bin/phpunit
 ```
 
-4524 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12818 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
-- `LegacyParityTest` replays the 3176 recorded cases, so the differential runs anywhere with
+- `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with
   no Magento installation, and drift in compatible mode shows up as a failing case rather than
   a surprise in production.
 - `StyleSmugglerDifferentialTest` asserts both halves of the vulnerability: that the recording
