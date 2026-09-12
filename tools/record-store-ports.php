@@ -27,8 +27,8 @@ declare(strict_types=1);
  * having changed its mind about what reaches the host.
  */
 
-// Magento's DI compiler require_once's any file under the package root; the guard keeps this
-// out of that, as tools/record-legacy.php does.
+// Inert unless invoked directly - see tools/harness.php. This tool runs inside a store and
+// does not use the harness, so it carries the guard and the ceiling itself.
 if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }

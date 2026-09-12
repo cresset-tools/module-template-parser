@@ -17,11 +17,12 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Four confirmed exploits, found by adversarial review of the URL directives.
+ * Confirmed exploits, found by adversarial review of the URL directives.
  *
- * All four shared one root cause: the guards treated their input as a PATH, checked a form
- * of it that was not the form that got shipped, and every one of these directives emits its
- * result unescaped. None of them had a test - deleting the guards left the suite green,
+ * Most shared one root cause: a guard checked a form of its input that was not the form that
+ * got shipped. The rest are the mirror image - a path segment nothing guarded at all, and a
+ * second copy of a list that was fixed only in the first place it appeared. Every one of
+ * these directives emits its result unescaped. None of them had a test - deleting the guards left the suite green,
  * which is how they got in.
  */
 final class UrlGuardRegressionTest extends TestCase

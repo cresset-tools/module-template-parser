@@ -38,7 +38,7 @@ final class MagentoGuardTest extends TestCase
         };
     }
 
-    /** Records what was constructed, so "was it built?" is observable. */
+    /** As MagentoAdapterTest's, plus a switch for what the layout hands back. */
     private function layout(array &$built, bool $returnWidget = true): LayoutInterface
     {
         return new class ($built, $returnWidget) implements LayoutInterface {
@@ -653,8 +653,7 @@ final class MagentoGuardTest extends TestCase
         self::assertSame([], $built, 'the block must not be constructed at all');
 
         // Control: the same class with no policy is CONSTRUCTED, so the refusal above is the
-        // policy's doing and not the type check's - the first version of this test named a
-        // class that does not exist and passed with the deny list deleted.
+        // policy's doing and not the type check's.
         $built = [];
         $open = new LayoutBlockRenderer($this->layout($built), $this->omConfig(), ['toHtml']);
         $open->render($class, [], 'toHtml');

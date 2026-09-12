@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 /**
  * The tokenizer factories StrictResolver and the directive processors construct through.
- *
- * Every declaration is guarded: inside a real installation the genuine classes exist and
- * redeclaring them is fatal.
  */
 
 namespace Magento\Framework\Filter\Template\Tokenizer;

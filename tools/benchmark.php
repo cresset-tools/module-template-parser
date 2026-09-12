@@ -22,11 +22,6 @@ if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }
 define('CRESSET_TEMPLATE_PARSER_TOOL', true);
-// The same ceiling the test bootstrap sets, for the same reason: bougie launches
-// PHP unlimited, and a tool that runs the whole corpus is where a runaway would hide.
-if (ini_get('memory_limit') === '-1') {
-    ini_set('memory_limit', '2G');
-}
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
@@ -92,8 +87,8 @@ $resolver = new StrictResolver(new VariableFactory());
         }
     };
 $simple = new SimpleDirective(new ProcessorPool(), new ParameterFactory(), $resolver, new FilterApplier(new FilterPool()));
-// No 'template' processor: this engine has no TemplateLoader port wired here, so including
-// it would time legacy resolving an include against this engine leaving it verbatim.
+// Also absent from the processor array, for the same reason as the registry stub above: the
+// like-for-like arrangement is that neither side resolves an include.
 $legacy = new BenchmarkEmailLikeLegacy(new StringUtils(), [], [
     'depend' => new DependDirective($resolver), 'if' => new IfDirective($resolver),
     'for' => new ForDirective($resolver),

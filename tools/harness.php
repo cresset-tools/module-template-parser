@@ -27,6 +27,13 @@ if (!defined('CRESSET_TEMPLATE_PARSER_TOOL')) {
     return;
 }
 
+// The same ceiling the test bootstrap sets, for the same reason: bougie launches PHP
+// unlimited, and a tool that runs the whole corpus is where a runaway would hide. Here
+// rather than in each tool, which is where it was written out six times.
+if (ini_get('memory_limit') === '-1') {
+    ini_set('memory_limit', '2G');
+}
+
 $magentoRoot = getenv('MAGENTO_ROOT') ?: '';
 if ($magentoRoot === '') {
     fwrite(STDERR, "MAGENTO_ROOT is not set. Point it at a Magento or Mage-OS checkout:
@@ -95,6 +102,9 @@ foreach ([
 // so several braced namespaces in one file made it invent "HarnessLaminas\Filter\FilterInterface"
 // and abort setup:di:compile. That split alone did not finish the job - PhpScanner went on
 // failing on a \Harness class it could not map to a file - which is what the extension settled.
+//
+// Each stub guards its declarations on class_exists: inside a real installation the genuine
+// classes exist and redeclaring them is fatal.
 require __DIR__ . '/stubs/Harness.php.stub';
 require __DIR__ . '/stubs/LaminasFilter.php.stub';
 require __DIR__ . '/stubs/MagentoFramework.php.stub';

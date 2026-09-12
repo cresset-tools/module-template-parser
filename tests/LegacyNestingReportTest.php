@@ -20,9 +20,9 @@ use PHPUnit\Framework\TestCase;
  * all six orderings of {{if}}, {{depend}} and {{for}} render three deep. Three is the
  * practical ceiling only because there are three body-taking directives to choose from.
  *
- * Compatible means bug-for-bug, so the capability matches: an engine that renders what the
- * old one crashes on is a better engine, not a compatible one, and `lenient` and `strict`
- * are the modes for wanting that.
+ * Compatible means bug-for-bug, so the capability matches - see LegacyParityTest's
+ * testCompatibleModeRefusesWhatLegacyCannotRender for the contract. `lenient` and `strict`
+ * are the modes for wanting the improvement.
  *
  * Opting out with withRefuseLegacyIncompatible(false) renders the construct and records it
  * on the Context instead, for anyone who wants the improvement but still needs to know which

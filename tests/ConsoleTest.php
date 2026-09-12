@@ -516,7 +516,7 @@ final class ConsoleTest extends TestCase
         ];
     }
 
-    /** int 0 and string "0" reach the engine as different things. */
+    /** A `:set` int and a JSON list arrive as an int and an array, not as strings. */
     public function testTypedValuesReachTheEngine(): void
     {
         $strict = $this->repl([

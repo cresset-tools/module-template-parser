@@ -4,9 +4,6 @@ declare(strict_types=1);
 /**
  * Framework\ObjectManager\ResetAfterRequestInterface, which Template\SignatureProvider
  * implements.
- *
- * Every declaration is guarded: inside a real installation the genuine classes exist and
- * redeclaring them is fatal.
  */
 
 namespace Magento\Framework\ObjectManager;

@@ -15,7 +15,8 @@ use PHPUnit\Framework\TestCase;
  * switched on without changing what customers see — while keeping the structural safety
  * properties, which are not negotiable in any mode.
  *
- * Parity measured by tools/parity.php over the shared directive surface: 138/138.
+ * Parity is measured by tools/parity.php over the shared directive surface. Nothing here
+ * recomputes the figure it prints, so run the tool rather than quoting it.
  */
 final class CompatibilityModeTest extends TestCase
 {

@@ -1,7 +1,4 @@
 <?php
-// strict_types matters here, not as house style: Email\Model\Template\Filter declares it,
-// so htmlentities() and rawurlencode() raise a TypeError on a non-string there. Without this
-// line the recorder would coerce instead, and record 46 legacy fatals as successful renders.
 declare(strict_types=1);
 // Declared in a *.php.stub so Magento's DI scanners never see it - see harness.php.
 

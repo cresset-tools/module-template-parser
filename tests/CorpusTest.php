@@ -14,8 +14,9 @@ use PHPUnit\Framework\TestCase;
  * Runs the parser over real templates harvested from the Magento/Mage-OS tree.
  *
  * These are the shapes merchants actually have stored, including .html files whose `{{`
- * sequences are not directives at all. The bar is: never throw, never lose content, never
- * execute anything that was not written in the template.
+ * sequences are not directives at all. The bar is: never throw, never lose content.
+ * Execution from data is SecurityTest's and StyleSmugglerDifferentialTest's subject; nothing
+ * here has variables to smuggle through.
  */
 final class CorpusTest extends TestCase
 {

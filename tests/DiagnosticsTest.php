@@ -14,9 +14,9 @@ use PHPUnit\Framework\TestCase;
 final class DiagnosticsTest extends TestCase
 {
     /**
-     * locate() counts "\n" and nothing else - deliberately, because a strpos loop over one
-     * byte is what keeps a 2.7 MB template out of a ten-second regex. excerpt() has to split
-     * the same way or the two disagree about which line is line three.
+     * locate() splits on "\n" and nothing else - deliberately, because indexing one byte with
+     * strpos is what keeps a 2.7 MB template out of a \R regex over the whole source. excerpt()
+     * has to split the same way, or the two disagree about which line is line three.
      */
     #[DataProvider('sourcesWithALineThreeCaret')]
     public function testTheCaretLandsUnderTheOffsetWhateverTheLineEndings(string $source, int $offset): void

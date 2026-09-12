@@ -3,9 +3,7 @@
 // so htmlentities() and rawurlencode() raise a TypeError on a non-string there. Without this
 // line the recorder would coerce instead, and record 46 legacy fatals as successful renders.
 declare(strict_types=1);
-// A class declaration lives here rather than in a *.php file so Magento's DI scanners
-// never try to reflect it: they walk every *.php under an installed module, and a
-// module installed from git ships tools/.
+// Declared in a *.php.stub so Magento's DI scanners never see it - see harness.php.
 
 use Magento\Framework\Filter\Template as LegacyTemplate;
 

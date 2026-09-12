@@ -318,7 +318,7 @@ final class FullDirectiveSurfaceTest extends TestCase
         ];
     }
 
-    /** With every port supplied, no stock directive is left unimplemented. */
+    /** With these ports supplied, every directive but {{template}} is implemented. */
     public function testTheWholeStockSurfaceIsCovered(): void
     {
         $registered = $this->engine()->evaluator()->registered();

@@ -10,18 +10,11 @@
  * Use a PRISTINE Magento checkout - see tools/harness.php.
  */
 declare(strict_types=1);
-// Marks this as a directly-invoked tool. Magento's DI compiler require_once's any
-// file declaring a class it has not loaded, and tools/ is not on its exclusion list,
-// so everything below must be inert when this file is merely included.
+// Inert unless invoked directly - see tools/harness.php.
 if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }
 define('CRESSET_TEMPLATE_PARSER_TOOL', true);
-// The same ceiling the test bootstrap sets, for the same reason: bougie launches
-// PHP unlimited, and a tool that runs the whole corpus is where a runaway would hide.
-if (ini_get('memory_limit') === '-1') {
-    ini_set('memory_limit', '2G');
-}
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
@@ -188,10 +181,8 @@ $values = [
 require PKGROOT . '/tests/fixtures/legacy/ObjectFixtures.php';
 
 /*
- * The recording runs against the real DataObject; the test run replays against
- * FakeDataObject. That is only sound while they behave alike, so prove it here - this is the
- * one process that has both classes loaded. Recording one object's behaviour and replaying
- * another's would be a parity measurement of nothing.
+ * Prove the two agree before writing anything - this is the one process with both classes
+ * loaded. ObjectFixtures' own docblock says why the split exists and why it has to hold.
  */
 (static function (): void {
     $real = new \Magento\Framework\DataObject(ObjectFixtures::dataObjectContents());
