@@ -281,10 +281,12 @@ final class FullDirectiveSurfaceTest extends TestCase
         ];
     }
 
-    public function testProtocolRejectsAnEmbeddedScheme(): void
+    public function testProtocolRejectsASchemeOrALineBreakInTheHost(): void
     {
         self::assertSame('', $this->engine()->render('{{protocol url="javascript:alert(1)"}}'));
-        self::assertSame('', $this->engine()->render('{{protocol url="evil.example\n"}}'));
+        // Double-quoted: single quotes made this a backslash and an `n`, so the case it was
+        // named for - a line break in the host - was never sent.
+        self::assertSame('', $this->engine()->render("{{protocol url=\"evil.example\n\"}}"));
     }
 
     // ------------------------------------------------------------------
@@ -325,5 +327,40 @@ final class FullDirectiveSurfaceTest extends TestCase
                   'store','media','view','css','layout','widget','protocol','block'] as $name) {
             self::assertContains($name, $registered, "{{{$name}}} should be implemented");
         }
+    }
+
+    /**
+     * A trailing newline is not part of any shape these guards name.
+     *
+     * PCRE's `$` matches at the end of the subject OR immediately before a final newline, so
+     * every `^…$` guard in this package accepted a value with a `\n` on the end: a design
+     * theme, a locale, an area, a module, a theme id, a config path, a custom-variable code, a
+     * base-URL type, and the host and path of a `{{protocol}}`. Each of those becomes a path
+     * segment, a lookup key or a URL. `\z` is the end of the subject and nothing else.
+     *
+     * The `{{protocol}}` host had a test already, written with a single-quoted `'\n'` - so it
+     * sent a backslash and an `n`, and passed without ever trying a line break.
+     */
+    #[DataProvider('valuesWithATrailingNewline')]
+    public function testNoGuardAcceptsATrailingNewline(string $template): void
+    {
+        self::assertSame('', $this->engine()->render($template));
+    }
+
+    /** @return array<string,array{0:string}> */
+    public static function valuesWithATrailingNewline(): array
+    {
+        return [
+            'protocol host' => ["{{protocol url=\"good.example\n\"}}"],
+            'protocol path' => ["{{protocol url=\"good.example/a\n\"}}"],
+            'store _type'   => ["{{store url=\"a/b\" _type=\"link\n\"}}"],
+            'config path'   => ["{{config path=\"general/store_information/name\n\"}}"],
+            'customvar'     => ["{{customvar code=\"my_var\n\"}}"],
+            'view area'     => ["{{view url=\"x.png\" area=\"frontend\n\"}}"],
+            'view locale'   => ["{{view url=\"x.png\" locale=\"en_US\n\"}}"],
+            'view theme'    => ["{{view url=\"x.png\" theme=\"Magento/luma\n\"}}"],
+            'view themeId'  => ["{{view url=\"x.png\" themeId=\"7\n\"}}"],
+            'view module'   => ["{{view url=\"x.png\" module=\"Magento_Email\n\"}}"],
+        ];
     }
 }

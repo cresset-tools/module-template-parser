@@ -76,7 +76,7 @@ final class MalformedTemplateTest extends TestCase
         $engine = TemplateEngine::compatible();
 
         if ($legacyCouldRender) {
-            self::assertIsString($engine->render($template, ['a' => 1]));
+            self::assertStringNotContainsString('<?php', $engine->render($template, ['a' => 1]));
             return;
         }
 

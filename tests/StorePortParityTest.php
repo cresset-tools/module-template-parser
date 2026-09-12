@@ -179,7 +179,7 @@ final class StorePortParityTest extends TestCase
         [, $result] = self::replay($case);
 
         if ($result[0] !== 'ok') {
-            self::assertTrue(true, 'a refusal renders nothing');
+            $this->addToAssertionCount(1);      // a refusal renders nothing
             return;
         }
 

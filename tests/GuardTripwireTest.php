@@ -733,7 +733,7 @@ final class GuardTripwireTest extends TestCase
     {
         return [
             'trailing space' => ['{{if x}}a{{else }}b{{/if}}'],
-            'leading space'  => ['{{if x}}a{{else  }}b{{/if}}'],
+            'two spaces'     => ['{{if x}}a{{else  }}b{{/if}}'],
             'tab'            => ["{{if x}}a{{else\t}}b{{/if}}"],
             'parameter'      => ['{{if x}}a{{else y}}b{{/if}}'],
         ];

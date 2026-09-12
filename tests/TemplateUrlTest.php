@@ -217,7 +217,7 @@ final class TemplateUrlTest extends TestCase
         self::assertSame([], $this->calls);
     }
 
-    /** Nothing about this is available to a template that renders through no port at all. */
+    /** A Context passed in place of loose variables reaches the port the same way. */
     public function testTheHostSeesTheContextItWasGiven(): void
     {
         $engine = $this->engine();

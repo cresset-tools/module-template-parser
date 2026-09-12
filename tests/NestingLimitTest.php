@@ -49,7 +49,7 @@ final class NestingLimitTest extends TestCase
         self::assertSame('X', (new TemplateEngine())->render($this->nest($names), $this->vars($names)));
     }
 
-    /** Unlimited nesting is supported by the grammar; the limit is a policy on top of it. */
+    /** The bound is on depth alone - which names are nested does not change it. */
     public function testAnyMixOfNamesNestsToTheLimit(): void
     {
         foreach ([['if','if','if'], ['depend','depend','depend'], ['depend','if','depend']] as $names) {

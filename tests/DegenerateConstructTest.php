@@ -103,7 +103,9 @@ final class DegenerateConstructTest extends TestCase
     #[DataProvider('legacyFatals')]
     public function testNonCompatibleModesJustRenderThemAsText(string $template): void
     {
-        self::assertSame($template, TemplateEngine::lenient()->render($template, ['x' => 'X']));
+        foreach ([TemplateEngine::lenient(), new TemplateEngine()] as $engine) {
+            self::assertSame($template, $engine->render($template, ['x' => 'X']));
+        }
     }
 
     public static function legacyFatals(): array

@@ -168,7 +168,7 @@ final class CustomDirectiveTest extends TestCase
         $this->render('X{{/mydir}}Y');
     }
 
-    /** Two different custom directives nest normally. */
+    /** Only a repeated name is the legacy fatal; two different ones pair the obvious way. */
     public function testTwoDifferentCustomDirectivesNest(): void
     {
         self::assertSame(

@@ -60,7 +60,7 @@ final class SecurityTest extends TestCase
         self::assertSame('[{{var postcode}}]', $out);
     }
 
-    /** Depth does not change the rule - there is no depth-sensitive behaviour at all. */
+    /** Depth does not change the rule; the only depth-sensitive thing is the bound itself. */
     public function testNestingDepthDoesNotEnableExecution(): void
     {
         $payload = '{{block class=X}}';

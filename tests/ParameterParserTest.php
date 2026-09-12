@@ -50,8 +50,8 @@ final class ParameterParserTest extends TestCase
         ];
     }
 
-    /** A value can never run past the directive; the lexer bounded it already. */
-    public function testValueCannotSwallowBraces(): void
+    /** Braces are ordinary bytes in a value; the lexer bounded the span before this runs. */
+    public function testBracesAreOrdinaryBytesInAValue(): void
     {
         $parsed = (new ParameterParser())->parse('class=A}}{{var x');
         self::assertSame('A}}{{var', $parsed['class']);

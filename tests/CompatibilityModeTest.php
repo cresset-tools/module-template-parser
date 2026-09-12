@@ -141,8 +141,8 @@ final class CompatibilityModeTest extends TestCase
             try {
                 $this->engine->render($template, ['x' => 1]);
                 self::fail('expected refusal for ' . $template);
-            } catch (\Cresset\TemplateParser\LegacyIncompatibleError) {
-                self::assertTrue(true);
+            } catch (\Cresset\TemplateParser\LegacyIncompatibleError $e) {
+                self::assertStringContainsString('does not start with a letter', $e->getMessage(), $template);
             }
         }
     }
@@ -226,19 +226,28 @@ final class CompatibilityModeTest extends TestCase
         }
     }
 
-    /** The nesting bound still applies. */
-    public function testNestingLimitStillApplies(): void
+    /** Same-name nesting is refused before the depth bound is ever reached. */
+    public function testLegacyIncompatibilityBitesBeforeTheNestingBound(): void
     {
-        // Legacy incompatibility bites first here, at two levels rather than four.
         $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
         $this->engine->render(
             '{{if a}}{{if a}}{{if a}}{{if a}}X{{/if}}{{/if}}{{/if}}{{/if}}',
             ['a' => 1]
         );
+    }
 
+    /**
+     * With that refusal off, the depth bound still applies.
+     *
+     * This used to be the second half of the test above, after an expectException that had
+     * already fired - so it never ran, and NestingLimitError was asserted nowhere in this file.
+     */
+    public function testNestingLimitStillApplies(): void
+    {
         $permissive = TemplateEngine::withOptions(
             Options::compatible()->withRefuseLegacyIncompatible(false)
         );
+
         $this->expectException(\Cresset\TemplateParser\NestingLimitError::class);
         $permissive->render('{{if a}}{{if a}}{{if a}}{{if a}}X{{/if}}{{/if}}{{/if}}{{/if}}', ['a' => 1]);
     }

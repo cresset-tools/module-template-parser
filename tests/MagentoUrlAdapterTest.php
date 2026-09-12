@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class MagentoUrlAdapterTest extends TestCase
 {
-    /** @param array<string,string> $urls */
+    /** @param list<array{0:?string,1:mixed}> $calls */
     private function urlModel(array &$calls): UrlInterface
     {
         return new class ($calls) implements UrlInterface {
@@ -254,7 +254,7 @@ final class MagentoUrlAdapterTest extends TestCase
         self::assertSame('Live/theme', $seen[1]['theme'], 'with none given, the live design is the fallback');
     }
 
-    /** A missing or unreadable asset yields null rather than taking the render down. */    /** A missing or unreadable asset yields null rather than taking the render down. */
+    /** A missing or unreadable asset yields null rather than taking the render down. */
     public function testAnAssetThatCannotBeLoadedYieldsNull(): void
     {
         $repository = new class extends Repository {

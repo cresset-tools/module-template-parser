@@ -54,11 +54,11 @@ final class HostDirectives
      * @var array<string,string>
      */
     private const DESIGN_PARAMETER_SHAPES = [
-        'area' => '/^[a-zA-Z0-9_]{1,64}$/',
-        'locale' => '/^[a-zA-Z0-9_-]{1,32}$/',
-        'module' => '/^[a-zA-Z0-9_]{1,128}$/',
-        'theme' => '#^[a-zA-Z0-9_]{1,64}/[a-zA-Z0-9_-]{1,64}$#',
-        'themeId' => '/^[0-9]{1,10}$/',
+        'area' => '/^[a-zA-Z0-9_]{1,64}\z/',
+        'locale' => '/^[a-zA-Z0-9_-]{1,32}\z/',
+        'module' => '/^[a-zA-Z0-9_]{1,128}\z/',
+        'theme' => '#^[a-zA-Z0-9_]{1,64}/[a-zA-Z0-9_-]{1,64}\z#',
+        'themeId' => '/^[0-9]{1,10}\z/',
     ];
 
     /**
@@ -387,7 +387,7 @@ final class HostDirectives
                     // host, an optional port and a path - the previous pattern had no port,
                     // which refused the `example.com:8080/a` legacy renders, and allowed every
                     // markup delimiter after the first slash.
-                    if (!preg_match('#^[a-zA-Z0-9.-]+(?::[0-9]{1,5})?(/[^\s]*)?$#', $host, $m)) {
+                    if (!preg_match('#^[a-zA-Z0-9.-]+(?::[0-9]{1,5})?(/[^\s]*)?\z#', $host, $m)) {
                         return '';
                     }
                     // Only the tail goes through the path guard. The host cannot: to a guard

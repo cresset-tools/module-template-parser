@@ -373,7 +373,7 @@ final class MagentoIntegrationTest extends TestCase
         self::assertSame([], $lines);
     }
 
-    /** A finisher that raises must not take a shadow run down with it. */    /** A finisher that raises must not take a shadow run down with it. */
+    /** A finisher that raises must not take a shadow run down with it. */
     public function testAFinisherThatRaisesStillLeavesTheLegacyResultStanding(): void
     {
         $lines = [];

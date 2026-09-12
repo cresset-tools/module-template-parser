@@ -226,7 +226,7 @@ final class PathGuard
         // set (link, web, media, static) and not free text - it is skipped by the loop below
         // as a flag, which would otherwise leave it the one unguarded spelling.
         $type = $parameters['_type'] ?? null;
-        if (is_string($type) && $type !== '' && !preg_match('/^[a-z]{1,16}$/', $type)) {
+        if (is_string($type) && $type !== '' && !preg_match('/^[a-z]{1,16}\z/', $type)) {
             return false;
         }
 
@@ -258,7 +258,7 @@ final class PathGuard
     /** A config path is a slash-separated identifier, nothing more. */
     public static function isSafeConfigPath(string $path): bool
     {
-        return $path !== '' && (bool)preg_match('#^[a-zA-Z0-9_]+(/[a-zA-Z0-9_]+)*$#', $path);
+        return $path !== '' && (bool)preg_match('#^[a-zA-Z0-9_]+(/[a-zA-Z0-9_]+)*\z#', $path);
     }
 
     /**
@@ -288,6 +288,6 @@ final class PathGuard
     /** A layout handle or widget/block type is an identifier, not a path. */
     public static function isSafeIdentifier(string $value): bool
     {
-        return $value !== '' && (bool)preg_match('#^[a-zA-Z0-9_\\\\.-]{1,255}$#', $value);
+        return $value !== '' && (bool)preg_match('#^[a-zA-Z0-9_\\\\.-]{1,255}\z#', $value);
     }
 }
