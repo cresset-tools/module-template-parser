@@ -62,7 +62,7 @@ final class HostDirectives
     ];
 
     /**
-     * The design parameters Asset\Repository turns into static-URL path segments.
+     * Whether every design parameter is a shape Asset\Repository can make a path segment of.
      *
      * FallbackContext::generatePath() is `$area . '/' . $theme . '/' . $locale` with no
      * validation of any of the three, and `module` becomes a segment of its own, so
@@ -70,6 +70,8 @@ final class HostDirectives
      * as a same-origin URL. Each is held to its own shape rather than to a path guard,
      * because none of them is a path: an area and a module are identifiers, a locale is
      * `en_US`, and a theme is exactly `Vendor/name`.
+     *
+     * @param array<string,mixed> $parameters
      */
     private static function designParametersAreSafe(array $parameters): bool
     {
@@ -307,9 +309,8 @@ final class HostDirectives
                 if (!PathGuard::isSafeVariableCode($code)) {
                     return '';
                 }
-                // The plain flag was hardcoded false, so a plain-text email got the variable's
-                // HTML value - markup in a text/plain body. The port has taken this argument
-                // since it was written; nothing was passing it.
+                // The plain flag decides which stored value is read. Passing false
+                // unconditionally puts the variable's HTML into a text/plain body.
                 return (string)($vars->value($code, $c->plainText()) ?? '');
             });
         }

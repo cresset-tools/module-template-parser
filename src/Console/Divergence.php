@@ -29,8 +29,9 @@ class Divergence
      *
      * The lead-in is clamped to the width rather than fixed, because a fixed 20 bytes of it
      * at `--show=20` - the floor DiffCommand clamps to - spends the whole excerpt before
-     * reaching the difference, and both sides then print the same text. At the two widths in
-     * ordinary use the clamp does nothing.
+     * reaching the difference, and both sides then print the same text. At the default width
+     * of 60 and anything wider the clamp is inert; below that it is what keeps the caret in
+     * frame.
      */
     public function excerpt(int $width = 60): array
     {

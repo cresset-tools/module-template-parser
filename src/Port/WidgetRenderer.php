@@ -11,5 +11,6 @@ namespace Cresset\TemplateParser\Port;
  */
 interface WidgetRenderer
 {
+    /** @param array<string,string|null> $parameters */
     public function render(string $type, array $parameters): string;
 }

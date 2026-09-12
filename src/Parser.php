@@ -28,7 +28,8 @@ final class Parser
     /** @var LegacyIncompatibility[] */
     private array $incompatibilities = [];
 
-    /* Nullable, not `= new X()` - a constructor default is fatal under the DI compiler. See TemplateEngine. */
+    /* The CONSTRUCTOR parameter is nullable, not `= new DirectiveSpec()`: a constructor
+     * default is fatal under the DI compiler. See TemplateEngine. */
     private readonly DirectiveSpec $spec;
 
     private readonly Options $options;
@@ -485,6 +486,9 @@ final class Parser
     private const LEGACY_LOOP_PATTERN =
         '/{{for(?P<loopItem>.*? )(in)(?P<loopData>.*?)}}(?P<loopBody>.*?){{\/for}}/si';
 
+    /** The opening half of LEGACY_LOOP_PATTERN, anchored, for asking about one construct. */
+    private const LEGACY_LOOP_OPENER = '/^{{for.*? in.*?}}/si';
+
     /** @var list<array{0:int,1:int}> half-open [from, to) offsets of each loop body */
     private array $loopBodySpans = [];
 
@@ -499,9 +503,8 @@ final class Parser
      * ProcessorPool::get() is never called, so the TypeError this engine was warning about
      * cannot happen there.
      *
-     * Refusing them anyway was an over-refusal carrying a claim that is simply false in this
-     * position - the failure mode testNoRefusalClaimsACrashTheFilterDoesNotHave exists to
-     * prevent, missed because every corpus case put these constructs at the top level.
+     * A refusal here would assert a crash the filter does not have, which is the failure mode
+     * testNoRefusalClaimsACrashTheFilterDoesNotHave guards against.
      *
      * The exemption stops exactly where the filter's does. An UNCLOSED `{{for}}` matches no
      * loop pattern, so its contents are ordinary source and still fatal; so is anything after
@@ -510,24 +513,35 @@ final class Parser
      */
     private function insideLoopBody(int $offset): bool
     {
-        // With ONE exception, and it is the construct that creates the body in the first
-        // place: a `{{for}}` or a `{{/for}}` in here means a nested pair, and the lazy match
-        // strands the outer closer (see LEGACY_LOOP_PATTERN). A stranded closer captures an
-        // empty directive name and raises, so both still refuse. Everything else in there is
-        // a variable read that renders.
-        if (str_starts_with(substr($this->source, $offset, 7), '{{for')
-            || str_starts_with(substr($this->source, $offset, 8), '{{/for}}')
-        ) {
-            return false;
-        }
-
+        $bodyEnd = null;
         foreach ($this->loopBodySpans as [$from, $to]) {
             if ($offset >= $from && $offset < $to) {
-                return true;
+                $bodyEnd = $to;
+                break;
             }
         }
 
-        return false;
+        if ($bodyEnd === null) {
+            return false;
+        }
+
+        // With ONE exception, and it is the construct that creates the body in the first
+        // place. A nested loop opener strands the outer `{{/for}}`: LEGACY_LOOP_PATTERN is
+        // lazy on both halves, so the match runs from the outer opener to the INNER closer
+        // and the outer one is left outside any body, where it captures an empty directive
+        // name and raises. So the filter cannot express a nested loop at all, and a nested
+        // opener is exactly the thing that must still be refused. Everything else in a loop
+        // body is a variable read that renders.
+        //
+        // An OPENER, matched, not a name starting `for`. `{{format x in rows}}` opens a loop
+        // to that pattern and `{{for2 a}}` does not, and a prefix test refused `{{for2 a}}`
+        // here - claiming a crash the filter does not have, where it renders as an empty
+        // variable read. The window stops at the body's end because a match beyond it would
+        // not be nested inside this loop.
+        return preg_match(
+            self::LEGACY_LOOP_OPENER,
+            substr($this->source, $offset, $bodyEnd - $offset)
+        ) !== 1;
     }
 
     /** Walked one match at a time: a match table over a large source is how this once OOMed. */

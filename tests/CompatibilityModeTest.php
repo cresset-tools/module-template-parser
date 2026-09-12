@@ -168,6 +168,56 @@ final class CompatibilityModeTest extends TestCase
         }
     }
 
+    /**
+     * Inside a `{{for}}` body, only a real loop OPENER loses the exemption.
+     *
+     * Legacy's `ForDirective` does not render its body - it `str_replace`s each construct
+     * with the variable resolution of that construct's parameter text - so nothing in there
+     * reaches a directive processor and nothing in there can be a legacy fatal. The one
+     * exception is a nested loop, which strands the outer `{{/for}}` and really does raise.
+     *
+     * The test for that exception was `str_starts_with($construct, '{{for')`, which is wider
+     * than `LOOP_PATTERN`: `{{for2 a}}` is not a loop opener there, and refusing it claimed
+     * a crash the filter does not have. Measured against a real filter at the time of this
+     * commit, with `a = [['n'=>1],['n'=>2]]`:
+     *
+     *     {{for r in a}}[{{for2 x}}]{{/for}}              legacy `[][]`, renders here
+     *     {{for r in a}}[{{format x in a}}y{{/for}}]{{/for}}   legacy TypeError, refused here
+     *
+     * No corpus case puts a `{{for`-prefixed construct inside a loop body, which is why
+     * `testNoRefusalClaimsACrashTheFilterDoesNotHave` never saw it.
+     */
+    #[DataProvider('constructsInsideALoopBody')]
+    public function testOnlyANestedLoopOpenerIsRefusedInsideALoopBody(string $body, bool $refused): void
+    {
+        $template = '{{for r in a}}[' . $body . ']{{/for}}';
+        $rows = ['a' => [['n' => 1], ['n' => 2]]];
+
+        if ($refused) {
+            $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
+            $this->engine->render($template, $rows);
+
+            return;
+        }
+
+        self::assertIsString($this->engine->render($template, $rows));
+    }
+
+    public static function constructsInsideALoopBody(): array
+    {
+        return [
+            // Not loop openers: LOOP_PATTERN needs a ` in ` before the closing braces.
+            'digit in the name'  => ['{{for2 x}}', false],
+            'dot after the name' => ['{{for.x}}', false],
+            'longer name'        => ['{{forloop}}', false],
+            'unrelated name'     => ['{{var2 x}}', false],
+            // Loop openers, whatever the name looks like - the pattern matches `{{for` then
+            // anything up to ` in`, so this is one to the filter as much as `{{for x in a}}`.
+            'nested for'         => ['{{for s in a}}y{{/for}}', true],
+            'nested format'      => ['{{format x in a}}y{{/for}}', true],
+        ];
+    }
+
     /** But prose beginning with a letter is rendered verbatim, exactly as legacy does. */
     public function testProseBeginningWithALetterIsRenderedVerbatim(): void
     {

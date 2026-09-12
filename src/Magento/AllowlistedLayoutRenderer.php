@@ -34,7 +34,7 @@ class AllowlistedLayoutRenderer implements LayoutRenderer
      */
     private const CAPABILITY_PARAMETERS = ['template', 'module_name'];
 
-    /** @param array<string,string> $parameters */
+    /** @param array<string,string|null> $parameters */
     public function render(string $handle, string $area, array $parameters): string
     {
         if (!in_array($handle, $this->allowedHandles, true)) {

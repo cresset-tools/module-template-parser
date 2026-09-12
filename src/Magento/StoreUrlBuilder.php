@@ -22,7 +22,7 @@ class StoreUrlBuilder implements UrlBuilder
     ) {
     }
 
-    /** @param array<string,string> $parameters */
+    /** @param array<string,string|null> $parameters */
     public function storeUrl(string $path, array $parameters): string
     {
         $query = [];
@@ -48,7 +48,7 @@ class StoreUrlBuilder implements UrlBuilder
         return $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA) . $path;
     }
 
-    /** @param array<string,string> $parameters */
+    /** @param array<string,string|null> $parameters */
     public function viewUrl(string $path, array $parameters): string
     {
         return $this->assetRepository->getUrlWithParams($path, $parameters);

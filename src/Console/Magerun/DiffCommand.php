@@ -6,13 +6,7 @@ namespace Cresset\TemplateParser\Console\Magerun;
 use Cresset\TemplateParser\Console\Command\DiffCommand as BaseCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-/**
- * The standalone Diff command, renamed for magerun and given its ObjectManager.
- *
- * Nothing is reimplemented: the behaviour lives in the base command so the two entrypoints
- * cannot drift. Prefixed with template-parser: because magerun's namespace is shared with
- * every other module.
- */
+/** The standalone Diff command, renamed for magerun. See Magerun\CheckCommand. */
 #[AsCommand(name: 'template-parser:diff')]
 class DiffCommand extends BaseCommand
 {

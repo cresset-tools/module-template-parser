@@ -21,7 +21,11 @@ namespace Cresset\TemplateParser;
  */
 final class RenderPolicy
 {
-    /** @param string[]|null $directives @param string[]|null $blocks */
+    /**
+     * @param string[]|null $directives
+     * @param string[]|null $blocks
+     * @param int|null $maxNestingDepth
+     */
     private function __construct(
         private readonly ?array $directives = null,
         private readonly ?array $blocks = null,

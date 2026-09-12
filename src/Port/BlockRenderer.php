@@ -13,6 +13,6 @@ namespace Cresset\TemplateParser\Port;
  */
 interface BlockRenderer
 {
-    /** @param array<string,string> $data */
+    /** @param array<string,string|null> $data */
     public function render(string $class, array $data, string $method): string;
 }

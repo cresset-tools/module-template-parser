@@ -43,7 +43,7 @@ class EngineFactory
         return TemplateEngine::forHost($this->hostServices($storeId), $mode->options());
     }
 
-    /** Which directives the current host can actually resolve, for reporting. */
+    /** @return string[] which directives the current host can actually resolve, for reporting */
     public function wiredDirectives(?int $storeId = null): array
     {
         return $this->create(Mode::Lenient, $storeId)->evaluator()->registered();

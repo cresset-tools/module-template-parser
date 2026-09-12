@@ -5,7 +5,10 @@ namespace Cresset\TemplateParser\Ast;
 
 final class RootNode implements Node
 {
-    /** @param Node[] $children */
+    /**
+     * @param Node[] $children
+     * @param \Cresset\TemplateParser\LegacyIncompatibility[] $incompatibilities
+     */
     public function __construct(
         private readonly array $children = [],
         private readonly string $source = '',

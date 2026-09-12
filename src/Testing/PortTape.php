@@ -92,7 +92,11 @@ final class PortTape
         return $expected['returned'];
     }
 
-    /** Calls the tape holds that the replay never made - a guard that started refusing. */
+    /**
+     * Calls the tape holds that the replay never made - a guard that started refusing.
+     *
+     * @return list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string}>
+     */
     public function unplayed(): array
     {
         return array_slice($this->entries, $this->position);

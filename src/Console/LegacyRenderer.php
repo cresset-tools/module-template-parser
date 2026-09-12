@@ -26,10 +26,9 @@ namespace Cresset\TemplateParser\Console;
 class LegacyRenderer
 {
     /**
-     * @param ?StoreEmulator $stores the ONE emulator in the process. Magento's Emulation does
-     *        not nest - an inner stop tears down an outer emulation - so this renderer must
-     *        not start its own alongside a caller's. Pass the caller's; a fresh one here would
-     *        have its own depth counter and reintroduce exactly that.
+     * @param ?StoreEmulator $stores the ONE emulator in the process - see StoreEmulator::$depth.
+     *        A fresh one here would have its own counter and so would not see a caller's
+     *        emulation at all.
      */
     public function __construct(
         private readonly MagentoContext $magento,
@@ -121,8 +120,7 @@ class LegacyRenderer
         // applyDesignConfig() does, and it is the only reason DesignInterface has a theme to
         // resolve {{css}} and {{view}} against. Calling getProcessedTemplate() on its own
         // skips it. applyDesignConfig() is protected, so the emulation is performed through
-        // the package's emulator instead - never directly, because Magento's Emulation does
-        // not nest and an inner stop would tear down a caller's.
+        // the package's emulator instead - never directly; see StoreEmulator::$depth.
         return $stores->around(
             $storeId,
             fn (): LegacyRender => $this->renderEmailIn($model, $template, $variables)
@@ -191,9 +189,8 @@ class LegacyRenderer
     /**
      * The variables the model ended up handing its filter.
      *
-     * addEmailVariables() adds `store`, `logo_url`, `store_phone` and about a dozen more,
-     * and getProcessedTemplate() puts the model itself in `this`. It is protected, and
-     * listing what it adds here would be a second implementation of it - one that drifts
+     * The model adds a dozen of its own - see LegacyRender. addEmailVariables() is protected,
+     * and listing what it adds here would be a second implementation of it, one that drifts
      * silently the first time Magento adds a variable. So read back what was actually used.
      *
      * Filter\Template::$templateVars is protected with no getter and nothing else exposes

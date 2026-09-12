@@ -66,7 +66,10 @@ class PoolCustomDirectiveRenderer implements CustomDirectiveRenderer
         return $this->names = $names;
     }
 
-    /** @param array<string,string> $parameters @param string[] $modifiers */
+    /**
+     * @param array<string,string|null> $parameters
+     * @param string[] $modifiers
+     */
     public function render(
         string $name,
         ?string $value,

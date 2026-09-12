@@ -49,12 +49,10 @@ class AssetStylesheetLoader implements StylesheetLoader
     /** @param array<string,mixed> $designParams */
     private function contentOf(string $file, array $designParams): string
     {
-        // What the caller was given beats what this can see. The filter resolves a stylesheet
-        // against a snapshot the template model handed it inside the model's own emulation,
-        // and getProcessedTemplate() cancels that emulation before filter() runs - so reading
-        // the design here resolves a DIFFERENT theme from the one the filter used, and the
-        // same template gets a different stylesheet depending on when it is rendered. The
-        // live read stays as the fallback for a caller with no design to offer.
+        // What the caller was given beats what this can see, for the reason
+        // Port\StylesheetLoader::load() gives: a live read here resolves a different theme
+        // from the one the filter used. The live read stays as the fallback for a caller with
+        // no design to offer, which is the CMS surface.
         $asset = $this->assetRepository->createAsset($file, $designParams ?: $this->designParams());
 
         if ($this->filesystem !== null) {

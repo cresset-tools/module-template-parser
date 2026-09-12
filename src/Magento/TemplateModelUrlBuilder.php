@@ -44,10 +44,8 @@ class TemplateModelUrlBuilder implements TemplateUrlBuilder
         // Url::_getRouteParams() as `$key . '/' . $value . '/'`, key included.
         //
         // This is the same sink {{store}} reaches, so it gets the same guard rather than its
-        // own. It had its own until now - a list naming `_direct`, `_fragment` and
-        // `_escape_params` - which is the list that was found wrong for {{store}} and fixed
-        // there. The copy here was missed, so `[x:'../../..']` walked straight past it while
-        // the identical payload through {{store}} was refused. One guard, called twice.
+        // own. A list of parameter NAMES cannot do the job here: the set is open, so
+        // `[x:'../../..']` walks past any such list. One guard, called twice.
         if (!PathGuard::routeParametersAreSafe($parameters)) {
             return '';
         }

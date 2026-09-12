@@ -23,13 +23,10 @@ final class DirectiveSpec
     /**
      * Known self-closing directives, from the stock filter surface.
      *
-     * `filter` was on this list and is not a directive. Magento has two extension points and
-     * they are easy to confuse: SimpleDirective\ProcessorPool registers arbitrary NAMED
-     * directives, so a module adding `mydir` gets `{{mydir}}`, while
-     * DirectiveProcessor\Filter\FilterPool registers MODIFIERS, so one adding `foofilter`
-     * gets `{{var x|foofilter}}`. There is no `{{filter}}` in either, and no stock template
-     * uses one. Listing it made knownNames() claim a directive that does not exist, which is
-     * what the diff notes and the render policy are built out of.
+     * `filter` was on this list and is not a directive: there is no `{{filter}}` in either of
+     * Magento's two extension points - see Port\CustomDirectiveRenderer for what they are -
+     * and no stock template uses one. Listing it made knownNames() claim a directive that does
+     * not exist, which is what the diff notes and the render policy are built out of.
      *
      * A ProcessorPool directive is the third kind, and is declared through $extraOptional
      * rather than here - see isOptionalBlock().

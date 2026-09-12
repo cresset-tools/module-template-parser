@@ -18,12 +18,12 @@ namespace Cresset\TemplateParser\Port;
  */
 interface UrlBuilder
 {
-    /** @param array<string,string> $parameters */
+    /** @param array<string,string|null> $parameters */
     public function storeUrl(string $path, array $parameters): string;
 
     public function mediaUrl(string $path): string;
 
-    /** @param array<string,string> $parameters */
+    /** @param array<string,string|null> $parameters */
     public function viewUrl(string $path, array $parameters): string;
 
     /** Whether the current store is being served over HTTPS, for {{protocol}}. */

@@ -36,7 +36,8 @@ final class Evaluator
 
     private string $source = '';
 
-    /* Nullable, not `= new X()` - a constructor default is fatal under the DI compiler. See TemplateEngine. */
+    /* The CONSTRUCTOR parameter is nullable, not `= new VariableResolver()`: a constructor
+     * default is fatal under the DI compiler. See TemplateEngine. */
     private readonly VariableResolver $variables;
 
     private readonly ParameterParser $parameters;
@@ -271,6 +272,8 @@ final class Evaluator
      *
      * Pass the context to get that resolution. Without one the values come back raw, which
      * is what the callers that only inspect a directive - rather than render it - want.
+     *
+     * @return array<string,string|null> null where a `$name` value did not resolve
      */
     public function params(DirectiveNode $node, ?Context $context = null): array
     {

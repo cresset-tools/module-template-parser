@@ -26,6 +26,8 @@ class ShadowComparator
 
     /**
      * @param array<string,mixed> $variables
+     * @param bool $plainTemplateMode the subject is rendering the PLAIN part of an email
+     * @param array<string,mixed> $designParams the design the legacy filter resolved {{css}} against
      * @param ?callable(string):string $finish whatever the host does to a FINISHED render
      * @return string the LEGACY result, always
      *

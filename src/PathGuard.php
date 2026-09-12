@@ -91,7 +91,8 @@ final class PathGuard
         }
 
         foreach ($candidates as $candidate) {
-            // Null bytes and control characters.
+            // Control bytes, which truncate or re-target a path in whatever consumes it: a
+            // NUL ends the string for anything reaching C, and CR/LF split a header.
             if (preg_match('/[\x00-\x1F\x7F]/', $candidate)) {
                 return false;
             }
@@ -215,8 +216,7 @@ final class PathGuard
      * is a second route wearing a different name. But it is not special - see the loop.
      *
      * Called from both sinks template text can reach: `{{store url=}}` and
-     * `{{var this.getUrl(...)}}`. They had a guard each until the second was found still
-     * carrying the superseded version of a fix made to the first.
+     * `{{var this.getUrl(...)}}`. One function, so a change to it cannot reach only one.
      *
      * @param array<string,mixed> $parameters
      */

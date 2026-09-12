@@ -29,7 +29,7 @@ interface CustomDirectiveRenderer
 
     /**
      * @param ?string $value the quoted value, as written - the host decides what it means
-     * @param array<string,string> $parameters with `$name` values already resolved
+     * @param array<string,string|null> $parameters with `$name` values already resolved
      * @param ?string $body the rendered body, or null when the directive was not paired
      * @param string[] $modifiers the modifiers the TEMPLATE named, which may be empty
      *

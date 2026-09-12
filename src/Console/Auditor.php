@@ -139,8 +139,8 @@ class Auditor
 
                 $legacyOutput = $legacyRender?->output;
                 // The variables Magento built for the legacy render, not the ones this tool
-                // was handed: an email template model adds a dozen store variables of its
-                // own, and rendering our side without them compares two different inputs.
+                // was handed - rendering our side without them compares two different inputs.
+                // See LegacyRender for what the model adds.
                 $variables = $legacyRender?->variables ?: $subject->variables;
 
                 $ours = null;
@@ -156,8 +156,7 @@ class Auditor
                         RenderPolicy::unrestricted(),
                         false,
                         // The design the filter resolved its stylesheets against. Looking it
-                        // up here would give a different theme: the model cancels its own
-                        // emulation before filter() returns.
+                        // up here gives a different theme - see Port\StylesheetLoader::load().
                         $legacyRender?->designParams ?? []
                     ));
                     // Whatever the host does to a finished render, it does to both.

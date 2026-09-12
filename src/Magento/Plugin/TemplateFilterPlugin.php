@@ -74,6 +74,11 @@ class TemplateFilterPlugin
      * without capturing it here the candidate render would use the HTML value of every custom
      * variable while the legacy render used the text one, and every plain email would report
      * as a divergence caused by nothing.
+     *
+     * `$plain` is untyped because the method it plugs into is: forwarded as given, cast only
+     * for the copy kept here.
+     *
+     * @return array{0:mixed}
      */
     public function beforeSetPlainTemplateMode(LegacyTemplate $subject, $plain): array
     {
@@ -112,10 +117,10 @@ class TemplateFilterPlugin
     }
 
     /**
-     * Compares, and returns whatever the comparator decides.
+     * Compares, and returns the legacy result.
      *
-     * In shadow mode that is always the legacy result, so enabling this changes nothing a
-     * customer sees. The comparator is the only place that decides otherwise.
+     * The comparator returns its input unchanged on every path, so enabling this changes
+     * nothing a customer sees; the candidate render exists only to be logged when it differs.
      */
     public function afterFilter(LegacyTemplate $subject, string $result, string $value): string
     {

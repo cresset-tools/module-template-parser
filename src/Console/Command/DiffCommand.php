@@ -49,10 +49,9 @@ HELP);
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $magento = $this->magento();
-        // ONE emulator for the process. Magento's Emulation does not nest, and its stop
-        // restores unconditionally - so a renderer with its own would tear down the Auditor's
-        // and every template after the first would resolve {{css}} and {{view}} against no
-        // theme at all.
+        // ONE emulator for the process - see StoreEmulator::$depth. A renderer with its own
+        // would tear down the Auditor's, and every template after the first would resolve
+        // {{css}} and {{view}} against no theme at all.
         $stores = new StoreEmulator($magento);
         $legacy = new LegacyRenderer($magento, $stores);
 

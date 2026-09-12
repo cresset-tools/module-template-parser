@@ -26,8 +26,7 @@ final class Lexer
 
     /*
      * Nullable, not `= new DirectiveSpec()` - a constructor default is fatal under the DI
-     * compiler. See TemplateEngine. This one was missed when the others were fixed because
-     * the sweep that checked for it could not resolve classes in subdirectories.
+     * compiler. See TemplateEngine.
      */
     public function __construct(?\Cresset\TemplateParser\DirectiveSpec $spec = null)
     {
@@ -147,7 +146,8 @@ final class Lexer
             // Quotes only shelter a `{{` when they are quotes. In `{{var c}"{{else}}` the
             // `"` never closes - it is HTML around a directive that lost a brace - so
             // honouring it would hide the {{else}} and both branches would render again.
-            // closeOutsideQuotes() returning a position is the proof that they balance.
+            // One of the two proofs that the quotes balance; the other is closerMayBeQuoted()
+            // answering no, which is the else path above.
             if (self::openerInsideSpan($source, $afterOpen, $close, $quotesClose)) {
                 // Where this engine and the legacy regex part company, so the parser is told.
                 // Here the opener is text and the directive after it renders; there, the lazy

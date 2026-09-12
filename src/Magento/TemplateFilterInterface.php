@@ -35,9 +35,8 @@ interface TemplateFilterInterface
      *
      * Named as Email\Model\Template\Filter names it, for the same reason setPlainTemplateMode
      * is: AbstractTemplate::getProcessedTemplate() calls exactly this on the filter it holds,
-     * with a snapshot taken inside the model's own emulation. That emulation is cancelled
-     * before filter() runs, so a stylesheet resolved from the live design at render time is
-     * resolved against a different theme than the filter used.
+     * with a snapshot taken inside the model's own emulation. Why it is a snapshot rather than
+     * a live read is on Port\StylesheetLoader::load().
      *
      * @param array<string,mixed> $designParams
      */

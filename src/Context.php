@@ -41,6 +41,7 @@ final class Context
     /**
      * @param array<string,mixed> $variables
      * @param bool $plainText the template is being rendered as the PLAIN part of an email
+     * @param array<string,mixed> $designParams the area, theme and locale {{css}} resolves against
      */
     public function __construct(
         array $variables = [],
@@ -69,10 +70,9 @@ final class Context
     /**
      * The area, theme and locale {{css}} resolves against.
      *
-     * A property of the render rather than of the engine, and passed rather than looked up: the
-     * filter carries a snapshot taken inside the template model's emulation, and that emulation
-     * is gone by the time anything downstream could look the design up for itself. Empty when
-     * the caller has none to offer, which is the CMS surface.
+     * A property of the render rather than of the engine, and passed rather than looked up -
+     * see Port\StylesheetLoader::load() for why a live lookup resolves the wrong theme. Empty
+     * when the caller has none to offer, which is the CMS surface.
      *
      * @return array<string,mixed>
      */

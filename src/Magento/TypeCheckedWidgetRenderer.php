@@ -27,7 +27,7 @@ class TypeCheckedWidgetRenderer implements WidgetRenderer
     ) {
     }
 
-    /** @param array<string,string> $parameters */
+    /** @param array<string,string|null> $parameters */
     public function render(string $type, array $parameters): string
     {
         $type = ltrim($type, '\\');

@@ -90,7 +90,8 @@ final class Options
      *    arguments are still escaped);
      *  - reflection-based dispatch of arbitrary filter methods.
      *
-     * This is the mode to run in production first: same output, fewer ways to be exploited.
+     * The first production posture: byte-identical output, with the value-re-parsing and
+     * reflection-dispatch surfaces gone.
      */
     public static function compatible(): self
     {

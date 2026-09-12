@@ -8,7 +8,8 @@ namespace Cresset\TemplateParser\Console;
  *
  * Deliberately flat. A CMS block from the database, an .html file in a module, and a line
  * typed into the REPL are all the same shape by the time anything looks at them, so the
- * checking and diffing code has one case to handle rather than four.
+ * checking and diffing code has one case to handle rather than four: a codebase file, a
+ * database email, a CMS block or page, and a newsletter.
  */
 class TemplateSubject
 {
