@@ -489,14 +489,17 @@ $out = [
     'recorded_against' => [
         'note' => 'Values here are this store\'s. Re-recording elsewhere will change them; what '
             . 'must not change without a reason is the shape of each tape.',
-        'agreement' => 'The `legacy` and `agreed` fields are CONTEXT, not an assertion. '
+        'agreement' => 'The `legacy` and `agreed` fields are ASSERTED: '
+            . 'StorePortParityTest::testWhatAgreedWithTheFilterStillAgrees replays each '
+            . 'agreeing case from its tape and holds the result to the recorded value, '
+            . 'offline. They were context while every case shared one process - '
+            . 'Asset\\Repository caches its design defaults on first use, and '
             . 'AbstractTemplate::getProcessedTemplate() applies its own design config and '
-            . 'cancels it again, so in a long-lived CLI process the design state a directive '
-            . 'sees depends on what ran before it - Asset\\Repository caches its defaults on '
-            . 'first use, and an isolated {{css}} or {{view}} can resolve a different theme '
-            . 'here than the same directive inside a real template. `template-parser diff` is '
-            . 'the end-to-end parity measure and renders whole templates; this file exists for '
-            . 'the tapes, which are store-independent and are where the guards live.',
+            . 'cancels it again, so an isolated {{css}} or {{view}} could resolve a different '
+            . 'theme here than the same directive inside a real template. A process per case '
+            . 'and a recorded design_params closed that. `template-parser diff` renders whole '
+            . 'templates and remains the end-to-end measure; this file is where the guards '
+            . 'are.',
         'ports' => $shape,
     ],
     'cases' => $cases,

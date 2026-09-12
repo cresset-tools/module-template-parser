@@ -8,15 +8,19 @@ accepts, and what it does with input it does not like — which, in this languag
 **Every example here was rendered through the real filter to produce it.**
 `tools/document-language.php` runs each one through `Magento\Framework\Filter\Template` (as
 `Email\Model\Template\Filter` configures it) and writes the blocks below from the output. It
-also renders each one through this engine's compatible mode and refuses to write the file if
-they disagree, so an example cannot be written down here without also being true.
+also renders each one through this engine's compatible mode, and refuses to write the file
+when the two disagree on a case that has not been declared a deliberate divergence — so an
+example cannot be written down here without also being true of the filter.
 
-Read the blocks as `template` · `variables` · `→ what the filter renders`. `(nothing)` is the
-empty string. A `#` comment says what the row is for, and where strict mode does something
-different — usually raising instead of rendering nothing — it says that too.
+Read the blocks as `template` · `variables` · `→ what the filter renders` — the filter, not
+this engine. `(nothing)` is the empty string. A `#` comment says what the row is for, and where
+strict mode does something different — usually raising instead of rendering nothing — it says
+that too. Where a note calls a row a deliberate divergence, compatible mode does not render
+what the arrow shows.
 
 The engine's own posture, its modes and its refusals are in [the README](../README.md); this
-file is about the language, not about this implementation of it.
+file is about the language first, and says what this engine does only where it does something
+else.
 
 ---
 
@@ -376,9 +380,9 @@ This changes observable rendering, so it is part of the language now. Trees from
 hardening are still in the field; this engine can target either.
 
 It is **not aware of the template type.** `Template::filter()` calls the neutralizer on every
-resolved directive, and `isPlainTemplateMode()` gates only `{{css}}` and `{{inlinecss}}` — so a
-plain-text email whose variable holds a `{{` delivers the literal characters `&#123;&#123;` to
-the recipient, where an HTML one at least renders them back as braces. Worth knowing before
+resolved directive, and `isPlainTemplateMode()` reaches only `{{css}}`, `{{inlinecss}}` and
+`{{customvar}}` — none of them the neutralizer — so a plain-text email whose variable holds a
+`{{` delivers the literal characters `&#123;&#123;` to the recipient, where an HTML one at least renders them back as braces. Worth knowing before
 assuming an entity is a safe way to write a brace: in a plain-text template it is not.
 
 <!-- generated:neutralizer -->

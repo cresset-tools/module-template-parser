@@ -41,7 +41,7 @@ class TemplateModelUrlBuilder implements TemplateUrlBuilder
         // The route is not the only thing that reaches a URL. Url::getRouteUrl() returns
         // `getBaseUrl() . $routeParams['_direct']` with no filtering at all, so `_direct` is a
         // second route wearing a different name - and every OTHER parameter is appended by
-        // Url::_getRouteParams() as `$key . '/' . $value . '/'`, key included.
+        // Url::_getRoutePath() as `$key . '/' . $value . '/'`, key included.
         //
         // This is the same sink {{store}} reaches, so it gets the same guard rather than its
         // own. A list of parameter NAMES cannot do the job here: the set is open, so

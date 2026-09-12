@@ -15,7 +15,8 @@ docker run --rm -v "$PWD":/m -w /m composer:2 sh -c 'composer install && vendor/
 
 The `composer` image rather than `php:8.3-cli`: the suite needs the autoloader and Symfony
 Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console tests, and
-that image's 128M `memory_limit` is below what `GuardTripwireTest` needs.
+`php:8.3-cli`'s default 128M `memory_limit` is below what the suite peaks at, which
+`GuardTripwireTest` is what pushes it to.
 
 12818 tests. 431 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
@@ -78,7 +79,7 @@ neither of which failed any test at the time:
   The recorder now calls the real `Escaper` and passes raw values under `strict_types`; do not
   add casts to `modifierEscape`.
 
-The recorder asserts `FakeDataObject` still matches Magento's `DataObject` on 19 probes before
+The recorder asserts `FakeDataObject` still matches Magento's `DataObject` on 21 probes before
 it writes anything, because recording against one object and replaying against another
 measures nothing.
 
@@ -94,13 +95,14 @@ orders**, because that is what `{{layout}}` needs to render anything: the five h
 stock sales emails use produce between 289 bytes and 2.3KB of item table each, and a store
 without orders agrees with the filter on all of them vacuously.
 
-Each case is recorded in a process of its own, which takes about 45 seconds for the lot and is
-not an optimisation to remove. Magento's services are shared and stateful: a hostile case can
+Each case is recorded in a process of its own. That costs about 45 seconds for the lot, and it
+is not overhead to trim away. Magento's services are shared and stateful: a hostile case can
 leave one in a mode that changes every render after it, and `{{store _type="../.."}}` does
 exactly that — the filter hands the type to the URL model, which keeps it, and every later
-legacy `{{store}}` in the process then fails with "Invalid base url type". Fifteen cases were
-recorded against a poisoned model before the isolation went in, each with a `legacy` value that
-is not what that template does. A run is reproducible byte for byte; if two runs differ,
+legacy `{{store}}` in the process then fails with "Invalid base url type". Twenty-six cases
+were recorded against a poisoned model before the isolation went in, each with a `legacy` value
+that is not what that template does, and four more carried a theme an earlier case in the same
+process had left behind. A run is reproducible byte for byte; if two runs differ,
 something is leaking.
 
 Re-record it from inside a store:
@@ -113,30 +115,32 @@ It writes next to the package it is run from, so copy the result back if the sto
 copy rather than a symlink. Read the diff: a tape that changed is the engine having changed
 its mind about what reaches the host, and that is either the point of your change or a bug.
 
-Two fields in it are context rather than assertions. `legacy` and `agreed` record what the old
-filter rendered for the same template on the same store, but
-`AbstractTemplate::getProcessedTemplate()` applies its own design config and cancels it again,
-so in a long-lived CLI process an isolated `{{css}}` or `{{view}}` can resolve a different
-theme than the same directive inside a real template. `template-parser diff` renders whole
-templates end to end and is the parity measure; this file exists for the tapes.
+`legacy` and `agreed` are assertions, not context:
+`StorePortParityTest::testWhatAgreedWithTheFilterStillAgrees` replays each agreeing case from
+its tape and holds the result to the recorded `legacy` byte for byte, offline. They were
+context once, when every case shared one process and an isolated `{{css}}` or `{{view}}` could
+resolve a different theme than the same directive inside a real template —
+`AbstractTemplate::getProcessedTemplate()` applies its own design config and cancels it again.
+A process per case and a recorded `design_params` closed that. `template-parser diff` renders
+whole templates end to end and remains the end-to-end measure; this file is where the guards
+are.
 
 Anything below the port boundary — `StoreUrlBuilder`, `AssetStylesheetLoader` and the rest of
-`src/Magento/` — is invisible to a tape by construction, and needs its own unit test. That is
-not a gap in the tape; it is the boundary doing its job. Verified: deleting the country-name
-substitution or the custom-variable truthiness quirk passes `StorePortParityTest` and fails the
-suite.
+`src/Magento/` — is invisible to a tape by construction, and needs its own unit test.
+Verified: deleting the country-name substitution or the custom-variable truthiness quirk passes
+`StorePortParityTest` and fails the suite.
 
-Two numbers move when you re-record. `StorePortParityTest::testTheAgreementSetHasNotShrunk`
-pins how many cases agree with the filter, and the README quotes the same figure. Both are
-meant to be edited deliberately: read the fixture diff, satisfy yourself the change is one you
-intended, then update them. The count exists precisely so that a guard which starts refusing
-something the filter renders cannot erode the agreeing set one case at a time in silence.
+One number moves when you re-record: `StorePortParityTest::testTheAgreementSetHasNotShrunk`
+pins how many cases agree with the filter. It is meant to be edited deliberately — read the
+fixture diff, satisfy yourself the change is one you intended, then update it. The count
+exists precisely so that a guard which starts refusing something the filter renders cannot
+erode the agreeing set one case at a time in silence.
 
 ## What the suite covers
 
 | Test | Covers |
 |---|---|
-| `LegacyParityTest` | the recorded corpus, in both directions: every legacy fatal is refused, and the extra refusals are exactly the ten documented shapes |
+| `LegacyParityTest` | the recorded corpus, in both directions: every legacy fatal is refused, and the extra refusals are exactly the seventeen documented shapes |
 | `ParitySensitivityTest` | the canary. It mis-configures the engine and asserts the same corpus then *fails* |
 | `StyleSmugglerDifferentialTest` | the vulnerability, as a paired differential |
 | `MalformedTemplateTest` | 15 broken templates asserted to raise a specific error in strict mode; 9 of them are refused in compatible mode and 6 render, and 10 hostile inputs are asserted inert |
@@ -144,7 +148,7 @@ something the filter renders cannot erode the agreeing set one case at a time in
 | `GuardTripwireTest`, `MagentoGuardTest`, `SecurityRegressionTest` | one test per security guard, each written against a mutation that removed it |
 | `MagentoIntegrationTest` | the adoption path: the plugin, the adapter's policy, and shadow mode |
 | `TemplateIncludeTest` | `{{template}}` semantics: scope, parameters, nesting, cycles, inheritance and output |
-| `MagentoUrlAdapterTest` | the adapters behind `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}` and `{{customvar}}` - the directives that carry merchant-authored content rather than shipped templates |
+| `MagentoUrlAdapterTest` | the adapters behind `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}` and `{{customvar}}` - the host directives that build a URL, load a stylesheet or read a merchant variable, none of which instantiates a class |
 | `KnownDivergenceTest` | the deliberate behavioural differences from the legacy filter |
 
 ### The sensitivity canary
@@ -157,14 +161,18 @@ cases:
 |---|---|
 | compatible (control) | 0 |
 | lenient (legacy quirks off) | 1103 |
-| standard truthiness (quirks and variables off) | 1103 |
+| standard truthiness (quirks off, refusal left on) | 1103 |
 | strict (default) | 1519 |
 
 Only the control's 0 is asserted exactly. The others are asserted as floors — 40, 20 and 20 —
 because the point is that the corpus still *notices*, and a figure pinned to the byte would
-fail on every case added to the corpus. The two 1103s are the same number because the second
-mutation turns off a superset of what `lenient()` does; it is kept as a separate row because
-it is a separate switch, and either one going quiet is the signal this test exists for.
+fail on every case added to the corpus. The two 1103s are the same cases, not merely the same
+count: `Options::compatible()` is `lenient()` plus the quirks, the legacy-incompatible refusal
+and the output neutralizer, so turning the quirks back off leaves only the latter two between
+them — and neither changes an outcome once the deliberate over-refusals are filtered out.
+`withVariables(false)` changes nothing either, compatible mode having never had strict
+variables on. The row stays because it is a separate switch, and either one going quiet is the
+signal this test exists for.
 
 ## Benchmarking
 

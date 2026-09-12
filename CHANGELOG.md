@@ -28,8 +28,8 @@ Entries say what changed and why it mattered. A line that only names a file has 
   default.
 - Host ports (`UrlBuilder`, `BlockRenderer`, `WidgetRenderer`, `LayoutRenderer`,
   `TemplateLoader`, `StylesheetLoader`, `ConfigReader`, `CustomVariableReader`,
-  `Translator`, `TemplateUrlBuilder`) with Magento adapters for each. The engine itself has
-  no Magento dependency.
+  `Translator`, `TemplateUrlBuilder`, `CustomDirectiveRenderer`) with Magento adapters for
+  each. The engine itself has no Magento dependency.
 - A Magento integration that does not require a DI preference: emails, CMS and newsletter all
   render through concrete subclasses DI instantiates directly, so the adoption path is a
   plugin plus `ShadowComparator`, which compares both engines in production and returns the
@@ -37,6 +37,15 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - The `template-parser` CLI: `check` validates templates and says what to fix, `diff` renders
   every template in a store through both engines and reports where they differ, `repl` tries
   directives interactively. An n98-magerun2 bridge for the same commands.
+- `{{mydir}}` — a directive a module registers through `SimpleDirective\ProcessorPool` —
+  renders, through a `CustomDirectiveRenderer` port. It needed a third directive kind:
+  Magento's pattern makes the body optional, so one registration gives a template both
+  `{{mydir "v"}}` and `{{mydir}}body{{/mydir}}`. Nesting one in itself is refused, because the
+  filter's lazy body strands the outer closing tag and raises.
+- `check` and `diff` ask the store what its `SimpleDirective\ProcessorPool` and `FilterPool`
+  hold, and say so when a template uses one. A registration this engine has no handler for is
+  otherwise invisible: an unknown directive comes back as its own text and an unknown modifier
+  is skipped, which is exactly what the filter does on a store without that extension.
 - `docs/directives.md`, generated from a live legacy filter rather than written by hand. The
   generator refuses to write the file when an example disagrees with the filter and the
   disagreement has not been declared.
@@ -56,9 +65,9 @@ Entries say what changed and why it mattered. A line that only names a file has 
   `BlockDirectivePolicy` deny list rather than reimplementing it, so a rule added to
   `Magento_Email`'s `di.xml` applies here too.
 - A quoted parameter may contain `{{` and `}}`. The legacy filter cannot express that; a
-  lexer has no reason to inherit the limitation. This is the one place the engine does *more*
-  rather than less, and both directions of it are recorded as corpus cases with the equality
-  declared rather than kept out of the corpus.
+  lexer has no reason to inherit the limitation. This and the `{{for}}` body are the two
+  places the engine does *more* rather than less, and both directions of this one are recorded
+  as corpus cases with the equality declared rather than kept out of the corpus.
 - One missing brace at top level reads as text followed by the intact directive, rather than
   as the regex's single run-on construct. Where that costs the filter a *paired* directive it
   raises instead of rendering, and those are refused here rather than rendered.
@@ -68,8 +77,9 @@ Entries say what changed and why it mattered. A line that only names a file has 
 ### Fixed
 
 - `{{layout}}` discarded every parameter it was given. Every stock order, invoice, shipment
-  and credit-memo email is `{{layout handle="sales_email_order_items" order_id=$order_id}}`,
-  so the item table was being built for no order at all — and without registering the root
+  and credit-memo email ends in a `{{layout}}` — `{{layout handle="sales_email_order_items"
+  order_id=$order_id}}` and its invoice, shipment and credit-memo counterparts — so the item
+  table was being built for no order at all — and without registering the root
   block for output, `getOutput()` returned nothing for any handle whose XML lacks
   `output="1"`.
 - `{{protocol http= https=}}` was guarded as though it took relative paths, so every value the
@@ -113,21 +123,14 @@ Entries say what changed and why it mattered. A line that only names a file has 
   resolution of that construct's parameter text — so nothing there reaches a directive
   processor and nothing there can crash. `{{}}`, `{{/if}}`, `{{var.a}}` and `{{var1 x}}` all
   render on the filter and were refused here with a message asserting a `TypeError` that
-  cannot happen in that position.
+  cannot happen in that position. The one real exception — a nested loop, which strands the
+  outer `{{/for}}` and does raise — was then tested by name prefix, so `{{for2 a}}` was
+  refused too. `LOOP_PATTERN` is matched now: `{{format x in rows}}` opens a loop to the
+  filter and `{{for2 a}}` does not.
 - `{{css}}` resolved its design at render time where the filter carries a snapshot, so the
   same template got a different stylesheet depending on who rendered it and when. The design
   is passed now — `Port\StylesheetLoader::load()` takes it, `Context` carries it, and the
   plugin captures `setDesignParams()` the way it captures the variables.
-- `check` and `diff` now ask the store what its `SimpleDirective\ProcessorPool` and
-  `FilterPool` hold, and say so when a template uses one. A registration this engine has no
-  handler for is otherwise invisible: an unknown directive comes back as its own text and an
-  unknown modifier is skipped, which is exactly what the filter does on a store without that
-  extension.
-- `{{mydir}}` — directives a module registers through `SimpleDirective\ProcessorPool` — is
-  implemented, through a `CustomDirectiveRenderer` port. This needed a third directive kind:
-  Magento's pattern makes the body optional, so one registration gives a template both
-  `{{mydir "v"}}` and `{{mydir}}body{{/mydir}}`. Nesting one in itself is refused, because the
-  filter's lazy body strands the outer closing tag and raises.
 - `check` and `diff` no longer warn about `FilterPool` modifiers. It was a false positive: a
   registered modifier never reaches `{{var}}` on any surface this package replaces, because
   `Email\Model\Template\Filter::varDirective` uses its own modifier map, so both engines skip
@@ -142,7 +145,7 @@ Nothing here has been released, so none of this reached a deployed store.
   arrived at the browser as a scheme, so `{{protocol}}` could emit a working `javascript:`
   URI under the default restricted policy, in every mode, recording no violation. Traversal
   and protocol-relative forms rode the same gap.
-- Route parameters were guarded by a list of three names, while `Url::_getRouteParams()`
+- Route parameters were guarded by a list of three names, while `Url::_getRoutePath()`
   appends *every* one to the path as `$key . '/' . $value . '/'` — the key included.
   `{{view}}` was worse: `area`, `theme` and `locale` are concatenated into the static URL with
   nothing checked, and none of them was on that list.

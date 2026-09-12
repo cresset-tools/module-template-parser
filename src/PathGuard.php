@@ -243,7 +243,7 @@ final class PathGuard
                 continue;
             }
 
-            // Everything else is a route parameter, and Url::_getRouteParams() appends those
+            // Everything else is a route parameter, and Url::_getRoutePath() appends those
             // as `$key . '/' . $value . '/'` - so the KEY is a path segment as much as the
             // value is. Naming three spellings guards three spellings out of an open set:
             // `{{store url="x" a="../../.."}}` walks straight past such a list.
