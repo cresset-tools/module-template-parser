@@ -9,7 +9,7 @@ namespace Cresset\TemplateParser\Console;
  * Two ways in, because the tool has two homes. Standalone it finds app/etc/env.php by walking
  * up from the working directory and boots Magento itself; inside n98-magerun2 the application
  * is already booted and hands over its ObjectManager, so booting again would be wrong. Both
- * end up as the same object, and everything downstream only sees `objectManager()`.
+ * end up behind `get()`, which is the only way anything downstream asks for a class.
  *
  * Absent a store, this is still constructible - `detect()` returns an unavailable context
  * rather than failing, so the REPL and the syntax checks work on a laptop with no Magento
@@ -76,15 +76,6 @@ class MagentoContext
     public function isAvailable(): bool
     {
         return $this->objectManager !== null;
-    }
-
-    public function objectManager(): object
-    {
-        if ($this->objectManager === null) {
-            throw new \RuntimeException('No Magento available: ' . ($this->reason ?? 'unknown'));
-        }
-
-        return $this->objectManager;
     }
 
     public function root(): ?string

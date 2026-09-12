@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Cresset\TemplateParser\Magento;
 
+use Cresset\TemplateParser\Diagnostics;
+
 use Psr\Log\LoggerInterface;
 
 /**
@@ -72,7 +74,7 @@ class ShadowComparator
                 'template_hash' => hash('sha256', $source),
                 'legacy_length' => strlen($legacyResult),
                 'candidate_length' => strlen($candidate),
-                'first_difference_at' => $this->firstDifference($legacyResult, $candidate),
+                'first_difference_at' => Diagnostics::firstDifferingByte($legacyResult, $candidate),
                 'policy_violations' => array_map(
                     static fn ($violation): string => $violation->describe(),
                     $this->adapter->violations()
@@ -85,16 +87,5 @@ class ShadowComparator
         }
 
         return $legacyResult;
-    }
-
-    private function firstDifference(string $a, string $b): int
-    {
-        $limit = min(strlen($a), strlen($b));
-        for ($i = 0; $i < $limit; $i++) {
-            if ($a[$i] !== $b[$i]) {
-                return $i;
-            }
-        }
-        return $limit;
     }
 }

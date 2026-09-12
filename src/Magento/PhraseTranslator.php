@@ -18,12 +18,9 @@ class PhraseTranslator implements Translator
         // would apply its integer-key numbering a second time.
         $translated = (string)__($text);
 
-        // One pass, not a str_replace per argument. Substituting in sequence has two faults:
-        // `%name` rewrites the front of `%name_long` before its own turn comes, and a value
-        // containing `%b` becomes a live placeholder for a later argument - a variable's
-        // value turning back into template syntax. strtr() takes the longest matching key at
-        // each position and never re-scans what it has written. It is also what Magento's
-        // own Placeholder renderer does.
+        // strtr(), for the reasons the no-host translator in Evaluator gives - and because
+        // it is what Phrase\Renderer\Placeholder does, so this port substitutes the way the
+        // layer it stands in front of would have.
         return $arguments === [] ? $translated : strtr($translated, $arguments);
     }
 }

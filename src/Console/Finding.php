@@ -20,7 +20,6 @@ class Finding
         public readonly string $severity,
         public readonly TemplateSubject $subject,
         public readonly string $summary,
-        public readonly ?string $detail = null,
         public readonly ?string $fix = null,
         public readonly ?int $line = null,
     ) {

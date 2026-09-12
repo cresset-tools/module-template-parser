@@ -70,7 +70,6 @@ class Auditor
                         severity: $severity,
                         subject: $subject,
                         summary: $this->firstLine($e->getMessage()),
-                        detail: $e->getMessage(),
                         fix: $fix,
                         line: $e->sourceLine ?? null,
                     )]);
@@ -79,7 +78,6 @@ class Auditor
                         severity: Finding::ERROR,
                         subject: $subject,
                         summary: sprintf('%s: %s', (new \ReflectionClass($e))->getShortName(), $e->getMessage()),
-                        detail: $e->getMessage(),
                         fix: 'This is not a template error - the engine or a wired port raised it. '
                             . 'Worth reporting if the template itself looks reasonable.',
                     )]);
@@ -241,8 +239,7 @@ class Auditor
     {
         $found = [];
         foreach ($engine->evaluator()->registered() as $name) {
-            $pattern = '/\{\{' . preg_quote($name, '/') . '(?![a-zA-Z0-9_])/i';
-            if (preg_match($pattern, $legacyOutput) === 1 && preg_match($pattern, $ours) !== 1) {
+            if (HostExtensions::mentions($legacyOutput, $name) && !HostExtensions::mentions($ours, $name)) {
                 $found[] = $name;
             }
         }
@@ -280,7 +277,7 @@ class Auditor
 
         $found = [];
         foreach ($unwired as $name) {
-            if (preg_match('/\{\{' . preg_quote($name, '/') . '(?![a-zA-Z0-9_])/i', $ours) === 1) {
+            if (HostExtensions::mentions($ours, $name)) {
                 $found[] = $name;
             }
         }

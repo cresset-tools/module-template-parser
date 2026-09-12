@@ -64,14 +64,11 @@ final class Parser
         // A variable, because parseUntil() takes the stack by reference so that nesting costs
         // one entry rather than a copy per level.
         $openStack = [];
+        // parseUntil() consumes every token at top level: its two early returns are a close
+        // matching $closingName, which is null here and a token's name never is, and a close
+        // naming something on $openStack, which is empty here and balanced by parseOpen()'s
+        // finally. A stray close at top level is emitted as text and the scan carries on.
         $children = $this->parseUntil($tokens, $index, null, $openStack);
-
-        while ($index < count($tokens)) {
-            // Only reachable in lenient mode: a stray close stopped the top-level scan.
-            $children[] = new TextNode($tokens[$index]->raw);
-            $index++;
-            $children = array_merge($children, $this->parseUntil($tokens, $index, null, $openStack));
-        }
 
         $this->assertNoStrayElse($children);
         $this->refuseStrayClosingTagsInText($children, $source);

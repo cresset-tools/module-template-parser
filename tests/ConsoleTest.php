@@ -361,6 +361,23 @@ final class ConsoleTest extends TestCase
         self::assertStringContainsString('ERROR', $tester->getDisplay());
     }
 
+    /**
+     * The label carries the line, because it was the only positional information a merchant got.
+     *
+     * The engine computes a caret excerpt and a line number for every error; the text report
+     * printed neither, so `check` over a codebase said which file and not where in it. The
+     * JSON report already carried the line.
+     */
+    public function testAnErrorSaysWhichLineItIsOn(): void
+    {
+        $tester = $this->tester('check');
+        $file = $this->writeTemplate("ok\nstill ok\n{{if a}}unclosed");
+
+        $tester->execute(['path' => $file, '--mode' => 'strict']);
+
+        self::assertMatchesRegularExpression('/ERROR .*:3$/m', $tester->getDisplay());
+    }
+
     public function testCheckExitsZeroWhenTheTemplateIsFine(): void
     {
         $tester = $this->tester('check');

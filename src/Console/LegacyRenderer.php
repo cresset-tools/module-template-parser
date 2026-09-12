@@ -93,6 +93,12 @@ class LegacyRenderer
         // here, and came back as null, which reads downstream as a divergence.
         $this->magento->ensureAreaCode(\Magento\Framework\App\Area::AREA_FRONTEND);
 
+        // The ONE emulator in the process, and the store its id comes from - resolved once,
+        // because the design config below and the emulation further down must name the same
+        // store or the render resolves {{css}} against one theme and emulates another.
+        $stores = $this->stores ?? new StoreEmulator($this->magento);
+        $storeId ??= $stores->currentStoreId();
+
         $model = $factory->create();
         $model->setTemplateType(\Magento\Framework\App\TemplateTypesInterface::TYPE_HTML);
         $model->setTemplateText($template);
@@ -108,7 +114,7 @@ class LegacyRenderer
         // and getDesignParams() throws rather than defaulting.
         $model->setDesignConfig([
             'area' => \Magento\Framework\App\Area::AREA_FRONTEND,
-            'store' => $storeId ?? $this->currentStoreId(),
+            'store' => $storeId,
         ]);
 
         // processTemplate() runs the whole render inside store emulation - that is what
@@ -117,10 +123,8 @@ class LegacyRenderer
         // skips it. applyDesignConfig() is protected, so the emulation is performed through
         // the package's emulator instead - never directly, because Magento's Emulation does
         // not nest and an inner stop would tear down a caller's.
-        $stores = $this->stores ?? new StoreEmulator($this->magento);
-
         return $stores->around(
-            $storeId ?? $this->currentStoreId(),
+            $storeId,
             fn (): LegacyRender => $this->renderEmailIn($model, $template, $variables)
         );
     }
@@ -253,14 +257,4 @@ class LegacyRenderer
         return array_filter($params, static fn (mixed $v): bool => is_scalar($v) || $v === null);
     }
 
-    private function currentStoreId(): ?int
-    {
-        $stores = $this->magento->get(\Magento\Store\Model\StoreManagerInterface::class);
-
-        try {
-            return $stores === null ? null : (int)$stores->getStore()->getId();
-        } catch (\Throwable) {
-            return null;
-        }
-    }
 }

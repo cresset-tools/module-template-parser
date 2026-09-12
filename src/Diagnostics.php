@@ -97,6 +97,25 @@ final class Diagnostics
     }
 
     /**
+     * Where two renders stop agreeing, or the length of the shorter when one is a prefix.
+     *
+     * Here rather than on either caller: `Console\Divergence` builds a report out of it and
+     * `Magento\ShadowComparator` logs one line from a live render, and a runtime plugin
+     * reaching into the CLI namespace for a byte loop is the wrong way round.
+     */
+    public static function firstDifferingByte(string $a, string $b): int
+    {
+        $limit = min(strlen($a), strlen($b));
+        for ($i = 0; $i < $limit; $i++) {
+            if ($a[$i] !== $b[$i]) {
+                return $i;
+            }
+        }
+
+        return $limit;
+    }
+
+    /**
      * Closest match from a candidate list, for "did you mean" hints.
      *
      * @param string[] $candidates

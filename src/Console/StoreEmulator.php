@@ -86,7 +86,8 @@ class StoreEmulator
         }
     }
 
-    private function currentStoreId(): ?int
+    /** The store a render lands in when nobody named one. Null with no store at all. */
+    public function currentStoreId(): ?int
     {
         $manager = $this->magento->get(\Magento\Store\Model\StoreManagerInterface::class);
 

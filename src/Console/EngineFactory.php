@@ -72,14 +72,11 @@ class EngineFactory
                     ? new LayoutBlockRenderer(
                         $layout,
                         $config,
-                        // The narrowing etc/di.xml applies, restated: constructing the port
-                        // directly bypasses DI, and the wider default let {{block output=}}
-                        // reach toString as well.
-                        ['toHtml'],
-                        null,
                         // Mage-OS's deny list for exactly this directive. Null on a tree that
                         // predates it, which is the behaviour that tree has anyway.
-                        $m->get(\Magento\Email\Model\Template\Filter\BlockDirectivePolicy::class),
+                        blockDirectivePolicy: $m->get(
+                            \Magento\Email\Model\Template\Filter\BlockDirectivePolicy::class
+                        ),
                     )
                     : null),
             translator: $this->build(static fn (MagentoContext $m): ?object => new PhraseTranslator()),

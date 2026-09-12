@@ -310,11 +310,21 @@ final class Evaluator
                 continue;
             }
 
-            $params[$key] = $this->stringify($resolution->value);
+            $params[$key] = $this->toStringValue($resolution->value);
         }
 
         return $params;
     }
+
+    /*
+     * What a directive handler is given.
+     *
+     * A handler receives the node, the context and this object, so everything below is public
+     * API and frozen at the first tag: params(), renderNodes(), renderTrans(), stringify(),
+     * escapeValue(), refusedByPolicy(), resolver(), options(), spec(). HostDirectives uses
+     * seven of the nine; the other two are here for a host writing its own handler, which is
+     * the whole point of `register()` being public.
+     */
 
     public function resolver(): VariableResolver
     {
@@ -343,6 +353,10 @@ final class Evaluator
      * {{var}} gets this through applyModifiers; any other directive that emits a resolved
      * value needs it explicitly, or that directive becomes the way to get an unescaped value
      * into the page.
+     *
+     * The two shipped handlers that do not use it, {{config}} and {{customvar}}, are matching
+     * the filter deliberately - configDirective() and customvarDirective() both return their
+     * value raw, and neither value comes from template text.
      */
     public function escapeValue(mixed $value): string
     {

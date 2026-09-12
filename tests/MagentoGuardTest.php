@@ -207,6 +207,36 @@ final class MagentoGuardTest extends TestCase
         self::assertSame('', $renderer->render($type, [], 'toGone'));
     }
 
+    /**
+     * The default allowlist is the narrow one, for a port constructed without DI.
+     *
+     * It was `['toHtml', 'toString']`, and both wirings in this package overrode it to drop
+     * `toString` - so the only thing the wider default reached was an integrator who built
+     * the port directly. Legacy's `output=` accepts any public no-argument method on the
+     * block; this is deliberately narrower.
+     */
+    public function testTheDefaultOutputAllowlistIsToHtmlAlone(): void
+    {
+        $built = [];
+        $layout = new class ($built) implements LayoutInterface {
+            public function __construct(private array &$built) {}
+            public function createBlock($type, $name = '', array $arguments = [])
+            {
+                $this->built[] = $type;
+                return new class implements BlockInterface {
+                    public function toHtml() { return 'HTML'; }
+                    public function toString() { return 'STRING'; }
+                };
+            }
+        };
+        $type = get_class(new class implements BlockInterface { public function toHtml() { return ''; } });
+
+        $renderer = new LayoutBlockRenderer($layout, $this->omConfig());
+
+        self::assertSame('HTML', $renderer->render($type, [], 'toHtml'));
+        self::assertSame('', $renderer->render($type, [], 'toString'));
+    }
+
     // ------------------------------------------------ AllowlistedConfigReader
 
     private function scopeConfig(array $values): ScopeConfigInterface

@@ -200,8 +200,13 @@ final class Lexer
      * This runs for every directive in the document, so it has to stay at C speed. If the
      * closer were inside a quote, that quote would be open at the closer - which means an ODD
      * number of its character precedes it. Even counts of both quote characters therefore
-     * prove the naive closer is outside quotes, and the careful character walk can be
-     * skipped. A backslash in the span could escape a quote, so that bails to the walk too.
+     * prove the naive closer is outside quotes, and the careful character walk can be skipped.
+     *
+     * A backslash is NOT a reason to walk, though the walk itself honours one. An escaped
+     * quote leaves the count even, so `{{trans "a\\"b}}c"}}` closes at the first `}}` - which
+     * is where the legacy filter closes it too, its construction regex being lazy and
+     * escape-blind. Walking there would extend the quoted-closer divergence to escaped
+     * quotes and buy nothing; see the divergence list in the README.
      *
      * Wrong only in the safe direction: a false positive costs one scan, never a mis-parse.
      */
@@ -210,13 +215,12 @@ final class Lexer
         if ($length <= 0) {
             return false;
         }
-        if (strcspn($source, '"\'\\\\', $from, $length) === $length) {
-            return false;                    // no quote and no escape in the span at all
+        if (strcspn($source, '"\'', $from, $length) === $length) {
+            return false;                    // no quote in the span at all
         }
 
         return substr_count($source, '"', $from, $length) % 2 === 1
-            || substr_count($source, "'", $from, $length) % 2 === 1
-            || substr_count($source, '\\\\', $from, $length) > 0;
+            || substr_count($source, "'", $from, $length) % 2 === 1;
     }
 
     /**

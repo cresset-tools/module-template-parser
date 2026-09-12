@@ -97,7 +97,13 @@ HELP);
                 default => 'fg=gray',
             };
 
-            $output->writeln(sprintf('<%s>%s</> %s', $colour, strtoupper($finding->severity), $finding->subject->label));
+            $output->writeln(sprintf(
+                '<%s>%s</> %s%s',
+                $colour,
+                strtoupper($finding->severity),
+                $finding->subject->label,
+                $finding->line !== null ? ':' . $finding->line : ''
+            ));
             $output->writeln('  ' . $finding->summary);
             if ($finding->fix !== null) {
                 $output->writeln('  <fg=cyan>fix:</> ' . $finding->fix);

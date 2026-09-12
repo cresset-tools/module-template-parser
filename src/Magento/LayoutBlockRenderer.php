@@ -36,7 +36,15 @@ use Cresset\TemplateParser\Port\BlockRenderer;
  */
 class LayoutBlockRenderer implements BlockRenderer
 {
-    private const DEFAULT_OUTPUT_METHODS = ['toHtml', 'toString'];
+    /**
+     * `toHtml` and nothing else, unless a store says otherwise in its own di.xml.
+     *
+     * The default was `['toHtml', 'toString']` and both wirings overrode it to drop
+     * `toString` - a default whose only use was being undone, and a footgun for anyone
+     * constructing this port directly. Legacy accepts any public no-argument method on the
+     * block; this is deliberately narrower, and now narrow by default.
+     */
+    private const DEFAULT_OUTPUT_METHODS = ['toHtml'];
 
     /**
      * @param string[] $allowedOutputMethods
@@ -134,18 +142,6 @@ class LayoutBlockRenderer implements BlockRenderer
 
     private function isBlockType(string $class): bool
     {
-        try {
-            $resolved = $this->objectManagerConfig->getInstanceType(
-                $this->objectManagerConfig->getPreference($class)
-            );
-        } catch (\Throwable) {
-            return false;
-        }
-
-        if (!is_string($resolved) || (!class_exists($resolved) && !interface_exists($resolved))) {
-            return false;
-        }
-
-        return is_a($resolved, BlockInterface::class, true);
+        return DeclaredType::resolvesTo($this->objectManagerConfig, $class, BlockInterface::class);
     }
 }

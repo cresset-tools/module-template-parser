@@ -100,6 +100,41 @@ final class LexerTest extends TestCase
         }
     }
 
+    /**
+     * Where the construct ends when a quoted parameter holds a `}}`.
+     *
+     * Two answers, and the seam between them was never measured. An UNESCAPED quote leaves an
+     * odd count before the naive closer, so the lexer walks the span and the construct runs to
+     * the closer outside the quotes - the declared divergence from the legacy filter, whose
+     * `(.*?)}}` stops at the first one wherever it falls. An ESCAPED quote leaves the count
+     * even, so there is no walk and the construct ends at that first `}}` - which is where the
+     * filter ends it too.
+     *
+     * Measured against a real filter: the first row diverges (declared, recorded as a corpus
+     * case with the equality dropped) and the second agrees. Pinned because the agreement in
+     * the second was an accident of the counting until this said so.
+     */
+    #[DataProvider('quotedClosers')]
+    public function testAQuotedCloserEndsTheConstructWhereTheCountingSaysItDoes(
+        string $source,
+        string $firstRaw
+    ): void {
+        self::assertSame($firstRaw, $this->lexer->tokenize($source)[0]->raw);
+    }
+
+    public static function quotedClosers(): array
+    {
+        return [
+            // The quote is open at the naive closer, so the walk runs and finds the real one.
+            'unescaped quote' => ['{{trans "a}}b"}} tail', '{{trans "a}}b"}}'],
+            'single quotes'   => ["{{trans 'a}}b'}} tail", "{{trans 'a}}b'}}"],
+            // The escaped quote does not open anything, so the first `}}` is the closer.
+            'escaped quote'   => ['{{trans "a\\"b}}c"}} tail', '{{trans "a\\"b}}'],
+            // A backslash with no quote at all must not reach the walk either.
+            'bare backslash'  => ['{{var a\\b}} tail', '{{var a\\b}}'],
+        ];
+    }
+
     /** Round-tripping every token must reproduce the source exactly. */
     #[DataProvider('roundTripSamples')]
     public function testRoundTrip(string $source): void

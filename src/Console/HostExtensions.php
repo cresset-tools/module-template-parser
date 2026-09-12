@@ -55,12 +55,23 @@ class HostExtensions
     }
 
     /**
-     * The extensions a template actually uses, as `{{name}}` spellings.
+     * Whether this text spells `{{name}}` - the way the store matches it.
      *
-     * Matched the way the store matches them: a registered name immediately after `{{`, and
-     * not a longer name that merely starts with it - the store's `[a-z]{0,10}` is greedy, so
-     * `{{mydir}}` is not `my`. Deliberately not clever - a false positive costs a note nobody
-     * needed, and a false negative costs the silence this exists to end.
+     * A registered name immediately after `{{`, and not a longer name that merely starts with
+     * it: the store's `[a-z]{0,10}` is greedy, so `{{mydir}}` is not `my`. Deliberately not
+     * clever - a false positive costs a note nobody needed, and a false negative costs the
+     * silence this exists to end.
+     *
+     * Static and public because `Auditor` asks the same question of a rendered OUTPUT rather
+     * than a template, and the rule was spelled three times before it was one.
+     */
+    public static function mentions(string $text, string $name): bool
+    {
+        return preg_match('/\{\{' . preg_quote($name, '/') . '(?![a-z0-9_])/i', $text) === 1;
+    }
+
+    /**
+     * The extensions a template actually uses, as `{{name}}` spellings.
      *
      * @return string[]
      */
@@ -68,7 +79,7 @@ class HostExtensions
     {
         $directives = [];
         foreach ($this->directives() as $name) {
-            if (preg_match('/\{\{' . preg_quote($name, '/') . '(?![a-z0-9_])/i', $template) === 1) {
+            if (self::mentions($template, $name)) {
                 $directives[] = $name;
             }
         }

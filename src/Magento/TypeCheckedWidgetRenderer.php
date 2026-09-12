@@ -47,16 +47,6 @@ class TypeCheckedWidgetRenderer implements WidgetRenderer
 
     private function isWidgetType(string $type): bool
     {
-        try {
-            $resolved = $this->objectManagerConfig->getInstanceType(
-                $this->objectManagerConfig->getPreference($type)
-            );
-        } catch (\Throwable) {
-            return false;
-        }
-
-        return is_string($resolved)
-            && (class_exists($resolved) || interface_exists($resolved))
-            && is_a($resolved, WidgetBlockInterface::class, true);
+        return DeclaredType::resolvesTo($this->objectManagerConfig, $type, WidgetBlockInterface::class);
     }
 }

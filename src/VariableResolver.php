@@ -244,9 +244,6 @@ final class VariableResolver
             if ($this->bagHas($value, $key)) {
                 return Resolution::of($this->readBag($value, $key));
             }
-            if ($this->legacyQuirks) {
-                return Resolution::missing($key);
-            }
         }
 
         if ($this->legacyQuirks) {
@@ -317,9 +314,6 @@ final class VariableResolver
             $key = $this->dataKeyFromGetter($method);
             if ($this->bagHas($value, $key)) {
                 return Resolution::of($this->readBag($value, $key));
-            }
-            if ($this->legacyQuirks) {
-                return Resolution::missing($label);
             }
         }
 

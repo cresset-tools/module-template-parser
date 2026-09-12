@@ -151,17 +151,4 @@ class TemplateFilterAdapter implements TemplateFilterInterface
     {
         return $this->context->incompatibilities();
     }
-
-    /**
-     * The engine underneath, for a caller that needs past the filter shape.
-     *
-     * The constructor builds the spec, parser and evaluator itself and takes no engine, so
-     * this is the only route to evaluator()->unregister() and evaluator()->registered() -
-     * the calls Auditor and tools/differential.php make on a bare engine. Deliberately not
-     * on TemplateFilterInterface, which is Magento's filter shape and has no engine in it.
-     */
-    public function engine(): TemplateEngine
-    {
-        return $this->engine;
-    }
 }
