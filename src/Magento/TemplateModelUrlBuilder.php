@@ -39,14 +39,17 @@ class TemplateModelUrlBuilder implements TemplateUrlBuilder
         }
 
         // The route is not the only thing that reaches a URL. Url::getRouteUrl() returns
-        // `getBaseUrl() . $routeParams['_direct']` with no filtering at all, so `_direct`
-        // is a second route wearing a different name - the same sink HostDirectives guards
-        // for {{store}}. Guarding only $route left `[_direct:'../../../admin/']` open.
-        foreach (['_direct', '_fragment', '_escape_params'] as $key) {
-            $value = $parameters[$key] ?? null;
-            if (is_string($value) && $value !== '' && !PathGuard::isSafeRelativePath($value)) {
-                return '';
-            }
+        // `getBaseUrl() . $routeParams['_direct']` with no filtering at all, so `_direct` is a
+        // second route wearing a different name - and every OTHER parameter is appended by
+        // Url::_getRouteParams() as `$key . '/' . $value . '/'`, key included.
+        //
+        // This is the same sink {{store}} reaches, so it gets the same guard rather than its
+        // own. It had its own until now - a list naming `_direct`, `_fragment` and
+        // `_escape_params` - which is the list that was found wrong for {{store}} and fixed
+        // there. The copy here was missed, so `[x:'../../..']` walked straight past it while
+        // the identical payload through {{store}} was refused. One guard, called twice.
+        if (!PathGuard::routeParametersAreSafe($parameters)) {
+            return '';
         }
 
         try {

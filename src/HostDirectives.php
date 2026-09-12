@@ -61,13 +61,11 @@ final class HostDirectives
         return [$value, $text, $modifiers];
     }
 
-    /** Parameters that are flags, scopes or query carriers rather than path segments. */
-    private const NON_PATH_PARAMETERS = [
-        '_query', '_nosid', '_absolute', '_secure', '_escape_params', '_scope', '_scope_to_url',
-        '_type',
-    ];
-
-    /** @var array<string,string> */
+    /**
+     * The shapes the design parameters must take, since each becomes a static-URL path segment.
+     *
+     * @var array<string,string>
+     */
     private const DESIGN_PARAMETER_SHAPES = [
         'area' => '/^[a-zA-Z0-9_]{1,64}$/',
         'locale' => '/^[a-zA-Z0-9_-]{1,32}$/',
@@ -75,42 +73,6 @@ final class HostDirectives
         'theme' => '#^[a-zA-Z0-9_]{1,64}/[a-zA-Z0-9_-]{1,64}$#',
         'themeId' => '/^[0-9]{1,10}$/',
     ];
-
-    private static function pathParametersAreSafe(array $parameters): bool
-    {
-        // `_type` picks which base URL the result is built on, so it is a name from a fixed
-        // set (link, web, media, static) and not free text - it is skipped by the loop below
-        // as a flag, which would otherwise leave it the one unguarded spelling.
-        $type = $parameters['_type'] ?? null;
-        if (is_string($type) && $type !== '' && !preg_match('/^[a-z]{1,16}$/', $type)) {
-            return false;
-        }
-
-        foreach ($parameters as $key => $value) {
-            if (!is_string($value) || $value === '') {
-                continue;
-            }
-
-            // A `_query_x` parameter becomes a QUERY parameter - storeDirective moves it into
-            // `_query` and the URL model escapes it - so it never reaches the path, and
-            // holding it to a path guard would refuse an ordinary customer name with an
-            // apostrophe in it. The rest of this list is flags and scopes.
-            if (str_starts_with($key, '_query_') || in_array($key, self::NON_PATH_PARAMETERS, true)) {
-                continue;
-            }
-
-            // Everything else is a route parameter, and Url::_getRouteParams() appends those
-            // as `$key . '/' . $value . '/'` - so the KEY is a path segment as much as the
-            // value is. Naming only `_direct`, `_fragment` and `_escape_params`, as this did,
-            // guarded three spellings out of an open set: `{{store url="x" a="../../.."}}`
-            // walked straight past it.
-            if (!PathGuard::isSafeRelativePath((string)$key) || !PathGuard::isSafeRelativePath($value)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     /**
      * The design parameters Asset\Repository turns into static-URL path segments.
@@ -390,7 +352,7 @@ final class HostDirectives
                 // Magento\Framework\Url::getRouteUrl() returns getBaseUrl() . $params['_direct']
                 // with no filtering of its own, so a guard on `url=` alone is not a guard.
                 // Any remaining parameter that names a path gets the same check.
-                if (!self::pathParametersAreSafe($params)) {
+                if (!PathGuard::routeParametersAreSafe($params)) {
                     return '';
                 }
                 return $urls->storeUrl($path, $params);
@@ -416,7 +378,7 @@ final class HostDirectives
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
                     return '';
                 }
-                if (!self::pathParametersAreSafe($params) || !self::designParametersAreSafe($params)) {
+                if (!PathGuard::routeParametersAreSafe($params) || !self::designParametersAreSafe($params)) {
                     return '';
                 }
                 return $urls->viewUrl($path, $params);

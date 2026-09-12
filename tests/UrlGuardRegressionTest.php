@@ -9,6 +9,7 @@ use Cresset\TemplateParser\HostServices;
 use Cresset\TemplateParser\Magento\TemplateModelUrlBuilder;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\PathGuard;
+use Cresset\TemplateParser\Port\TemplateUrlBuilder;
 use Cresset\TemplateParser\Port\UrlBuilder;
 use Cresset\TemplateParser\RenderPolicy;
 use Cresset\TemplateParser\TemplateEngine;
@@ -289,6 +290,69 @@ final class UrlGuardRegressionTest extends TestCase
             'view theme model'    => ['{{view url="css/email.css" themeModel="x"}}'],
             'store type'          => ['{{store url="customer/account" _type=$p}}'],
         ];
+    }
+
+    /**
+     * `{{var this.getUrl(...)}}` reaches the SAME sink as `{{store}}`, and had its own guard.
+     *
+     * `TemplateModelUrlBuilder` carried a copy of the list naming `_direct`, `_fragment` and
+     * `_escape_params` - the list that was found wrong for `{{store}}`, because
+     * `Url::_getRouteParams()` appends every parameter as `$key . '/' . $value . '/'`, key
+     * included. That one was fixed and this copy was missed, so for a while the identical
+     * payload was refused through `{{store}}` and served through `getUrl()`. Both call one
+     * guard now, and this is what says they still do.
+     *
+     * Exercised against the REAL builder, not a port double: the guard lives in the adapter,
+     * so a fake one proves nothing - which the first version of this test demonstrated by
+     * passing every payload straight through.
+     */
+    #[DataProvider('routeParameterPayloadsForGetUrl')]
+    public function testGetUrlAndTheStoreDirectiveShareOneRouteParameterGuard(array $parameters): void
+    {
+        $model = new class extends \Magento\Email\Model\AbstractTemplate {
+            public array $served = [];
+            public function getUrl($store, $route = '', $params = [])
+            {
+                $this->served[] = $params;
+                return 'REACHED';
+            }
+        };
+
+        $built = (new TemplateModelUrlBuilder())->urlFor(
+            $model,
+            [new \Magento\Store\Model\Store(), 'customer/account', $parameters]
+        );
+
+        self::assertSame('', $built);
+        self::assertSame([], $model->served, 'the parameters reached the host');
+    }
+
+    /** @return array<string,array{0:array<string,string>}> */
+    public static function routeParameterPayloadsForGetUrl(): array
+    {
+        return [
+            // Every shape the three-name list let through...
+            'arbitrary key'     => [['x' => '../../../app/etc/env.php']],
+            'protocol relative' => [['anything' => '//evil.example']],
+            'the key itself'    => [['../../..' => '1']],
+            'entity scheme'     => [['q' => 'javascript&#58alert(1)']],
+            // ...and the two it did catch, which must keep being caught.
+            'named _direct'     => [['_direct' => '../../../admin/']],
+            'named _fragment'   => [['_fragment' => '../../..']],
+        ];
+    }
+
+    /** An ordinary call still reaches the host, or the guard has simply closed the feature. */
+    public function testAnOrdinaryGetUrlCallIsStillServed(): void
+    {
+        $model = new class extends \Magento\Email\Model\AbstractTemplate {
+            public function getUrl($store, $route = '', $params = []) { return 'SERVED'; }
+        };
+
+        self::assertSame('SERVED', (new TemplateModelUrlBuilder())->urlFor(
+            $model,
+            [new \Magento\Store\Model\Store(), 'customer/account', ['_nosid' => 1, '_query_id' => '7']]
+        ));
     }
 
     /**
