@@ -207,7 +207,6 @@ printf("per render: legacy %.1fus, compatible %.1fus (%+.1fus)\n",
 
 // How much of our cost is parsing? That half is cacheable; legacy's regex work is not.
 $parseTotal = 0.0;
-$evalTotal = 0.0;
 foreach (array_intersect_key($corpus, $rows) as $source) {
     [$t] = time_it(static fn () => $parser->parse($source), $iterations);
     $parseTotal += $t;

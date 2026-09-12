@@ -78,7 +78,7 @@ final class KnownDivergenceTest extends TestCase
      *
      * @param mixed $value
      */
-    #[DataProvider('loosleyComparedValues')]
+    #[DataProvider('looselyComparedValues')]
     public function testTheComparisonLegacyTruthinessRestsOn(mixed $value, bool $takesFalseBranch): void
     {
         self::assertSame(
@@ -89,7 +89,7 @@ final class KnownDivergenceTest extends TestCase
     }
 
     /** @return array<string,array{0:mixed,1:bool}> */
-    public static function loosleyComparedValues(): array
+    public static function looselyComparedValues(): array
     {
         return [
             // Falsy on the filter, and on this engine too - so no divergence from these.

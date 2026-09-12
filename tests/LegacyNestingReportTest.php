@@ -53,7 +53,7 @@ final class LegacyNestingReportTest extends TestCase
 
     /** By default, compatible mode is exactly as capable as legacy - so it refuses. */
     #[DataProvider('legacyUnsupported')]
-    public function testUnsupportedNestingIsRefusedByDefault(string $template, string $kind, string $needle): void
+    public function testUnsupportedNestingIsRefusedByDefault(string $template, string $_kind, string $needle): void
     {
         try {
             TemplateEngine::compatible()->render($template, ['a' => 1, 'b' => 1, 'c' => 1]);
