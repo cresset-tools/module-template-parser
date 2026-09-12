@@ -269,11 +269,46 @@ foreach ($argv as $arg) {
     }
 }
 
+/**
+ * The name of one case.
+ *
+ * The driver names every case and each child matches on the name it was given, so the two
+ * have to spell them identically. One function rather than a sprintf at each end.
+ */
+function caseId(string $construct, string $within): string
+{
+    return $construct . '/' . $within;
+}
+
+/**
+ * Every case, in the order they are recorded.
+ *
+ * @return string[]
+ */
+function caseIds(): array
+{
+    $ids = [];
+    foreach (VARIABLE_SETS as $vlabel => $variables) {
+        foreach (CONSTRUCTS as $clabel => $template) {
+            foreach ([false, true] as $plainText) {
+                $ids[] = caseId($clabel, $vlabel . ($plainText ? '/plain' : ''));
+            }
+        }
+    }
+    foreach (CONSTRUCTS as $clabel => $template) {
+        $ids[] = caseId($clabel, 'cms');
+    }
+
+    return $ids;
+}
+
 foreach (VARIABLE_SETS as $vlabel => $variables) {
     foreach (CONSTRUCTS as $clabel => $template) {
         foreach ([false, true] as $plainText) {
-            $id = sprintf('%s/%s%s', $clabel, $vlabel, $plainText ? '/plain' : '');
-            if ($only !== null && $only !== $id) {
+            // $only is null in the driver, so it matches nothing and the driver records
+            // nothing: every case is recorded by the child that was asked for it by name.
+            $id = caseId($clabel, $vlabel . ($plainText ? '/plain' : ''));
+            if ($only !== $id) {
                 continue;
             }
 
@@ -358,7 +393,7 @@ foreach (VARIABLE_SETS as $vlabel => $variables) {
  * Once per construct: a CMS render takes no variables and has no plain-text mode.
  */
 foreach (CONSTRUCTS as $clabel => $template) {
-    if ($only !== null && $only !== $clabel . '/cms') {
+    if ($only !== caseId($clabel, 'cms')) {
         continue;
     }
 
@@ -421,17 +456,7 @@ if ($only !== null) {
  * case silently not tested.
  */
 if ($only === null) {
-    $ids = [];
-    foreach (VARIABLE_SETS as $vlabel => $variables) {
-        foreach (CONSTRUCTS as $clabel => $template) {
-            foreach ([false, true] as $plainText) {
-                $ids[] = sprintf('%s/%s%s', $clabel, $vlabel, $plainText ? '/plain' : '');
-            }
-        }
-    }
-    foreach (CONSTRUCTS as $clabel => $template) {
-        $ids[] = $clabel . '/cms';
-    }
+    $ids = caseIds();
 
     $cases = [];
     $failed = [];

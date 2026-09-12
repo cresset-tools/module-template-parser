@@ -31,11 +31,18 @@ class Divergence
         return $limit;
     }
 
-    /** @return array{0:string,1:string} the differing region on each side */
+    /**
+     * @return array{0:string,1:string} the differing region on each side
+     *
+     * The lead-in is clamped to the width rather than fixed, because a fixed 20 bytes of it
+     * at `--show=20` - the floor DiffCommand clamps to - spends the whole excerpt before
+     * reaching the difference, and both sides then print the same text. At the two widths in
+     * ordinary use the clamp does nothing.
+     */
     public function excerpt(int $width = 60): array
     {
         $at = $this->firstDifference() ?? 0;
-        $from = max(0, $at - 20);
+        $from = max(0, $at - min(20, intdiv($width, 3)));
 
         return [
             $this->legacy === null ? '(did not render)' : substr($this->legacy, $from, $width),

@@ -10,10 +10,12 @@ vendor/bin/phpunit
 Without a local PHP:
 
 ```sh
-docker run --rm -v "$PWD":/m php:8.3-cli sh -c \
-  'php -r "copy(\"https://phar.phpunit.de/phpunit-12.phar\",\"/tmp/phpunit.phar\");"; \
-   cd /m && php /tmp/phpunit.phar'
+docker run --rm -v "$PWD":/m -w /m composer:2 sh -c 'composer install && vendor/bin/phpunit'
 ```
+
+The `composer` image rather than `php:8.3-cli`: the suite needs the autoloader and Symfony
+Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console tests, and
+that image's 128M `memory_limit` is below what `GuardTripwireTest` needs.
 
 4524 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.

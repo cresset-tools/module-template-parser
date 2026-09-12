@@ -51,6 +51,7 @@ HELP);
     {
         $magento = $this->magento();
         $mode = Mode::parse((string)$input->getOption('mode'));
+        $failOn = $this->failOn($input);
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
 
         $auditor = new Auditor(
@@ -82,8 +83,8 @@ HELP);
         }
 
         return $input->getOption('format') === 'json'
-            ? $this->reportJson($findings, $output, (string)$input->getOption('fail-on'))
-            : $this->reportText($findings, $output, (string)$input->getOption('fail-on'), $mode);
+            ? $this->reportJson($findings, $output, $failOn)
+            : $this->reportText($findings, $output, $failOn, $mode);
     }
 
     /** @param Finding[] $findings */
@@ -140,6 +141,28 @@ HELP);
         $output->writeln((string)json_encode(['findings' => $rows, 'counts' => $counts], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         return $this->exitCode($counts, $failOn);
+    }
+
+    /**
+     * Read --fail-on before the scan, not at the end of it.
+     *
+     * exitCode() runs after a full codebase walk and after the report is printed, so a
+     * misspelling caught there costs the whole run - and, because the severities nest, a
+     * misspelling that fell through to the error gate let a build pass that should have
+     * failed. --mode and --source are read here for the same reason.
+     */
+    private function failOn(InputInterface $input): string
+    {
+        $failOn = strtolower(trim((string)$input->getOption('fail-on')));
+
+        if (!in_array($failOn, ['error', 'warning', 'note'], true)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Unknown --fail-on "%s". Use error, warning or note.',
+                (string)$input->getOption('fail-on')
+            ));
+        }
+
+        return $failOn;
     }
 
     /** @param array<string,int> $counts */

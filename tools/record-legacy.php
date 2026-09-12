@@ -170,10 +170,10 @@ $values = [
     'true' => true, 'false' => false, 'zero' => 0, 'one' => 1, 'answer' => 42,
     'strzero' => '0', 'emptystr' => '', 'word' => 'x', 'null' => null,
     'floatzero' => 0.0, 'float' => 1.5, 'emptyarr' => [], 'list' => [1, 2],
-    'assoc' => ['b' => 'deep'], 'assocempty' => ['b' => ''], 'html' => '<b>&</b>',
+    'assoc' => ['b' => 'deep'], 'assocempty' => ['b' => ''], 'html' => '<b>&"x"</b>',
     'directive' => '{{var a}}', 'blockpayload' => '{{block class=Evil}}',
     'longstr' => str_repeat('ab', 40), 'spaces' => '  padded  ',
-    'html' => '<b>&"x"</b>', 'entities' => 'Tom &amp; Jerry &nbsp;',
+    'entities' => 'Tom &amp; Jerry &nbsp;',
     // NOTE: invalid UTF-8 is deliberately absent - json_encode() cannot represent it, and
     // it is pinned directly in CompatibilityModeTest instead.
     'newlines' => "a\nb\nc",

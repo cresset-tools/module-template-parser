@@ -147,6 +147,27 @@ final class CompatibilityModeTest extends TestCase
         }
     }
 
+    /**
+     * The excerpt points at the directive that is actually incompatible.
+     *
+     * Every modifier-chain refusal used to read its position off a field that only the
+     * {{var}} handler wrote, so a {{trans}} chain was reported at offset 0 - or, on a reused
+     * engine, at wherever the last {{var}} in some earlier template had been. Compatible
+     * mode refuses by default, so that excerpt is the first thing a user sees.
+     */
+    public function testAModifierRefusalPointsAtItsOwnDirective(): void
+    {
+        $template = "Hello\n{{var who}}\nand\n{{trans \"hi\"|nl2br:x}}";
+
+        try {
+            $this->engine->render($template, ['who' => 'you']);
+            self::fail('expected a refusal');
+        } catch (\Cresset\TemplateParser\LegacyIncompatibleError $e) {
+            // Line 4 is the {{trans}}; line 2 is the {{var}} whose offset it used to borrow.
+            self::assertStringContainsString('on line 4, column 1', $e->getMessage());
+        }
+    }
+
     /** But prose beginning with a letter is rendered verbatim, exactly as legacy does. */
     public function testProseBeginningWithALetterIsRenderedVerbatim(): void
     {

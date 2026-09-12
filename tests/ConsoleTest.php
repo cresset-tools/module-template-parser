@@ -325,6 +325,29 @@ final class ConsoleTest extends TestCase
         self::assertSame([], $this->auditor()->check([$subject], Mode::Strict));
     }
 
+    /**
+     * The excerpt has to show the difference it is an excerpt of.
+     *
+     * The lead-in was a fixed 20 bytes while the window is a parameter, so at `--show=20`
+     * - the floor `DiffCommand` clamps to - the window ended one byte before the difference
+     * and both sides printed identically.
+     */
+    public function testANarrowExcerptStillReachesTheDifference(): void
+    {
+        $divergence = new \Cresset\TemplateParser\Console\Divergence(
+            new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: ''),
+            legacy: str_repeat('same', 10) . 'LEFT',
+            candidate: str_repeat('same', 10) . 'RIGHT',
+            note: null
+        );
+
+        [$legacy, $ours] = $divergence->excerpt(20);
+
+        self::assertNotSame($legacy, $ours);
+        self::assertStringContainsString('LEFT', $legacy);
+        self::assertStringContainsString('RIGHT', $ours);
+    }
+
     // ---------------------------------------------------------------- commands
 
     public function testCheckExitsNonZeroOnAnErrorSoCiCanUseIt(): void
@@ -354,6 +377,27 @@ final class ConsoleTest extends TestCase
 
         self::assertSame(0, $tester->execute(['path' => $file, '--mode' => 'strict']), 'a warning is not an error');
         self::assertSame(1, $tester->execute(['path' => $file, '--mode' => 'strict', '--fail-on' => 'warning']));
+    }
+
+    /**
+     * A misspelled --fail-on used to be a silently passing build.
+     *
+     * The severities nest, so anything unrecognised fell through to the error-only gate:
+     * `--fail-on=warn` ran the whole scan, printed the warnings and exited 0. It is read
+     * before the scan now, the way --mode and --source already were.
+     */
+    public function testAnUnknownFailOnIsRefusedBeforeTheScan(): void
+    {
+        $tester = $this->tester('check');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Use error, warning or note/');
+
+        $tester->execute([
+            'path' => $this->writeTemplate('Hi {{var custmer}}'),
+            '--mode' => 'strict',
+            '--fail-on' => 'warn',
+        ]);
     }
 
     public function testCheckSpeaksJsonForCi(): void

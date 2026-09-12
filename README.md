@@ -682,7 +682,7 @@ given, and the CSS inlining that runs after a render runs after both.
 `{{layout}}` is the exception, because a layout handle decides which blocks get built and
 template text is not a trustworthy source for one. Nothing is allowed by default, which makes
 every stock sales email report as a difference. `--allow-layout-handle` names the ones a run
-may render, and `stock-email` is shorthand for the four the stock sales emails use:
+may render, and `stock-email` is shorthand for the five the stock sales emails use:
 
 ```sh
 template-parser diff --source=codebase --allow-layout-handle=stock-email

@@ -84,6 +84,7 @@ trait MagentoAware
                 'sales_email_order_items',
                 'sales_email_order_invoice_items',
                 'sales_email_order_shipment_items',
+                'sales_email_order_shipment_track',
                 'sales_email_order_creditmemo_items',
             ]);
         }

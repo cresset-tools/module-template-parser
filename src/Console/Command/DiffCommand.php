@@ -95,7 +95,7 @@ HELP);
         }
 
         return $input->getOption('format') === 'json'
-            ? $this->reportJson($divergences, $examined, $output, (bool)$input->getOption('fail-on-divergence'))
+            ? $this->reportJson($divergences, $examined, $output, $width, (bool)$input->getOption('fail-on-divergence'))
             : $this->reportText($divergences, $examined, $output, $width, (bool)$input->getOption('fail-on-divergence'));
     }
 
@@ -127,11 +127,11 @@ HELP);
     }
 
     /** @param Divergence[] $divergences */
-    private function reportJson(array $divergences, int $examined, OutputInterface $output, bool $failOnDivergence): int
+    private function reportJson(array $divergences, int $examined, OutputInterface $output, int $width, bool $failOnDivergence): int
     {
         $rows = [];
         foreach ($divergences as $divergence) {
-            [$legacy, $ours] = $divergence->excerpt(120);
+            [$legacy, $ours] = $divergence->excerpt($width);
             $rows[] = [
                 'id' => $divergence->subject->id,
                 'label' => $divergence->subject->label,

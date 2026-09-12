@@ -79,7 +79,11 @@ final class Diagnostics
     public static function excerpt(string $source, int $offset): string
     {
         ['line' => $line, 'column' => $column] = self::locate($source, $offset);
-        $lines = preg_split('/\R/', $source) ?: [];
+        // Split on "\n" alone, because locate() counts "\n" alone. Splitting on \R here
+        // would number the lines differently to the caret being placed on them, and a lone
+        // CR or form feed in the template would draw the caret under the wrong line. It also
+        // leaves the CR of a CRLF pair on the end of each line, which the rtrim below takes.
+        $lines = explode("\n", $source);
         $first = max(1, $line - self::CONTEXT_LINES);
         $last = min(count($lines), $line + self::CONTEXT_LINES);
         $width = strlen((string)$last);

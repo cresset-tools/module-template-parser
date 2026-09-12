@@ -35,9 +35,6 @@ final class Evaluator
 
     private string $source = '';
 
-    /** Position of the {{var}} whose modifiers are being applied, for diagnostics. */
-    private int $modifierOffset = 0;
-
     /*
      * Nullable, not `= new X()`.
      *
@@ -369,8 +366,6 @@ final class Evaluator
                 $this->requireVariable($resolution, $n, $c, $expr);
             }
 
-            $this->modifierOffset = $n->offset();
-
             // Legacy hands the RAW resolved value to the modifier chain, so the type each
             // function sees depends on what ran before it. Elsewhere the value is stringified
             // up front, which is safer and simpler.
@@ -378,7 +373,7 @@ final class Evaluator
                 ? ($resolution->value ?? '')     // getVariable(..., '') defaults null to ''
                 : $this->toStringValue($resolution->value);
 
-            return $this->applyModifiers($carried, $modifiers, $c);
+            return $this->applyModifiers($carried, $modifiers, $c, $n->offset());
         };
 
         $this->handlers['if'] = function (DirectiveNode $n, Context $c, self $e): string {
@@ -520,10 +515,8 @@ final class Evaluator
      *
      * Mirrors the parser's handling, so `refuseLegacyIncompatible` governs both.
      */
-    private function noteLegacyIncompatible(Context $context, string $message, ?int $offset = null): void
+    private function noteLegacyIncompatible(Context $context, string $message, int $offset): void
     {
-        $offset ??= $this->modifierOffset;
-
         if ($this->options->refuseLegacyIncompatible) {
             throw LegacyIncompatibleError::at(
                 $this->source,
@@ -593,7 +586,7 @@ final class Evaluator
             $resolved[self::placeholderFor($key)] = $this->toStringValue($value);
         }
 
-        return $this->applyModifiers($translate($text, $resolved), $modifiers, $context);
+        return $this->applyModifiers($translate($text, $resolved), $modifiers, $context, $node->offset());
     }
 
     /**
@@ -755,15 +748,16 @@ final class Evaluator
      * value and then inserts real <br /> tags, and a typo cannot silently disable escaping.
      *
      * @param string[] $modifiers
+     * @param int $offset position of the directive whose modifiers these are, for diagnostics
      */
-    private function applyModifiers(mixed $value, array $modifiers, Context $context): string
+    private function applyModifiers(mixed $value, array $modifiers, Context $context, int $offset): string
     {
         if ($modifiers === []) {
             // Through applyEscapeModifier, not straight to escape(): `escape` is what
             // varDirective defaults to, so the no-modifier path has to behave exactly like
             // an explicit one - including recursing into an array, which is where legacy
             // dies on an element it cannot cast.
-            return $this->toStringValue($this->applyEscapeModifier($value, 'html', $context));
+            return $this->toStringValue($this->applyEscapeModifier($value, 'html', $context, $offset));
         }
 
         /** @var list<array{0:string,1:string[]}> $parsed */
@@ -794,7 +788,8 @@ final class Evaluator
                 $this->noteLegacyIncompatible(
                     $context,
                     'the |nl2br modifier is given arguments - the legacy filter passes them '
-                    . 'to nl2br() and raises a TypeError here'
+                    . 'to nl2br() and raises a TypeError here',
+                    $offset
                 );
             }
 
@@ -804,13 +799,14 @@ final class Evaluator
                 $this->noteLegacyIncompatible(
                     $context,
                     'the |nl2br modifier receives a non-string value - '
-                    . 'the legacy filter raises a TypeError here'
+                    . 'the legacy filter raises a TypeError here',
+                    $offset
                 );
             }
             $value = match ($lookup) {
                 'raw' => $value,
                 'nl2br' => nl2br(is_string($value) ? $value : $this->toStringValue($value)),
-                'escape' => $this->applyEscapeModifier($value, $params[0] ?? 'html', $context),
+                'escape' => $this->applyEscapeModifier($value, $params[0] ?? 'html', $context, $offset),
                 default => $value,      // legacy skips an unknown modifier
             };
         }
@@ -857,7 +853,7 @@ final class Evaluator
      * and rawurlencode() get the raw value under strict_types, so a non-string is a TypeError
      * there too.
      */
-    private function applyEscapeModifier(mixed $value, string $type, Context $context): mixed
+    private function applyEscapeModifier(mixed $value, string $type, Context $context, int $offset): mixed
     {
         if (!in_array($type, self::ESCAPE_TYPES, true)) {
             if ($this->options->legacyQuirks) {
@@ -873,11 +869,11 @@ final class Evaluator
                     // is an object without __toString is an Error there - and `escape` is
                     // varDirective's DEFAULT modifier, so plain `{{var a}}` over such an
                     // array is a legacy fatal with no modifier written at all.
-                    $this->refuseUnstringableElements($value, $context);
+                    $this->refuseUnstringableElements($value, $context, $offset);
                 }
 
                 return array_map(
-                    fn (mixed $item): mixed => $this->applyEscapeModifier($item, 'html', $context),
+                    fn (mixed $item): mixed => $this->applyEscapeModifier($item, 'html', $context, $offset),
                     $value
                 );
             }
@@ -892,7 +888,8 @@ final class Evaluator
                     'the |escape:%s modifier receives a non-string value - '
                     . 'the legacy filter raises a TypeError here',
                     $type
-                )
+                ),
+                $offset
             );
         }
 
@@ -904,11 +901,11 @@ final class Evaluator
      *
      * @param array<mixed> $value
      */
-    private function refuseUnstringableElements(array $value, Context $context): void
+    private function refuseUnstringableElements(array $value, Context $context, int $offset): void
     {
         foreach ($value as $item) {
             if (is_array($item)) {
-                $this->refuseUnstringableElements($item, $context);
+                $this->refuseUnstringableElements($item, $context, $offset);
                 continue;
             }
             if (is_object($item) && !method_exists($item, '__toString')) {
@@ -918,7 +915,8 @@ final class Evaluator
                         'the value is an array holding a %s, which the legacy escaper casts '
                         . 'to string and dies on',
                         $item::class
-                    )
+                    ),
+                    $offset
                 );
                 return;
             }
