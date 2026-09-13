@@ -2,14 +2,15 @@
 
 Notable changes to `cresset-tools/module-template-parser`.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow
-[semantic versioning](https://semver.org/spec/v2.0.0.html) once there is one to follow: nothing
-has been released yet, so everything below is under Unreleased and the public API may still
-move.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
+[semantic versioning](https://semver.org/spec/v2.0.0.html). Pre-1.0, so the public API may
+still move between minor versions.
 
 Entries say what changed and why it mattered. A line that only names a file has been left out.
 
-## [Unreleased]
+## [0.1.0] - 2026-09-13
+
+First release.
 
 ### Added
 
@@ -49,7 +50,7 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - `docs/directives.md`, generated from a live legacy filter rather than written by hand. The
   generator refuses to write the file when an example disagrees with the filter and the
   disagreement has not been declared.
-- A recorded corpus — 4788 cases at the time of writing, 804 of them constructs the legacy
+- A recorded corpus — 4788 cases, 804 of them constructs the legacy
   filter cannot render at all — replayed by the test suite, so parity is measured against
   recorded behaviour rather than asserted. Plus a benchmark against the legacy filter and
   mutation tripwires for the guards.

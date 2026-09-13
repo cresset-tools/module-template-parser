@@ -214,8 +214,8 @@ changes do not.
 
 The corpus figures in the README and in this file are checked against the corpus itself by
 `LegacyParityTest::testTheProseMatchesTheCorpus`, so adding cases fails the suite until both
-are updated with them. The changelog's own count is written as "at the time of writing" and is
-not checked, a changelog being historical by nature.
+are updated with them. The changelog's counts are not checked: it records what was true at each
+release, a changelog being historical by nature.
 
 ## Reporting a security issue
 
