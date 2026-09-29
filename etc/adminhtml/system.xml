@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+    Stores > Configuration > Advanced > System > Template Engine.
+
+    In Magento's own System section rather than a vendor tab: this module is meant to become
+    part of Mage-OS, whose convention is to extend Magento's configuration, not to add a group
+    of its own.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="system">
+            <group id="template_engine" translate="label" type="text" sortOrder="950"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Template Engine</label>
+                <field id="mode" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Engine</label>
+                    <source_model>Cresset\TemplateParser\Magento\Config\Source\EngineModeOptions</source_model>
+                    <comment><![CDATA[How email, CMS and newsletter templates are rendered in this scope. <strong>Legacy</strong> uses Magento's filter only. <strong>Shadow</strong> also renders each template through the new engine and records where the two differ, but always serves the legacy result, so customers see no change.]]></comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

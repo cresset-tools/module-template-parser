@@ -114,8 +114,7 @@ final class MagentoAdapterTest extends TestCase
 
         $comparator = new ShadowComparator(
             new TemplateFilterAdapter(options: Options::lenient()),
-            $logger,
-            true
+            $logger
         );
 
         $result = $comparator->compare('Hi {{var name}}', 'LEGACY OUTPUT', ['name' => 'Jan']);
@@ -124,22 +123,6 @@ final class MagentoAdapterTest extends TestCase
         self::assertCount(1, $logger->records);
         self::assertStringContainsString('divergence', $logger->records[0][0]);
         self::assertArrayHasKey('template_hash', $logger->records[0][1]);
-    }
-
-    public function testShadowComparatorIsInertWhenDisabled(): void
-    {
-        $logger = new class implements LoggerInterface {
-            public array $records = [];
-            public function emergency($m, array $c = []) {} public function alert($m, array $c = []) {}
-            public function critical($m, array $c = []) {} public function error($m, array $c = []) {}
-            public function warning($m, array $c = []) {} public function notice($m, array $c = []) {}
-            public function debug($m, array $c = []) {}  public function log($l, $m, array $c = []) {}
-            public function info($m, array $c = []): void { $this->records[] = [$m, $c]; }
-        };
-        $comparator = new ShadowComparator(new TemplateFilterAdapter(), $logger, false);
-
-        self::assertSame('L', $comparator->compare('{{if broken}}', 'L'));
-        self::assertSame([], $logger->records);
     }
 
     /** A strict-mode failure in the candidate engine must never break the render. */
@@ -153,7 +136,7 @@ final class MagentoAdapterTest extends TestCase
             public function debug($m, array $c = []) {}  public function log($l, $m, array $c = []) {}
             public function info($m, array $c = []): void { $this->records[] = [$m, $c]; }
         };
-        $comparator = new ShadowComparator(new TemplateFilterAdapter(), $logger, true);
+        $comparator = new ShadowComparator(new TemplateFilterAdapter(), $logger);
 
         self::assertSame('L', $comparator->compare('{{if unclosed}}', 'L'));
         self::assertStringContainsString('engine raised', $logger->records[0][0]);

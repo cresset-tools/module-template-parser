@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+    Legacy by default, which is what keeps installing this module from changing anything: the
+    plugin is wired, and returns as soon as it has read this.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <system>
+            <template_engine>
+                <mode>legacy</mode>
+            </template_engine>
+        </system>
+    </default>
+</config>

@@ -12,15 +12,18 @@ use Psr\Log\LoggerInterface;
  *
  * The templates that decide whether a migration is safe live in merchant databases and
  * cannot be audited in advance. Shadow mode turns that unknowable compatibility question
- * into measured data: legacy output is always what gets returned, so enabling this changes
+ * into measured data: legacy output is always what gets returned, so running this changes
  * nothing a customer sees.
+ *
+ * Whether it runs at all is not decided here. TemplateFilterPlugin calls it only for a render
+ * whose store is set to Shadow in `system/template_engine/mode`, so the store view is the unit
+ * of rollout rather than the installation.
  */
 class ShadowComparator
 {
     public function __construct(
         private readonly TemplateFilterInterface $adapter,
-        private readonly LoggerInterface $logger,
-        private readonly bool $enabled = false
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -46,10 +49,6 @@ class ShadowComparator
         ?callable $finish = null,
         array $designParams = []
     ): string {
-        if (!$this->enabled) {
-            return $legacyResult;
-        }
-
         try {
             $candidate = $this->adapter
                 ->setPlainTemplateMode($plainTemplateMode)

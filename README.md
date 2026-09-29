@@ -78,36 +78,37 @@ All of that holds in every mode; the modes differ in what they refuse, never in 
 
 The package is a `magento2-module` with `registration.php` and `etc/`, so
 `bin/magento setup:upgrade` after the `composer require` above adds it to `app/etc/config.php`.
-**Installing it changes no rendering behaviour**: `etc/di.xml` declares no preference for
-`Magento\Framework\Filter\Template`.
+**Installing it changes no rendering behaviour.** The module wires its plugin on install, and
+the plugin does nothing until a store view is told to.
+
+The stage is chosen per store view, under **Stores › Configuration › Advanced › System ›
+Template Engine** (`system/template_engine/mode`):
+
+| Stage | What renders | What the customer gets |
+|---|---|---|
+| **Legacy** (default) | Magento's filter only | the legacy result |
+| **Shadow** | both engines, compared | the legacy result |
+
+```sh
+bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode shadow
+```
+
+**Parser** — serving this engine's output, with a fallback to the legacy filter for anything
+it refuses — is not offered yet; see [#2](https://github.com/cresset-tools/module-template-parser/issues/2).
 
 Adoption goes through a plugin, not a preference. Emails render through
 `Magento\Email\Model\Template\Filter`, CMS extends that, and Newsletter extends
 `Widget\Model\Template\FilterEmulate` — all concrete classes DI instantiates directly, so a
-preference for the framework base class never applies. Declare the shipped plugin in a
-project module against whichever filter you want to cover:
-
-```xml
-<type name="Magento\Email\Model\Template\Filter">
-    <plugin name="cresset_template_parser" sortOrder="10"
-            type="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin"/>
-</type>
-```
-
-The plugin is inert until the comparator is enabled, which is a second entry in the same
-`di.xml`:
-
-```xml
-<type name="Cresset\TemplateParser\Magento\ShadowComparator">
-    <arguments><argument name="enabled" xsi:type="boolean">true</argument></arguments>
-</type>
-```
+preference for the framework base class never applies. The module's `etc/di.xml` declares the
+plugin on the Email filter, and a plugin on a class applies to its subclasses, so that one
+declaration covers every template filter a stock store renders with. Each render reads the
+stage for its own store; under Legacy the plugin returns there, before any second render.
 
 `ShadowComparator` renders the template through this engine, logs where it differs from the
-legacy output it was handed, and returns the *legacy* result — so switching it on changes
-nothing a customer sees. It logs the policy violations and legacy incompatibilities behind a
-divergence, not just a byte offset, and it hashes the template rather than logging its content,
-because a rendered email holds a customer's name and address.
+legacy output it was handed, and returns the *legacy* result — so putting a store view in
+Shadow changes nothing a customer sees. It logs the policy violations and legacy
+incompatibilities behind a divergence, not just a byte offset, and it hashes the template
+rather than logging its content, because a rendered email holds a customer's name and address.
 
 One render is deliberately skipped, and one is adjusted before the diff. A **child** template —
 anything reached through `{{template}}` — is skipped, because the filter defers a directive it
@@ -346,7 +347,7 @@ than what is true. Two properties are asserted absolutely:
   out of one, so the disagreement is measured and pinned rather than avoided.
 
 Everything else is a superset of refusals, enumerated below. Before switching a store over,
-run `Magento\ShadowComparator` against your own templates; the corpus cannot contain them.
+put it in Shadow and let it compare your own templates; the corpus cannot contain them.
 
 Quirks it reproduces:
 
@@ -857,7 +858,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12851 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12856 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

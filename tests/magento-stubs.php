@@ -32,6 +32,11 @@ namespace Magento\Framework\App\Config {
         }
     }
 }
+namespace Magento\Framework\Data {
+    if (!interface_exists(OptionSourceInterface::class)) {
+        interface OptionSourceInterface { public function toOptionArray(); }
+    }
+}
 namespace Magento\Widget\Block {
     if (!interface_exists(BlockInterface::class)) {
         interface BlockInterface { public function toHtml(); }

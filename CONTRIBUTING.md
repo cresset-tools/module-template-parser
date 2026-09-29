@@ -18,7 +18,7 @@ Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console 
 `php:8.3-cli`'s default 128M `memory_limit` is below what the suite peaks at, which
 `GuardTripwireTest` is what pushes it to.
 
-12851 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
+12856 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ### Mutation testing, without taking the machine down
@@ -146,7 +146,7 @@ erode the agreeing set one case at a time in silence.
 | `MalformedTemplateTest` | 15 broken templates asserted to raise a specific error in strict mode; 9 of them are refused in compatible mode and 6 render, and 10 hostile inputs are asserted inert |
 | `CorpusTest` | the parser never throws, never loses content, and never executes anything absent from the template |
 | `GuardTripwireTest`, `MagentoGuardTest`, `SecurityRegressionTest` | one test per security guard, each written against a mutation that removed it |
-| `MagentoIntegrationTest` | the adoption path: the plugin, the adapter's policy, and shadow mode |
+| `MagentoIntegrationTest` | the adoption path: the per-store stage, the plugin, the adapter's policy, and shadow mode |
 | `TemplateIncludeTest` | `{{template}}` semantics: scope, parameters, nesting, cycles, inheritance and output |
 | `MagentoUrlAdapterTest` | the adapters behind `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}` and `{{customvar}}` - the host directives that build a URL, load a stylesheet or read a merchant variable, none of which instantiates a class |
 | `KnownDivergenceTest` | the deliberate behavioural differences from the legacy filter |

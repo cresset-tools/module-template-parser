@@ -12,12 +12,34 @@ Entries say what changed and why it mattered. A line that only names a file has 
 
 ### Added
 
+- A per-store-view setting chooses the engine: **Stores › Configuration › Advanced › System ›
+  Template Engine** (`system/template_engine/mode`), with **Legacy**, the default, and
+  **Shadow**. Rolling out is now a configuration change per store view instead of two `di.xml`
+  entries in a project module, and a Shadow run is evidence for the store view it ran in.
+  Parser is not offered until it can fall back to legacy on a refusal (#2).
+
 - `check` warns about directives a module added as `fooDirective()` methods on a template
   filter. The legacy filter dispatches those by reflection and this engine never does, so in
   compatible mode such a directive renders as its own text — silently, until now. Found
   without calling anything: the store's filter classes are resolved through the ObjectManager,
   and a method counts when a non-Magento class declares it, which catches overrides of stock
   directives too.
+
+### Changed
+
+- The module wires `TemplateFilterPlugin` on `Magento\Email\Model\Template\Filter` itself,
+  which covers the CMS, Widget and Newsletter filters too. Installing it still changes no
+  rendering: under Legacy the plugin reads the setting and returns. It finds the render's
+  store without calling the filter's `getStoreId()`, which fills an unset store from the
+  current one and keeps it — on the shared CMS filters that would have pinned every later
+  render to the first store that rendered.
+
+### Removed
+
+- `ShadowComparator`'s `enabled` argument. Whether a render is compared is the setting's to
+  decide, per store view; a project module that set `enabled` should drop that entry and set
+  the stage instead. A project module that declared the plugin itself should drop that too, or
+  every render is intercepted twice.
 
 ## [0.2.0] - 2026-09-29
 
