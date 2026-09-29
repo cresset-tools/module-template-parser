@@ -26,6 +26,22 @@ Entries say what changed and why it mattered. A line that only names a file has 
   divergences" can be told apart from "nothing rendered". This is what the Shadow report in #1
   reads.
 
+- `bin/magento template:check`, `template:diff` and `template:repl`: the commands are
+  registered with Magento's `CommandList`, so a store runs them without the standalone binary
+  or magerun. They take the ObjectManager bin/magento already booted, and building them does
+  nothing else, because bin/magento builds every registered command on every run.
+
+- `shadow:report` (`template:shadow:report`, `template-parser:shadow:report`) reads the Shadow
+  table and says, per store view, how many templates and renders were compared, how many
+  diverged, were refused or crashed, and since when the store view has been clean. Each
+  divergence comes with its causes and the `diff` command that reproduces it. The exit code is
+  the rollout gate: 0 clean, 1 something diverged or crashed, and 2 when nothing in scope was
+  compared at all — so an empty table is never reported as a clean one. `--since` counts only
+  divergences after a fix; `--template` takes `*` patterns such as `cms_block:*`.
+
+- `shadow:clear` forgets recorded results for a store view or template, so what is measured
+  next starts over. It refuses to run without `--store`, `--template` or an explicit `--all`.
+
 - `check` warns about directives a module added as `fooDirective()` methods on a template
   filter. The legacy filter dispatches those by reflection and this engine never does, so in
   compatible mode such a directive renders as its own text — silently, until now. Found

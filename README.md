@@ -676,10 +676,16 @@ and against total count, since five levels of fan-out is not five renders.
 ## The command line tool
 
 ```sh
-vendor/bin/template-parser repl        # try directives interactively
-vendor/bin/template-parser check       # will these templates render?
-vendor/bin/template-parser diff        # do they render the same as today?
+vendor/bin/template-parser repl            # try directives interactively
+vendor/bin/template-parser check           # will these templates render?
+vendor/bin/template-parser diff            # do they render the same as today?
+vendor/bin/template-parser shadow:report   # what did Shadow mode measure?
+vendor/bin/template-parser shadow:clear    # forget it, for one template or store view
 ```
+
+With the module installed the same commands are part of `bin/magento`, under `template:` —
+`bin/magento template:check`, `template:shadow:report` and so on — and take the application
+bin/magento already booted.
 
 Run from inside a store it finds `app/etc/env.php`, boots Magento and wires every port it
 can, so `{{block}}`, `{{media}}`, `{{config}}` and the rest resolve against the real
@@ -769,6 +775,33 @@ may render, and `stock-email` is shorthand for the five the stock sales emails u
 ```sh
 template-parser diff --source=codebase --allow-layout-handle=stock-email
 ```
+
+### Reading what Shadow measured
+
+`shadow:report` summarises the `cresset_template_shadow` table per store view: templates and
+renders compared, how many diverged, were refused or crashed, and since when the store view has
+been clean. Each diverging template is listed with its causes and the `diff` command that
+reproduces it; refusals are listed too, but never fail the report, because Parser mode falls
+back to legacy for them.
+
+```sh
+bin/magento template:shadow:report --store=1
+bin/magento template:shadow:report --template="cms_block:*" --since="-7 days"
+bin/magento template:shadow:report --format=json
+```
+
+The exit code is the gate for moving a store view on:
+
+| Exit | Meaning |
+|---|---|
+| 0 | compared, and nothing diverged or crashed (since `--since`, when given) |
+| 1 | something diverged or crashed |
+| 2 | nothing in scope was compared — Shadow is off, or nothing has rendered yet |
+
+2 is separate because "no divergences" and "no data" look the same in a count of failures, and
+only one of them is evidence. After fixing a template, `--since` counts only what diverged after
+the fix; `shadow:clear --template=cms_block:7` deletes its history instead, and needs
+`--store`, `--template` or an explicit `--all`.
 
 ### Inside n98-magerun2
 
@@ -880,7 +913,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12878 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12898 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

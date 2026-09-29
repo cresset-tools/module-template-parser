@@ -165,4 +165,22 @@
             <argument name="allowedHandles" xsi:type="array"/>
         </arguments>
     </type>
+
+    <!--
+        The commands, under bin/magento as template:*. Each is the standalone command with the
+        ObjectManager handed in; see Console\Magento\ObjectManagerBridge. CommandList builds
+        every registered command on every bin/magento run, so their constructors do nothing
+        but keep the ObjectManager.
+    -->
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="cresset_template_check" xsi:type="object">Cresset\TemplateParser\Console\Magento\CheckCommand</item>
+                <item name="cresset_template_diff" xsi:type="object">Cresset\TemplateParser\Console\Magento\DiffCommand</item>
+                <item name="cresset_template_repl" xsi:type="object">Cresset\TemplateParser\Console\Magento\ReplCommand</item>
+                <item name="cresset_template_shadow_report" xsi:type="object">Cresset\TemplateParser\Console\Magento\ShadowReportCommand</item>
+                <item name="cresset_template_shadow_clear" xsi:type="object">Cresset\TemplateParser\Console\Magento\ShadowClearCommand</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

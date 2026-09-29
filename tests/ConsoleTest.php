@@ -582,7 +582,12 @@ final class ConsoleTest extends TestCase
         self::assertStringContainsString('unknown command', $this->repl([':nope']));
     }
 
-    public function testEveryCommandIsAvailableInBothEntrypoints(): void
+    /**
+     * The same commands in all three entrypoints, and each registered where that entrypoint
+     * looks: Application::commands() standalone, n98-magerun2.yaml for magerun, and the
+     * CommandListInterface argument in etc/di.xml for bin/magento.
+     */
+    public function testEveryCommandIsAvailableInEveryEntrypoint(): void
     {
         $standalone = array_map(
             static fn ($c): string => (string)$c->getName(),
@@ -590,13 +595,54 @@ final class ConsoleTest extends TestCase
         );
         sort($standalone);
 
-        self::assertSame(['check', 'diff', 'repl'], $standalone);
+        self::assertSame(['check', 'diff', 'repl', 'shadow:clear', 'shadow:report'], $standalone);
 
-        // The magerun subclasses exist for each, renamed into magerun's shared namespace.
-        foreach (['Repl', 'Check', 'Diff'] as $name) {
-            $class = 'Cresset\\TemplateParser\\Console\\Magerun\\' . $name . 'Command';
-            self::assertTrue(class_exists($class), $class . ' is missing');
-            self::assertSame('template-parser:' . strtolower($name), (new $class())->getName());
+        $root = dirname(__DIR__);
+        $magerunYaml = (string)file_get_contents($root . '/n98-magerun2.yaml');
+        $di = simplexml_load_file($root . '/etc/di.xml');
+        $registered = [];
+        foreach ($di->xpath('//type[@name="Magento\\Framework\\Console\\CommandListInterface"]//item') as $item) {
+            $registered[] = trim((string)$item);
+        }
+
+        $objectManager = new class implements \Magento\Framework\ObjectManagerInterface {
+            public function create($type, array $arguments = []) { return null; }
+            public function get($type) { return null; }
+            public function configure(array $configuration) {}
+        };
+
+        foreach ($standalone as $name) {
+            $class = str_replace(' ', '', ucwords(str_replace(':', ' ', $name))) . 'Command';
+
+            // magerun: renamed into its shared namespace, and listed in the module definition.
+            $magerun = 'Cresset\\TemplateParser\\Console\\Magerun\\' . $class;
+            self::assertTrue(class_exists($magerun), $magerun . ' is missing');
+            self::assertSame('template-parser:' . $name, (new $magerun())->getName());
+            self::assertStringContainsString($magerun, $magerunYaml, $magerun . ' is not in n98-magerun2.yaml');
+
+            // bin/magento: under template:, built from an ObjectManager, and in the CommandList.
+            $magento = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class;
+            self::assertTrue(class_exists($magento), $magento . ' is missing');
+            self::assertSame('template:' . $name, (new $magento($objectManager))->getName());
+            self::assertContains($magento, $registered, $magento . ' is not registered in etc/di.xml');
+        }
+    }
+
+    /**
+     * bin/magento builds every registered command on every run, to list them. Constructing
+     * one must not reach for anything - an ObjectManager that raises on use proves it.
+     */
+    public function testBuildingABinMagentoCommandTouchesNothing(): void
+    {
+        $objectManager = new class implements \Magento\Framework\ObjectManagerInterface {
+            public function create($type, array $arguments = []) { throw new \LogicException('create ' . $type); }
+            public function get($type) { throw new \LogicException('get ' . $type); }
+            public function configure(array $configuration) { throw new \LogicException('configure'); }
+        };
+
+        foreach (['Check', 'Diff', 'Repl', 'ShadowReport', 'ShadowClear'] as $class) {
+            $class = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
+            self::assertInstanceOf(\Symfony\Component\Console\Command\Command::class, new $class($objectManager));
         }
     }
 

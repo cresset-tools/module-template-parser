@@ -293,6 +293,15 @@ namespace Magento\Framework\App {
         }
     }
 }
+namespace Magento\Framework {
+    if (!interface_exists(ObjectManagerInterface::class)) {
+        interface ObjectManagerInterface {
+            public function create($type, array $arguments = []);
+            public function get($type);
+            public function configure(array $configuration);
+        }
+    }
+}
 namespace Psr\Log {
     if (!interface_exists(LoggerInterface::class)) {
         interface LoggerInterface {
