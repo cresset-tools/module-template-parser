@@ -18,7 +18,7 @@ Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console 
 `php:8.3-cli`'s default 128M `memory_limit` is below what the suite peaks at, which
 `GuardTripwireTest` is what pushes it to.
 
-12841 tests. 431 are skipped by design: they are the shapes compatible mode deliberately
+12847 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ### Mutation testing, without taking the machine down
@@ -140,7 +140,7 @@ erode the agreeing set one case at a time in silence.
 
 | Test | Covers |
 |---|---|
-| `LegacyParityTest` | the recorded corpus, in both directions: every legacy fatal is refused, and the extra refusals are exactly the seventeen documented shapes |
+| `LegacyParityTest` | the recorded corpus, in both directions: every legacy fatal is refused, and the extra refusals are exactly the thirteen documented shapes |
 | `ParitySensitivityTest` | the canary. It mis-configures the engine and asserts the same corpus then *fails* |
 | `StyleSmugglerDifferentialTest` | the vulnerability, as a paired differential |
 | `MalformedTemplateTest` | 15 broken templates asserted to raise a specific error in strict mode; 9 of them are refused in compatible mode and 6 render, and 10 hostile inputs are asserted inert |
@@ -154,7 +154,7 @@ erode the agreeing set one case at a time in silence.
 ### The sensitivity canary
 
 Green assertions mean nothing if the corpus cannot tell a correct engine from a broken one, so
-each deliberate mis-configuration must produce divergences over the 2710 rendering-comparable
+each deliberate mis-configuration must produce divergences over the 2834 rendering-comparable
 cases:
 
 | Engine | Divergences |
@@ -162,7 +162,7 @@ cases:
 | compatible (control) | 0 |
 | lenient (legacy quirks off) | 1103 |
 | standard truthiness (quirks off, refusal left on) | 1103 |
-| strict (default) | 1519 |
+| strict (default) | 1581 |
 
 Only the control's 0 is asserted exactly. The others are asserted as floors — 40, 20 and 20 —
 because the point is that the corpus still *notices*, and a figure pinned to the byte would

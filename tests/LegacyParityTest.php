@@ -268,8 +268,8 @@ final class LegacyParityTest extends TestCase
         // so a value this engine refuses on is one legacy never looked at. They appear here
         // only in the variable sets carrying such a value.
         'brace_top_trans', 'brace_top_two', 'brace_top_var',
-        'cross_unclosed', 'depend_dot', 'mixed_close', 'nest_empty_dep', 'nest_empty_if',
-        'shout_paired', 'unknown_paired', 'upper_paired', 'upper_var_dot', 'upper_wraps_dir',
+        'cross_unclosed', 'depend_dot', 'nest_empty_dep', 'nest_empty_if',
+        'upper_var_dot', 'upper_wraps_dir',
         'var_digit', 'var_dot', 'var_paired', 'var_underscore',
     ];
 

@@ -298,8 +298,8 @@ rather than reimplementing it, because reimplementing the escaper once made the 
 circular.
 
 **4788 cases recorded. 804 are constructs the legacy filter cannot render at all, 843 put the
-two engines on surfaces that cannot be compared, and 431 are shapes compatible mode refuses on
-purpose. Over the remaining 2710 cases, where both engines render, output is byte-identical.**
+two engines on surfaces that cannot be compared, and 307 are shapes compatible mode refuses on
+purpose. Over the remaining 2834 cases, where both engines render, output is byte-identical.**
 
 That corpus is recorded from a filter built out of a handful of files and no application, so
 the directives it can compare are the six the base `Framework\Filter\Template` implements:
@@ -367,6 +367,7 @@ Quirks it reproduces:
 | trans arguments | an integer key stands for the NEXT placeholder, so `{{trans "%1" 1=$x}}` fills in `%2` and leaves `%1` standing |
 | trans escaping | the default modifier is `escape` and it applies to the whole result, translated text included; `\|raw` turns it off |
 | trans bodies | the body must be a quoted string with whitespace before its arguments, and the split on `\|` happens first — so `{{trans "a\|b"}}` renders nothing at all |
+| unknown paired names | `{{foo}}x{{/foo}}` is one construction to the regex, and an unknown one comes back verbatim — any letter case, mismatched-case closers included. Reproduced when the body holds none of our directives |
 
 Unknown modifiers and unknown escape types are reproduced only in compatible mode. Everywhere
 else they fail closed.
@@ -518,19 +519,19 @@ is not the structure written here
 
 (Wrapped here; the engine prints the summary and the hint each on one line.)
 
-**Four families of construct are refused that legacy does render**, 17 spellings in all. Each
+**Four families of construct are refused that legacy does render**, 13 spellings in all. Each
 is a place where legacy's regex does something by accident that this parser will not build in:
 
 | Shape | What legacy does |
 |---|---|
 | `{{var.a}}`, `{{var_a}}`, `{{var2 a}}`, `{{depend.a}}Y{{/depend}}`, `{{VAR.a}}` | punctuation after a name is read as a parameter separator, which makes `{{var.a}}` a live variable read — case-insensitively, so `{{VAR.a}}` too. `{{depend.a}}` needs its body and closing tag to render; without them it is a TypeError there too |
 | `{{if}}{{if}}{{/if}}`, its `{{depend}}` twin, `{{if}}{{depend}}x{{/if}}` | nesting collapses to `''` by accident of the lazy body match |
-| `{{foo}}x{{/foo}}`, `{{Foo}}x{{/Foo}}`, `{{FOO}}x{{/FOO}}`, `{{foo}}x{{/Foo}}`, `{{var a}}Y{{/var}}`, `{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}` | the optional closing group swallows a body for a directive that has none — case-insensitively, since it closes with a backreference under `/si`, so the last of those comes back verbatim with its `{{if}}` un-executed |
+| `{{var a}}Y{{/var}}`, `{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}` | the optional closing group swallows a body — for `{{var}}` a body it silently drops, and for an unknown name one it hands back verbatim. What happens to a directive *inside* that verbatim span depends on which directive it is (an inner `{{var}}` is resolved, an inner `{{if}}` is not), so a span containing one is refused rather than guessed at |
 | `[Hi {{var a}, bye {{var a}}]`, and two more like it | the fourth family is not a decision of its own: one missing brace makes legacy's lazy match run on to the *next* construct's closer, so the directive it swallows is never evaluated — and a value this engine refuses on is one legacy never looked at |
 
 `LegacyParityTest` asserts the two halves separately, because they are different claims:
 `testEveryLegacyFatalIsRefused` allows no exceptions, and
-`testExtraRefusalsAreOnlyTheDocumentedShapes` pins all seventeen against the observed set, so
+`testExtraRefusalsAreOnlyTheDocumentedShapes` pins all thirteen against the observed set, so
 the list cannot grow without a test failing.
 
 Compatible means bug-for-bug. Use `lenient` or `strict` if you want the fixes. It is also what
@@ -857,7 +858,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12841 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12847 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

@@ -8,6 +8,18 @@ still move between minor versions.
 
 Entries say what changed and why it mattered. A line that only names a file has been left out.
 
+## [Unreleased]
+
+### Changed
+
+- Compatible mode renders an unknown paired construction verbatim, as the legacy filter does,
+  instead of refusing it. `{{foo}}x{{/foo}}` is one construction to CONSTRUCTION_PATTERN and an
+  unknown one comes back as written, in any letter case and with a mismatched-case closer —
+  124 recorded cases, all verbatim. A body holding one of our directives is still refused:
+  legacy resolves an inner `{{var}}` there but not an inner `{{if}}`, and guessing which is
+  which would risk rendering something the filter does not. The deliberate over-refusals go
+  from 17 spellings to 13.
+
 ## [0.1.0] - 2026-09-13
 
 First release.

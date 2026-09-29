@@ -57,6 +57,7 @@ final class Parser
         $this->incompatibilities = [];
         // Before any refusal is raised: the spans decide which of them apply.
         $this->findLoopBodies($source);
+        $this->findVerbatimSpans($source);
         $this->refuseLegacyParsingDifferences($source);
 
         $tokens = $this->lexer->tokenize($source);
@@ -90,8 +91,14 @@ final class Parser
         while ($index < $count) {
             $token = $tokens[$index];
 
+            if ($token->type !== TokenType::Text && $this->insideVerbatimSpan($token->offset, strlen($token->raw))) {
+                $nodes[] = new TextNode($token->raw, $token->offset);
+                $index++;
+                continue;
+            }
+
             if ($token->type === TokenType::Text) {
-                $nodes[] = new TextNode($token->raw);
+                $nodes[] = new TextNode($token->raw, $token->offset);
                 $index++;
                 continue;
             }
@@ -112,7 +119,7 @@ final class Parser
                         trim($token->raw)
                     )
                 );
-                $nodes[] = new TextNode($token->raw);
+                $nodes[] = new TextNode($token->raw, $token->offset);
                 $index++;
                 continue;
             }
@@ -143,7 +150,7 @@ final class Parser
                         $token->name
                     )
                 );
-                $nodes[] = new TextNode($token->raw);
+                $nodes[] = new TextNode($token->raw, $token->offset);
                 $index++;
                 continue;
             }
@@ -374,7 +381,13 @@ final class Parser
 
             foreach ($this->matches('/\{\{\/[^{}]*\}\}/', $node->text()) as $match) {
                 $spelling = $match[0][0];
-                $at = strpos($source, $spelling);
+                // Where THIS closer is, not the first one spelled the same: a `{{/if}}` inside
+                // a swallowed span and a real one elsewhere are different closers.
+                $at = $node->offset() !== null ? $node->offset() + $match[0][1] : strpos($source, $spelling);
+
+                if ($at !== false && $this->insideVerbatimSpan($at, strlen($spelling))) {
+                    continue;
+                }
 
                 $this->refuseIfLegacyCannotRender(
                     $at === false ? 0 : $at,
@@ -542,6 +555,110 @@ final class Parser
             self::LEGACY_LOOP_OPENER,
             substr($this->source, $offset, $bodyEnd - $offset)
         ) !== 1;
+    }
+
+    /** @var list<array{0:int,1:int}> half-open [from, to) offsets legacy hands back verbatim */
+    private array $verbatimSpans = [];
+
+    /**
+     * Where the legacy filter swallows an unknown directive and its body whole.
+     *
+     * CONSTRUCTION_PATTERN is `/{{([a-z]{0,10})(.*?)}}(?:(.*?){{\/(?:\1)}})?/si`: the body
+     * group is optional and closes on a case-insensitive backreference. So an opener whose
+     * name no processor handles, followed by a closer spelled the same, is ONE construction -
+     * and an unknown construction comes back as construction[0], verbatim, with nothing inside
+     * it evaluated. `{{foo}}x{{/foo}}`, `{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}` and
+     * `{{foo}}x{{/Foo}}` all render exactly as written in the recorded corpus.
+     *
+     * That is the shape of a Handlebars or Knockout snippet pasted into a CMS block, and it
+     * renders fine on the filter. Refusing it would break working pages for no gain: nothing in
+     * the span is executed, so reproducing it costs none of the guarantees.
+     *
+     * Found with strpos rather than the pattern, with the same laziness - parameters end at the
+     * first `}}`, the body at the first matching closer - because running a lazy body group
+     * from every unclosed opener in a large template is quadratic. A span starting inside a
+     * loop body is left alone: ForDirective scans its body rather than rendering it, which is a
+     * declared divergence of its own.
+     */
+    private function findVerbatimSpans(string $source): void
+    {
+        $this->verbatimSpans = [];
+
+        if (!$this->options->legacyQuirks || !str_contains($source, '{{/')) {
+            return;
+        }
+
+        /** @var array<string,int|false> $nextCloser by lower-cased name */
+        $nextCloser = [];
+        $from = 0;
+
+        while (($at = strpos($source, '{{', $from)) !== false) {
+            $from = $at + 2;
+
+            // Legacy's name: up to ten letters, case-insensitively, straight after the braces.
+            if (preg_match('/\G[a-zA-Z]{1,10}/', $source, $m, 0, $at + 2) !== 1) {
+                continue;
+            }
+            $name = strtolower($m[0]);
+            if ($this->spec->isKnown($name) || $this->insideLoopBody($at)) {
+                continue;
+            }
+
+            $openerEnd = strpos($source, '}}', $at + 2 + strlen($name));
+            if ($openerEnd === false) {
+                continue;
+            }
+
+            $closer = '{{/' . $name . '}}';
+            if (!isset($nextCloser[$name]) || ($nextCloser[$name] !== false && $nextCloser[$name] < $openerEnd + 2)) {
+                $nextCloser[$name] = stripos($source, $closer, $openerEnd + 2);
+            }
+            if ($nextCloser[$name] === false) {
+                continue;
+            }
+
+            $end = $nextCloser[$name] + strlen($closer);
+            $from = $end;               // legacy's scan resumes after the construction
+
+            // Only a body with none of our directives in it. Legacy's behaviour inside the
+            // span depends on which directive is there - an inner {{var}} is resolved, an
+            // inner {{if}} is not - so a span holding one keeps the refusal rather than risk
+            // rendering something the filter does not.
+            $body = substr($source, $openerEnd + 2, $nextCloser[$name] - $openerEnd - 2);
+            if ($this->holdsKnownDirective($body)) {
+                continue;
+            }
+
+            $this->verbatimSpans[] = [$at, $end];
+        }
+    }
+
+    /** Whether the text opens or closes any directive this engine knows, in any letter case. */
+    private function holdsKnownDirective(string $text): bool
+    {
+        if (!str_contains($text, '{{')) {
+            return false;
+        }
+        preg_match_all('/\{\{\/?([a-zA-Z]{1,10})/', $text, $m);
+        foreach ($m[1] as $name) {
+            if ($this->spec->isKnown(strtolower($name))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Whether [$offset, $offset + $length) lies wholly inside one swallowed span. */
+    private function insideVerbatimSpan(int $offset, int $length): bool
+    {
+        foreach ($this->verbatimSpans as [$from, $to]) {
+            if ($offset >= $from && $offset + $length <= $to) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Walked one match at a time: a match table over a large source is how this once OOMed. */

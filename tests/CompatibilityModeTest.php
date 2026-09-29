@@ -219,6 +219,50 @@ final class CompatibilityModeTest extends TestCase
         ];
     }
 
+    /**
+     * An unknown paired construction comes back verbatim - unless its body holds one of ours.
+     *
+     * CONSTRUCTION_PATTERN reads `{{foo}}x{{/foo}}` as one construction, and an unknown one is
+     * returned as written. The corpus pins the plain shapes; these go beyond it, and each was
+     * measured against the Mage-OS 3.5.0 filter before being written down here.
+     *
+     * The refused rows are the conservative half. Inside such a span legacy resolves an inner
+     * `{{var}}` but leaves an inner `{{if}}` alone, so a span holding a directive of ours is
+     * refused rather than rendered one way or the other.
+     */
+    #[DataProvider('unknownPairedConstructions')]
+    public function testAnUnknownPairedConstructionIsVerbatimOnlyWhenItsBodyIsInert(
+        string $template,
+        ?string $legacy
+    ): void {
+        $variables = ['a' => 1, 'name' => 'N'];
+
+        if ($legacy === null) {
+            $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
+        }
+
+        self::assertSame($legacy, $this->engine->render($template, $variables));
+    }
+
+    public static function unknownPairedConstructions(): array
+    {
+        return [
+            'two side by side' => ['{{foo}}1{{/foo}} and {{bar}}2{{/bar}}', '{{foo}}1{{/foo}} and {{bar}}2{{/bar}}'],
+            'nested unknowns'  => ['{{outer}}{{inner}}x{{/inner}}{{/outer}}', '{{outer}}{{inner}}x{{/inner}}{{/outer}}'],
+            // Inside a real block the span is part of that block's output, which the 3.5.0
+            // neutralizer encodes - on the filter as here.
+            'inside an if'     => [
+                'pre {{if a}}[{{each}}{{name}}{{/each}}]{{/if}} post',
+                'pre [&#123;&#123;each}}&#123;&#123;name}}&#123;&#123;/each}}] post',
+            ],
+            // Legacy resolves this {{var}}; the span is refused rather than guessed at.
+            'holds a var'      => ['a {{foo}}{{var a}}{{/foo}} b', null],
+            'holds an if'      => ['{{Wrap}}A{{if a}}B{{/if}}C{{/Wrap}}', null],
+            // Handlebars' own block syntax is a legacy fatal, and stays one here.
+            'handlebars block' => ['{{#each items}}{{name}}{{/each}}', null],
+        ];
+    }
+
     /** But prose beginning with a letter is rendered verbatim, exactly as legacy does. */
     public function testProseBeginningWithALetterIsRenderedVerbatim(): void
     {
