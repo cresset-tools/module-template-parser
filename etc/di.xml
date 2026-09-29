@@ -32,6 +32,34 @@
     </type>
 
     <!--
+        Which template a render was. The filter is handed a string and never learns where it
+        came from, so these register an identity against the text as the models hand it over,
+        and the filter plugin looks it up by the source it was given. Without them every Shadow
+        row would be "unidentified", and a report could say that something diverged but not
+        what to open. See Shadow\TemplateIdentity.
+
+        Newsletter's model extends AbstractTemplate, so the first covers newsletter bodies too.
+        Subjects are declared on the concrete email model, because that is where
+        getProcessedTemplateSubject() is.
+    -->
+    <type name="Magento\Email\Model\AbstractTemplate">
+        <plugin name="cresset_template_parser_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\EmailTemplateIdentityPlugin"/>
+    </type>
+    <type name="Magento\Email\Model\Template">
+        <plugin name="cresset_template_parser_subject_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\EmailSubjectIdentityPlugin"/>
+    </type>
+    <type name="Magento\Cms\Model\Block">
+        <plugin name="cresset_template_parser_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\CmsBlockIdentityPlugin"/>
+    </type>
+    <type name="Magento\Cms\Model\Page">
+        <plugin name="cresset_template_parser_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\CmsPageIdentityPlugin"/>
+    </type>
+
+    <!--
         The ports the adapter renders through.
 
         Without these HostServices defaults every port to null, so the adapter registers only

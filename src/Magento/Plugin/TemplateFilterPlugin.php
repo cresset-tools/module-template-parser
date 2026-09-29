@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento\Plugin;
 
 use Cresset\TemplateParser\Magento\Config\EngineMode;
+use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
+use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
 use Cresset\TemplateParser\Magento\ShadowComparator;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 
@@ -20,7 +22,8 @@ use Magento\Framework\Filter\Template as LegacyTemplate;
  * Wired on install, and off until configured. Each render reads `system/template_engine/mode`
  * for the subject's store, and under Legacy - the default - nothing past that read happens:
  * no second render, no comparison, and the legacy result goes back untouched. Shadow renders
- * through this engine as well, and still returns the legacy result.
+ * through this engine as well, records the outcome against the store view and the template
+ * it was - see TemplateIdentity - and still returns the legacy result.
  *
  * The variables are captured on the way past because the legacy filter keeps them in a
  * protected property with a setter and no getter, so an `after filter()` plugin cannot
@@ -49,14 +52,18 @@ class TemplateFilterPlugin
      * `false` marks an invocation that is not being compared. Every beforeFilter pushes and
      * every afterFilter pops whatever the mode, so a Legacy render nested in a Shadow one - or
      * the reverse, a child rendering for another store - cannot leave the stack misaligned.
+     * The store travels in the frame too, so the outcome is recorded against the store the
+     * render was decided for.
      *
-     * @var list<array{0:array<string,mixed>,1:bool,2:array<string,mixed>}|false>
+     * @var list<array{0:array<string,mixed>,1:bool,2:array<string,mixed>,3:int|string|null}|false>
      */
     private array $inFlight = [];
 
     public function __construct(
         private readonly ShadowComparator $comparator,
-        private readonly EngineMode $mode
+        private readonly EngineMode $mode,
+        private readonly TemplateIdentity $identity,
+        private readonly ShadowRecorder $recorder
     ) {
     }
 
@@ -118,30 +125,23 @@ class TemplateFilterPlugin
      */
     public function beforeFilter(LegacyTemplate $subject, $value): array
     {
-        $this->inFlight[] = $this->mode->isShadow($this->storeIdOf($subject))
-            ? [$this->variables, $this->plainTemplateMode, $this->designParams]
-            : false;
+        $this->inFlight[] = $this->frame($subject);
 
         return [$value];
     }
 
     /**
-     * Compares, and returns the legacy result.
+     * Compares, records, and returns the legacy result.
      *
-     * The comparator returns its input unchanged on every path, so even in Shadow nothing a
-     * customer sees changes; the candidate render exists only to be recorded when it differs.
+     * The legacy result is returned on every path, so even in Shadow nothing a customer sees
+     * changes; the candidate render exists only to be measured.
      */
     public function afterFilter(LegacyTemplate $subject, string $result, string $value): string
     {
         // Popped first, whatever happens next, so every return below leaves the stack as
         // beforeFilter found it. null only when afterFilter runs without its beforeFilter,
         // which interception never does; decided on the spot then, from what was captured.
-        $scope = array_pop($this->inFlight);
-        if ($scope === null) {
-            $scope = $this->mode->isShadow($this->storeIdOf($subject))
-                ? [$this->variables, $this->plainTemplateMode, $this->designParams]
-                : false;
-        }
+        $scope = array_pop($this->inFlight) ?? $this->frame($subject);
 
         if ($scope === false) {
             return $result;
@@ -174,9 +174,33 @@ class TemplateFilterPlugin
             : null;
 
         // Whatever THIS invocation was called with, not whatever the last one left behind.
-        [$variables, $plainTemplateMode, $designParams] = $scope;
+        [$variables, $plainTemplateMode, $designParams, $storeId] = $scope;
 
-        return $this->comparator->compare($value, $result, $variables, $plainTemplateMode, $finish, $designParams);
+        try {
+            $outcome = $this->comparator->compare($value, $result, $variables, $plainTemplateMode, $finish, $designParams);
+            $this->recorder->record(
+                $storeId,
+                $this->identity->identify($value) ?? TemplateIdentity::unidentified($subject),
+                $outcome
+            );
+        } catch (\Throwable) {
+            // The comparator and the recorder each contain their own failures; this is the
+            // backstop for the promise that Shadow never changes a render.
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array{0:array<string,mixed>,1:bool,2:array<string,mixed>,3:int|string|null}|false
+     */
+    private function frame(LegacyTemplate $subject): array|false
+    {
+        $storeId = $this->storeIdOf($subject);
+
+        return $this->mode->isShadow($storeId)
+            ? [$this->variables, $this->plainTemplateMode, $this->designParams, $storeId]
+            : false;
     }
 
     /**

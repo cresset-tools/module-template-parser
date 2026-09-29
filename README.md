@@ -104,11 +104,33 @@ plugin on the Email filter, and a plugin on a class applies to its subclasses, s
 declaration covers every template filter a stock store renders with. Each render reads the
 stage for its own store; under Legacy the plugin returns there, before any second render.
 
-`ShadowComparator` renders the template through this engine, logs where it differs from the
-legacy output it was handed, and returns the *legacy* result — so putting a store view in
-Shadow changes nothing a customer sees. It logs the policy violations and legacy
-incompatibilities behind a divergence, not just a byte offset, and it hashes the template
-rather than logging its content, because a rendered email holds a customer's name and address.
+In Shadow, `ShadowComparator` renders the template through this engine as well and the plugin
+returns the *legacy* result — so putting a store view in Shadow changes nothing a customer
+sees. Each comparison is recorded in the `cresset_template_shadow` table, one row per store view
+and template:
+
+| Column | Holds |
+|---|---|
+| `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3`, `cms_block:7`, `cms_page:2`, or `unidentified:<filter class>` |
+| `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
+| `first_seen`, `last_seen` | when it was first and last compared (UTC) |
+| `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many renders have agreed or been refused since |
+| `last_divergence`, `last_refusal`, `last_crash` | JSON describing the most recent of each |
+
+A **refusal** is a construct this engine declines on purpose; Parser mode will fall back to
+legacy for it, so it counts as clean. A **crash** is anything else the engine raised, and counts
+against the template like a divergence. So "clean since" is `last_divergence_at`, or
+`first_seen` for a template that has never diverged.
+
+The template is named by where it came from — plugins on the email and CMS models register
+its identity as they hand its text to the filter — never by its content. No rendered output is
+stored either: a divergence is described by lengths, the first differing byte, and the policy
+violations and legacy incompatibilities behind it, because a rendered email holds a customer's
+name and address.
+
+Comparisons are counted in memory and written in one statement at the end of the request, or
+every 100 templates or 60 seconds in a long-running process. A failed write is logged once as a
+warning and never affects the render.
 
 One render is deliberately skipped, and one is adjusted before the diff. A **child** template —
 anything reached through `{{template}}` — is skipped, because the filter defers a directive it
@@ -858,7 +880,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12856 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12878 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

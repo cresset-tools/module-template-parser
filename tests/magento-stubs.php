@@ -81,6 +81,7 @@ namespace Magento\Email\Model {
     if (!class_exists(AbstractTemplate::class)) {
         abstract class AbstractTemplate
         {
+            public function getProcessedTemplate(array $variables = []) { return ''; }
             /** Url::getRouteUrl() concatenates _direct onto the base URL with no filtering. */
             public function getUrl($store, $route = '', $params = [])
             {
@@ -233,6 +234,7 @@ namespace Magento\Email\Model {
             public function load($id) { return $this; }
             public function loadDefault($id) { return $this; }
             public function getTemplateText() { return ''; }
+            public function getProcessedTemplateSubject(array $variables) { return ''; }
         }
     }
     if (!class_exists(TemplateFactory::class)) {
@@ -259,6 +261,35 @@ namespace Magento\Framework\Filter {
             protected $templateVars = [];
             public function setVariables(array $variables) { $this->templateVars = $variables; return $this; }
             public function filter($value) { return $value; }
+        }
+    }
+}
+namespace Magento\Cms\Model {
+    // The Shadow identity plugins are typed against these, as Magento's plugin validator
+    // requires; a test extends them to supply an id and content.
+    if (!class_exists(Block::class)) {
+        class Block {
+            public function getId() { return null; }
+            public function getContent() { return ''; }
+        }
+    }
+    if (!class_exists(Page::class)) {
+        class Page {
+            public function getId() { return null; }
+            public function getContent() { return ''; }
+        }
+    }
+}
+namespace Magento\Newsletter\Model {
+    if (!class_exists(Template::class)) {
+        class Template extends \Magento\Email\Model\AbstractTemplate {}
+    }
+}
+namespace Magento\Framework\App {
+    if (!class_exists(ResourceConnection::class)) {
+        class ResourceConnection {
+            public function getConnection($resourceName = 'default') { return null; }
+            public function getTableName($modelEntity, $connectionName = 'default') { return $modelEntity; }
         }
     }
 }

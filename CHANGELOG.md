@@ -18,6 +18,14 @@ Entries say what changed and why it mattered. A line that only names a file has 
   entries in a project module, and a Shadow run is evidence for the store view it ran in.
   Parser is not offered until it can fall back to legacy on a refusal (#2).
 
+- Shadow records every comparison in a `cresset_template_shadow` table, one row per store view
+  and template, counting agreements, divergences, refusals and crashes, with when the template
+  last diverged and how many renders have been clean since. The template is named by where it
+  came from — `email:sales_email_order_template`, `cms_block:7` — by plugins on the email and
+  CMS models, so a report can say which template to open. Agreements are counted too, so "no
+  divergences" can be told apart from "nothing rendered". This is what the Shadow report in #1
+  reads.
+
 - `check` warns about directives a module added as `fooDirective()` methods on a template
   filter. The legacy filter dispatches those by reflection and this engine never does, so in
   compatible mode such a directive renders as its own text — silently, until now. Found
@@ -35,6 +43,12 @@ Entries say what changed and why it mattered. A line that only names a file has 
   render to the first store that rendered.
 
 ### Removed
+
+- Shadow's `info` lines in `system.log` (`template-parser shadow: divergence` and
+  `... engine raised`), and the SHA-256 of the template they carried. A hash could not be traced
+  back to a template, and a general-purpose log could not be reported on per store view; the
+  table replaces both. `ShadowComparator::compare()` now returns a `ShadowOutcome` instead of
+  the legacy string, and no longer takes a logger.
 
 - `ShadowComparator`'s `enabled` argument. Whether a render is compared is the setting's to
   decide, per store view; a project module that set `enabled` should drop that entry and set
