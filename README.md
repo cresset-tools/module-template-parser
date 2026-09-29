@@ -1,4 +1,4 @@
-# cresset-tools/module-template-parser
+# cresset/module-template-parser
 
 A parser for Magento's `{{...}}` template directives. It builds an AST and evaluates it once,
 instead of matching regexes against its own output the way `Magento\Framework\Filter\Template`
@@ -16,17 +16,8 @@ echo $engine->render('Dear {{var name}},', ['name' => 'Ada']);
 Everything in this README lives under `Cresset\TemplateParser\`; later snippets leave the
 `use` lines out.
 
-It is not on Packagist, so the repository goes in the project's `composer.json` before
-Composer will find the package:
-
-```json
-"repositories": [
-    {"type": "vcs", "url": "https://github.com/cresset-tools/module-template-parser"}
-]
-```
-
 ```sh
-composer require cresset-tools/module-template-parser
+composer require cresset/module-template-parser
 ```
 
 That puts `vendor/bin/template-parser` in place too, which is what the CLI section below runs.
@@ -767,7 +758,7 @@ ObjectManager instead of booting a second one.
 package's own CI uses it. If you do too:
 
 ```sh
-bougie tool run cresset-tools/module-template-parser check --source=codebase
+bougie tool run cresset/module-template-parser check --source=codebase
 bougie run -- vendor/bin/n98-magerun2 template-parser:diff --source=email
 ```
 

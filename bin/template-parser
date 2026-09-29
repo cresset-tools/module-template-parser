@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Standalone entrypoint.
  *
  * Finds an autoloader whether this package is the project or a dependency of one, so
- * `bougie tool run cresset-tools/module-template-parser` and a checkout both work.
+ * `bougie tool run cresset/module-template-parser` and a checkout both work.
  */
 foreach ([
     __DIR__ . '/../vendor/autoload.php',     // installed as the project

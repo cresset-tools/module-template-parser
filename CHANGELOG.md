@@ -1,6 +1,6 @@
 # Changelog
 
-Notable changes to `cresset-tools/module-template-parser`.
+Notable changes to `cresset/module-template-parser`.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [semantic versioning](https://semver.org/spec/v2.0.0.html). Pre-1.0, so the public API may
@@ -12,6 +12,10 @@ Entries say what changed and why it mattered. A line that only names a file has 
 
 ### Changed
 
+- The Composer package is `cresset/module-template-parser`, matching the other Cresset
+  packages, and it is on Packagist. 0.1.0 was published as `cresset-tools/module-template-parser`
+  and is not renamed; require the new name from 0.2.0. The GitHub repository and the
+  `Cresset\TemplateParser` namespace are unchanged.
 - Compatible mode renders an unknown paired construction verbatim, as the legacy filter does,
   instead of refusing it. `{{foo}}x{{/foo}}` is one construction to CONSTRUCTION_PATTERN and an
   unknown one comes back as written, in any letter case and with a mismatched-case closer —

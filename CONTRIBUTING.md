@@ -108,7 +108,7 @@ something is leaking.
 Re-record it from inside a store:
 
 ```sh
-cd /path/to/store && php vendor/cresset-tools/module-template-parser/tools/record-store-ports.php
+cd /path/to/store && php vendor/cresset/module-template-parser/tools/record-store-ports.php
 ```
 
 It writes next to the package it is run from, so copy the result back if the store holds a
