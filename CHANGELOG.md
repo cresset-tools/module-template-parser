@@ -8,7 +8,7 @@ still move between minor versions.
 
 Entries say what changed and why it mattered. A line that only names a file has been left out.
 
-## [Unreleased]
+## [0.2.0] - 2026-09-29
 
 ### Changed
 
