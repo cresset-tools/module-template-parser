@@ -690,6 +690,34 @@ final class ConsoleTest extends TestCase
         }
     }
 
+    /**
+     * Under bin/magento every command is built as a generated Interceptor subclass, because
+     * Magento_NewRelicReporting plugs into Symfony's Command. An Interceptor carries no
+     * #[AsCommand], and Symfony reads that attribute from the instantiated class only - so a
+     * name left to the attribute was empty, and setup:upgrade refused to start. Simulated
+     * here with the same shape: a bare subclass that only forwards its constructor.
+     */
+    public function testABinMagentoCommandKeepsItsNameAndDescriptionWhenIntercepted(): void
+    {
+        $objectManager = new class implements \Magento\Framework\ObjectManagerInterface {
+            public function create($type, array $arguments = []) { return null; }
+            public function get($type) { return null; }
+            public function configure(array $configuration) {}
+        };
+
+        foreach (['Check' => 'check', 'Diff' => 'diff', 'Repl' => 'repl', 'ShadowReport' => 'shadow:report', 'ShadowClear' => 'shadow:clear', 'Status' => 'status'] as $class => $name) {
+            $parent = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
+            $interceptor = 'InterceptedFixture' . $class . 'Command';
+            if (!class_exists($interceptor, false)) {
+                eval(sprintf('class %s extends \\%s {}', $interceptor, $parent));
+            }
+
+            $command = new $interceptor($objectManager);
+            self::assertSame('template:' . $name, $command->getName());
+            self::assertNotSame('', $command->getDescription(), $interceptor . ' lost its description');
+        }
+    }
+
     public function testTheCodebaseSourceIsInertWithoutARoot(): void
     {
         $source = new CodebaseEmailTemplates(null);

@@ -397,7 +397,7 @@ final class MagentoIntegrationTest extends TestCase
         $comparator = new ShadowComparator($adapter);
 
         $outcome = $comparator->compare(
-            '{{var name}}',
+            '{{inlinecss file="css/email-inline.css"}}{{var name}}',
             '<INLINED>Ada</INLINED>',
             ['name' => 'Ada'],
             false,
@@ -424,11 +424,37 @@ final class MagentoIntegrationTest extends TestCase
             public function applyInlineCss($html) { return '<INLINED>' . $html . '</INLINED>'; }
         };
 
+        $source = '{{inlinecss file="css/email-inline.css"}}Dear {{var name}},';
         $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
-        $plugin->beforeFilter($subject, 'Dear {{var name}},');
-        $plugin->afterFilter($subject, '<INLINED>Dear Ada,</INLINED>', 'Dear {{var name}},');
+        $plugin->beforeFilter($subject, $source);
+        $plugin->afterFilter($subject, '<INLINED>Dear Ada,</INLINED>', $source);
 
         self::assertSame([], $lines, 'the plugin did not put the candidate through applyInlineCss');
+    }
+
+    /**
+     * But only a render that asked for inlining is finished.
+     *
+     * The legacy filter resets its after-filter callbacks after every render and keeps its
+     * inline CSS file list, so an email's SUBJECT - filtered by the same instance straight
+     * after the body - reaches applyInlineCss() with the body's stylesheets still set. Legacy
+     * never calls it for the subject; finishing the candidate anyway wrapped every subject in
+     * an HTML document, and a real store reported each one as a divergence.
+     */
+    public function testARenderThatDidNotAskForInliningIsNotFinished(): void
+    {
+        $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
+        $comparator = new ShadowComparator($adapter);
+
+        $outcome = $comparator->compare(
+            'Your order #{{var id}}',
+            'Your order #42',
+            ['id' => '42'],
+            false,
+            static fn (string $html): string => '<html><body>' . $html . '</body></html>'
+        );
+
+        self::assertSame(ShadowOutcome::AGREE, $outcome->outcome, 'a subject was finished as if it were a body');
     }
 
     /**
@@ -479,7 +505,7 @@ final class MagentoIntegrationTest extends TestCase
         $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
         $comparator = new ShadowComparator($adapter);
 
-        $outcome = $comparator->compare('{{var name}}', 'Ada', ['name' => 'Ada'], false, static function (): string {
+        $outcome = $comparator->compare('{{inlinecss file="css/email-inline.css"}}{{var name}}', 'Ada', ['name' => 'Ada'], false, static function (): string {
             throw new \RuntimeException('emogrifier fell over');
         });
 
