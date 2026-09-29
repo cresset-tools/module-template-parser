@@ -394,7 +394,7 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate('{{if a}}unclosed');
 
-        $exit = $tester->execute(['path' => $file, '--mode' => 'strict']);
+        $exit = $tester->execute(['path' => $file, '--posture' => 'strict']);
 
         self::assertSame(1, $exit);
         self::assertStringContainsString('ERROR', $tester->getDisplay());
@@ -412,7 +412,7 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate("ok\nstill ok\n{{if a}}unclosed");
 
-        $tester->execute(['path' => $file, '--mode' => 'strict']);
+        $tester->execute(['path' => $file, '--posture' => 'strict']);
 
         self::assertMatchesRegularExpression('/ERROR .*:3$/m', $tester->getDisplay());
     }
@@ -422,7 +422,7 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate('Hello, nothing to see here.');
 
-        self::assertSame(0, $tester->execute(['path' => $file, '--mode' => 'strict']));
+        self::assertSame(0, $tester->execute(['path' => $file, '--posture' => 'strict']));
     }
 
     /** --fail-on decides what CI treats as a failure, so a first run is not a wall of red. */
@@ -431,8 +431,8 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate('Hi {{var custmer}}');
 
-        self::assertSame(0, $tester->execute(['path' => $file, '--mode' => 'strict']), 'a warning is not an error');
-        self::assertSame(1, $tester->execute(['path' => $file, '--mode' => 'strict', '--fail-on' => 'warning']));
+        self::assertSame(0, $tester->execute(['path' => $file, '--posture' => 'strict']), 'a warning is not an error');
+        self::assertSame(1, $tester->execute(['path' => $file, '--posture' => 'strict', '--fail-on' => 'warning']));
     }
 
     /**
@@ -440,7 +440,7 @@ final class ConsoleTest extends TestCase
      *
      * The severities nest, so anything unrecognised fell through to the error-only gate:
      * `--fail-on=warn` ran the whole scan, printed the warnings and exited 0. It is read
-     * before the scan now, the way --mode and --source already were.
+     * before the scan now, the way --posture and --source already were.
      */
     public function testAnUnknownFailOnIsRefusedBeforeTheScan(): void
     {
@@ -451,7 +451,7 @@ final class ConsoleTest extends TestCase
 
         $tester->execute([
             'path' => $this->writeTemplate('Hi {{var custmer}}'),
-            '--mode' => 'strict',
+            '--posture' => 'strict',
             '--fail-on' => 'warn',
         ]);
     }
@@ -461,12 +461,56 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate('{{if a}}unclosed');
 
-        $tester->execute(['path' => $file, '--mode' => 'compatible', '--format' => 'json']);
+        $tester->execute(['path' => $file, '--posture' => 'compatible', '--format' => 'json']);
         $report = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
 
         self::assertArrayHasKey('findings', $report);
         self::assertArrayHasKey('counts', $report);
         self::assertNotEmpty($report['findings']);
+    }
+
+    /** --mode still works for a release, says it is going, and keeps stdout clean for JSON. */
+    public function testModeIsADeprecatedSpellingOfPosture(): void
+    {
+        $tester = $this->tester('check');
+        $file = $this->writeTemplate('Hi {{var custmer}}');
+
+        $exit = $tester->execute(
+            ['path' => $file, '--mode' => 'strict', '--fail-on' => 'warning', '--format' => 'json'],
+            ['capture_stderr_separately' => true]
+        );
+
+        self::assertSame(1, $exit, 'strict reports the unknown variable, so --mode was honoured');
+        self::assertStringContainsString('--mode is deprecated; use --posture', $tester->getErrorOutput());
+        json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    public function testPostureAndModeThatDisagreeAreRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/disagree; pass only --posture/');
+
+        $this->tester('check')->execute(
+            ['path' => $this->writeTemplate('x'), '--posture' => 'strict', '--mode' => 'compatible'],
+            ['capture_stderr_separately' => true]
+        );
+    }
+
+    /** Parser mode runs the compatible posture, so that is what an unqualified run measures. */
+    public function testThePostureDefaultsToCompatibleAndIsCalledThat(): void
+    {
+        $tester = $this->tester('check');
+        $tester->execute(['path' => $this->writeTemplate('Hi {{var custmer}}')]);
+
+        self::assertStringContainsString('checked in the compatible posture', $tester->getDisplay());
+    }
+
+    public function testReplSwitchesPosture(): void
+    {
+        $display = $this->repl([':posture strict', ':set customer_name=Ada', '{{var custmer_name}}']);
+
+        self::assertStringContainsString('posture compatible', $display);
+        self::assertStringContainsString('Unknown variable', $display);
     }
 
     /** diff needs a store, and says so instead of pretending. */
@@ -563,7 +607,7 @@ final class ConsoleTest extends TestCase
             ':set xs=[1,2]',
             '{{if qty}}truthy{{else}}falsy{{/if}}',
             '{{for i in xs}}[{{var i}}]{{/for}}',
-        ], ['--mode' => 'strict']);
+        ], ['--posture' => 'strict']);
 
         self::assertStringContainsString('falsy', $strict, 'int 0 is falsy under standard truthiness');
         self::assertStringContainsString('[1][2]', $strict, 'a JSON list should be iterable');
@@ -572,7 +616,7 @@ final class ConsoleTest extends TestCase
     /** ...and compatible mode disagrees about 0, which is the legacy quirk. */
     public function testCompatibleModeTreatsIntZeroAsTruthy(): void
     {
-        $display = $this->repl([':set qty=0', '{{if qty}}truthy{{else}}falsy{{/if}}'], ['--mode' => 'compatible']);
+        $display = $this->repl([':set qty=0', '{{if qty}}truthy{{else}}falsy{{/if}}'], ['--posture' => 'compatible']);
 
         self::assertStringContainsString('truthy', $display);
     }
@@ -595,7 +639,7 @@ final class ConsoleTest extends TestCase
         );
         sort($standalone);
 
-        self::assertSame(['check', 'diff', 'repl', 'shadow:clear', 'shadow:report'], $standalone);
+        self::assertSame(['check', 'diff', 'repl', 'shadow:clear', 'shadow:report', 'status'], $standalone);
 
         $root = dirname(__DIR__);
         $magerunYaml = (string)file_get_contents($root . '/n98-magerun2.yaml');
@@ -640,7 +684,7 @@ final class ConsoleTest extends TestCase
             public function configure(array $configuration) { throw new \LogicException('configure'); }
         };
 
-        foreach (['Check', 'Diff', 'Repl', 'ShadowReport', 'ShadowClear'] as $class) {
+        foreach (['Check', 'Diff', 'Repl', 'ShadowReport', 'ShadowClear', 'Status'] as $class) {
             $class = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
             self::assertInstanceOf(\Symfony\Component\Console\Command\Command::class, new $class($objectManager));
         }

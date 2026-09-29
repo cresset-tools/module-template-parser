@@ -26,20 +26,32 @@ trait ShadowAware
         return $this;
     }
 
-    protected function shadowTable(OutputInterface $output): ?ShadowTable
+    /** The store's database, whether or not this module's table is in it yet. */
+    protected function database(OutputInterface $output): ?ShadowTable
     {
-        $table = $this->shadowTable;
+        if ($this->shadowTable !== null) {
+            return $this->shadowTable;
+        }
+
+        $magento = $this->magento();
+        $table = $magento->isAvailable() ? ShadowTable::fromMagento($magento) : null;
 
         if ($table === null) {
-            $magento = $this->magento();
-            $table = $magento->isAvailable() ? ShadowTable::fromMagento($magento) : null;
+            $output->writeln(sprintf('<error>%s needs a Magento store to read from.</error>', $this->getName()));
+            $output->writeln('  ' . ($magento->reason() ?? 'the database connection could not be resolved'));
 
-            if ($table === null) {
-                $output->writeln(sprintf('<error>%s needs a Magento store to read Shadow results from.</error>', $this->getName()));
-                $output->writeln('  ' . ($magento->reason() ?? 'the database connection could not be resolved'));
+            return null;
+        }
 
-                return null;
-            }
+        return $this->shadowTable = $table;
+    }
+
+    /** The database, and only if this module's table is in it. */
+    protected function shadowTable(OutputInterface $output): ?ShadowTable
+    {
+        $table = $this->database($output);
+        if ($table === null) {
+            return null;
         }
 
         if (!$table->exists()) {
@@ -49,7 +61,7 @@ trait ShadowAware
             return null;
         }
 
-        return $this->shadowTable = $table;
+        return $table;
     }
 
     /**

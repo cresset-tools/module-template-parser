@@ -24,7 +24,7 @@ class ReplCommand extends Command
 
     protected function configure(): void
     {
-        $this->addModeOption()
+        $this->addPostureOption()
             ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store id to render in')
             ->addOption('var', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Preset a variable, name=value');
     }
@@ -32,7 +32,7 @@ class ReplCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $magento = $this->magento();
-        $mode = Mode::parse((string)$input->getOption('mode'));
+        $mode = $this->posture($input, $output);
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
         $variables = $this->parseVariables((array)$input->getOption('var'));
 
@@ -40,7 +40,7 @@ class ReplCommand extends Command
         $emulator = new StoreEmulator($magento);
 
         $output->writeln('<info>template-parser</info> interactive');
-        $output->writeln('  mode    ' . $mode->describe());
+        $output->writeln('  posture ' . $mode->describe());
         $output->writeln('  store   ' . ($magento->isAvailable()
             ? 'connected' . ($storeId !== null ? ' (store ' . $storeId . ')' : '')
             : 'not connected - ' . $magento->reason()));
@@ -187,7 +187,7 @@ class ReplCommand extends Command
 
             case ':help':
                 $output->writeln(<<<'HELP'
-  <comment>:mode</comment> strict|lenient|compatible   switch engine posture
+  <comment>:posture</comment> strict|lenient|compatible switch engine posture (:mode too)
   <comment>:set</comment> name=value                   set a variable (see :types)
   <comment>:unset</comment> name                       remove one
   <comment>:vars</comment>                             list variables in scope
@@ -214,10 +214,11 @@ HELP);
   On PHP 8 the legacy filter tests == '', which makes int 0 and string "0" both
   TRUTHY. Compatible mode - the default here - reproduces that; strict and lenient
   use standard PHP truthiness and call both falsy. Being able to set one and not
-  the other is the point, and <comment>:mode</comment> switches which answer you get.
+  the other is the point, and <comment>:posture</comment> switches which answer you get.
 TYPES);
                 return true;
 
+            case ':posture':
             case ':mode':
                 try {
                     $mode = Mode::parse((string)$argument);

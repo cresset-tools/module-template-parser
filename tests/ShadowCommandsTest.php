@@ -5,16 +5,19 @@ namespace Cresset\TemplateParser\Test;
 
 use Cresset\TemplateParser\Console\Command\ShadowClearCommand;
 use Cresset\TemplateParser\Console\Command\ShadowReportCommand;
+use Cresset\TemplateParser\Console\Command\StatusCommand;
 use Cresset\TemplateParser\Console\MagentoContext;
 use Cresset\TemplateParser\Console\Magento\ShadowReportCommand as BinMagentoReport;
 use Cresset\TemplateParser\Console\Shadow\ShadowReport;
 use Cresset\TemplateParser\Console\Shadow\ShadowTable;
+use Cresset\TemplateParser\Magento\Config\EngineMode;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * shadow:report and shadow:clear, against the statements they really run.
+ * shadow:report, shadow:clear and status, against the statements they really run.
  *
  * The report is the rollout gate, so what matters most is that it cannot say "clean" by
  * accident: not over an empty table, not with a divergence left out of a count, not because a
@@ -345,5 +348,88 @@ final class ShadowCommandsTest extends TestCase
 
         self::assertStringContainsString('Cleared 2 row(s).', $this->clear(['--all' => true])->getDisplay());
         self::assertSame([], (new ShadowTable($this->db))->rows());
+    }
+
+    // ---------------------------------------------------------------- status
+
+    /** @param array<int,string> $effective store id => the stage config resolves to */
+    private function runStatus(array $effective, array $options = []): CommandTester
+    {
+        $scopeConfig = new class ($effective) implements ScopeConfigInterface {
+            public function __construct(private array $effective) {}
+            public function getValue($path, $scope = 'default', $scopeCode = null) { return $this->effective[(int)$scopeCode] ?? null; }
+            public function isSetFlag($path, $scope = 'default', $scopeCode = null) { return false; }
+        };
+        $command = (new StatusCommand())
+            ->setMagentoContext(MagentoContext::unavailable('tests'))
+            ->setShadowTable(new ShadowTable($this->db))
+            ->setEngineMode(new EngineMode($scopeConfig));
+        $tester = new CommandTester($command);
+        $tester->execute($options);
+
+        return $tester;
+    }
+
+    private function seedRollout(): void
+    {
+        $this->db
+            ->setConfig('websites', 1, EngineMode::XML_PATH, 'shadow', '2026-09-01 08:00:00')
+            ->setConfig('stores', 2, EngineMode::XML_PATH, 'legacy', '2026-09-10 12:00:00');
+        $this->seedCleanStore();
+    }
+
+    public function testStatusShowsEachStoreViewsStageAndWhereItIsSet(): void
+    {
+        $this->seedRollout();
+
+        $tester = $this->runStatus([1 => 'shadow', 2 => 'legacy']);
+
+        self::assertSame(0, $tester->getStatusCode());
+        $display = $tester->getDisplay();
+        self::assertMatchesRegularExpression('/Main Website \(website base\)\n  default \(1\) +Shadow +set at website, since 2026-09-01 08:00:00 UTC/', $display);
+        self::assertStringContainsString('2 template(s), 940 render(s): 940 agreed, 0 diverged, 0 refused, 0 crashed; clean since 2026-08-30 10:00:00 UTC', $display);
+        self::assertMatchesRegularExpression('/nl \(2\) +Legacy +set at store view, since 2026-09-10 12:00:00 UTC/', $display);
+        self::assertMatchesRegularExpression('/Trade \(website b2b\)\n  trade \(3\) +Legacy +not set - the module default/', $display);
+        self::assertStringNotContainsString('admin', $display);
+        self::assertStringNotContainsString('the database says', $display);
+    }
+
+    /** The stage shown is the one renders use; a saved value that disagrees is called out. */
+    public function testStatusSaysWhenTheSavedValueIsNotTheOneInEffect(): void
+    {
+        $this->seedRollout();
+
+        $display = $this->runStatus([1 => 'legacy', 2 => 'legacy'])->getDisplay();
+
+        self::assertMatchesRegularExpression('/default \(1\) +Legacy/', $display);
+        self::assertStringContainsString('the database says Shadow; the config cache is stale', $display);
+    }
+
+    public function testStatusWorksBeforeTheTableExists(): void
+    {
+        $this->db = new SqliteConnection();
+        $this->db->setConfig('default', 0, EngineMode::XML_PATH, 'shadow', '2026-09-01 08:00:00');
+
+        $tester = $this->runStatus([1 => 'shadow', 2 => 'shadow', 3 => 'shadow']);
+
+        self::assertSame(0, $tester->getStatusCode());
+        self::assertMatchesRegularExpression('/trade \(3\) +Shadow +set at default, since 2026-09-01 08:00:00 UTC/', $tester->getDisplay());
+        self::assertStringContainsString('No Shadow table yet', $tester->getDisplay());
+    }
+
+    public function testStatusSpeaksJson(): void
+    {
+        $this->seedRollout();
+
+        $status = json_decode($this->runStatus([1 => 'shadow', 2 => 'legacy'], ['--format' => 'json'])->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertTrue($status['shadow_table']);
+        self::assertSame(['base', 'b2b'], array_column($status['websites'], 'code'));
+        self::assertSame(
+            [[1, 'shadow', 'website'], [2, 'legacy', 'store view'], [3, 'legacy', 'not set']],
+            array_map(static fn (array $r): array => [$r['store_id'], $r['mode'], $r['set_at']], $status['stores'])
+        );
+        self::assertNotNull($status['stores'][0]['shadow']);
+        self::assertNull($status['stores'][2]['shadow']);
     }
 }

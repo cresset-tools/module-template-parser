@@ -74,6 +74,11 @@ TemplateEngine::withOptions(Options::strict()->withVariables(false));
 
 All of that holds in every mode; the modes differ in what they refuse, never in what they run.
 
+The command line calls these the **posture** — `--posture=strict|lenient|compatible` — because
+in a store "mode" means the rollout stage below, Legacy, Shadow or Parser. They are different
+axes: the posture is how this engine reads a template, the stage is whether a store view uses
+it. Parser mode runs the compatible posture, which is why that is the CLI's default.
+
 ## Using it as a Magento module
 
 The package is a `magento2-module` with `registration.php` and `etc/`, so
@@ -95,6 +100,21 @@ bin/magento config:set --scope=stores --scope-code=default system/template_engin
 
 **Parser** — serving this engine's output, with a fallback to the legacy filter for anything
 it refuses — is not offered yet; see [#2](https://github.com/cresset-tools/module-template-parser/issues/2).
+
+A rollout, one store view at a time:
+
+```sh
+bin/magento template:status                      # every store view's stage, and since when
+bin/magento template:diff --store=1              # what would Parser change, over every template?
+bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode shadow
+# ... let real emails and pages render for a while ...
+bin/magento template:shadow:report --store=1     # exit 0: compared, and nothing diverged
+```
+
+A clean report — exit 0, with renders behind it — is the evidence for moving that store view
+on to Parser once [#2](https://github.com/cresset-tools/module-template-parser/issues/2) lands.
+`template:status` shows the stage renders actually use, and says so when the value saved in
+the database is not it: a stale config cache, or an override in `app/etc/env.php`.
 
 Adoption goes through a plugin, not a preference. Emails render through
 `Magento\Email\Model\Template\Filter`, CMS extends that, and Newsletter extends
@@ -681,6 +701,7 @@ vendor/bin/template-parser check           # will these templates render?
 vendor/bin/template-parser diff            # do they render the same as today?
 vendor/bin/template-parser shadow:report   # what did Shadow mode measure?
 vendor/bin/template-parser shadow:clear    # forget it, for one template or store view
+vendor/bin/template-parser status          # which stage is each store view at?
 ```
 
 With the module installed the same commands are part of `bin/magento`, under `template:` —
@@ -693,7 +714,7 @@ application. Run anywhere else it degrades to the built-in directives and still 
 
 ```
 $ template-parser repl
-  mode    compatible - reproduces the legacy filter, refuses what it could not render
+  posture compatible - reproduces the legacy filter, refuses what it could not render
   store   connected
   18 directives wired
 
@@ -703,7 +724,7 @@ compatible> {{media url="../../../app/etc/env.php"}}
 (empty)
 compatible> :set customer_name=Ada
   customer_name = string  'Ada'
-compatible> :mode strict
+compatible> :posture strict
   strict - unknown directives and variables are errors
 strict> {{var custmer_name}}
 Unknown variable "custmer_name" in {{var custmer_name}}
@@ -715,7 +736,7 @@ Unknown variable "custmer_name" in {{var custmer_name}}
   hint: did you mean {{var customer_name}}?
 ```
 
-`:help` lists the rest — `:set`, `:vars`, `:store`, `:stores`, `:directives`, `:mode`.
+`:help` lists the rest — `:set`, `:vars`, `:store`, `:stores`, `:directives`, `:posture`.
 
 Values are typed, which matters more here than it might elsewhere:
 
@@ -737,12 +758,16 @@ diagnostic. `--source` picks where to look: `codebase` (files in app/code, vendo
 `email`, `cms`, `newsletter`, or `all`.
 
 ```sh
-template-parser check --source=codebase --mode=strict --fail-on=error
+template-parser check --source=codebase --posture=strict --fail-on=error
 template-parser check --source=all --format=json > findings.json
 ```
 
 The exit code is what makes it useful in CI: non-zero at or above `--fail-on`, which defaults
 to `error` so a first run over a decade of templates is not a wall of red.
+
+`--posture` picks how strictly the engine reads (see [Modes](#modes)); it defaults to
+compatible, the posture Parser mode runs. `--mode` is the old spelling and still works for one
+release, with a warning on stderr.
 
 ### Diffing against the filter you run today
 
@@ -754,6 +779,10 @@ the templates that matter are in a merchant's database, not the repository.
 template-parser diff --source=email --store=1
 template-parser diff --source=all --format=json --fail-on-divergence
 ```
+
+With `--store=N` and the default posture, this answers "what would switching this store view to
+Parser change?" — over every template now, where Shadow mode measures it on live renders as
+they happen.
 
 `--store` sets the store context, so `{{trans}}` resolves in that store view's language and
 `{{config}}` in its scope. It emulates rather than just switching the store id, because
@@ -913,7 +942,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12898 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12906 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

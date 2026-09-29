@@ -180,6 +180,7 @@
                 <item name="cresset_template_repl" xsi:type="object">Cresset\TemplateParser\Console\Magento\ReplCommand</item>
                 <item name="cresset_template_shadow_report" xsi:type="object">Cresset\TemplateParser\Console\Magento\ShadowReportCommand</item>
                 <item name="cresset_template_shadow_clear" xsi:type="object">Cresset\TemplateParser\Console\Magento\ShadowClearCommand</item>
+                <item name="cresset_template_status" xsi:type="object">Cresset\TemplateParser\Console\Magento\StatusCommand</item>
             </argument>
         </arguments>
     </type>

@@ -14,3 +14,4 @@ commands:
     - Cresset\TemplateParser\Console\Magerun\DiffCommand
     - Cresset\TemplateParser\Console\Magerun\ShadowReportCommand
     - Cresset\TemplateParser\Console\Magerun\ShadowClearCommand
+    - Cresset\TemplateParser\Console\Magerun\StatusCommand

@@ -26,10 +26,10 @@ class DiffCommand extends Command
 
     protected function configure(): void
     {
-        $this->addModeOption()
+        $this->addPostureOption()
             ->addLayoutOption()
             ->addSourceOptions()
-            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store id to render in')
+            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store view id: what switching this store view to Parser would change')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'text or json', 'text')
             ->addOption('show', null, InputOption::VALUE_REQUIRED, 'Excerpt width around the first difference', '60')
             ->addOption('fail-on-divergence', null, InputOption::VALUE_NONE, 'Exit non-zero if anything differs')
@@ -37,9 +37,13 @@ class DiffCommand extends Command
 Renders each template through the filter your store runs today AND through this
 engine, and reports every one whose output differs.
 
-This is the number that decides whether a migration is safe, and it needs a
-store: the templates that matter are in a merchant's database, not in the
-repository. Without one, only syntax can be checked - use `check` for that.
+With --store=N that is the answer to "what would switching this store view to
+Parser change?": the default posture, compatible, is the one Parser mode runs.
+Shadow mode measures the same thing on live renders; this measures it now, over
+every template, without waiting for them to be sent.
+
+It needs a store: the templates that matter are in a merchant's database, not in
+the repository. Without one, only syntax can be checked - use `check` for that.
 
   template-parser diff --source=email --store=1
   template-parser diff --source=all --format=json --fail-on-divergence
@@ -63,7 +67,7 @@ HELP);
             return Command::FAILURE;
         }
 
-        $mode = Mode::parse((string)$input->getOption('mode'));
+        $mode = $this->posture($input, $output);
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
         $width = max(20, (int)$input->getOption('show'));
 

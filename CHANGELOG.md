@@ -42,6 +42,11 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - `shadow:clear` forgets recorded results for a store view or template, so what is measured
   next starts over. It refuses to run without `--store`, `--template` or an explicit `--all`.
 
+- `status` (`template:status`, `template-parser:status`) lists every website and store view
+  with the stage renders use, whether it was set at default, website or store view level, when
+  it was set, and one line of Shadow results. Where the value saved in the database is not the
+  one in effect — a stale config cache, or an override in `app/etc` — it says so.
+
 - `check` warns about directives a module added as `fooDirective()` methods on a template
   filter. The legacy filter dispatches those by reflection and this engine never does, so in
   compatible mode such a directive renders as its own text — silently, until now. Found
@@ -50,6 +55,12 @@ Entries say what changed and why it mattered. A line that only names a file has 
   directives too.
 
 ### Changed
+
+- `--mode` is now `--posture` on `check`, `diff` and `repl` (`-p`; `:posture` in the REPL),
+  and the output says posture. "Mode" is the rollout stage — Legacy, Shadow, Parser — and the two
+  appear side by side under bin/magento. `--mode` and `-m` still work for this release, with a
+  warning on stderr, and are removed in the next. `diff --store=N` is described as what it now
+  answers: what switching that store view to Parser would change.
 
 - The module wires `TemplateFilterPlugin` on `Magento\Email\Model\Template\Filter` itself,
   which covers the CMS, Widget and Newsletter filters too. Installing it still changes no

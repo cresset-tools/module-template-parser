@@ -8,6 +8,7 @@ use Cresset\TemplateParser\Console\Command\DiffCommand;
 use Cresset\TemplateParser\Console\Command\ReplCommand;
 use Cresset\TemplateParser\Console\Command\ShadowClearCommand;
 use Cresset\TemplateParser\Console\Command\ShadowReportCommand;
+use Cresset\TemplateParser\Console\Command\StatusCommand;
 use Symfony\Component\Console\Application as ConsoleApplication;
 use Symfony\Component\Console\Command\Command;
 
@@ -47,6 +48,7 @@ class Application extends ConsoleApplication
             new DiffCommand(),
             new ShadowReportCommand(),
             new ShadowClearCommand(),
+            new StatusCommand(),
         ];
     }
 }

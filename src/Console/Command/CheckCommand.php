@@ -25,7 +25,7 @@ class CheckCommand extends Command
 
     protected function configure(): void
     {
-        $this->addModeOption()
+        $this->addPostureOption()
             ->addLayoutOption()
             ->addSourceOptions()
             ->addArgument('path', InputArgument::OPTIONAL, 'A single template file to check instead of a source')
@@ -39,7 +39,7 @@ Exit code is what makes this useful in CI: 0 when nothing at or above --fail-on
 was found, 1 otherwise. The default only fails on errors, so a first run does not
 drown you in the warnings a decade of templates will produce.
 
-  template-parser check --source=codebase --mode=strict --fail-on=error
+  template-parser check --source=codebase --posture=strict --fail-on=error
   template-parser check --source=all --format=json > findings.json
 HELP);
     }
@@ -47,7 +47,7 @@ HELP);
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $magento = $this->magento();
-        $mode = Mode::parse((string)$input->getOption('mode'));
+        $mode = $this->posture($input, $output);
         $failOn = $this->failOn($input);
         $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
 
@@ -112,7 +112,7 @@ HELP);
         }
 
         $output->writeln(sprintf(
-            'checked in %s mode: %d error(s), %d warning(s), %d note(s)',
+            'checked in the %s posture: %d error(s), %d warning(s), %d note(s)',
             $mode->value,
             $counts[Finding::ERROR],
             $counts[Finding::WARNING],
@@ -152,7 +152,7 @@ HELP);
      * exitCode() runs after a full codebase walk and after the report is printed, so a
      * misspelling caught there costs the whole run - and, because the severities nest, a
      * misspelling that fell through to the error gate let a build pass that should have
-     * failed. --mode and --source are read here for the same reason.
+     * failed. --posture and --source are read here for the same reason.
      */
     private function failOn(InputInterface $input): string
     {
