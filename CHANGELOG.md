@@ -8,6 +8,17 @@ still move between minor versions.
 
 Entries say what changed and why it mattered. A line that only names a file has been left out.
 
+## [Unreleased]
+
+### Added
+
+- `check` warns about directives a module added as `fooDirective()` methods on a template
+  filter. The legacy filter dispatches those by reflection and this engine never does, so in
+  compatible mode such a directive renders as its own text — silently, until now. Found
+  without calling anything: the store's filter classes are resolved through the ObjectManager,
+  and a method counts when a non-Magento class declares it, which catches overrides of stock
+  directives too.
+
 ## [0.2.0] - 2026-09-29
 
 ### Changed

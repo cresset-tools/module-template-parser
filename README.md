@@ -203,6 +203,14 @@ It *would* matter to a host rendering through a bare `Framework\Filter\Template`
 The `check` and `diff` commands ask the store what its pool holds and report any directive
 whose port a host has not wired.
 
+There is a third, older way, and this engine does not support it: a module prefers or
+subclasses a filter and adds a public `fooDirective()` method. The legacy filter dispatches
+`{{foo}}` to it by reflection; this engine never dispatches by reflection, by design, so in
+compatible mode an unhandled `{{foo}}` comes back as its own text. `check` finds these without
+calling them — it resolves the store's filter classes through the ObjectManager and reports
+any `*Directive` method a non-Magento class declares, including an override of a stock one —
+and warns on every template that uses one.
+
 ## Per-render capability policy
 
 Capability belongs to the template, not the application. A stock transactional email and a
@@ -849,7 +857,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12847 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12851 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

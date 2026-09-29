@@ -348,6 +348,45 @@ final class ConsoleTest extends TestCase
         self::assertStringContainsString('RIGHT', $ours);
     }
 
+    /**
+     * `check` warns about a directive a module added as a method on the store's filter.
+     *
+     * Silent otherwise: compatible mode renders an unknown {{coupon}} as its own text, which
+     * is not an error, so nothing else in the report would mention it.
+     */
+    public function testCheckWarnsAboutADirectiveAddedAsAFilterMethod(): void
+    {
+        require_once __DIR__ . '/fixtures/FilterMethodDirectives.php';
+        $magento = MagentoContext::unavailable('no store in tests');
+        $store = MagentoContext::fromObjectManager(new class {
+            public function get(string $class): ?object
+            {
+                return $class === \Magento\Framework\ObjectManager\ConfigInterface::class
+                    ? new class implements \Magento\Framework\ObjectManager\ConfigInterface {
+                        public function getPreference($type)
+                        {
+                            return $type === 'Magento\\Email\\Model\\Template\\Filter' ? \Acme\Coupons\Filter::class : $type;
+                        }
+                        public function getInstanceType($instanceName) { return $instanceName; }
+                    }
+                    : null;
+            }
+        });
+        $auditor = new Auditor(new EngineFactory($magento), new StoreEmulator($magento), new HostExtensions($store));
+
+        $findings = $auditor->check(
+            [new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: 'Code: {{coupon code="X"}}')],
+            Mode::Compatible
+        );
+
+        $warnings = array_values(array_filter(
+            $findings,
+            static fn (Finding $f): bool => str_contains($f->summary, 'couponDirective()')
+        ));
+        self::assertCount(1, $warnings);
+        self::assertSame(Finding::WARNING, $warnings[0]->severity);
+    }
+
     // ---------------------------------------------------------------- commands
 
     public function testCheckExitsNonZeroOnAnErrorSoCiCanUseIt(): void

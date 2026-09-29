@@ -163,4 +163,65 @@ final class HostExtensionsTest extends TestCase
         self::assertSame([], $extensions->directives());
         self::assertNull($extensions->noteFor('{{mydir}}'));
     }
+
+    /** A store whose email filter a module replaced with its own subclass. */
+    private function withVendorFilter(): HostExtensions
+    {
+        require_once __DIR__ . '/fixtures/FilterMethodDirectives.php';
+
+        return new HostExtensions(MagentoContext::fromObjectManager(new class {
+            public function get(string $class): ?object
+            {
+                if ($class !== \Magento\Framework\ObjectManager\ConfigInterface::class) {
+                    return null;
+                }
+
+                return new class implements \Magento\Framework\ObjectManager\ConfigInterface {
+                    public function getPreference($type)
+                    {
+                        return $type === 'Magento\\Email\\Model\\Template\\Filter' ? \Acme\Coupons\Filter::class : $type;
+                    }
+                    public function getInstanceType($instanceName) { return $instanceName; }
+                };
+            }
+        }));
+    }
+
+    /**
+     * A module that adds `fooDirective()` to a filter has added `{{foo}}` - legacy finds it by
+     * reflection, and this engine never does. So it is found here instead, without calling it:
+     * the effective filter class comes from the ObjectManager, and a method counts when the
+     * class declaring it is not Magento's.
+     */
+    public function testDirectiveMethodsAModuleAddedToTheFilterAreFound(): void
+    {
+        self::assertSame(
+            // An added directive and an override of a stock one. Not: the core base's own
+            // methods, a name longer than legacy's ten-letter capture, a static, a protected.
+            ['coupon' => \Acme\Coupons\Filter::class, 'var' => \Acme\Coupons\Filter::class],
+            $this->withVendorFilter()->methodDirectives()
+        );
+    }
+
+    public function testATemplateUsingOneIsToldWhoseItIs(): void
+    {
+        $extensions = $this->withVendorFilter();
+
+        $added = $extensions->methodNotesFor('Your code: {{coupon code="X"}}', ['var']);
+        self::assertCount(1, $added);
+        self::assertStringContainsString('Acme\\Coupons\\Filter::couponDirective()', $added[0]);
+        self::assertStringContainsString('no handler', $added[0]);
+
+        $override = $extensions->methodNotesFor('Hi {{var name}}', ['var']);
+        self::assertCount(1, $override);
+        self::assertStringContainsString('an override of the stock directive', $override[0]);
+
+        // A longer name is not a use: the store matches {{coupons}} as `coupons`.
+        self::assertSame([], $extensions->methodNotesFor('{{coupons}}', ['var']));
+    }
+
+    public function testNoObjectManagerConfigMeansNothingIsClaimed(): void
+    {
+        self::assertSame([], $this->extensions()->methodDirectives());
+    }
 }
