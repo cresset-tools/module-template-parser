@@ -283,9 +283,12 @@ HELP);
             return null;
         }
 
-        try {
-            $moment = new \DateTimeImmutable((string)$since, new \DateTimeZone('UTC'));
-        } catch (\Exception) {
+        // The procedural form, because it returns false instead of throwing. PHP 8.3's
+        // DateMalformedStringException trips older Xdebug releases, which try to add a
+        // dynamic property to it and raise an Error in its place - so the constructor turned
+        // a typo into a crash on exactly the CI setup that has Xdebug loaded.
+        $moment = date_create_immutable((string)$since, new \DateTimeZone('UTC'));
+        if ($moment === false) {
             throw new \InvalidArgumentException(sprintf(
                 'Unknown --since "%s". Use a date such as "2026-09-01 12:00", or a relative time such as "-7 days".',
                 (string)$since
