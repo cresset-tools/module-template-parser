@@ -241,6 +241,7 @@ final class MagentoIntegrationTest extends TestCase
             public function deferred(): array { return []; }
             public function violations(): array { return []; }
             public function incompatibilities(): array { return []; }
+            public function lastError(): ?\Exception { return null; }
         });
         $crashed = $crashing->compare('x', 'x');
         self::assertSame(ShadowOutcome::CRASHED, $crashed->outcome);

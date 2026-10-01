@@ -332,4 +332,56 @@ final class MagentoAdapterTest extends TestCase
 
         self::assertSame('TEXT', $adapter->filter('{{template config_path="design/email/footer"}}'));
     }
+
+    /**
+     * A host error is reported for the render it happened in and forgotten by the next.
+     * Kept, it would make a clean render look like one the host raised in - and Parser mode
+     * falls back on that.
+     */
+    public function testAHostErrorIsForgottenByTheNextRender(): void
+    {
+        $raise = true;
+        $adapter = new TemplateFilterAdapter(new HostServices(blocks: new class ($raise) implements BlockRenderer {
+            public function __construct(private bool &$raise) {}
+            public function render(string $class, array $data, string $method): string
+            {
+                if ($this->raise) {
+                    throw new \RuntimeException('once');
+                }
+                return 'BLOCK';
+            }
+        }), Options::compatible());
+
+        $adapter->setVariables(['x' => 1])->filter('{{block class="Magento\\Cms\\Block\\Block"}}');
+        self::assertNotNull($adapter->lastError());
+
+        $raise = false;
+        $adapter->filter('{{block class="Magento\\Cms\\Block\\Block"}}');
+        self::assertNull($adapter->lastError());
+    }
+
+    /**
+     * filter() is re-entered through the host: our {{block}} renders a CMS block, whose filter
+     * renders it through this same adapter. What the adapter reports afterwards must be the
+     * OUTER render's - it is the one the caller just made.
+     */
+    public function testAnAdapterReEnteredMidRenderReportsTheOuterRender(): void
+    {
+        $adapter = null;
+        $blocks = new class ($adapter) implements BlockRenderer {
+            public function __construct(private ?TemplateFilterAdapter &$adapter) {}
+            public function render(string $class, array $data, string $method): string
+            {
+                // The inner render defers nothing.
+                return $this->adapter->setVariables(['y' => 1])->filter('[{{var y}}]');
+            }
+        };
+        $adapter = new TemplateFilterAdapter(new HostServices(blocks: $blocks), Options::compatible());
+
+        $out = $adapter->setVariables(['x' => 1])
+            ->filter('{{inlinecss file="a.css"}}{{block class="Magento\\Cms\\Block\\Block"}}');
+
+        self::assertSame('[1]', $out);
+        self::assertSame([['kind' => 'inlinecss', 'payload' => ['file' => 'a.css']]], $adapter->deferred());
+    }
 }

@@ -67,7 +67,7 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         $this->context = new Context();
     }
 
-    /** The exception the last filter() swallowed, for a caller that wants to know. */
+    /** The exception the last filter() swallowed, or null if it swallowed none. */
     public function lastError(): ?\Exception
     {
         return $this->lastError;
@@ -104,14 +104,23 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         // A fresh scope per call. Reusing one context makes deferred(), violations() and
         // incompatibilities() cumulative across every template this adapter has ever
         // filtered, so a caller acting on "the last render" acts on all of them.
-        $this->context = new Context($this->variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode, $this->designParams);
+        //
+        // Held locally and published only when the render is over, because filter() is
+        // RE-ENTRANT through the host: a {{block}} that renders a CMS block reaches that
+        // block's filter, whose plugin renders it through this same shared adapter in the
+        // middle of the outer render. Published on the way in, the inner render's context
+        // replaced the outer one, and the outer caller then read the inner render's
+        // deferrals, violations and error as its own. Published on the way out, each caller
+        // reads the render it just made, because the inner one finishes first.
+        $context = new Context($this->variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode, $this->designParams);
+        $error = null;
 
         try {
-            return $this->engine->render($value, context: $this->context);
+            return $this->engine->render($value, context: $context);
         } catch (TemplateError $e) {
             // This engine's own diagnostics are the product, not a failure to hide. Shadow
-            // mode reports them as "engine raised", `check` turns them into findings, and a
-            // caller that wanted them swallowed can catch them itself.
+            // mode reports them as refusals, `check` turns them into findings, and a caller
+            // that wanted them swallowed can catch them itself.
             throw $e;
         } catch (\Exception $e) {
             // Email\Model\Template\Filter::filter() catches \Exception and substitutes this
@@ -123,14 +132,18 @@ class TemplateFilterAdapter implements TemplateFilterInterface
             //
             // So this arm is host code raising - a block's InvalidArgumentException, a
             // ValidatorException from the view layer - which is exactly what the filter's
-            // own catch is for.
+            // own catch is for. lastError() says it happened: Parser mode hands such a render
+            // to legacy rather than serving this imitation of the filter's message.
             //
             // \Error is deliberately not caught either, matching the filter: a TypeError from
             // a template is how a legacy fatal is detected, and swallowing it would hide the
             // one thing compatible mode is measured on.
-            $this->lastError = $e;
+            $error = $e;
 
             return (string)__('Error filtering template: %1', $e->getMessage());
+        } finally {
+            $this->context = $context;
+            $this->lastError = $error;
         }
     }
 

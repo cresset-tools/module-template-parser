@@ -52,4 +52,14 @@ interface TemplateFilterInterface
 
     /** @return \Cresset\TemplateParser\LegacyIncompatibility[] from the last render */
     public function incompatibilities(): array;
+
+    /**
+     * The host exception the last filter() caught and rendered as error text, or null.
+     *
+     * filter() degrades a host exception to text, as the filter it stands in for does, so the
+     * return value alone cannot say whether that happened. Parser mode needs to know: it
+     * hands such a render to legacy, whose own handling of the exception is what a customer
+     * gets today.
+     */
+    public function lastError(): ?\Exception;
 }
