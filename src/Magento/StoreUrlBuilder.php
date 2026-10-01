@@ -38,7 +38,17 @@ class StoreUrlBuilder implements UrlBuilder
         // difference matters: Url escapes route parameters only while it is truthy, so a
         // template that forwarded its own `_escape_params=0` would turn the escaping off for
         // every route parameter it also supplied.
-        $parameters['_escape_params'] = $this->storeManager->getStore()->getCode();
+        $store = $this->storeManager->getStore();
+        $parameters['_escape_params'] = $store->getCode();
+
+        // storeDirective sets the scope on every call, and so must this. A URL model's scope
+        // is sticky - Url::_getScope() resolves it once and keeps it - and the instance is
+        // shared, so without this a store view's email is built with whichever store last set
+        // it: a cron run sending for store 1 and then store 2 would link store 2's customers
+        // to store 1. Legacy skips it for the backend URL model, and so does this.
+        if (!$this->urlModel instanceof \Magento\Backend\Model\Url) {
+            $this->urlModel->setScope($store);
+        }
 
         return $this->urlModel->getUrl($path, $parameters);
     }

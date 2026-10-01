@@ -54,6 +54,9 @@ class TemplateFilterPlugin
      */
     private \WeakMap $state;
 
+    /** @var array<class-string,list<string>> filter class => directives only it can render */
+    private array $legacyOnly = [];
+
     public function __construct(
         private readonly ShadowComparator $comparator,
         private readonly EngineMode $mode,
@@ -156,6 +159,13 @@ class TemplateFilterPlugin
         $result = $proceed($value);
 
         try {
+            $unmodelled = $this->unmodelledDirective($subject, $value);
+            if ($unmodelled !== null) {
+                $this->recorder->record($storeId, $this->templateOf($subject, $value), $unmodelled);
+
+                return $result;
+            }
+
             // Legacy has already put this render's stylesheets on the subject, so the finisher
             // only has to apply them. Registering them again would be harmless here, but not in
             // general: one this engine accepted and legacy did not would then be inlined into
@@ -206,13 +216,14 @@ class TemplateFilterPlugin
         }
 
         try {
-            $candidate = $this->comparator->render(
-                $value,
-                $state['variables'],
-                $state['plain'],
-                $this->finisher($subject, registerStylesheets: true),
-                $state['design']
-            );
+            $candidate = $this->unmodelledDirective($subject, $value)
+                ?? $this->comparator->render(
+                    $value,
+                    $state['variables'],
+                    $state['plain'],
+                    $this->finisher($subject, registerStylesheets: true),
+                    $state['design']
+                );
         } catch (\Throwable $e) {
             // render() contains its own failures; this is the backstop.
             $candidate = ShadowOutcome::crashed($e);
@@ -294,6 +305,65 @@ class TemplateFilterPlugin
 
             return (string)$subject->applyInlineCss($html);
         };
+    }
+
+    /**
+     * A directive this template uses that only the subject itself knows how to render.
+     *
+     * The filter dispatches `{{name}}` to any public `nameDirective()` method by reflection;
+     * this engine renders its own handlers and nothing else, so a directive it does not model
+     * comes out as its own text - complete-looking, and served in Parser mode. Three kinds:
+     *
+     * - a method a module added, on a filter subclass or through a preference;
+     * - a stock directive a module put a plugin on: the generated Interceptor redeclares the
+     *   method, so whatever the plugin changes is behaviour only the filter has;
+     * - `Cms\Model\Template\Filter`'s own `{{media}}`, which returns a FILESYSTEM path - the
+     *   admin's WYSIWYG image preview opens it - where every other filter returns a URL. The
+     *   Widget filter, which the storefront renders CMS through, restores the URL one.
+     *
+     * Any of them in the source declines the render, and the filter renders it.
+     */
+    private function unmodelledDirective(LegacyTemplate $subject, string $value): ?ShadowOutcome
+    {
+        $names = $this->legacyOnly[$subject::class] ??= self::legacyOnlyDirectives($subject);
+        if ($names === [] || !preg_match('/\{\{(' . implode('|', $names) . ')(?![a-z])/i', $value, $m)) {
+            return null;
+        }
+
+        return ShadowOutcome::policyRefused([sprintf(
+            'directive "%s" is rendered by %s itself, which this engine does not model',
+            strtolower($m[1]),
+            self::originalClass($subject::class)
+        )]);
+    }
+
+    /** @return list<string> */
+    private static function legacyOnlyDirectives(LegacyTemplate $subject): array
+    {
+        $names = [];
+        foreach ((new \ReflectionClass($subject))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+            if ($method->isStatic() || !preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m)) {
+                continue;
+            }
+            $declaring = $method->getDeclaringClass()->getName();
+            if (str_ends_with($declaring, '\\Interceptor') || !str_starts_with($declaring, 'Magento\\')) {
+                $names[] = strtolower($m[1]);
+            }
+        }
+
+        if (is_a($subject, 'Magento\\Cms\\Model\\Template\\Filter')
+            && !is_a($subject, 'Magento\\Widget\\Model\\Template\\Filter')
+        ) {
+            $names[] = 'media';
+        }
+
+        return array_values(array_unique($names));
+    }
+
+    /** The class a generated Interceptor stands in for, for a message a person reads. */
+    private static function originalClass(string $class): string
+    {
+        return str_ends_with($class, '\\Interceptor') ? (string)get_parent_class($class) : $class;
     }
 
     private function templateOf(LegacyTemplate $subject, string $value): string

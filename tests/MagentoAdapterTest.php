@@ -22,6 +22,8 @@ use PHPUnit\Framework\TestCase;
 
 final class MagentoAdapterTest extends TestCase
 {
+    use AssertsRefusals;
+
     /** Tripwire: records construction, so "was it built?" is observable. */
     private function layout(array &$built): LayoutInterface
     {
@@ -63,14 +65,15 @@ final class MagentoAdapterTest extends TestCase
     public function testNonBlockTypeIsRefusedWithoutBeingConstructed(): void
     {
         $built = [];
-        self::assertSame('', $this->renderer($built)->render(\stdClass::class, [], 'toHtml'));
+        // Refused out loud: the filter's createBlock() raises for it, which is not ''.
+        self::assertRefused(fn () => $this->renderer($built)->render(\stdClass::class, [], 'toHtml'), 'block class');
         self::assertSame([], $built, 'the class must never have been constructed');
     }
 
     public function testNonExistentClassIsRefusedWithoutBeingConstructed(): void
     {
         $built = [];
-        self::assertSame('', $this->renderer($built)->render('No\\Such\\Class', [], 'toHtml'));
+        self::assertRefused(fn () => $this->renderer($built)->render('No\\Such\\Class', [], 'toHtml'), 'block class');
         self::assertSame([], $built);
     }
 
@@ -79,7 +82,8 @@ final class MagentoAdapterTest extends TestCase
     {
         $built = [];
         $class = get_class(new class implements BlockInterface { public function toHtml() { return ''; } });
-        self::assertSame('', $this->renderer($built)->render($class, [], 'getCacheKey'));
+        // The filter would call it; this refuses, out loud, so Parser falls back.
+        self::assertRefused(fn () => $this->renderer($built)->render($class, [], 'getCacheKey'), 'block output method', 'getCacheKey');
         self::assertSame([], $built, 'refusal must happen before construction');
     }
 
@@ -88,7 +92,7 @@ final class MagentoAdapterTest extends TestCase
         $built = [];
         $class = get_class(new class implements BlockInterface { public function toHtml() { return ''; } });
         $renderer = $this->renderer($built, ['toHtml'], ['Only\\This\\One']);
-        self::assertSame('', $renderer->render($class, [], 'toHtml'));
+        self::assertRefused(fn () => $renderer->render($class, [], 'toHtml'), 'block class');
         self::assertSame([], $built);
     }
 

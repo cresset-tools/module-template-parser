@@ -2904,7 +2904,11 @@
                     "args": [
                         "design/email/nope"
                     ],
-                    "returned": null
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "template config path",
+                        "name": "design/email/nope"
+                    }
                 }
             ],
             "legacy": "Error filtering template: Email template is not defined.",
@@ -2926,7 +2930,11 @@
                     "args": [
                         "design/email/nope"
                     ],
-                    "returned": null
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "template config path",
+                        "name": "design/email/nope"
+                    }
                 }
             ],
             "legacy": null,
@@ -3073,7 +3081,11 @@
                         [],
                         "toHtml"
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "block class",
+                        "name": "No\\Such\\Klass"
+                    }
                 }
             ],
             "legacy": "Error filtering template: Invalid block type: No\\Such\\Klass",
@@ -3097,7 +3109,11 @@
                         [],
                         "toHtml"
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "block class",
+                        "name": "No\\Such\\Klass"
+                    }
                 }
             ],
             "legacy": null,
@@ -3871,7 +3887,11 @@
                             "order_id": "1"
                         }
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "layout handle",
+                        "name": "customer_account_edit"
+                    }
                 }
             ],
             "legacy": "",
@@ -3897,7 +3917,11 @@
                             "order_id": "1"
                         }
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "layout handle",
+                        "name": "customer_account_edit"
+                    }
                 }
             ],
             "legacy": null,
@@ -3927,20 +3951,7 @@
             },
             "outcome": "ok",
             "expected": "",
-            "tape": [
-                {
-                    "port": "layouts",
-                    "method": "render",
-                    "args": [
-                        "sales_email_order_items",
-                        "adminhtml",
-                        {
-                            "order_id": "1"
-                        }
-                    ],
-                    "returned": ""
-                }
-            ],
+            "tape": [],
             "legacy": "",
             "agreed": true
         },
@@ -3953,20 +3964,7 @@
             "design_params": [],
             "outcome": "ok",
             "expected": "",
-            "tape": [
-                {
-                    "port": "layouts",
-                    "method": "render",
-                    "args": [
-                        "sales_email_order_items",
-                        "adminhtml",
-                        {
-                            "order_id": "1"
-                        }
-                    ],
-                    "returned": ""
-                }
-            ],
+            "tape": [],
             "legacy": null,
             "agreed": false
         },
@@ -7350,7 +7348,11 @@
                     "args": [
                         "design/email/nope"
                     ],
-                    "returned": null
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "template config path",
+                        "name": "design/email/nope"
+                    }
                 }
             ],
             "legacy": "Error filtering template: Email template is not defined.",
@@ -7376,7 +7378,11 @@
                     "args": [
                         "design/email/nope"
                     ],
-                    "returned": null
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "template config path",
+                        "name": "design/email/nope"
+                    }
                 }
             ],
             "legacy": null,
@@ -7548,7 +7554,11 @@
                         [],
                         "toHtml"
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "block class",
+                        "name": "No\\Such\\Klass"
+                    }
                 }
             ],
             "legacy": "Error filtering template: Invalid block type: No\\Such\\Klass",
@@ -7576,7 +7586,11 @@
                         [],
                         "toHtml"
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "block class",
+                        "name": "No\\Such\\Klass"
+                    }
                 }
             ],
             "legacy": null,
@@ -8430,7 +8444,11 @@
                             "order_id": "1"
                         }
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "layout handle",
+                        "name": "customer_account_edit"
+                    }
                 }
             ],
             "legacy": "",
@@ -8460,7 +8478,11 @@
                             "order_id": "1"
                         }
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "layout handle",
+                        "name": "customer_account_edit"
+                    }
                 }
             ],
             "legacy": null,
@@ -8493,20 +8515,7 @@
             },
             "outcome": "ok",
             "expected": "",
-            "tape": [
-                {
-                    "port": "layouts",
-                    "method": "render",
-                    "args": [
-                        "sales_email_order_items",
-                        "adminhtml",
-                        {
-                            "order_id": "1"
-                        }
-                    ],
-                    "returned": ""
-                }
-            ],
+            "tape": [],
             "legacy": "",
             "agreed": true
         },
@@ -8523,20 +8532,7 @@
             "design_params": [],
             "outcome": "ok",
             "expected": "",
-            "tape": [
-                {
-                    "port": "layouts",
-                    "method": "render",
-                    "args": [
-                        "sales_email_order_items",
-                        "adminhtml",
-                        {
-                            "order_id": "1"
-                        }
-                    ],
-                    "returned": ""
-                }
-            ],
+            "tape": [],
             "legacy": null,
             "agreed": false
         },
@@ -11916,7 +11912,11 @@
                     "args": [
                         "design/email/nope"
                     ],
-                    "returned": null
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "template config path",
+                        "name": "design/email/nope"
+                    }
                 }
             ],
             "legacy": "Error filtering template: Email template is not defined.",
@@ -11942,7 +11942,11 @@
                     "args": [
                         "design/email/nope"
                     ],
-                    "returned": null
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "template config path",
+                        "name": "design/email/nope"
+                    }
                 }
             ],
             "legacy": null,
@@ -12114,7 +12118,11 @@
                         [],
                         "toHtml"
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "block class",
+                        "name": "No\\Such\\Klass"
+                    }
                 }
             ],
             "legacy": "Error filtering template: Invalid block type: No\\Such\\Klass",
@@ -12142,7 +12150,11 @@
                         [],
                         "toHtml"
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "block class",
+                        "name": "No\\Such\\Klass"
+                    }
                 }
             ],
             "legacy": null,
@@ -12996,7 +13008,11 @@
                             "order_id": "1"
                         }
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "layout handle",
+                        "name": "customer_account_edit"
+                    }
                 }
             ],
             "legacy": "",
@@ -13026,7 +13042,11 @@
                             "order_id": "1"
                         }
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "layout handle",
+                        "name": "customer_account_edit"
+                    }
                 }
             ],
             "legacy": null,
@@ -13059,20 +13079,7 @@
             },
             "outcome": "ok",
             "expected": "",
-            "tape": [
-                {
-                    "port": "layouts",
-                    "method": "render",
-                    "args": [
-                        "sales_email_order_items",
-                        "adminhtml",
-                        {
-                            "order_id": "1"
-                        }
-                    ],
-                    "returned": ""
-                }
-            ],
+            "tape": [],
             "legacy": "",
             "agreed": true
         },
@@ -13089,20 +13096,7 @@
             "design_params": [],
             "outcome": "ok",
             "expected": "",
-            "tape": [
-                {
-                    "port": "layouts",
-                    "method": "render",
-                    "args": [
-                        "sales_email_order_items",
-                        "adminhtml",
-                        {
-                            "order_id": "1"
-                        }
-                    ],
-                    "returned": ""
-                }
-            ],
+            "tape": [],
             "legacy": null,
             "agreed": false
         },
@@ -14280,7 +14274,11 @@
                     "args": [
                         "design/email/nope"
                     ],
-                    "returned": null
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "template config path",
+                        "name": "design/email/nope"
+                    }
                 }
             ],
             "legacy": "&#123;Error in template processing}",
@@ -14343,7 +14341,11 @@
                         [],
                         "toHtml"
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "block class",
+                        "name": "No\\Such\\Klass"
+                    }
                 }
             ],
             "legacy": "Error filtering template: Invalid block type: No\\Such\\Klass",
@@ -14653,7 +14655,11 @@
                             "order_id": "1"
                         }
                     ],
-                    "returned": ""
+                    "threw": "RefusedByPort",
+                    "refused": {
+                        "kind": "layout handle",
+                        "name": "customer_account_edit"
+                    }
                 }
             ],
             "legacy": "",
@@ -14668,20 +14674,7 @@
             "design_params": [],
             "outcome": "ok",
             "expected": "",
-            "tape": [
-                {
-                    "port": "layouts",
-                    "method": "render",
-                    "args": [
-                        "sales_email_order_items",
-                        "adminhtml",
-                        {
-                            "order_id": "1"
-                        }
-                    ],
-                    "returned": ""
-                }
-            ],
+            "tape": [],
             "legacy": "",
             "agreed": true
         },

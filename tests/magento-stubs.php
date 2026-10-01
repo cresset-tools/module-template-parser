@@ -117,6 +117,7 @@ namespace Magento\Framework {
             public const URL_TYPE_MEDIA = 'media';
             public const URL_TYPE_STATIC = 'static';
             public function getUrl($routePath = null, $routeParams = null);
+            public function setScope($params);
         }
     }
 }

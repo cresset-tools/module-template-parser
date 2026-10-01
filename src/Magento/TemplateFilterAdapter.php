@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento;
 
 use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\Diagnostics;
+use Cresset\TemplateParser\PolicyViolation;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\RenderPolicy;
 use Cresset\TemplateParser\HostServices;
@@ -29,6 +31,9 @@ class TemplateFilterAdapter implements TemplateFilterInterface
     private Context $context;
 
     private ?\Exception $lastError = null;
+
+    /** See unwiredDirectives(). */
+    private ?string $unwired = null;
 
     private readonly Options $options;
 
@@ -65,6 +70,39 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
         $this->engine = TemplateEngine::forHost($services, $this->options);
         $this->context = new Context();
+        $this->unwired = self::unwiredDirectives($services);
+    }
+
+    /**
+     * The filter's directives this adapter has no port for, as a pattern; null when it has
+     * every one.
+     *
+     * A directive with no port stays unregistered, and renders as its own text - where the
+     * filter renders it. The module's di.xml wires every port, so this is a host that left one
+     * out; a render that uses such a directive records it, and is declined rather than served.
+     */
+    private static function unwiredDirectives(HostServices $services): ?string
+    {
+        $ports = [
+            'block' => $services->blocks,
+            'template' => $services->templates,
+            'config' => $services->config,
+            'customvar' => $services->customVariables,
+            'store' => $services->urls,
+            'media' => $services->urls,
+            'view' => $services->urls,
+            'protocol' => $services->urls,
+            'css' => $services->stylesheets,
+            'layout' => $services->layouts,
+            'widget' => $services->widgets,
+            // The built-in {{trans}} renders untranslated without one.
+            'trans' => $services->translator,
+        ];
+        $missing = array_keys(array_filter($ports, static fn (?object $port): bool => $port === null));
+
+        // `(?![a-z])` because the filter's name is every letter up to ten: `{{stores}}` is not
+        // {{store}} to it either.
+        return $missing === [] ? null : '/\{\{(' . implode('|', $missing) . ')(?![a-z])/i';
     }
 
     /** The exception the last filter() swallowed, or null if it swallowed none. */
@@ -116,7 +154,10 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         $error = null;
 
         try {
-            return $this->engine->render($value, context: $context);
+            $rendered = $this->engine->render($value, context: $context);
+            $this->noteUnwired($value, $context);
+
+            return $rendered;
         } catch (TemplateError $e) {
             // This engine's own diagnostics are the product, not a failure to hide. Shadow
             // mode reports them as refusals, `check` turns them into findings, and a caller
@@ -144,6 +185,21 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         } finally {
             $this->context = $context;
             $this->lastError = $error;
+        }
+    }
+
+    /** Records each use of a directive this adapter has no port for, where it is. */
+    private function noteUnwired(string $source, Context $context): void
+    {
+        if ($this->unwired === null
+            || !preg_match_all($this->unwired, $source, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)
+        ) {
+            return;
+        }
+
+        foreach ($matches as $match) {
+            ['line' => $line, 'column' => $column] = Diagnostics::locate($source, $match[0][1]);
+            $context->recordViolation(new PolicyViolation('unwired directive', strtolower($match[1][0]), $line, $column));
         }
     }
 

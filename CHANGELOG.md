@@ -95,7 +95,26 @@ Entries say what changed and why it mattered. A line that only names a file has 
   rather than compared: Shadow records it as refused, Parser falls back to the filter, and
   `check` says which handle to allow.
 
+- Every place this engine rendered less than the filter would, silently, now records a policy
+  violation instead, so Parser falls back and Shadow reports it as a refusal: stricter guards on
+  `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}`, `{{customvar}}` and
+  `{{template}}`; `{{block id=}}` and `{{widget id=}}`; disallowed block output methods,
+  non-block classes, layout areas and handles, and integrator allowlists; includes the loader
+  cannot produce, unnamed countries and regions, stylesheets that cannot be built, failing
+  ProcessorPool directives; unwired ports; and directives only the filter renders (module
+  methods, plugged stock directives, the CMS filter's filesystem `{{media}}`). Ports signal it
+  by throwing `Port\RefusedByPort`. Port tapes keep a refusal's kind and name and replay it as one.
+
 ### Fixed
+
+- `{{layout area="adminhtml"}}` reached the layout port, where Mage-OS 3.5.0 refuses it. It is
+  now refused before the port, as legacy does, and renders nothing.
+
+- `{{store}}` URLs were built with whatever scope the shared URL model last had, and with the
+  area's preferred URL model - the backend one in adminhtml. On a real store, 9 of 18 order
+  emails rendered in the admin linked the customer to a backend URL carrying an admin secret
+  key. `StoreUrlBuilder` now sets the scope on every call, as `storeDirective` does, and is
+  given `Magento\Framework\Url`, the model `Magento\Email\Model\Template` gives its filter.
 
 - The adapter reported the wrong render when re-entered. A `{{block}}` that renders a CMS block
   reaches that block's filter, which renders it through the same shared adapter mid-render;

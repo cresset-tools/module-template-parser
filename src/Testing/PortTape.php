@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Cresset\TemplateParser\Testing;
 
+use Cresset\TemplateParser\Port\RefusedByPort;
+
 /**
  * A record of every question the engine asked its ports, and the answer it got.
  *
@@ -19,7 +21,7 @@ namespace Cresset\TemplateParser\Testing;
  */
 final class PortTape
 {
-    /** @var list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string}> */
+    /** @var list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string,refused?:array{kind:string,name:string}}> */
     private array $entries = [];
 
     private int $position = 0;
@@ -39,12 +41,19 @@ final class PortTape
      */
     public function recordThrow(string $port, string $method, array $args, \Throwable $e): void
     {
-        $this->entries[] = [
+        $entry = [
             'port' => $port,
             'method' => $method,
             'args' => $args,
             'threw' => (new \ReflectionClass($e))->getShortName(),
         ];
+        // A refusal is the one failure the engine answers differently - it records it and
+        // renders nothing, where any other lets out - so it is kept whole and replayed as one.
+        if ($e instanceof RefusedByPort) {
+            $entry['refused'] = ['kind' => $e->kind, 'name' => $e->name];
+        }
+
+        $this->entries[] = $entry;
     }
 
     /**
@@ -85,6 +94,9 @@ final class PortTape
 
         $this->position++;
 
+        if (isset($expected['refused'])) {
+            throw new RefusedByPort($expected['refused']['kind'], $expected['refused']['name']);
+        }
         if (isset($expected['threw'])) {
             throw new ReplayedPortFailure($expected['threw']);
         }
@@ -95,20 +107,20 @@ final class PortTape
     /**
      * Calls the tape holds that the replay never made - a guard that started refusing.
      *
-     * @return list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string}>
+     * @return list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string,refused?:array{kind:string,name:string}}>
      */
     public function unplayed(): array
     {
         return array_slice($this->entries, $this->position);
     }
 
-    /** @return list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string}> */
+    /** @return list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string,refused?:array{kind:string,name:string}}> */
     public function entries(): array
     {
         return $this->entries;
     }
 
-    /** @param list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string}> $entries */
+    /** @param list<array{port:string,method:string,args:array<int,mixed>,returned?:mixed,threw?:string,refused?:array{kind:string,name:string}}> $entries */
     public static function fromEntries(array $entries): self
     {
         $tape = new self();

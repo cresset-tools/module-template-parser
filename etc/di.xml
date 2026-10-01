@@ -124,6 +124,18 @@
         </arguments>
     </type>
 
+    <!--
+        The URL model Magento\Email\Model\Template gives its filter (Magento_Email's di.xml),
+        rather than whatever UrlInterface the area prefers. In adminhtml that preference is the
+        backend URL model, so an order email sent from the admin - an invoice, a shipment -
+        would have linked its customer into the admin.
+    -->
+    <type name="Cresset\TemplateParser\Magento\StoreUrlBuilder">
+        <arguments>
+            <argument name="urlModel" xsi:type="object">Magento\Framework\Url</argument>
+        </arguments>
+    </type>
+
     <type name="Cresset\TemplateParser\Magento\TemplateFilterAdapter">
         <arguments>
             <argument name="services" xsi:type="object">Cresset\TemplateParser\HostServices</argument>

@@ -20,6 +20,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class PoolCustomDirectiveRendererTest extends TestCase
 {
+    use AssertsRefusals;
+
     private function processor(string $name, ?array $defaults = null): ProcessorInterface
     {
         return new class ($name, $defaults) implements ProcessorInterface {
@@ -127,7 +129,7 @@ final class PoolCustomDirectiveRendererTest extends TestCase
     }
 
     /** A name the pool has lost, or a processor that raises, loses the directive, not the render. */
-    public function testAFailureYieldsNothingRatherThanRaising(): void
+    public function testAFailureIsRefusedRatherThanRenderedAsNothing(): void
     {
         $renderer = new PoolCustomDirectiveRenderer(new ProcessorPool([
             'boom' => new class implements ProcessorInterface {
@@ -140,8 +142,10 @@ final class PoolCustomDirectiveRendererTest extends TestCase
             },
         ]));
 
-        self::assertNull($renderer->render('nosuch', null, [], null, []));
-        self::assertNull($renderer->render('boom', null, [], null, []));
+        // The filter returns an unknown name verbatim, and lets a processor's exception out to
+        // its catch. Neither is nothing, so both are refused and Parser falls back.
+        self::assertRefused(fn () => $renderer->render('nosuch', null, [], null, []), 'custom directive', 'nosuch');
+        self::assertRefused(fn () => $renderer->render('boom', null, [], null, []), 'custom directive', 'boom');
     }
 
     /** An unknown filter is skipped, exactly as FilterApplier skips one. */

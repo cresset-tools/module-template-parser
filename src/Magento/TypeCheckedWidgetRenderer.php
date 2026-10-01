@@ -6,6 +6,7 @@ namespace Cresset\TemplateParser\Magento;
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Widget\Block\BlockInterface as WidgetBlockInterface;
 use Cresset\TemplateParser\Port\WidgetRenderer;
+use Cresset\TemplateParser\Port\RefusedByPort;
 
 /**
  * {{widget}} with the type validated BEFORE instantiation.
@@ -32,10 +33,13 @@ class TypeCheckedWidgetRenderer implements WidgetRenderer
     {
         $type = ltrim($type, '\\');
 
+        // An integrator's allowlist is stricter than generateWidget, which renders any
+        // declared widget.
         if ($this->allowedTypes !== null && !in_array($type, $this->allowedTypes, true)) {
-            return '';
+            throw new RefusedByPort('widget type', $type);
         }
 
+        // generateWidget renders nothing for a type it cannot build as a widget either.
         if (!$this->isWidgetType($type)) {
             return '';
         }

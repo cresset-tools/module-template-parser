@@ -108,6 +108,29 @@ measuring after it: `system/template_engine/parser_shadow_rate` percent of its r
 default, shown in the admin only for Parser) are also rendered by the filter and compared. The
 customer still gets this engine's result.
 
+"Declines" is deliberately wide. Wherever this engine would render less than Mage-OS 3.5.0's
+filter for the same template — a guard stricter than the filter's, a port that cannot answer,
+a directive it does not model — the render records a policy violation instead of rendering an
+unexplained nothing, and Parser hands it to the filter. That covers:
+
+- a `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}`, `{{customvar}}` or
+  `{{template}}` parameter one of this engine's guards refuses (the filter checks none of them);
+- `{{block id=...}}` and `{{widget id=...}}`, which load a CMS block or a widget instance by id;
+- a `{{block output=...}}` method outside the allowed list, a class that is not a block, a
+  layout handle or area that is not allowed, and an integrator's class or widget allowlist;
+- a `{{template}}` include the loader cannot produce, a `{{config}}` country or region with no
+  store information to name it, a stylesheet that cannot be built, and a ProcessorPool
+  directive that is missing, raises, or has modifiers and no filter pool;
+- a directive whose port the host did not wire;
+- a directive only the filter itself renders: a `fooDirective()` a module added, a stock
+  directive a module put a plugin on, and the CMS filter's own `{{media}}`, which returns a
+  filesystem path for the admin's WYSIWYG preview.
+
+Where the filter renders nothing as well — a block class on its deny list, an adminhtml layout
+handle (refused outright since 3.5.0), a `{{config}}` path not on Magento's list, a widget type
+no `widget.xml` declares — this engine stays quiet, because falling back would only render the
+same nothing twice. `SilentDegradationTest` pins both lists.
+
 A rollout, one store view at a time:
 
 ```sh
@@ -968,7 +991,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12937 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12973 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

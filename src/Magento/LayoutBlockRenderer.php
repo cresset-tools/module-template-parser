@@ -8,6 +8,7 @@ use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\LayoutInterface;
 use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\RefusedByPort;
 
 /**
  * Renders {{block}} through Magento's layout, with the two constraints the core factories
@@ -75,16 +76,27 @@ class LayoutBlockRenderer implements BlockRenderer
         // the wrong case or a leading `\` in di.xml got a directive that silently rendered
         // nothing forever. Fail-closed either way - this list only ever permits a spelling of
         // a class the integrator has already named - and the deny list still runs after it.
+        // An integrator's allowlist is stricter than the filter, which builds any class.
         if ($this->allowedClasses !== null && !$this->isAllowedClass($class)) {
-            return '';
+            throw new RefusedByPort('block class', $class);
         }
 
+        // blockDirective calls ANY public method `output=` names, and falls back to toHtml()
+        // for one that does not exist. This calls only the allowed ones - so where legacy
+        // would have rendered something, this refuses out loud rather than render nothing.
         if (!in_array($method, $this->allowedOutputMethods, true)) {
-            return '';
+            throw new RefusedByPort('block output method', $method);
         }
 
-        if (!$this->isBlockType($class) || $this->isRestricted($class)) {
+        // The deny list is legacy's own (BlockDirectivePolicy), and legacy renders '' for it
+        // too - so that one stays quiet. A class that is not a block, or does not exist,
+        // makes the filter's createBlock() raise, which its catch turns into an error page:
+        // not this ''. Refused, so Parser leaves that to the filter.
+        if ($this->isRestricted($class)) {
             return '';
+        }
+        if (!$this->isBlockType($class)) {
+            throw new RefusedByPort('block class', $class);
         }
 
         // Only `frontend`, trimmed and case-insensitively, exactly as blockDirective() does -
@@ -94,8 +106,12 @@ class LayoutBlockRenderer implements BlockRenderer
         }
 
         $block = $this->layout->createBlock($class, '', ['data' => $data]);
-        if (!$block instanceof BlockInterface || !method_exists($block, $method)) {
+        if (!$block instanceof BlockInterface) {
             return '';
+        }
+        // Legacy falls back to toHtml() for a method the block does not have.
+        if (!method_exists($block, $method)) {
+            throw new RefusedByPort('block output method', $method);
         }
 
         // Again on what was actually built. DI preferences and virtual types mean the written
