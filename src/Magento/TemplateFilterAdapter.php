@@ -5,6 +5,7 @@ namespace Cresset\TemplateParser\Magento;
 
 use Cresset\TemplateParser\Context;
 use Cresset\TemplateParser\Diagnostics;
+use Cresset\TemplateParser\LegacyReading;
 use Cresset\TemplateParser\PolicyViolation;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\RenderPolicy;
@@ -156,6 +157,7 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         try {
             $rendered = $this->engine->render($value, context: $context);
             $this->noteUnwired($value, $context);
+            $this->noteLegacyReading($value, $context);
 
             return $rendered;
         } catch (TemplateError $e) {
@@ -186,6 +188,27 @@ class TemplateFilterAdapter implements TemplateFilterInterface
             $this->context = $context;
             $this->lastError = $error;
         }
+    }
+
+    /**
+     * Records where the filter would read this template differently - see LegacyReading.
+     *
+     * Only for the compatible posture, which is the one that claims to render as the filter
+     * does; the others render differently on purpose and say so.
+     */
+    private function noteLegacyReading(string $source, Context $context): void
+    {
+        if (!$this->options->legacyQuirks) {
+            return;
+        }
+
+        $difference = LegacyReading::firstDifference($source);
+        if ($difference === null) {
+            return;
+        }
+
+        ['line' => $line, 'column' => $column] = Diagnostics::locate($source, $difference['offset']);
+        $context->recordViolation(new PolicyViolation('construct the filter reads differently', $difference['rule'], $line, $column));
     }
 
     /** Records each use of a directive this adapter has no port for, where it is. */

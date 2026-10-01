@@ -24,13 +24,15 @@ class TypeCheckedWidgetRenderer implements WidgetRenderer
     public function __construct(
         private readonly \Magento\Framework\View\LayoutInterface $layout,
         private readonly ConfigInterface $objectManagerConfig,
-        private readonly ?array $allowedTypes = null
+        private readonly ?array $allowedTypes = null,
+        private readonly ?RenderScope $scope = null
     ) {
     }
 
     /** @param array<string,string|null> $parameters */
     public function render(string $type, array $parameters): string
     {
+        $written = $type;
         $type = ltrim($type, '\\');
 
         // An integrator's allowlist is stricter than generateWidget, which renders any
@@ -44,7 +46,17 @@ class TypeCheckedWidgetRenderer implements WidgetRenderer
             return '';
         }
 
-        $widget = $this->layout->createBlock($type, '', ['data' => $parameters]);
+        // generateWidget's data, exactly: the parameters as written, `type` included; the
+        // filter's store as `store_id` when it has one and the template did not give one;
+        // and `name` as the block's name in the layout.
+        $data = ['type' => $written] + $parameters;
+        $storeId = $this->scope?->storeId();
+        if ($storeId !== null && !isset($data['store_id'])) {
+            $data['store_id'] = $storeId;
+        }
+        $name = isset($data['name']) && is_string($data['name']) ? $data['name'] : null;
+
+        $widget = $this->layout->createBlock($type, $name, ['data' => $data]);
 
         return $widget instanceof WidgetBlockInterface ? (string)$widget->toHtml() : '';
     }

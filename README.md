@@ -123,8 +123,21 @@ unexplained nothing, and Parser hands it to the filter. That covers:
   directive that is missing, raises, or has modifiers and no filter pool;
 - a directive whose port the host did not wire;
 - a directive only the filter itself renders: a `fooDirective()` a module added, a stock
-  directive a module put a plugin on, and the CMS filter's own `{{media}}`, which returns a
-  filesystem path for the admin's WYSIWYG preview.
+  directive a module put a plugin on, the CMS filter's own `{{media}}`, which returns a
+  filesystem path for the admin's WYSIWYG preview, and `{{widget}}` in the newsletter filter,
+  which renders each widget in an emulated frontend area;
+- `{{store}}` through the backend URL model - a CMS filter built in the admin - whose route
+  persists between calls, so legacy's output there depends on what it built last;
+- a template the filter *reads* differently: a `{{for}}` loop, a construct legacy's lazy
+  `{{name(.*?)}}` would end at a different `}}` (a `{{{`, a stray or quoted `{{`, a missing
+  brace), a quote still open at that `}}`, and `{{iframe}}`-style names legacy reads as
+  `{{if}}`. These are the "Quirks it does not reproduce" below; compatible mode keeps
+  rendering them its own way for `check` and `diff`, and the Magento layer declines them
+  (`LegacyReading`), for the top-level template and for every include.
+
+And it matches the filter where it can. `{{widget}}` gets what `generateWidget` gives a block -
+`type`, the filter's store as `store_id`, and `name` as the block name - and `{{store}}` and
+`{{protocol store=}}` answer for the filter's own URL model and the named store.
 
 Where the filter renders nothing as well — a block class on its deny list, an adminhtml layout
 handle (refused outright since 3.5.0), a `{{config}}` path not on Magento's list, a widget type
@@ -991,7 +1004,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12973 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12996 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

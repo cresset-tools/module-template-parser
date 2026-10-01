@@ -1640,8 +1640,10 @@
             "tape": [
                 {
                     "port": "urls",
-                    "method": "isSecure",
-                    "args": [],
+                    "method": "isSecureFor",
+                    "args": [
+                        "1"
+                    ],
                     "returned": false
                 }
             ],
@@ -1660,8 +1662,10 @@
             "tape": [
                 {
                     "port": "urls",
-                    "method": "isSecure",
-                    "args": [],
+                    "method": "isSecureFor",
+                    "args": [
+                        "1"
+                    ],
                     "returned": false
                 }
             ],
@@ -5916,8 +5920,10 @@
             "tape": [
                 {
                     "port": "urls",
-                    "method": "isSecure",
-                    "args": [],
+                    "method": "isSecureFor",
+                    "args": [
+                        "1"
+                    ],
                     "returned": false
                 }
             ],
@@ -5940,8 +5946,10 @@
             "tape": [
                 {
                     "port": "urls",
-                    "method": "isSecure",
-                    "args": [],
+                    "method": "isSecureFor",
+                    "args": [
+                        "1"
+                    ],
                     "returned": false
                 }
             ],
@@ -10480,8 +10488,10 @@
             "tape": [
                 {
                     "port": "urls",
-                    "method": "isSecure",
-                    "args": [],
+                    "method": "isSecureFor",
+                    "args": [
+                        "1"
+                    ],
                     "returned": false
                 }
             ],
@@ -10504,8 +10514,10 @@
             "tape": [
                 {
                     "port": "urls",
-                    "method": "isSecure",
-                    "args": [],
+                    "method": "isSecureFor",
+                    "args": [
+                        "1"
+                    ],
                     "returned": false
                 }
             ],
@@ -13817,8 +13829,10 @@
             "tape": [
                 {
                     "port": "urls",
-                    "method": "isSecure",
-                    "args": [],
+                    "method": "isSecureFor",
+                    "args": [
+                        "1"
+                    ],
                     "returned": false
                 }
             ],

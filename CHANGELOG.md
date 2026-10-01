@@ -105,6 +105,17 @@ Entries say what changed and why it mattered. A line that only names a file has 
   methods, plugged stock directives, the CMS filter's filesystem `{{media}}`). Ports signal it
   by throwing `Port\RefusedByPort`. Port tapes keep a refusal's kind and name and replay it as one.
 
+- Known differences from Mage-OS 3.5.0 are matched or declined, never served. `{{widget}}`
+  hands the block `type`, the filter's store as `store_id` and `name` as its layout name, as
+  `generateWidget` does. `{{store}}` builds with the rendering filter's own URL model
+  (`RenderScope`), and declines through the backend one, whose route persists between calls.
+  `{{protocol store=}}` answers for that store (`Port\StoreAwareUrlBuilder`), and declines a
+  store that does not exist. `{{widget}}` in the newsletter filter, which emulates the frontend
+  area per widget, is declined. And the constructs README lists under "Quirks it does not
+  reproduce" - `{{for}}`, a different `}}`, an open quote, `{{iframe}}` read as `{{if}}` - are
+  detected on the source (`LegacyReading`) and declined, top-level and in includes; over the
+  corpus that flags every case where compatible mode renders differently from the filter.
+
 ### Fixed
 
 - `{{layout area="adminhtml"}}` reached the layout port, where Mage-OS 3.5.0 refuses it. It is

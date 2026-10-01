@@ -125,14 +125,30 @@
     </type>
 
     <!--
-        The URL model Magento\Email\Model\Template gives its filter (Magento_Email's di.xml),
-        rather than whatever UrlInterface the area prefers. In adminhtml that preference is the
-        backend URL model, so an order email sent from the admin - an invoice, a shipment -
-        would have linked its customer into the admin.
+        The default URL model is the one Magento\Email\Model\Template gives its filter
+        (Magento_Email's di.xml), rather than whatever UrlInterface the area prefers - in
+        adminhtml that is the backend model, and an order email sent from the admin would have
+        linked its customer into the admin. Inside a render, the filter's own model is used.
     -->
     <type name="Cresset\TemplateParser\Magento\StoreUrlBuilder">
         <arguments>
             <argument name="urlModel" xsi:type="object">Magento\Framework\Url</argument>
+            <!-- The rendering filter's own URL model wins over that default; see RenderScope. -->
+            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
+        </arguments>
+    </type>
+
+    <!-- {{widget}} gets the rendering filter's store as store_id, as generateWidget does. -->
+    <!-- The rendering filter's store and URL model, for the two ports above. -->
+    <type name="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin">
+        <arguments>
+            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
+        </arguments>
+    </type>
+
+    <type name="Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer">
+        <arguments>
+            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
         </arguments>
     </type>
 

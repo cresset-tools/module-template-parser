@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento\Plugin;
 
 use Cresset\TemplateParser\Magento\Config\EngineMode;
+use Cresset\TemplateParser\Magento\RenderScope;
 use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
 use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
 use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
@@ -61,7 +62,8 @@ class TemplateFilterPlugin
         private readonly ShadowComparator $comparator,
         private readonly EngineMode $mode,
         private readonly TemplateIdentity $identity,
-        private readonly ShadowRecorder $recorder
+        private readonly ShadowRecorder $recorder,
+        private readonly ?RenderScope $scope = null
     ) {
         $this->state = new \WeakMap();
     }
@@ -170,14 +172,14 @@ class TemplateFilterPlugin
             // only has to apply them. Registering them again would be harmless here, but not in
             // general: one this engine accepted and legacy did not would then be inlined into
             // later LEGACY renders on the same instance, which Shadow promises not to change.
-            $outcome = $this->comparator->compare(
+            $outcome = $this->inScopeOf($subject, $storeId, fn () => $this->comparator->compare(
                 $value,
                 (string)$result,
                 $state['variables'],
                 $state['plain'],
                 $this->finisher($subject, registerStylesheets: false),
                 $state['design']
-            );
+            ));
             $this->recorder->record($storeId, $this->templateOf($subject, $value), $outcome);
         } catch (\Throwable) {
             // The comparator and the recorder each contain their own failures; this is the
@@ -217,13 +219,13 @@ class TemplateFilterPlugin
 
         try {
             $candidate = $this->unmodelledDirective($subject, $value)
-                ?? $this->comparator->render(
+                ?? $this->inScopeOf($subject, $storeId, fn () => $this->comparator->render(
                     $value,
                     $state['variables'],
                     $state['plain'],
                     $this->finisher($subject, registerStylesheets: true),
                     $state['design']
-                );
+                ));
         } catch (\Throwable $e) {
             // render() contains its own failures; this is the backstop.
             $candidate = ShadowOutcome::crashed($e);
@@ -248,6 +250,37 @@ class TemplateFilterPlugin
         $this->record($storeId, $template, $outcome, served: true, fellBack: false);
 
         return $candidate;
+    }
+
+    /**
+     * Runs `$render` with the subject's store and URL model in RenderScope, for the ports that
+     * answer differently per filter.
+     *
+     * The store is the `_storeId` the filter holds - null when it holds none, as generateWidget
+     * tests with isset() - not the store config was read for.
+     *
+     * @template T
+     * @param callable():T $render
+     * @return T
+     */
+    private function inScopeOf(LegacyTemplate $subject, int|string|null $storeId, callable $render): mixed
+    {
+        if ($this->scope === null) {
+            return $render();
+        }
+
+        $urlModel = property_exists($subject, 'urlModel')
+            ? (function () {
+                return $this->urlModel;
+            })->call($subject)
+            : null;
+
+        $this->scope->push($storeId, is_object($urlModel) ? $urlModel : null);
+        try {
+            return $render();
+        } finally {
+            $this->scope->pop();
+        }
     }
 
     /** Recording must never cost a render; the recorder contains its own failures too. */
@@ -319,7 +352,9 @@ class TemplateFilterPlugin
      *   method, so whatever the plugin changes is behaviour only the filter has;
      * - `Cms\Model\Template\Filter`'s own `{{media}}`, which returns a FILESYSTEM path - the
      *   admin's WYSIWYG image preview opens it - where every other filter returns a URL. The
-     *   Widget filter, which the storefront renders CMS through, restores the URL one.
+     *   Widget filter, which the storefront renders CMS through, restores the URL one;
+     * - `{{widget}}` in `Widget\Model\Template\FilterEmulate` - the newsletter filter - which
+     *   renders each widget in an emulated frontend area.
      *
      * Any of them in the source declines the render, and the filter renders it.
      */
@@ -355,6 +390,13 @@ class TemplateFilterPlugin
             && !is_a($subject, 'Magento\\Widget\\Model\\Template\\Filter')
         ) {
             $names[] = 'media';
+        }
+
+        // The newsletter filter renders each widget inside a frontend area emulation; this
+        // engine renders it in whatever area is current, which in a newsletter send is not
+        // frontend. Emulating around the whole render would move every OTHER directive too.
+        if (is_a($subject, 'Magento\\Widget\\Model\\Template\\FilterEmulate')) {
+            $names[] = 'widget';
         }
 
         return array_values(array_unique($names));

@@ -44,3 +44,13 @@ namespace Magento\Widget\Model\Template\Filter {
         }
     }
 }
+
+namespace Magento\Widget\Model\Template {
+    if (!class_exists(FilterEmulate::class)) {
+        /** The newsletter filter's parent: every {{widget}} inside a frontend area emulation. */
+        class FilterEmulate extends Filter
+        {
+            public function widgetDirective($construction) { return 'EMULATED'; }
+        }
+    }
+}

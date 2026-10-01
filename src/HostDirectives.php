@@ -5,6 +5,7 @@ namespace Cresset\TemplateParser;
 
 use Cresset\TemplateParser\Ast\DirectiveNode;
 use Cresset\TemplateParser\Port\RefusedByPort;
+use Cresset\TemplateParser\Port\StoreAwareUrlBuilder;
 
 /**
  * Registers the directives that need something from the host application.
@@ -430,7 +431,21 @@ final class HostDirectives
 
             $evaluator->register('protocol', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $params = $e->params($n, $c);
-                $secure = $urls->isSecure();
+                // protocolDirective reads the scheme of the store `store=` names, and raises for
+                // one that does not exist. Answered for that store where the port can; declined
+                // where it cannot, rather than answered for the wrong one.
+                if (isset($params['store'])) {
+                    if (!$urls instanceof StoreAwareUrlBuilder) {
+                        return self::declined($n, $c, $e, 'protocol store', (string)$params['store']);
+                    }
+                    try {
+                        $secure = $urls->isSecureFor((string)$params['store']);
+                    } catch (RefusedByPort $refused) {
+                        return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                    }
+                } else {
+                    $secure = $urls->isSecure();
+                }
                 $scheme = $secure ? 'https' : 'http';
 
                 // Legacy's order: url wins over the pair, and with neither the directive is

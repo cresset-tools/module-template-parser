@@ -340,3 +340,12 @@ namespace {
         }
     }
 }
+namespace Magento\Backend\Model {
+    // StoreUrlBuilder refuses to build through it; a test extends it to check that.
+    if (!class_exists(Url::class)) {
+        class Url implements \Magento\Framework\UrlInterface {
+            public function getUrl($routePath = null, $routeParams = null) { return ''; }
+            public function setScope($params) { return $this; }
+        }
+    }
+}

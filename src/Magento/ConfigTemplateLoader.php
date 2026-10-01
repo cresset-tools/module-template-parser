@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Cresset\TemplateParser\Magento;
 
+use Cresset\TemplateParser\LegacyReading;
 use Cresset\TemplateParser\Port\RefusedByPort;
 use Cresset\TemplateParser\Port\TemplateLoader;
 use Magento\Email\Model\TemplateFactory;
@@ -73,7 +74,15 @@ class ConfigTemplateLoader implements TemplateLoader
             throw new RefusedByPort('template include', $configPath);
         }
 
-        return is_string($text) ? $text : '';
+        $text = is_string($text) ? $text : '';
+
+        // The include is rendered by this engine as part of its parent, so a construct the
+        // filter reads differently declines the parent - as it would at the top level.
+        if (LegacyReading::firstDifference($text) !== null) {
+            throw new RefusedByPort('template include the filter reads differently', $configPath);
+        }
+
+        return $text;
     }
 
     private function isAllowed(string $configPath): bool
