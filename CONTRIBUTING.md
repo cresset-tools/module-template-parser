@@ -18,7 +18,7 @@ Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console 
 `php:8.3-cli`'s default 128M `memory_limit` is below what the suite peaks at, which
 `GuardTripwireTest` is what pushes it to.
 
-12996 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
+12997 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ### Mutation testing, without taking the machine down

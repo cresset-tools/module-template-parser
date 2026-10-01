@@ -116,6 +116,11 @@ Entries say what changed and why it mattered. A line that only names a file has 
   detected on the source (`LegacyReading`) and declined, top-level and in includes; over the
   corpus that flags every case where compatible mode renders differently from the filter.
 
+- `tools/render-store.php` renders a store's emails, CMS blocks and pages through the paths
+  Magento takes, for comparing stages byte for byte. Its header records the two things that
+  vary between runs on their own: admin secret keys, and CatalogWidget's area-blind block
+  cache, which serves an admin-rendered product list on the storefront - in legacy as here.
+
 ### Fixed
 
 - `{{layout area="adminhtml"}}` reached the layout port, where Mage-OS 3.5.0 refuses it. It is

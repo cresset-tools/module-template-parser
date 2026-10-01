@@ -67,6 +67,39 @@ final class LegacyFaithfulnessTest extends TestCase
         );
     }
 
+    /**
+     * The cache key a widget computes is built from its data, so the data has to be the
+     * filter's to the byte: values untouched (strings stay strings), in the order written, and
+     * nothing added but what generateWidget adds.
+     *
+     * Why it matters: CatalogWidget's ProductsList keys its block_html entry on conditions,
+     * counts, title and template - and NOT on the area. An admin render writes an entry with
+     * admin URLs in it that a storefront render then reads, in legacy as much as here. Found on
+     * a real store, where both engines served the same admin-written entry; the only way this
+     * engine could serve a DIFFERENT one is a widget built with different data.
+     */
+    public function testAWidgetsDataReachesItUnchangedInTheOrderWritten(): void
+    {
+        $scope = new RenderScope();
+        $created = [];
+        $renderer = new TypeCheckedWidgetRenderer($this->layout($created), $this->widgetTypes(), null, $scope);
+        $type = $this->widgetClass();
+        $parameters = [
+            'show_pager' => '0',
+            'products_count' => '5',
+            'template' => 'Magento_CatalogWidget::product/widget/content/grid.phtml',
+            'conditions_encoded' => '^[`1`:^[`type`:`Magento||CatalogWidget||Model||Rule||Condition||Combine`]^]',
+            'title' => 'New',
+        ];
+
+        $scope->push('1', null);
+        $renderer->render($type, $parameters);
+        $scope->pop();
+
+        self::assertSame(['type' => $type] + $parameters + ['store_id' => '1'], $created[0][1]);
+        self::assertSame(array_keys(['type' => $type] + $parameters + ['store_id' => '1']), array_keys($created[0][1]));
+    }
+
     /** The store is the filter's own, pushed by the plugin around this engine's render. */
     public function testThePluginPushesTheFiltersStoreForTheRender(): void
     {
