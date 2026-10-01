@@ -61,6 +61,21 @@ class Auditor
                         . 'opener this engine knows.',
                 )];
 
+                // A directive a module added as a method on the filter class. Legacy finds it by
+                // reflection and this engine never will, so it renders differently here - or,
+                // for an override of a stock directive, through different code.
+                foreach ($this->extensions?->methodNotesFor($subject->content, $engine->evaluator()->registered()) ?? [] as $note) {
+                    $extensionFinding[] = new Finding(
+                        severity: Finding::WARNING,
+                        subject: $subject,
+                        summary: $note,
+                        fix: 'The legacy filter dispatches {{name}} to a nameDirective() method by '
+                            . 'reflection; this engine does not, by design. In compatible mode an '
+                            . 'unhandled directive comes back as its own text. Keep this template '
+                            . 'on the legacy filter, or give the engine a handler for the directive.',
+                    );
+                }
+
                 try {
                     $engine->render($subject->content, context: $context);
                 } catch (TemplateError $e) {

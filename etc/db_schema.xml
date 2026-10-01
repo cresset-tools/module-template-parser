@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+    Where Shadow mode keeps what it measured. See Shadow\ShadowRecorder for how a row is
+    written and what "clean since" means.
+
+    One row per store view and template, with a counter per outcome, rather than a row per
+    render: the table is bounded by stores x templates however long Shadow runs, so it needs no
+    pruning, and the reset of renders_since_divergence happens in the same row update that
+    counts the divergence.
+
+    No foreign key to store. A key would delete a removed store's rows, but it would also fail
+    the whole batched write over one render recorded against a store id that no longer exists,
+    losing every other row in it. A report joins to store and leaves orphans out instead.
+
+    No rendered output is stored, only lengths, offsets and causes: a rendered email carries a
+    customer's name and address.
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="cresset_template_shadow" resource="default" engine="innodb"
+           comment="Template engine Shadow comparisons, per store view and template">
+        <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true"
+                comment="Entity ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" default="0"
+                comment="Store view the render was for"/>
+        <column xsi:type="varchar" name="template" nullable="false" length="255"
+                comment="email:ID, email:ID/subject, newsletter:ID, cms_block:ID, cms_page:ID or unidentified:FILTER_CLASS"/>
+        <column xsi:type="bigint" name="agreed" unsigned="true" nullable="false" default="0"
+                comment="Renders where both engines produced the same output"/>
+        <column xsi:type="bigint" name="diverged" unsigned="true" nullable="false" default="0"
+                comment="Renders where they differed"/>
+        <column xsi:type="bigint" name="refused" unsigned="true" nullable="false" default="0"
+                comment="Renders the new engine declined; Parser mode falls back to legacy for these"/>
+        <column xsi:type="bigint" name="crashed" unsigned="true" nullable="false" default="0"
+                comment="Renders where the new engine raised anything else"/>
+        <column xsi:type="datetime" name="first_seen" nullable="false" comment="First comparison, UTC"/>
+        <column xsi:type="datetime" name="last_seen" nullable="false" comment="Latest comparison, UTC"/>
+        <column xsi:type="datetime" name="last_divergence_at" nullable="true"
+                comment="Latest divergence or crash, UTC; null if there has been none"/>
+        <column xsi:type="bigint" name="renders_since_divergence" unsigned="true" nullable="false" default="0"
+                comment="Agreements and refusals since last_divergence_at, or since first_seen"/>
+        <column xsi:type="text" name="last_divergence" nullable="true"
+                comment="JSON: lengths, first differing byte, policy violations, legacy incompatibilities"/>
+        <column xsi:type="text" name="last_refusal" nullable="true" comment="JSON: the error, problem, line and column"/>
+        <column xsi:type="text" name="last_crash" nullable="true" comment="JSON: the error class and message"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="CRESSET_TEMPLATE_SHADOW_STORE_ID_TEMPLATE">
+            <column name="store_id"/>
+            <column name="template"/>
+        </constraint>
+    </table>
+</schema>

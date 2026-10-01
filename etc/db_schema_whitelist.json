@@ -1,0 +1,24 @@
+{
+    "cresset_template_shadow": {
+        "column": {
+            "entity_id": true,
+            "store_id": true,
+            "template": true,
+            "agreed": true,
+            "diverged": true,
+            "refused": true,
+            "crashed": true,
+            "first_seen": true,
+            "last_seen": true,
+            "last_divergence_at": true,
+            "renders_since_divergence": true,
+            "last_divergence": true,
+            "last_refusal": true,
+            "last_crash": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "CRESSET_TEMPLATE_SHADOW_STORE_ID_TEMPLATE": true
+        }
+    }
+}

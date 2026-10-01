@@ -74,40 +74,83 @@ TemplateEngine::withOptions(Options::strict()->withVariables(false));
 
 All of that holds in every mode; the modes differ in what they refuse, never in what they run.
 
+The command line calls these the **posture** — `--posture=strict|lenient|compatible` — because
+in a store "mode" means the rollout stage below, Legacy, Shadow or Parser. They are different
+axes: the posture is how this engine reads a template, the stage is whether a store view uses
+it. Parser mode runs the compatible posture, which is why that is the CLI's default.
+
 ## Using it as a Magento module
 
 The package is a `magento2-module` with `registration.php` and `etc/`, so
 `bin/magento setup:upgrade` after the `composer require` above adds it to `app/etc/config.php`.
-**Installing it changes no rendering behaviour**: `etc/di.xml` declares no preference for
-`Magento\Framework\Filter\Template`.
+**Installing it changes no rendering behaviour.** The module wires its plugin on install, and
+the plugin does nothing until a store view is told to.
+
+The stage is chosen per store view, under **Stores › Configuration › Advanced › System ›
+Template Engine** (`system/template_engine/mode`):
+
+| Stage | What renders | What the customer gets |
+|---|---|---|
+| **Legacy** (default) | Magento's filter only | the legacy result |
+| **Shadow** | both engines, compared | the legacy result |
+
+```sh
+bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode shadow
+```
+
+**Parser** — serving this engine's output, with a fallback to the legacy filter for anything
+it refuses — is not offered yet; see [#2](https://github.com/cresset-tools/module-template-parser/issues/2).
+
+A rollout, one store view at a time:
+
+```sh
+bin/magento template:status                      # every store view's stage, and since when
+bin/magento template:diff --store=1              # what would Parser change, over every template?
+bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode shadow
+# ... let real emails and pages render for a while ...
+bin/magento template:shadow:report --store=1     # exit 0: compared, and nothing diverged
+```
+
+A clean report — exit 0, with renders behind it — is the evidence for moving that store view
+on to Parser once [#2](https://github.com/cresset-tools/module-template-parser/issues/2) lands.
+`template:status` shows the stage renders actually use, and says so when the value saved in
+the database is not it: a stale config cache, or an override in `app/etc/env.php`.
 
 Adoption goes through a plugin, not a preference. Emails render through
 `Magento\Email\Model\Template\Filter`, CMS extends that, and Newsletter extends
 `Widget\Model\Template\FilterEmulate` — all concrete classes DI instantiates directly, so a
-preference for the framework base class never applies. Declare the shipped plugin in a
-project module against whichever filter you want to cover:
+preference for the framework base class never applies. The module's `etc/di.xml` declares the
+plugin on the Email filter, and a plugin on a class applies to its subclasses, so that one
+declaration covers every template filter a stock store renders with. Each render reads the
+stage for its own store; under Legacy the plugin returns there, before any second render.
 
-```xml
-<type name="Magento\Email\Model\Template\Filter">
-    <plugin name="cresset_template_parser" sortOrder="10"
-            type="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin"/>
-</type>
-```
+In Shadow, `ShadowComparator` renders the template through this engine as well and the plugin
+returns the *legacy* result — so putting a store view in Shadow changes nothing a customer
+sees. Each comparison is recorded in the `cresset_template_shadow` table, one row per store view
+and template:
 
-The plugin is inert until the comparator is enabled, which is a second entry in the same
-`di.xml`:
+| Column | Holds |
+|---|---|
+| `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3`, `cms_block:7`, `cms_page:2`, or `unidentified:<filter class>` |
+| `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
+| `first_seen`, `last_seen` | when it was first and last compared (UTC) |
+| `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many renders have agreed or been refused since |
+| `last_divergence`, `last_refusal`, `last_crash` | JSON describing the most recent of each |
 
-```xml
-<type name="Cresset\TemplateParser\Magento\ShadowComparator">
-    <arguments><argument name="enabled" xsi:type="boolean">true</argument></arguments>
-</type>
-```
+A **refusal** is a construct this engine declines on purpose; Parser mode will fall back to
+legacy for it, so it counts as clean. A **crash** is anything else the engine raised, and counts
+against the template like a divergence. So "clean since" is `last_divergence_at`, or
+`first_seen` for a template that has never diverged.
 
-`ShadowComparator` renders the template through this engine, logs where it differs from the
-legacy output it was handed, and returns the *legacy* result — so switching it on changes
-nothing a customer sees. It logs the policy violations and legacy incompatibilities behind a
-divergence, not just a byte offset, and it hashes the template rather than logging its content,
-because a rendered email holds a customer's name and address.
+The template is named by where it came from — plugins on the email and CMS models register
+its identity as they hand its text to the filter — never by its content. No rendered output is
+stored either: a divergence is described by lengths, the first differing byte, and the policy
+violations and legacy incompatibilities behind it, because a rendered email holds a customer's
+name and address.
+
+Comparisons are counted in memory and written in one statement at the end of the request, or
+every 100 templates or 60 seconds in a long-running process. A failed write is logged once as a
+warning and never affects the render.
 
 One render is deliberately skipped, and one is adjusted before the diff. A **child** template —
 anything reached through `{{template}}` — is skipped, because the filter defers a directive it
@@ -202,6 +245,14 @@ It *would* matter to a host rendering through a bare `Framework\Filter\Template`
 
 The `check` and `diff` commands ask the store what its pool holds and report any directive
 whose port a host has not wired.
+
+There is a third, older way, and this engine does not support it: a module prefers or
+subclasses a filter and adds a public `fooDirective()` method. The legacy filter dispatches
+`{{foo}}` to it by reflection; this engine never dispatches by reflection, by design, so in
+compatible mode an unhandled `{{foo}}` comes back as its own text. `check` finds these without
+calling them — it resolves the store's filter classes through the ObjectManager and reports
+any `*Directive` method a non-Magento class declares, including an override of a stock one —
+and warns on every template that uses one.
 
 ## Per-render capability policy
 
@@ -338,7 +389,7 @@ than what is true. Two properties are asserted absolutely:
   out of one, so the disagreement is measured and pinned rather than avoided.
 
 Everything else is a superset of refusals, enumerated below. Before switching a store over,
-run `Magento\ShadowComparator` against your own templates; the corpus cannot contain them.
+put it in Shadow and let it compare your own templates; the corpus cannot contain them.
 
 Quirks it reproduces:
 
@@ -645,10 +696,17 @@ and against total count, since five levels of fan-out is not five renders.
 ## The command line tool
 
 ```sh
-vendor/bin/template-parser repl        # try directives interactively
-vendor/bin/template-parser check       # will these templates render?
-vendor/bin/template-parser diff        # do they render the same as today?
+vendor/bin/template-parser repl            # try directives interactively
+vendor/bin/template-parser check           # will these templates render?
+vendor/bin/template-parser diff            # do they render the same as today?
+vendor/bin/template-parser shadow:report   # what did Shadow mode measure?
+vendor/bin/template-parser shadow:clear    # forget it, for one template or store view
+vendor/bin/template-parser status          # which stage is each store view at?
 ```
+
+With the module installed the same commands are part of `bin/magento`, under `template:` —
+`bin/magento template:check`, `template:shadow:report` and so on — and take the application
+bin/magento already booted.
 
 Run from inside a store it finds `app/etc/env.php`, boots Magento and wires every port it
 can, so `{{block}}`, `{{media}}`, `{{config}}` and the rest resolve against the real
@@ -656,7 +714,7 @@ application. Run anywhere else it degrades to the built-in directives and still 
 
 ```
 $ template-parser repl
-  mode    compatible - reproduces the legacy filter, refuses what it could not render
+  posture compatible - reproduces the legacy filter, refuses what it could not render
   store   connected
   18 directives wired
 
@@ -666,7 +724,7 @@ compatible> {{media url="../../../app/etc/env.php"}}
 (empty)
 compatible> :set customer_name=Ada
   customer_name = string  'Ada'
-compatible> :mode strict
+compatible> :posture strict
   strict - unknown directives and variables are errors
 strict> {{var custmer_name}}
 Unknown variable "custmer_name" in {{var custmer_name}}
@@ -678,7 +736,7 @@ Unknown variable "custmer_name" in {{var custmer_name}}
   hint: did you mean {{var customer_name}}?
 ```
 
-`:help` lists the rest — `:set`, `:vars`, `:store`, `:stores`, `:directives`, `:mode`.
+`:help` lists the rest — `:set`, `:vars`, `:store`, `:stores`, `:directives`, `:posture`.
 
 Values are typed, which matters more here than it might elsewhere:
 
@@ -700,12 +758,16 @@ diagnostic. `--source` picks where to look: `codebase` (files in app/code, vendo
 `email`, `cms`, `newsletter`, or `all`.
 
 ```sh
-template-parser check --source=codebase --mode=strict --fail-on=error
+template-parser check --source=codebase --posture=strict --fail-on=error
 template-parser check --source=all --format=json > findings.json
 ```
 
 The exit code is what makes it useful in CI: non-zero at or above `--fail-on`, which defaults
 to `error` so a first run over a decade of templates is not a wall of red.
+
+`--posture` picks how strictly the engine reads (see [Modes](#modes)); it defaults to
+compatible, the posture Parser mode runs. `--mode` is the old spelling and still works for one
+release, with a warning on stderr.
 
 ### Diffing against the filter you run today
 
@@ -717,6 +779,10 @@ the templates that matter are in a merchant's database, not the repository.
 template-parser diff --source=email --store=1
 template-parser diff --source=all --format=json --fail-on-divergence
 ```
+
+With `--store=N` and the default posture, this answers "what would switching this store view to
+Parser change?" — over every template now, where Shadow mode measures it on live renders as
+they happen.
 
 `--store` sets the store context, so `{{trans}}` resolves in that store view's language and
 `{{config}}` in its scope. It emulates rather than just switching the store id, because
@@ -738,6 +804,33 @@ may render, and `stock-email` is shorthand for the five the stock sales emails u
 ```sh
 template-parser diff --source=codebase --allow-layout-handle=stock-email
 ```
+
+### Reading what Shadow measured
+
+`shadow:report` summarises the `cresset_template_shadow` table per store view: templates and
+renders compared, how many diverged, were refused or crashed, and since when the store view has
+been clean. Each diverging template is listed with its causes and the `diff` command that
+reproduces it; refusals are listed too, but never fail the report, because Parser mode falls
+back to legacy for them.
+
+```sh
+bin/magento template:shadow:report --store=1
+bin/magento template:shadow:report --template="cms_block:*" --since="-7 days"
+bin/magento template:shadow:report --format=json
+```
+
+The exit code is the gate for moving a store view on:
+
+| Exit | Meaning |
+|---|---|
+| 0 | compared, and nothing diverged or crashed (since `--since`, when given) |
+| 1 | something diverged or crashed |
+| 2 | nothing in scope was compared — Shadow is off, or nothing has rendered yet |
+
+2 is separate because "no divergences" and "no data" look the same in a count of failures, and
+only one of them is evidence. After fixing a template, `--since` counts only what diverged after
+the fix; `shadow:clear --template=cms_block:7` deletes its history instead, and needs
+`--store`, `--template` or an explicit `--all`.
 
 ### Inside n98-magerun2
 
@@ -849,7 +942,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12847 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12908 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

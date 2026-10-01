@@ -15,10 +15,10 @@ use Cresset\TemplateParser\Port\TemplateLoader;
 use Cresset\TemplateParser\TemplateError;
 use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
 use Cresset\TemplateParser\Magento\ShadowComparator;
+use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
 use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
 use Cresset\TemplateParser\Options;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 
 final class MagentoAdapterTest extends TestCase
 {
@@ -101,62 +101,25 @@ final class MagentoAdapterTest extends TestCase
         self::assertSame([['kind' => 'inlinecss', 'payload' => ['file' => 'a.css']]], $adapter->deferred());
     }
 
-    public function testShadowComparatorAlwaysReturnsLegacyOutputAndLogsDivergence(): void
+    public function testShadowComparatorReportsADivergenceWithoutEitherOutput(): void
     {
-        $logger = new class implements LoggerInterface {
-            public array $records = [];
-            public function emergency($m, array $c = []) {} public function alert($m, array $c = []) {}
-            public function critical($m, array $c = []) {} public function error($m, array $c = []) {}
-            public function warning($m, array $c = []) {} public function notice($m, array $c = []) {}
-            public function debug($m, array $c = []) {}  public function log($l, $m, array $c = []) {}
-            public function info($m, array $c = []): void { $this->records[] = [$m, $c]; }
-        };
+        $comparator = new ShadowComparator(new TemplateFilterAdapter(options: Options::lenient()));
 
-        $comparator = new ShadowComparator(
-            new TemplateFilterAdapter(options: Options::lenient()),
-            $logger,
-            true
-        );
+        $outcome = $comparator->compare('Hi {{var name}}', 'LEGACY OUTPUT', ['name' => 'Jan']);
 
-        $result = $comparator->compare('Hi {{var name}}', 'LEGACY OUTPUT', ['name' => 'Jan']);
-
-        self::assertSame('LEGACY OUTPUT', $result, 'shadow mode must never change what is returned');
-        self::assertCount(1, $logger->records);
-        self::assertStringContainsString('divergence', $logger->records[0][0]);
-        self::assertArrayHasKey('template_hash', $logger->records[0][1]);
-    }
-
-    public function testShadowComparatorIsInertWhenDisabled(): void
-    {
-        $logger = new class implements LoggerInterface {
-            public array $records = [];
-            public function emergency($m, array $c = []) {} public function alert($m, array $c = []) {}
-            public function critical($m, array $c = []) {} public function error($m, array $c = []) {}
-            public function warning($m, array $c = []) {} public function notice($m, array $c = []) {}
-            public function debug($m, array $c = []) {}  public function log($l, $m, array $c = []) {}
-            public function info($m, array $c = []): void { $this->records[] = [$m, $c]; }
-        };
-        $comparator = new ShadowComparator(new TemplateFilterAdapter(), $logger, false);
-
-        self::assertSame('L', $comparator->compare('{{if broken}}', 'L'));
-        self::assertSame([], $logger->records);
+        self::assertSame(ShadowOutcome::DIVERGE, $outcome->outcome);
+        self::assertSame(13, $outcome->detail['legacy_length']);
+        self::assertSame(6, $outcome->detail['candidate_length']);
+        // The template is named by where it came from (TemplateIdentity), not by a hash of it.
+        self::assertArrayNotHasKey('template_hash', $outcome->detail);
     }
 
     /** A strict-mode failure in the candidate engine must never break the render. */
     public function testShadowComparatorSwallowsEngineErrors(): void
     {
-        $logger = new class implements LoggerInterface {
-            public array $records = [];
-            public function emergency($m, array $c = []) {} public function alert($m, array $c = []) {}
-            public function critical($m, array $c = []) {} public function error($m, array $c = []) {}
-            public function warning($m, array $c = []) {} public function notice($m, array $c = []) {}
-            public function debug($m, array $c = []) {}  public function log($l, $m, array $c = []) {}
-            public function info($m, array $c = []): void { $this->records[] = [$m, $c]; }
-        };
-        $comparator = new ShadowComparator(new TemplateFilterAdapter(), $logger, true);
+        $comparator = new ShadowComparator(new TemplateFilterAdapter());
 
-        self::assertSame('L', $comparator->compare('{{if unclosed}}', 'L'));
-        self::assertStringContainsString('engine raised', $logger->records[0][0]);
+        self::assertSame(ShadowOutcome::REFUSED, $comparator->compare('{{if unclosed}}', 'L')->outcome);
     }
 
     /**

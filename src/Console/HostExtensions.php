@@ -55,6 +55,102 @@ class HostExtensions
     }
 
     /**
+     * The filters a store's templates render through, whose effective class a module may replace.
+     */
+    private const FILTER_CLASSES = [
+        \Magento\Framework\Filter\Template::class,
+        \Magento\Email\Model\Template\Filter::class,
+        \Magento\Cms\Model\Template\Filter::class,
+        \Magento\Newsletter\Model\Template\Filter::class,
+        \Magento\Widget\Model\Template\Filter::class,
+    ];
+
+    /**
+     * Directives a module added as `fooDirective()` methods on a template filter.
+     *
+     * The older way to extend the language: prefer or subclass a filter and add a public
+     * method. LegacyDirective reflects `$construction[1] . 'Directive'`, so the method IS the
+     * directive. This engine never dispatches by reflection - deliberately, it is part of the
+     * security argument - so such a directive has no handler here, and in compatible mode an
+     * unknown `{{foo}}` comes back as its own text, silently.
+     *
+     * Found without calling anything: the filter classes are resolved through the
+     * ObjectManager's own preferences, and a method counts when the class that DECLARES it is
+     * not Magento's. That catches an added method and an override of a stock one alike, and
+     * ignores every method core ships. Only names legacy can reach are reported - its name
+     * capture is `[a-z]{0,10}`, so `somethingLongerDirective()` is dead code to a template.
+     *
+     * @return array<string,string> directive name => the class declaring its method
+     */
+    public function methodDirectives(): array
+    {
+        $config = $this->magento->get(\Magento\Framework\ObjectManager\ConfigInterface::class);
+        if ($config === null) {
+            return [];
+        }
+
+        $found = [];
+        foreach (self::FILTER_CLASSES as $filter) {
+            try {
+                $class = $config->getInstanceType($config->getPreference($filter));
+            } catch (\Throwable) {
+                continue;
+            }
+            if (!is_string($class) || !class_exists($class)) {
+                continue;
+            }
+
+            foreach ((new \ReflectionClass($class))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+                if ($method->isStatic() || preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m) !== 1) {
+                    continue;
+                }
+                $declaring = $method->getDeclaringClass()->getName();
+                if (str_starts_with($declaring, 'Magento\\')) {
+                    continue;
+                }
+                $found[strtolower($m[1])] = $declaring;
+            }
+        }
+
+        ksort($found);
+
+        return $found;
+    }
+
+    /**
+     * One sentence per filter-method directive this template uses, saying whose it is.
+     *
+     * @param string[] $known the directive names this engine has a handler for
+     * @return string[]
+     */
+    public function methodNotesFor(string $template, array $known = []): array
+    {
+        $notes = [];
+        foreach ($this->methodDirectives() as $name => $class) {
+            if (!self::mentions($template, $name)) {
+                continue;
+            }
+            $notes[] = in_array($name, $known, true)
+                ? sprintf(
+                    'this template uses {{%s}}, which the store renders through %s::%sDirective() '
+                    . '- an override of the stock directive this engine renders instead',
+                    $name,
+                    $class,
+                    $name
+                )
+                : sprintf(
+                    'this template uses {{%s}}, which the store provides as %s::%sDirective() '
+                    . 'and this engine has no handler for',
+                    $name,
+                    $class,
+                    $name
+                );
+        }
+
+        return $notes;
+    }
+
+    /**
      * Whether this text spells `{{name}}` - the way the store matches it.
      *
      * A registered name immediately after `{{`, and not a longer name that merely starts with

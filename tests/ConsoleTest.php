@@ -348,6 +348,45 @@ final class ConsoleTest extends TestCase
         self::assertStringContainsString('RIGHT', $ours);
     }
 
+    /**
+     * `check` warns about a directive a module added as a method on the store's filter.
+     *
+     * Silent otherwise: compatible mode renders an unknown {{coupon}} as its own text, which
+     * is not an error, so nothing else in the report would mention it.
+     */
+    public function testCheckWarnsAboutADirectiveAddedAsAFilterMethod(): void
+    {
+        require_once __DIR__ . '/fixtures/FilterMethodDirectives.php';
+        $magento = MagentoContext::unavailable('no store in tests');
+        $store = MagentoContext::fromObjectManager(new class {
+            public function get(string $class): ?object
+            {
+                return $class === \Magento\Framework\ObjectManager\ConfigInterface::class
+                    ? new class implements \Magento\Framework\ObjectManager\ConfigInterface {
+                        public function getPreference($type)
+                        {
+                            return $type === 'Magento\\Email\\Model\\Template\\Filter' ? \Acme\Coupons\Filter::class : $type;
+                        }
+                        public function getInstanceType($instanceName) { return $instanceName; }
+                    }
+                    : null;
+            }
+        });
+        $auditor = new Auditor(new EngineFactory($magento), new StoreEmulator($magento), new HostExtensions($store));
+
+        $findings = $auditor->check(
+            [new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: 'Code: {{coupon code="X"}}')],
+            Mode::Compatible
+        );
+
+        $warnings = array_values(array_filter(
+            $findings,
+            static fn (Finding $f): bool => str_contains($f->summary, 'couponDirective()')
+        ));
+        self::assertCount(1, $warnings);
+        self::assertSame(Finding::WARNING, $warnings[0]->severity);
+    }
+
     // ---------------------------------------------------------------- commands
 
     public function testCheckExitsNonZeroOnAnErrorSoCiCanUseIt(): void
@@ -355,7 +394,7 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate('{{if a}}unclosed');
 
-        $exit = $tester->execute(['path' => $file, '--mode' => 'strict']);
+        $exit = $tester->execute(['path' => $file, '--posture' => 'strict']);
 
         self::assertSame(1, $exit);
         self::assertStringContainsString('ERROR', $tester->getDisplay());
@@ -373,7 +412,7 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate("ok\nstill ok\n{{if a}}unclosed");
 
-        $tester->execute(['path' => $file, '--mode' => 'strict']);
+        $tester->execute(['path' => $file, '--posture' => 'strict']);
 
         self::assertMatchesRegularExpression('/ERROR .*:3$/m', $tester->getDisplay());
     }
@@ -383,7 +422,7 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate('Hello, nothing to see here.');
 
-        self::assertSame(0, $tester->execute(['path' => $file, '--mode' => 'strict']));
+        self::assertSame(0, $tester->execute(['path' => $file, '--posture' => 'strict']));
     }
 
     /** --fail-on decides what CI treats as a failure, so a first run is not a wall of red. */
@@ -392,8 +431,8 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate('Hi {{var custmer}}');
 
-        self::assertSame(0, $tester->execute(['path' => $file, '--mode' => 'strict']), 'a warning is not an error');
-        self::assertSame(1, $tester->execute(['path' => $file, '--mode' => 'strict', '--fail-on' => 'warning']));
+        self::assertSame(0, $tester->execute(['path' => $file, '--posture' => 'strict']), 'a warning is not an error');
+        self::assertSame(1, $tester->execute(['path' => $file, '--posture' => 'strict', '--fail-on' => 'warning']));
     }
 
     /**
@@ -401,7 +440,7 @@ final class ConsoleTest extends TestCase
      *
      * The severities nest, so anything unrecognised fell through to the error-only gate:
      * `--fail-on=warn` ran the whole scan, printed the warnings and exited 0. It is read
-     * before the scan now, the way --mode and --source already were.
+     * before the scan now, the way --posture and --source already were.
      */
     public function testAnUnknownFailOnIsRefusedBeforeTheScan(): void
     {
@@ -412,7 +451,7 @@ final class ConsoleTest extends TestCase
 
         $tester->execute([
             'path' => $this->writeTemplate('Hi {{var custmer}}'),
-            '--mode' => 'strict',
+            '--posture' => 'strict',
             '--fail-on' => 'warn',
         ]);
     }
@@ -422,12 +461,56 @@ final class ConsoleTest extends TestCase
         $tester = $this->tester('check');
         $file = $this->writeTemplate('{{if a}}unclosed');
 
-        $tester->execute(['path' => $file, '--mode' => 'compatible', '--format' => 'json']);
+        $tester->execute(['path' => $file, '--posture' => 'compatible', '--format' => 'json']);
         $report = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
 
         self::assertArrayHasKey('findings', $report);
         self::assertArrayHasKey('counts', $report);
         self::assertNotEmpty($report['findings']);
+    }
+
+    /** --mode still works for a release, says it is going, and keeps stdout clean for JSON. */
+    public function testModeIsADeprecatedSpellingOfPosture(): void
+    {
+        $tester = $this->tester('check');
+        $file = $this->writeTemplate('Hi {{var custmer}}');
+
+        $exit = $tester->execute(
+            ['path' => $file, '--mode' => 'strict', '--fail-on' => 'warning', '--format' => 'json'],
+            ['capture_stderr_separately' => true]
+        );
+
+        self::assertSame(1, $exit, 'strict reports the unknown variable, so --mode was honoured');
+        self::assertStringContainsString('--mode is deprecated; use --posture', $tester->getErrorOutput());
+        json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    public function testPostureAndModeThatDisagreeAreRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/disagree; pass only --posture/');
+
+        $this->tester('check')->execute(
+            ['path' => $this->writeTemplate('x'), '--posture' => 'strict', '--mode' => 'compatible'],
+            ['capture_stderr_separately' => true]
+        );
+    }
+
+    /** Parser mode runs the compatible posture, so that is what an unqualified run measures. */
+    public function testThePostureDefaultsToCompatibleAndIsCalledThat(): void
+    {
+        $tester = $this->tester('check');
+        $tester->execute(['path' => $this->writeTemplate('Hi {{var custmer}}')]);
+
+        self::assertStringContainsString('checked in the compatible posture', $tester->getDisplay());
+    }
+
+    public function testReplSwitchesPosture(): void
+    {
+        $display = $this->repl([':posture strict', ':set customer_name=Ada', '{{var custmer_name}}']);
+
+        self::assertStringContainsString('posture compatible', $display);
+        self::assertStringContainsString('Unknown variable', $display);
     }
 
     /** diff needs a store, and says so instead of pretending. */
@@ -524,7 +607,7 @@ final class ConsoleTest extends TestCase
             ':set xs=[1,2]',
             '{{if qty}}truthy{{else}}falsy{{/if}}',
             '{{for i in xs}}[{{var i}}]{{/for}}',
-        ], ['--mode' => 'strict']);
+        ], ['--posture' => 'strict']);
 
         self::assertStringContainsString('falsy', $strict, 'int 0 is falsy under standard truthiness');
         self::assertStringContainsString('[1][2]', $strict, 'a JSON list should be iterable');
@@ -533,7 +616,7 @@ final class ConsoleTest extends TestCase
     /** ...and compatible mode disagrees about 0, which is the legacy quirk. */
     public function testCompatibleModeTreatsIntZeroAsTruthy(): void
     {
-        $display = $this->repl([':set qty=0', '{{if qty}}truthy{{else}}falsy{{/if}}'], ['--mode' => 'compatible']);
+        $display = $this->repl([':set qty=0', '{{if qty}}truthy{{else}}falsy{{/if}}'], ['--posture' => 'compatible']);
 
         self::assertStringContainsString('truthy', $display);
     }
@@ -543,7 +626,12 @@ final class ConsoleTest extends TestCase
         self::assertStringContainsString('unknown command', $this->repl([':nope']));
     }
 
-    public function testEveryCommandIsAvailableInBothEntrypoints(): void
+    /**
+     * The same commands in all three entrypoints, and each registered where that entrypoint
+     * looks: Application::commands() standalone, n98-magerun2.yaml for magerun, and the
+     * CommandListInterface argument in etc/di.xml for bin/magento.
+     */
+    public function testEveryCommandIsAvailableInEveryEntrypoint(): void
     {
         $standalone = array_map(
             static fn ($c): string => (string)$c->getName(),
@@ -551,13 +639,82 @@ final class ConsoleTest extends TestCase
         );
         sort($standalone);
 
-        self::assertSame(['check', 'diff', 'repl'], $standalone);
+        self::assertSame(['check', 'diff', 'repl', 'shadow:clear', 'shadow:report', 'status'], $standalone);
 
-        // The magerun subclasses exist for each, renamed into magerun's shared namespace.
-        foreach (['Repl', 'Check', 'Diff'] as $name) {
-            $class = 'Cresset\\TemplateParser\\Console\\Magerun\\' . $name . 'Command';
-            self::assertTrue(class_exists($class), $class . ' is missing');
-            self::assertSame('template-parser:' . strtolower($name), (new $class())->getName());
+        $root = dirname(__DIR__);
+        $magerunYaml = (string)file_get_contents($root . '/n98-magerun2.yaml');
+        $di = simplexml_load_file($root . '/etc/di.xml');
+        $registered = [];
+        foreach ($di->xpath('//type[@name="Magento\\Framework\\Console\\CommandListInterface"]//item') as $item) {
+            $registered[] = trim((string)$item);
+        }
+
+        $objectManager = new class implements \Magento\Framework\ObjectManagerInterface {
+            public function create($type, array $arguments = []) { return null; }
+            public function get($type) { return null; }
+            public function configure(array $configuration) {}
+        };
+
+        foreach ($standalone as $name) {
+            $class = str_replace(' ', '', ucwords(str_replace(':', ' ', $name))) . 'Command';
+
+            // magerun: renamed into its shared namespace, and listed in the module definition.
+            $magerun = 'Cresset\\TemplateParser\\Console\\Magerun\\' . $class;
+            self::assertTrue(class_exists($magerun), $magerun . ' is missing');
+            self::assertSame('template-parser:' . $name, (new $magerun())->getName());
+            self::assertStringContainsString($magerun, $magerunYaml, $magerun . ' is not in n98-magerun2.yaml');
+
+            // bin/magento: under template:, built from an ObjectManager, and in the CommandList.
+            $magento = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class;
+            self::assertTrue(class_exists($magento), $magento . ' is missing');
+            self::assertSame('template:' . $name, (new $magento($objectManager))->getName());
+            self::assertContains($magento, $registered, $magento . ' is not registered in etc/di.xml');
+        }
+    }
+
+    /**
+     * bin/magento builds every registered command on every run, to list them. Constructing
+     * one must not reach for anything - an ObjectManager that raises on use proves it.
+     */
+    public function testBuildingABinMagentoCommandTouchesNothing(): void
+    {
+        $objectManager = new class implements \Magento\Framework\ObjectManagerInterface {
+            public function create($type, array $arguments = []) { throw new \LogicException('create ' . $type); }
+            public function get($type) { throw new \LogicException('get ' . $type); }
+            public function configure(array $configuration) { throw new \LogicException('configure'); }
+        };
+
+        foreach (['Check', 'Diff', 'Repl', 'ShadowReport', 'ShadowClear', 'Status'] as $class) {
+            $class = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
+            self::assertInstanceOf(\Symfony\Component\Console\Command\Command::class, new $class($objectManager));
+        }
+    }
+
+    /**
+     * Under bin/magento every command is built as a generated Interceptor subclass, because
+     * Magento_NewRelicReporting plugs into Symfony's Command. An Interceptor carries no
+     * #[AsCommand], and Symfony reads that attribute from the instantiated class only - so a
+     * name left to the attribute was empty, and setup:upgrade refused to start. Simulated
+     * here with the same shape: a bare subclass that only forwards its constructor.
+     */
+    public function testABinMagentoCommandKeepsItsNameAndDescriptionWhenIntercepted(): void
+    {
+        $objectManager = new class implements \Magento\Framework\ObjectManagerInterface {
+            public function create($type, array $arguments = []) { return null; }
+            public function get($type) { return null; }
+            public function configure(array $configuration) {}
+        };
+
+        foreach (['Check' => 'check', 'Diff' => 'diff', 'Repl' => 'repl', 'ShadowReport' => 'shadow:report', 'ShadowClear' => 'shadow:clear', 'Status' => 'status'] as $class => $name) {
+            $parent = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
+            $interceptor = 'InterceptedFixture' . $class . 'Command';
+            if (!class_exists($interceptor, false)) {
+                eval(sprintf('class %s extends \\%s {}', $interceptor, $parent));
+            }
+
+            $command = new $interceptor($objectManager);
+            self::assertSame('template:' . $name, $command->getName());
+            self::assertNotSame('', $command->getDescription(), $interceptor . ' lost its description');
         }
     }
 

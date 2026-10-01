@@ -7,6 +7,8 @@ use Cresset\TemplateParser\Console\MagentoContext;
 use Cresset\TemplateParser\Console\Mode;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Shared wiring for commands that may or may not have a store.
@@ -31,17 +33,60 @@ trait MagentoAware
         return $this->injectedMagento ??= MagentoContext::detect();
     }
 
-    protected function addModeOption(): static
+    /**
+     * The engine posture: how strictly this engine reads a template.
+     *
+     * Called the posture, not the mode, because "mode" now belongs to the rollout - Legacy,
+     * Shadow, Parser in `system/template_engine/mode` - and the two sit side by side under
+     * bin/magento. They are different axes: the posture is how the new engine behaves, the
+     * rollout stage is whether a store view uses it. Parser mode runs the compatible posture,
+     * which is why that is the default here.
+     *
+     * `--mode` still works for one release, with a warning, so scripts written against 0.2
+     * keep running while they are updated.
+     */
+    protected function addPostureOption(): static
     {
+        $this->addOption(
+            'posture',
+            'p',
+            InputOption::VALUE_REQUIRED,
+            'Engine posture: ' . implode(', ', Mode::names()) . ' [default: compatible, what Parser mode runs]'
+        );
         $this->addOption(
             'mode',
             'm',
             InputOption::VALUE_REQUIRED,
-            'Engine posture: ' . implode(', ', Mode::names()) . ' (legacy is a spelling of compatible)',
-            Mode::Compatible->value
+            'Deprecated spelling of --posture; removed in the next release'
         );
 
         return $this;
+    }
+
+    /**
+     * Reads --posture, or the deprecated --mode, before any work starts.
+     *
+     * The warning goes to stderr so a `--format=json` run still prints only JSON.
+     */
+    protected function posture(InputInterface $input, OutputInterface $output): Mode
+    {
+        $posture = $input->getOption('posture');
+        $legacy = $input->getOption('mode');
+
+        if ($legacy !== null) {
+            $errors = $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output;
+            $errors->writeln('<comment>--mode is deprecated; use --posture. It will be removed in the next release.</comment>');
+
+            if ($posture !== null && Mode::parse((string)$posture) !== Mode::parse((string)$legacy)) {
+                throw new \InvalidArgumentException(sprintf(
+                    '--posture=%s and --mode=%s disagree; pass only --posture.',
+                    (string)$posture,
+                    (string)$legacy
+                ));
+            }
+        }
+
+        return Mode::parse((string)($posture ?? $legacy ?? Mode::Compatible->value));
     }
 
     /**

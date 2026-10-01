@@ -6,7 +6,10 @@ namespace Cresset\TemplateParser\Console;
 use Cresset\TemplateParser\Options;
 
 /**
- * The three engine postures, as a CLI-facing choice.
+ * The three engine postures, as a CLI-facing choice - `--posture` on the commands.
+ *
+ * Named Mode in code for history; the CLI says posture, because the rollout stage
+ * (Legacy/Shadow/Parser) is what "mode" means to anyone configuring a store.
  *
  * `legacy` is accepted as a spelling of `compatible`, because that is what people call it
  * when they mean "behave like the old filter".
@@ -24,7 +27,7 @@ enum Mode: string
             'lenient', 'permissive' => self::Lenient,
             'compatible', 'legacy', 'compat' => self::Compatible,
             default => throw new \InvalidArgumentException(sprintf(
-                'Unknown mode "%s". Use strict, lenient or compatible (legacy is a spelling of compatible).',
+                'Unknown posture "%s". Use strict, lenient or compatible (legacy is a spelling of compatible).',
                 $value
             )),
         };
