@@ -216,23 +216,37 @@ final class MagentoIntegrationTest extends TestCase
 
     public function testADivergenceCarriesItsCausesAndNoOutput(): void
     {
+        $comparator = new ShadowComparator(new TemplateFilterAdapter(new HostServices(), Options::compatible()));
+
+        $outcome = $comparator->compare('Dear {{var name}},', 'LEGACY-OUTPUT', ['name' => 'Ada']);
+
+        self::assertSame(ShadowOutcome::DIVERGE, $outcome->outcome);
+        self::assertSame(13, $outcome->detail['legacy_length']);
+        self::assertSame(9, $outcome->detail['candidate_length']);
+        self::assertSame(0, $outcome->detail['first_difference_at']);
+        // Neither side's output: a rendered email holds a customer's name and address.
+        self::assertStringNotContainsString('LEGACY-OUTPUT', (string)json_encode($outcome->detail));
+    }
+
+    /**
+     * A render that skipped something by policy is declined, not compared: what it left out,
+     * the filter - which has no policy - would have rendered, so Parser mode hands it there.
+     * Shadow says so the same way, so a Shadow run predicts what Parser will do.
+     */
+    public function testARenderThePolicyCutShortIsRefusedWithItsCauses(): void
+    {
         $rendered = [];
         $adapter = new TemplateFilterAdapter(
             new HostServices(blocks: $this->blocks($rendered)),
             Options::compatible(),
             RenderPolicy::restricted()
         );
-        $comparator = new ShadowComparator($adapter);
 
-        $outcome = $comparator->compare('{{block class="Evil"}}', 'LEGACY-OUTPUT', []);
+        $outcome = (new ShadowComparator($adapter))->compare('{{block class="Evil"}}', 'LEGACY-OUTPUT', []);
 
-        self::assertSame(ShadowOutcome::DIVERGE, $outcome->outcome);
-        // The cause, not just a byte offset.
-        self::assertNotEmpty($outcome->detail['policy_violations']);
+        self::assertSame(ShadowOutcome::REFUSED, $outcome->outcome);
+        self::assertSame('policy', $outcome->detail['error']);
         self::assertStringContainsString('block', $outcome->detail['policy_violations'][0]);
-        self::assertSame(13, $outcome->detail['legacy_length']);
-        self::assertSame(0, $outcome->detail['first_difference_at']);
-        // Neither side's output: a rendered email holds a customer's name and address.
         self::assertStringNotContainsString('LEGACY-OUTPUT', (string)json_encode($outcome->detail));
     }
 

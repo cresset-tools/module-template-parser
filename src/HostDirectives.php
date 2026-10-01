@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser;
 
 use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Port\RefusedByPort;
 
 /**
  * Registers the directives that need something from the host application.
@@ -481,7 +482,13 @@ final class HostDirectives
                 if (!PathGuard::isSafeIdentifier($handle) || !in_array($area, ['frontend', 'adminhtml'], true)) {
                     return '';
                 }
-                return $layouts->render($handle, $area, $params);
+                try {
+                    return $layouts->render($handle, $area, $params);
+                } catch (RefusedByPort $refused) {
+                    $e->refusedByPolicy($n, $c, $refused->kind, $refused->name);
+
+                    return '';
+                }
             });
         }
 

@@ -7,7 +7,9 @@ namespace Cresset\TemplateParser\Port;
  * Renders a layout handle for {{layout handle="..."}}.
  *
  * Implementations SHOULD restrict which handles a template may name; a handle is a
- * capability, and template text is not a trustworthy source for one.
+ * capability, and template text is not a trustworthy source for one. Decline one by throwing
+ * RefusedByPort, so the refusal is recorded as a policy violation rather than rendering an
+ * unexplained nothing.
  */
 interface LayoutRenderer
 {

@@ -21,6 +21,9 @@ use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
 use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
 use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
 use Cresset\TemplateParser\ParameterParser;
+use Cresset\TemplateParser\Port\RefusedByPort;
+use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\Options;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -576,8 +579,32 @@ final class MagentoGuardTest extends TestCase
         $loaded = [];
         $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
 
-        self::assertSame('', $renderer->render('customer_account_edit', 'frontend', []));
+        try {
+            $renderer->render('customer_account_edit', 'frontend', []);
+            self::fail('a handle outside the allowlist was not refused');
+        } catch (RefusedByPort $refused) {
+            self::assertSame(['layout handle', 'customer_account_edit'], [$refused->kind, $refused->name]);
+        }
         self::assertSame([], $layout->created, 'the handle was loaded despite being refused');
+    }
+
+    /**
+     * And the refusal is recorded, not an unexplained nothing.
+     *
+     * A silent '' is how Parser mode served every stock order email without its item table:
+     * nothing said the directive had been skipped, so nothing fell back to the filter.
+     */
+    public function testARefusedHandleIsRecordedAsAPolicyViolation(): void
+    {
+        $loaded = [];
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
+        $adapter = new TemplateFilterAdapter(new HostServices(layouts: $renderer), Options::compatible());
+
+        self::assertSame('ab', $adapter->setVariables(['x' => 1])->filter('a{{layout handle="sales_email_order_items"}}b'));
+        self::assertSame(
+            ['policy refused layout handle "sales_email_order_items" (line 1, column 2)'],
+            array_map(static fn ($v) => $v->describe(), $adapter->violations())
+        );
     }
 
     // ------------------------------------------------ adapter scope

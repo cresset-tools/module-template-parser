@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Test;
 
 use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
 use Cresset\TemplateParser\Magento\Config\EngineMode;
 use Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
 use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
@@ -14,6 +15,9 @@ use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
 use Cresset\TemplateParser\Magento\TemplateFilterInterface;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\Port\BlockRenderer;
+use Cresset\TemplateParser\Port\LayoutRenderer;
+use Cresset\TemplateParser\Port\RefusedByPort;
+use Cresset\TemplateParser\PolicyViolation;
 use Cresset\TemplateParser\RenderPolicy;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResourceConnection;
@@ -108,6 +112,33 @@ final class ParserModeTest extends TestCase
         self::assertSame('We\'re sorry', $result);
         self::assertSame(ShadowOutcome::REFUSED, $this->records[0][0]);
         self::assertStringContainsString('block fell over', $this->records[0][1]['problem']);
+        self::assertTrue($this->records[0][5]);
+    }
+
+    /**
+     * A render the policy cut short falls back too: what it skipped, the filter renders.
+     *
+     * Found on a real store: with no layout handle allowed, {{layout}} rendered nothing and
+     * Parser served every order email without its item table. Nothing raised, so "fall back
+     * on an exception" did not catch it; the skip is now recorded, and recorded skips decline.
+     */
+    public function testARenderThatSkippedALayoutHandleFallsBack(): void
+    {
+        $adapter = new TemplateFilterAdapter(new HostServices(layouts: new class implements LayoutRenderer {
+            public function render(string $handle, string $area, array $parameters): string
+            {
+                throw new RefusedByPort(PolicyViolation::LAYOUT_HANDLE, $handle);
+            }
+        }), Options::compatible());
+        $plugin = $this->plugin($adapter);
+        $subject = $this->filterFor(1);
+        $plugin->beforeSetVariables($subject, ['order_id' => 1]);
+
+        $result = $this->filter($plugin, $subject, 'Items: {{layout handle="sales_email_order_items" order_id=$order_id}}', 'Items: <table/>');
+
+        self::assertSame('Items: <table/>', $result);
+        self::assertSame(ShadowOutcome::REFUSED, $this->records[0][0]);
+        self::assertSame('policy', $this->records[0][1]['error']);
         self::assertTrue($this->records[0][5]);
     }
 
@@ -310,6 +341,23 @@ final class ParserModeTest extends TestCase
         $config = simplexml_load_file(__DIR__ . '/../etc/config.xml');
         self::assertSame('1', (string)$config->default->system->template_engine->parser_shadow_rate);
         self::assertSame(EngineMode::XML_PATH_PARSER_SHADOW_RATE, 'system/template_engine/parser_shadow_rate');
+    }
+
+    /**
+     * The stock sales emails' layout handles are allowed out of the box, and they are the
+     * CLI's `stock-email` handles too. Without them Parser declined every order, invoice,
+     * shipment and credit memo email - found on a real store, where the item table was the
+     * 5.5 KB difference between the two engines' output.
+     */
+    public function testTheModuleAllowsTheStockEmailLayoutHandles(): void
+    {
+        $di = simplexml_load_file(__DIR__ . '/../etc/di.xml');
+        $items = $di->xpath('//type[@name="Cresset\\TemplateParser\\Magento\\AllowlistedLayoutRenderer"]/arguments/argument[@name="allowedHandles"]/item');
+
+        self::assertSame(
+            AllowlistedLayoutRenderer::STOCK_EMAIL_HANDLES,
+            array_map(static fn ($item): string => (string)$item, $items)
+        );
     }
 
     // ---------------------------------------------------------------- recording

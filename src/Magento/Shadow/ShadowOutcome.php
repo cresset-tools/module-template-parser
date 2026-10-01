@@ -76,6 +76,25 @@ final class ShadowOutcome
     }
 
     /**
+     * The candidate render completed but skipped something by policy - a layout handle not
+     * allowed, a directive the render policy refuses. Declined, because what it skipped the
+     * filter would have rendered.
+     *
+     * @param string[] $violations
+     */
+    public static function policyRefused(array $violations): self
+    {
+        return new self(self::REFUSED, [
+            'error' => 'policy',
+            'problem' => self::clip('the render policy refused part of this render: ' . implode('; ', self::causes($violations))),
+            'line' => null,
+            'column' => null,
+            'hint' => 'allow it - for a layout handle, add it to AllowlistedLayoutRenderer\'s allowedHandles in di.xml - or change the template',
+            'policy_violations' => self::causes($violations),
+        ]);
+    }
+
+    /**
      * The host raised during the candidate render - a block's exception, a validator - and
      * the adapter turned it into its own error text, as the filter's catch does.
      *

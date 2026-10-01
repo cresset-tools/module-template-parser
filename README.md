@@ -100,8 +100,8 @@ bin/magento config:set --scope=stores --scope-code=default system/template_engin
 ```
 
 **Parser** serves this engine's output, and falls back to the legacy filter for any render this
-engine declines: a refusal, an exception from the host while rendering (a block that raises),
-or a crash. A fallback is the filter's own render of that template, so it is exactly what
+engine declines: a refusal, a render the policy cut short (a layout handle not allowed), an
+exception from the host while rendering (a block that raises), or a crash. A fallback is the filter's own render of that template, so it is exactly what
 Legacy would have served. The one way Parser can do worse than Legacy is by serving different
 output without raising — which is what Shadow measures before the switch, and what Parser keeps
 measuring after it: `system/template_engine/parser_shadow_rate` percent of its renders (1 by
@@ -148,8 +148,9 @@ and template:
 | `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many renders have agreed or been refused since |
 | `last_divergence`, `last_refusal`, `last_crash` | JSON describing the most recent of each |
 
-A **refusal** is a construct this engine declines on purpose, or an exception the host raised
-while this engine rendered; Parser mode falls back to legacy for it, so it counts as clean. A
+A **refusal** is a construct this engine declines on purpose, a render the policy cut short
+(a layout handle not allowed, say), or an exception the host raised while this engine
+rendered; Parser mode falls back to legacy for it, so it counts as clean. A
 **crash** is anything else the engine raised. Parser falls back for that too, but a crash is a
 bug in this engine rather than a property of the template, so it counts against the template
 like a divergence. "Clean since" is `last_divergence_at`, or `first_seen` for a template that
@@ -503,7 +504,11 @@ Quirks it does not reproduce:
 - **Reflection dispatch of arbitrary filter methods.** There is none here; every directive
   reaches a named handler.
 - **`{{layout}}` without an allowlist.** A layout handle decides which blocks get built, so
-  the `LayoutRenderer` port takes the handles it may render and refuses the rest.
+  the `LayoutRenderer` port takes the handles it may render and refuses the rest. The module
+  allows the five the stock sales emails use (`AllowlistedLayoutRenderer::STOCK_EMAIL_HANDLES`,
+  in `etc/di.xml`); add a module's own there. A refused handle is recorded as a policy
+  violation rather than rendering an unexplained nothing, so Shadow reports it and Parser mode
+  hands that render to the legacy filter.
 - **`{{var x|modifier}}` rendering empty.** That is a defect in `Framework\Filter\Template`,
   whose `varDirective` hands `VarDirective` a legacy-shaped construction so the expression
   resolved is `" x|raw"`. `Email\Model\Template\Filter` overrides `varDirective` and handles
@@ -817,9 +822,10 @@ the legacy render (`store`, `logo_url`, `this` and the rest) are the variables t
 given, and the CSS inlining that runs after a render runs after both.
 
 `{{layout}}` is the exception, because a layout handle decides which blocks get built and
-template text is not a trustworthy source for one. Nothing is allowed by default, which makes
-every stock sales email report as a difference. `--allow-layout-handle` names the ones a run
-may render, and `stock-email` is shorthand for the five the stock sales emails use:
+template text is not a trustworthy source for one. Outside a store, nothing is allowed by
+default, which makes every stock sales email report as a difference. `--allow-layout-handle`
+names the ones a run may render, and `stock-email` is shorthand for the five the stock sales
+emails use - the five the module allows in a store:
 
 ```sh
 template-parser diff --source=codebase --allow-layout-handle=stock-email
@@ -962,7 +968,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12933 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12937 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

@@ -32,7 +32,8 @@ class ShadowComparator
      * The candidate render, or the outcome that stands in for one.
      *
      * A string is output fit to serve. A ShadowOutcome is the reason there is none - refused,
-     * the host raised, or crashed - and in Parser mode means "fall back to legacy". The host
+     * refused in part by policy, the host raised, or crashed - and in Parser mode means "fall
+     * back to legacy". The host
      * raising counts even though the adapter caught it: the adapter's error text is its
      * imitation of the filter's, and the filter's own - which differs between developer and
      * production mode, and logs - is what a customer gets today.
@@ -73,6 +74,18 @@ class ShadowComparator
             $hostError = $this->adapter->lastError();
             if ($hostError !== null) {
                 return ShadowOutcome::hostRaised($hostError);
+            }
+
+            // A render that skipped something by policy is incomplete, not merely different:
+            // the filter has no policy and renders what this one left out. Served, a stock
+            // order email went out without its item table, because the layout handle that
+            // builds it was not allowed. So it is declined like a refusal, and in Parser mode
+            // the filter renders it - exactly what the customer gets today.
+            $violations = $this->adapter->violations();
+            if ($violations !== []) {
+                return ShadowOutcome::policyRefused(
+                    array_map(static fn ($violation): string => $violation->describe(), $violations)
+                );
             }
 
             $stylesheets = $this->stylesheetsToInline();

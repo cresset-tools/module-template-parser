@@ -5,6 +5,7 @@ namespace Cresset\TemplateParser\Console;
 
 use Cresset\TemplateParser\Console\Source\TemplateSource;
 use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\PolicyViolation;
 use Cresset\TemplateParser\RenderPolicy;
 use Cresset\TemplateParser\TemplateEngine;
 use Cresset\TemplateParser\TemplateError;
@@ -109,8 +110,11 @@ class Auditor
                         severity: Finding::NOTE,
                         subject: $subject,
                         summary: $violation->describe(),
-                        fix: 'The render policy refused this directive. Grant it with '
-                            . 'RenderPolicy::alsoAllowing() if the template is trusted.',
+                        fix: $violation->kind === PolicyViolation::LAYOUT_HANDLE
+                            ? sprintf('Name it with --allow-layout-handle=%s to render it here; in a store, '
+                                . 'add it to AllowlistedLayoutRenderer\'s allowedHandles in di.xml.', $violation->name)
+                            : 'The render policy refused this directive. Grant it with '
+                                . 'RenderPolicy::alsoAllowing() if the template is trusted.',
                     );
                 }
                 foreach ($context->incompatibilities() as $incompatibility) {

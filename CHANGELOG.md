@@ -18,8 +18,8 @@ Entries say what changed and why it mattered. A line that only names a file has 
   entries in a project module, and a Shadow run is evidence for the store view it ran in.
 
 - **Parser** mode serves this engine's output, and hands any render it declines — a refusal,
-  an exception from the host, a crash — to the legacy filter, so a fallback is byte for byte
-  what Legacy serves. `system/template_engine/parser_shadow_rate` (1% by default) also renders
+  a render the policy cut short, an exception from the host, a crash — to the legacy filter, so
+  a fallback is byte for byte what Legacy serves. `system/template_engine/parser_shadow_rate` (1% by default) also renders
   that share of Parser's renders through the filter and compares them, so a divergence after
   the switch still fails `template:shadow:report`. The Shadow table counts what Parser served
   and what fell back, and `template:status` shows a Parser store view's sample rate. (#2)
@@ -83,6 +83,17 @@ Entries say what changed and why it mattered. A line that only names a file has 
   `setDesignParams()` is kept per filter instance, and variables are merged as the filter
   merges them. The plugin is shared by every filter, so with one slot a CMS block rendered
   inside an email was rendered with the email's variables.
+
+- The module allows the five layout handles the stock sales emails build their item tables
+  and tracking with (`AllowlistedLayoutRenderer::STOCK_EMAIL_HANDLES`, also what the CLI's
+  `stock-email` means). Each is reachable from a template the store ships, so this grants
+  nothing a stock store does not already do. With none allowed, a real store in Parser mode
+  served every order, invoice, shipment and credit memo email without its item table.
+
+- A layout handle the allowlist refuses is recorded as a policy violation (`RefusedByPort`)
+  instead of rendering an unexplained nothing, and a render with a policy violation is declined
+  rather than compared: Shadow records it as refused, Parser falls back to the filter, and
+  `check` says which handle to allow.
 
 ### Fixed
 
