@@ -2,6 +2,10 @@
 <!--
     Legacy by default, which is what keeps installing this module from changing anything: the
     plugin is wired, and returns as soon as it has read this.
+
+    parser_shadow_rate is read only for a store in Parser mode: the percentage of its renders
+    also rendered by the legacy filter and compared. 1% keeps a regression after the switch
+    visible in template:shadow:report without paying for a second render on every page.
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
@@ -9,6 +13,7 @@
         <system>
             <template_engine>
                 <mode>legacy</mode>
+                <parser_shadow_rate>1</parser_shadow_rate>
             </template_engine>
         </system>
     </default>

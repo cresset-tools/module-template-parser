@@ -93,13 +93,20 @@ Template Engine** (`system/template_engine/mode`):
 |---|---|---|
 | **Legacy** (default) | Magento's filter only | the legacy result |
 | **Shadow** | both engines, compared | the legacy result |
+| **Parser** | this engine; the filter only for what it declines, and for a sample | this engine's result, or legacy's where it declined |
 
 ```sh
 bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode shadow
 ```
 
-**Parser** — serving this engine's output, with a fallback to the legacy filter for anything
-it refuses — is not offered yet; see [#2](https://github.com/cresset-tools/module-template-parser/issues/2).
+**Parser** serves this engine's output, and falls back to the legacy filter for any render this
+engine declines: a refusal, an exception from the host while rendering (a block that raises),
+or a crash. A fallback is the filter's own render of that template, so it is exactly what
+Legacy would have served. The one way Parser can do worse than Legacy is by serving different
+output without raising — which is what Shadow measures before the switch, and what Parser keeps
+measuring after it: `system/template_engine/parser_shadow_rate` percent of its renders (1 by
+default, shown in the admin only for Parser) are also rendered by the filter and compared. The
+customer still gets this engine's result.
 
 A rollout, one store view at a time:
 
@@ -109,11 +116,14 @@ bin/magento template:diff --store=1              # what would Parser change, ove
 bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode shadow
 # ... let real emails and pages render for a while ...
 bin/magento template:shadow:report --store=1     # exit 0: compared, and nothing diverged
+bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode parser
+# ... and keep reading the report: Parser's sampled comparisons land in it too
+bin/magento template:shadow:report --store=1
 ```
 
 A clean report — exit 0, with renders behind it — is the evidence for moving that store view
-on to Parser once [#2](https://github.com/cresset-tools/module-template-parser/issues/2) lands.
-`template:status` shows the stage renders actually use, and says so when the value saved in
+on to Parser. Moving back is the same `config:set` with `legacy`, and takes effect on the next
+render. `template:status` shows the stage renders actually use, and says so when the value saved in
 the database is not it: a stale config cache, or an override in `app/etc/env.php`.
 
 Adoption goes through a plugin, not a preference. Emails render through
@@ -133,14 +143,22 @@ and template:
 |---|---|
 | `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3`, `cms_block:7`, `cms_page:2`, or `unidentified:<filter class>` |
 | `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
+| `served`, `fell_back` | Parser mode: how many renders it served, and how many it handed to legacy |
 | `first_seen`, `last_seen` | when it was first and last compared (UTC) |
 | `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many renders have agreed or been refused since |
 | `last_divergence`, `last_refusal`, `last_crash` | JSON describing the most recent of each |
 
-A **refusal** is a construct this engine declines on purpose; Parser mode will fall back to
-legacy for it, so it counts as clean. A **crash** is anything else the engine raised, and counts
-against the template like a divergence. So "clean since" is `last_divergence_at`, or
-`first_seen` for a template that has never diverged.
+A **refusal** is a construct this engine declines on purpose, or an exception the host raised
+while this engine rendered; Parser mode falls back to legacy for it, so it counts as clean. A
+**crash** is anything else the engine raised. Parser falls back for that too, but a crash is a
+bug in this engine rather than a property of the template, so it counts against the template
+like a divergence. "Clean since" is `last_divergence_at`, or `first_seen` for a template that
+has never diverged.
+
+Parser records into the same rows. A served render that was sampled counts as a comparison,
+exactly like a Shadow one — so a divergence after the switch fails `template:shadow:report` the
+way one before it did. A served render that was not sampled is only counted in `served`: it is
+no evidence either way, so it leaves `renders_since_divergence` alone.
 
 The template is named by where it came from — plugins on the email and CMS models register
 its identity as they hand its text to the filter — never by its content. No rendered output is
@@ -153,7 +171,9 @@ every 100 templates or 60 seconds in a long-running process. A failed write is l
 warning and never affects the render.
 
 One render is deliberately skipped, and one is adjusted before the diff. A **child** template —
-anything reached through `{{template}}` — is skipped, because the filter defers a directive it
+anything the filter reaches through `{{template}}` — always goes to the filter, in every stage,
+and is never compared. The filter only renders a child while rendering its parent (this engine
+loads includes itself, so a parent it serves never reaches one), and it is skipped because the filter defers a directive it
 cannot finish in a child by emitting a signed placeholder for the parent to resolve, and the
 signature is random per render. This engine records that deferral structurally instead, so a
 child's output can never be byte-equal to the filter's, whatever either engine does. The
@@ -942,7 +962,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12908 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12933 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

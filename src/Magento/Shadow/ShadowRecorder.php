@@ -10,14 +10,21 @@ use Psr\Log\LoggerInterface;
 /**
  * Records Shadow outcomes in `cresset_template_shadow`, one row per store view and template.
  *
+ * And Parser's: every render Parser mode served (`served`), every one it handed to legacy
+ * (`fell_back`, alongside the refusal or crash that caused it), and the outcome of every
+ * sampled comparison, which counts exactly as a Shadow comparison does. A served render that
+ * was not sampled is only counted as served - it is no evidence either way - so it leaves
+ * `renders_since_divergence` alone.
+ *
  * One row, not one per outcome, because the question the rollout asks - "has this template
  * been clean since its last divergence, and for how many renders?" - is answered by resetting
  * a counter at the moment a divergence is counted, and that has to happen in the same row
  * update to be atomic. The row carries a counter per outcome, the first and last time the
  * template was compared, `last_divergence_at` and `renders_since_divergence`:
  *
- * - a divergence or a crash sets `last_divergence_at` and resets the counter to zero. A crash
- *   counts because Parser mode would have served nothing sensible for it either;
+ * - a divergence or a crash sets `last_divergence_at` and resets the counter to zero. Parser
+ *   mode falls back to legacy for a crash, so the customer is not affected, but a crash is a
+ *   bug in this engine rather than a property of the template, and not evidence for it;
  * - an agreement or a refusal adds one. A refusal counts as clean because Parser mode falls
  *   back to legacy for it, so the customer gets exactly what they get today;
  * - "clean since" is `last_divergence_at`, or `first_seen` for a template that never diverged.
@@ -47,7 +54,7 @@ class ShadowRecorder
 
     private const COLUMNS = [
         'store_id', 'template',
-        'agreed', 'diverged', 'refused', 'crashed',
+        'agreed', 'diverged', 'refused', 'crashed', 'served', 'fell_back',
         'first_seen', 'last_seen',
         'last_divergence_at', 'renders_since_divergence',
         'last_divergence', 'last_refusal', 'last_crash',
@@ -81,11 +88,19 @@ class ShadowRecorder
 
     /**
      * @param int|string|null $storeId as the filter holds it; null means the current store
+     * @param ?ShadowOutcome $outcome null for a Parser render that was served and not compared
+     * @param bool $served Parser mode served this engine's render
+     * @param bool $fellBack Parser mode served legacy's instead, for the reason `$outcome` gives
      */
-    public function record(int|string|null $storeId, string $template, ShadowOutcome $outcome): void
-    {
+    public function record(
+        int|string|null $storeId,
+        string $template,
+        ?ShadowOutcome $outcome,
+        bool $served = false,
+        bool $fellBack = false
+    ): void {
         try {
-            $this->add($this->resolveStore($storeId), $template, $outcome);
+            $this->add($this->resolveStore($storeId), $template, $outcome, $served, $fellBack);
 
             if (!$this->shutdownRegistered && $this->flushOnShutdown) {
                 register_shutdown_function([$this, 'flush']);
@@ -138,7 +153,7 @@ class ShadowRecorder
         }
     }
 
-    private function add(int $storeId, string $template, ShadowOutcome $outcome): void
+    private function add(int $storeId, string $template, ?ShadowOutcome $outcome, bool $served, bool $fellBack): void
     {
         $template = mb_strcut($template, 0, self::TEMPLATE_LENGTH);
         $now = gmdate('Y-m-d H:i:s', ($this->clock)());
@@ -151,6 +166,8 @@ class ShadowRecorder
             'diverged' => 0,
             'refused' => 0,
             'crashed' => 0,
+            'served' => 0,
+            'fell_back' => 0,
             'first_seen' => $now,
             'last_seen' => $now,
             'last_divergence_at' => null,
@@ -161,8 +178,10 @@ class ShadowRecorder
         ];
         $row = &$this->pending[$key];
         $row['last_seen'] = $now;
+        $row['served'] += (int)$served;
+        $row['fell_back'] += (int)$fellBack;
 
-        switch ($outcome->outcome) {
+        switch ($outcome?->outcome) {
             case ShadowOutcome::AGREE:
                 $row['agreed']++;
                 $row['renders_since_divergence']++;
@@ -212,7 +231,7 @@ class ShadowRecorder
         }
 
         $update = [];
-        foreach (['agreed', 'diverged', 'refused', 'crashed'] as $counter) {
+        foreach (['agreed', 'diverged', 'refused', 'crashed', 'served', 'fell_back'] as $counter) {
             $update[] = sprintf('%1$s = %1$s + VALUES(%1$s)', $quote($counter));
         }
         $update[] = sprintf(

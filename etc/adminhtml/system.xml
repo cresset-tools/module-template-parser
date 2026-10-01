@@ -17,7 +17,16 @@
                        showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Engine</label>
                     <source_model>Cresset\TemplateParser\Magento\Config\Source\EngineModeOptions</source_model>
-                    <comment><![CDATA[How email, CMS and newsletter templates are rendered in this scope. <strong>Legacy</strong> uses Magento's filter only. <strong>Shadow</strong> also renders each template through the new engine and records where the two differ, but always serves the legacy result, so customers see no change.]]></comment>
+                    <comment><![CDATA[How email, CMS and newsletter templates are rendered in this scope. <strong>Legacy</strong> uses Magento's filter only. <strong>Shadow</strong> also renders each template through the new engine and records where the two differ, but always serves the legacy result, so customers see no change. <strong>Parser</strong> serves the new engine's result; any template it declines is rendered by Magento's filter instead. Run <code>bin/magento template:shadow:report</code> before switching a store view to Parser.]]></comment>
+                </field>
+                <field id="parser_shadow_rate" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Parser Comparison Rate (%)</label>
+                    <validate>validate-number validate-number-range number-range-0-100</validate>
+                    <comment><![CDATA[The percentage of Parser renders also rendered by Magento's filter and compared, so a difference that appears after switching still shows up in <code>template:shadow:report</code>. The new engine's result is served either way. 0 turns the comparison off.]]></comment>
+                    <depends>
+                        <field id="mode">parser</field>
+                    </depends>
                 </field>
             </group>
         </section>

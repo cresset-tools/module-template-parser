@@ -16,7 +16,13 @@ Entries say what changed and why it mattered. A line that only names a file has 
   Template Engine** (`system/template_engine/mode`), with **Legacy**, the default, and
   **Shadow**. Rolling out is now a configuration change per store view instead of two `di.xml`
   entries in a project module, and a Shadow run is evidence for the store view it ran in.
-  Parser is not offered until it can fall back to legacy on a refusal (#2).
+
+- **Parser** mode serves this engine's output, and hands any render it declines — a refusal,
+  an exception from the host, a crash — to the legacy filter, so a fallback is byte for byte
+  what Legacy serves. `system/template_engine/parser_shadow_rate` (1% by default) also renders
+  that share of Parser's renders through the filter and compares them, so a divergence after
+  the switch still fails `template:shadow:report`. The Shadow table counts what Parser served
+  and what fell back, and `template:status` shows a Parser store view's sample rate. (#2)
 
 - Shadow records every comparison in a `cresset_template_shadow` table, one row per store view
   and template, counting agreements, divergences, refusals and crashes, with when the template
@@ -68,6 +74,23 @@ Entries say what changed and why it mattered. A line that only names a file has 
   store without calling the filter's `getStoreId()`, which fills an unset store from the
   current one and keeps it — on the shared CMS filters that would have pinned every later
   render to the first store that rendered.
+
+- The plugin is an `around` plugin on `filter()`, because Parser has to be able not to run the
+  filter. Each invocation keeps its scope in its own call, which replaces the stack of frames
+  a before/after pair needed for re-entrant renders.
+
+- What the plugin captures from `setVariables()`, `setPlainTemplateMode()` and
+  `setDesignParams()` is kept per filter instance, and variables are merged as the filter
+  merges them. The plugin is shared by every filter, so with one slot a CMS block rendered
+  inside an email was rendered with the email's variables.
+
+### Fixed
+
+- The adapter reported the wrong render when re-entered. A `{{block}}` that renders a CMS block
+  reaches that block's filter, which renders it through the same shared adapter mid-render;
+  afterwards `deferred()`, `violations()` and `incompatibilities()` described the inner render.
+  Each render's context is now published when it ends, so the caller reads its own.
+  `lastError()` is also reset per render rather than kept from the first host exception.
 
 ### Removed
 

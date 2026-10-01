@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento\Plugin;
 
 use Cresset\TemplateParser\Magento\Config\EngineMode;
+use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
 use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
 use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
 use Cresset\TemplateParser\Magento\ShadowComparator;
@@ -20,44 +21,38 @@ use Magento\Framework\Filter\Template as LegacyTemplate;
  * on the Email filter, and a plugin on a class applies to its subclasses.
  *
  * Wired on install, and off until configured. Each render reads `system/template_engine/mode`
- * for the subject's store, and under Legacy - the default - nothing past that read happens:
- * no second render, no comparison, and the legacy result goes back untouched. Shadow renders
- * through this engine as well, records the outcome against the store view and the template
- * it was - see TemplateIdentity - and still returns the legacy result.
+ * for the subject's store:
  *
- * The variables are captured on the way past because the legacy filter keeps them in a
- * protected property with a setter and no getter, so an `after filter()` plugin cannot
- * otherwise see what the template was rendered with.
+ * - Legacy, the default: the filter runs and nothing else happens.
+ * - Shadow: the filter runs and its result is served; this engine renders the same template
+ *   as well, and the outcome is recorded against the store view and the template - see
+ *   TemplateIdentity and ShadowRecorder.
+ * - Parser: this engine's result is served, and the filter does not run - unless this engine
+ *   declines the render (a refusal, the host raising, a crash), in which case the filter runs
+ *   instead and its result is served, exactly as under Legacy. A sample of served renders,
+ *   `system/template_engine/parser_shadow_rate` percent, is also rendered by the filter and
+ *   compared, so a regression after the switch still shows up in the report.
+ *
+ * An around plugin because Parser has to be able NOT to run the filter. It is also what lets
+ * each invocation keep its own scope in local variables: filter() is re-entrant - an include
+ * or a CMS block renders inside its parent's filter() - and a before/after pair needed a stack
+ * of frames to get the same right.
+ *
+ * The variables, the plain-text flag and the design are captured on the way past because the
+ * filter keeps them in protected properties with setters and no getters. They are kept PER
+ * FILTER, as the filter keeps them: the plugin is shared by every filter instance, and with one
+ * slot a CMS block rendered inside an email was rendered with the email's variables.
  */
 class TemplateFilterPlugin
 {
-    /** @var array<string,mixed> */
-    private array $variables = [];
-
-    private bool $plainTemplateMode = false;
-
-    /** @var array<string,mixed> */
-    private array $designParams = [];
-
     /**
-     * The state each in-flight filter() call captured, innermost last.
+     * What each filter instance has been told, as it would hold it itself.
      *
-     * filter() is RE-ENTRANT: a {{template}} include builds a child model, and that child
-     * calls setVariables() and filter() of its own in the middle of its parent's filter().
-     * With a single slot the child's variables overwrite the parent's, and by the time the
-     * parent's afterFilter runs it compares the parent's template against the CHILD's scope -
-     * which reported 79 divergences on a stock store, none of them a disagreement between the
-     * engines. A stack because the nesting is a stack.
+     * Weak, so a filter that is gone takes its entry with it.
      *
-     * `false` marks an invocation that is not being compared. Every beforeFilter pushes and
-     * every afterFilter pops whatever the mode, so a Legacy render nested in a Shadow one - or
-     * the reverse, a child rendering for another store - cannot leave the stack misaligned.
-     * The store travels in the frame too, so the outcome is recorded against the store the
-     * render was decided for.
-     *
-     * @var list<array{0:array<string,mixed>,1:bool,2:array<string,mixed>,3:int|string|null}|false>
+     * @var \WeakMap<object,array{variables:array<string,mixed>,plain:bool,design:array<string,mixed>}>
      */
-    private array $inFlight = [];
+    private \WeakMap $state;
 
     public function __construct(
         private readonly ShadowComparator $comparator,
@@ -65,15 +60,23 @@ class TemplateFilterPlugin
         private readonly TemplateIdentity $identity,
         private readonly ShadowRecorder $recorder
     ) {
+        $this->state = new \WeakMap();
     }
 
     /**
+     * Merged, not replaced: `Framework\Filter\Template::setVariables()` assigns each name into
+     * what the instance already holds, so a second call adds to the first.
+     *
      * @param array<string,mixed> $variables
      * @return array{0:array<string,mixed>}
      */
     public function beforeSetVariables(LegacyTemplate $subject, array $variables): array
     {
-        $this->variables = $variables;
+        $state = $this->stateOf($subject);
+        foreach ($variables as $name => $value) {
+            $state['variables'][$name] = $value;
+        }
+        $this->state[$subject] = $state;
 
         return [$variables];
     }
@@ -81,11 +84,10 @@ class TemplateFilterPlugin
     /**
      * Captured for the same reason the variables are: it is set on the subject, not on us.
      *
-     * getProcessedTemplate() calls setPlainTemplateMode() on the filter it holds - which is
-     * the LEGACY filter, this being a plugin on it rather than a replacement for it - so
-     * without capturing it here the candidate render would use the HTML value of every custom
-     * variable while the legacy render used the text one, and every plain email would report
-     * as a divergence caused by nothing.
+     * getProcessedTemplate() calls setPlainTemplateMode() on the filter it holds, so without
+     * capturing it here the candidate render would use the HTML value of every custom variable
+     * while the legacy render used the text one, and every plain email would report as a
+     * divergence caused by nothing.
      *
      * `$plain` is untyped because the method it plugs into is: forwarded as given, cast only
      * for the copy kept here.
@@ -94,95 +96,79 @@ class TemplateFilterPlugin
      */
     public function beforeSetPlainTemplateMode(LegacyTemplate $subject, $plain): array
     {
-        $this->plainTemplateMode = (bool)$plain;
+        $state = $this->stateOf($subject);
+        $state['plain'] = (bool)$plain;
+        $this->state[$subject] = $state;
 
         return [$plain];
     }
 
     /**
-     * Captured for the same reason the variables and the plain flag are: it is set on the
-     * subject, and by the time filter() returns the emulation it was taken inside is gone.
+     * Captured for the same reason again: it is set on the subject, and by the time filter()
+     * returns the emulation it was taken inside is gone.
      *
      * @param array<string,mixed> $designParams
      * @return array{0:array<string,mixed>}
      */
     public function beforeSetDesignParams(LegacyTemplate $subject, array $designParams): array
     {
-        $this->designParams = $designParams;
+        $state = $this->stateOf($subject);
+        $state['design'] = $designParams;
+        $this->state[$subject] = $state;
 
         return [$designParams];
     }
 
     /**
-     * Decides whether this invocation is compared, and snapshots the scope it will be.
+     * Decides which engine renders this invocation, and serves its result.
      *
-     * Both on the way IN. The scope because by the time filter() returns an include may have
-     * replaced everything captured above with its own; the mode because it belongs to the
-     * store this render started in, and deciding it here is what lets afterFilter do nothing
-     * at all for a Legacy render.
-     *
-     * @return array{0:string}
+     * `$value` is untyped because the method it wraps is; anything but a string goes to the
+     * filter, which raises for it as it always has.
      */
-    public function beforeFilter(LegacyTemplate $subject, $value): array
+    public function aroundFilter(LegacyTemplate $subject, callable $proceed, $value)
     {
-        $this->inFlight[] = $this->frame($subject);
+        // A CHILD render belongs to legacy whatever the stage. The filter renders a child
+        // only while rendering its parent - this engine loads {{template}} includes itself,
+        // so a parent it serves never reaches one - and a child's output is not a document:
+        // the filter defers {{inlinecss}} by emitting a SIGNED placeholder for its parent to
+        // resolve, a contract only the legacy parent can keep. Nor is one worth comparing:
+        // the signature is random per render, so it could never match, and the parent's
+        // comparison covers the same content.
+        if (!is_string($value) || (method_exists($subject, 'isChildTemplate') && $subject->isChildTemplate())) {
+            return $proceed($value);
+        }
 
-        return [$value];
+        $storeId = $this->storeIdOf($subject);
+
+        return match ($this->mode->forStore($storeId)) {
+            EngineMode::SHADOW => $this->shadow($subject, $proceed, $value, $storeId),
+            EngineMode::PARSER => $this->parser($subject, $proceed, $value, $storeId),
+            default => $proceed($value),
+        };
     }
 
-    /**
-     * Compares, records, and returns the legacy result.
-     *
-     * The legacy result is returned on every path, so even in Shadow nothing a customer sees
-     * changes; the candidate render exists only to be measured.
-     */
-    public function afterFilter(LegacyTemplate $subject, string $result, string $value): string
+    /** Serves legacy, and records how this engine would have done. */
+    private function shadow(LegacyTemplate $subject, callable $proceed, string $value, int|string|null $storeId): mixed
     {
-        // Popped first, whatever happens next, so every return below leaves the stack as
-        // beforeFilter found it. null only when afterFilter runs without its beforeFilter,
-        // which interception never does; decided on the spot then, from what was captured.
-        $scope = array_pop($this->inFlight) ?? $this->frame($subject);
-
-        if ($scope === false) {
-            return $result;
-        }
-
-        // A CHILD render is not a document, and comparing one is a false positive by
-        // construction. `Framework\Filter\Template` defers a directive it cannot finish in a
-        // child - {{inlinecss}} being the one every stock email hits - by emitting a SIGNED
-        // placeholder for the parent to resolve, and that signature is random per render. This
-        // engine records the deferral structurally instead and emits nothing, so a child's
-        // output can never match. The parent's comparison covers the same content, because the
-        // parent's render contains the child's, so nothing goes unchecked by skipping.
-        if (method_exists($subject, 'isChildTemplate') && $subject->isChildTemplate()) {
-            return $result;
-        }
-
-        // The subject inlines its stylesheets before returning, so the result above is a
-        // FINISHED document. This engine defers that step, so the candidate has to be put
-        // through the same one or every template with a stylesheet reports as a divergence.
-        $finish = method_exists($subject, 'applyInlineCss')
-            ? static function (string $html) use ($subject): string {
-                try {
-                    return (string)$subject->applyInlineCss($html);
-                } catch (\Throwable) {
-                    // A candidate the inliner cannot process is compared as it stands; the
-                    // comparison is the point, and a shadow run must never raise.
-                    return $html;
-                }
-            }
-            : null;
-
-        // Whatever THIS invocation was called with, not whatever the last one left behind.
-        [$variables, $plainTemplateMode, $designParams, $storeId] = $scope;
+        // Taken before the filter runs, as the scope this invocation was called with: by the
+        // time it returns, an include may have told the subject something else.
+        $state = $this->stateOf($subject);
+        $result = $proceed($value);
 
         try {
-            $outcome = $this->comparator->compare($value, $result, $variables, $plainTemplateMode, $finish, $designParams);
-            $this->recorder->record(
-                $storeId,
-                $this->identity->identify($value) ?? TemplateIdentity::unidentified($subject),
-                $outcome
+            // Legacy has already put this render's stylesheets on the subject, so the finisher
+            // only has to apply them. Registering them again would be harmless here, but not in
+            // general: one this engine accepted and legacy did not would then be inlined into
+            // later LEGACY renders on the same instance, which Shadow promises not to change.
+            $outcome = $this->comparator->compare(
+                $value,
+                (string)$result,
+                $state['variables'],
+                $state['plain'],
+                $this->finisher($subject, registerStylesheets: false),
+                $state['design']
             );
+            $this->recorder->record($storeId, $this->templateOf($subject, $value), $outcome);
         } catch (\Throwable) {
             // The comparator and the recorder each contain their own failures; this is the
             // backstop for the promise that Shadow never changes a render.
@@ -192,15 +178,133 @@ class TemplateFilterPlugin
     }
 
     /**
-     * @return array{0:array<string,mixed>,1:bool,2:array<string,mixed>,3:int|string|null}|false
+     * Serves this engine's render, or legacy's when this engine declines.
+     *
+     * A sampled render runs the filter FIRST, then this engine. The order matters because the
+     * filter is re-entrant through the host: a {{block}} in it can reach another filter and,
+     * through this plugin, render through the same shared adapter - after which the adapter's
+     * violations describe that render, not ours. Rendering ours last means judge() reads ours.
      */
-    private function frame(LegacyTemplate $subject): array|false
+    private function parser(LegacyTemplate $subject, callable $proceed, string $value, int|string|null $storeId): mixed
     {
-        $storeId = $this->storeIdOf($subject);
+        $state = $this->stateOf($subject);
+        $template = $this->templateOf($subject, $value);
 
-        return $this->mode->isShadow($storeId)
-            ? [$this->variables, $this->plainTemplateMode, $this->designParams, $storeId]
-            : false;
+        $sampled = $this->sampled($storeId);
+        $legacy = null;
+        $legacyRaised = false;
+        if ($sampled) {
+            try {
+                $legacy = $proceed($value);
+            } catch (\Throwable) {
+                // A legacy fatal: today's customer got an error here. Served by this engine
+                // instead, which is no reason to give them one now, and nothing to compare
+                // against. Should this engine decline too, the fallback below runs the filter
+                // again and the fatal is theirs, as it is under Legacy.
+                $legacyRaised = true;
+            }
+        }
+
+        try {
+            $candidate = $this->comparator->render(
+                $value,
+                $state['variables'],
+                $state['plain'],
+                $this->finisher($subject, registerStylesheets: true),
+                $state['design']
+            );
+        } catch (\Throwable $e) {
+            // render() contains its own failures; this is the backstop.
+            $candidate = ShadowOutcome::crashed($e);
+        }
+
+        if ($candidate instanceof ShadowOutcome) {
+            // Declined: the customer gets exactly what Legacy would have given them. The
+            // sampled render already is that, so it is not rendered twice.
+            $this->record($storeId, $template, $candidate, served: false, fellBack: true);
+
+            return $sampled && !$legacyRaised ? $legacy : $proceed($value);
+        }
+
+        $outcome = null;
+        if ($sampled && !$legacyRaised) {
+            try {
+                $outcome = $this->comparator->judge($candidate, (string)$legacy);
+            } catch (\Throwable) {
+                // Nothing to record but the serve.
+            }
+        }
+        $this->record($storeId, $template, $outcome, served: true, fellBack: false);
+
+        return $candidate;
+    }
+
+    /** Recording must never cost a render; the recorder contains its own failures too. */
+    private function record(int|string|null $storeId, string $template, ?ShadowOutcome $outcome, bool $served, bool $fellBack): void
+    {
+        try {
+            $this->recorder->record($storeId, $template, $outcome, $served, $fellBack);
+        } catch (\Throwable) {
+        }
+    }
+
+    /**
+     * Whether this Parser render is also compared, at the store's configured rate.
+     *
+     * Per render rather than per template: a template rendered a thousand times a day is
+     * compared about ten times at 1%, one rendered twice a week mostly not at all, which is
+     * the right way round - the first is where a regression costs the most.
+     */
+    private function sampled(int|string|null $storeId): bool
+    {
+        $rate = $this->mode->parserShadowRate($storeId);
+
+        return $rate >= 100.0 || ($rate > 0.0 && mt_rand(0, 999_999) < (int)round($rate * 10_000));
+    }
+
+    /**
+     * What the host does to a FINISHED render: the subject's own inline-CSS step.
+     *
+     * Under Shadow, legacy has already registered the stylesheets on the subject. Under
+     * Parser it has not run, so this engine's deferrals are registered first, through the
+     * subject's own protected method - the one {{inlinecss}} calls - so the subject inlines
+     * exactly what it would have. A filter without the step returns the render unfinished,
+     * as it would have itself.
+     *
+     * A finisher that raises is left to raise. The comparator records it as a crash, which
+     * in Parser mode means falling back to the filter - whose own catch is what deals with
+     * an inliner failing today.
+     *
+     * @return ?callable(string,list<string>):string
+     */
+    private function finisher(LegacyTemplate $subject, bool $registerStylesheets): ?callable
+    {
+        if (!method_exists($subject, 'applyInlineCss')) {
+            return null;
+        }
+
+        return static function (string $html, array $stylesheets = []) use ($subject, $registerStylesheets): string {
+            if ($registerStylesheets && method_exists($subject, 'addInlineCssFile')) {
+                (function () use ($stylesheets): void {
+                    foreach ($stylesheets as $file) {
+                        $this->addInlineCssFile($file);
+                    }
+                })->call($subject);
+            }
+
+            return (string)$subject->applyInlineCss($html);
+        };
+    }
+
+    private function templateOf(LegacyTemplate $subject, string $value): string
+    {
+        return $this->identity->identify($value) ?? TemplateIdentity::unidentified($subject);
+    }
+
+    /** @return array{variables:array<string,mixed>,plain:bool,design:array<string,mixed>} */
+    private function stateOf(LegacyTemplate $subject): array
+    {
+        return $this->state[$subject] ?? ['variables' => [], 'plain' => false, 'design' => []];
     }
 
     /**

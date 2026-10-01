@@ -50,8 +50,9 @@ final class MagentoIntegrationTest extends TestCase
      * A recorder that keeps what it is handed instead of writing it.
      *
      * `$lines` gets every outcome that is NOT an agreement, as [outcome, detail, store,
-     * template] - what used to be a log line - so "nothing went wrong" stays an empty array.
-     * `$all` gets every outcome, agreements included.
+     * template, served, fell back] - what used to be a log line - so "nothing went wrong"
+     * stays an empty array. `$all` gets every record, agreements and bare Parser serves
+     * (outcome null) included.
      */
     private function recorder(array &$lines, array &$all = []): ShadowRecorder
     {
@@ -65,11 +66,16 @@ final class MagentoIntegrationTest extends TestCase
                     false
                 );
             }
-            public function record(int|string|null $storeId, string $template, ShadowOutcome $outcome): void
-            {
-                $entry = [$outcome->outcome, $outcome->detail, $storeId, $template];
+            public function record(
+                int|string|null $storeId,
+                string $template,
+                ?ShadowOutcome $outcome,
+                bool $served = false,
+                bool $fellBack = false
+            ): void {
+                $entry = [$outcome?->outcome, $outcome?->detail, $storeId, $template, $served, $fellBack];
                 $this->all[] = $entry;
-                if ($outcome->outcome !== ShadowOutcome::AGREE) {
+                if ($outcome !== null && $outcome->outcome !== ShadowOutcome::AGREE) {
                     $this->lines[] = $entry;
                 }
             }
@@ -111,6 +117,17 @@ final class MagentoIntegrationTest extends TestCase
             $identity ?? new TemplateIdentity(),
             $this->recorder($lines, $all)
         );
+    }
+
+    /**
+     * One filter() through the plugin, with the filter itself answering `$legacy` - or, given a
+     * callable, whatever it does: that is how a test nests a render inside another.
+     */
+    private function filter(TemplateFilterPlugin $plugin, LegacyTemplate $subject, string $source, string|callable $legacy): mixed
+    {
+        $proceed = is_callable($legacy) ? $legacy : static fn (): string => $legacy;
+
+        return $plugin->aroundFilter($subject, $proceed, $source);
     }
 
     /** A filter for one store, shaped like Email\Model\Template\Filter where it matters here. */
@@ -259,8 +276,7 @@ final class MagentoIntegrationTest extends TestCase
         $subject = $this->filterFor(1);
 
         $plugin->beforeSetVariables($subject, []);
-        $plugin->beforeFilter($subject, '{{var nope}}');
-        self::assertSame('LEGACY', $plugin->afterFilter($subject, 'LEGACY', '{{var nope}}'));
+        self::assertSame('LEGACY', $this->filter($plugin, $subject, '{{var nope}}', 'LEGACY'));
         self::assertSame(ShadowOutcome::REFUSED, $lines[0][0]);
     }
 
@@ -282,7 +298,7 @@ final class MagentoIntegrationTest extends TestCase
         self::assertSame([['name' => 'Ada']], $plugin->beforeSetVariables($subject, ['name' => 'Ada']));
 
         // Same output both sides: no divergence should be logged.
-        $result = $plugin->afterFilter($subject, 'Dear Ada,', 'Dear {{var name}},');
+        $result = $this->filter($plugin, $subject, 'Dear {{var name}},', 'Dear Ada,');
 
         self::assertSame('Dear Ada,', $result);
         self::assertSame([], $lines, 'identical output should not be reported as a divergence');
@@ -316,12 +332,12 @@ final class MagentoIntegrationTest extends TestCase
 
         // The legacy side of a plain render produces TEXT, and so must ours - a divergence
         // logged here would be the plugin's own doing.
-        $plugin->afterFilter($subject, 'TEXT', '{{customvar code="g"}}');
+        $this->filter($plugin, $subject, '{{customvar code="g"}}', 'TEXT');
         self::assertSame([], $lines, 'plain mode did not reach the candidate render');
 
         // And it is not sticky the wrong way: back to HTML, HTML is what agrees.
         $plugin->beforeSetPlainTemplateMode($subject, false);
-        $plugin->afterFilter($subject, '<b>HTML</b>', '{{customvar code="g"}}');
+        $this->filter($plugin, $subject, '{{customvar code="g"}}', '<b>HTML</b>');
         self::assertSame([], $lines);
     }
 
@@ -330,9 +346,8 @@ final class MagentoIntegrationTest extends TestCase
      *
      * A {{template}} include builds a child model which calls setVariables() and filter() of
      * its own in the middle of its parent's filter(). With a single slot the child's variables
-     * overwrite the parent's, so the parent's afterFilter compared the parent's template
-     * against the CHILD's scope. On a stock store that reported divergences in templates where
-     * the engines agreed perfectly.
+     * overwrite the parent's, so the parent was compared against the CHILD's scope. On a stock
+     * store that reported divergences in templates where the engines agreed perfectly.
      */
     public function testThePluginComparesEachRenderAgainstItsOwnScope(): void
     {
@@ -341,19 +356,54 @@ final class MagentoIntegrationTest extends TestCase
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
         $subject = new LegacyTemplate();
 
-        // Parent takes its scope and starts rendering.
+        // The parent takes its scope and starts rendering; an include renders inside it, with a
+        // scope of its own. The parent's comparison must use ADA, which is what it was called with.
         $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
-        $plugin->beforeFilter($subject, 'Dear {{var name}},');
+        $this->filter($plugin, $subject, 'Dear {{var name}},', function () use ($plugin, $subject): string {
+            $plugin->beforeSetVariables($subject, ['name' => 'Grace']);
+            $this->filter($plugin, $subject, 'Hi {{var name}}', 'Hi Grace');
 
-        // An include renders inside it, with a scope of its own.
-        $plugin->beforeSetVariables($subject, ['name' => 'Grace']);
-        $plugin->beforeFilter($subject, 'Hi {{var name}}');
-        $plugin->afterFilter($subject, 'Hi Grace', 'Hi {{var name}}');
-
-        // The parent finishes. Its comparison must use ADA, which is what it was called with.
-        $plugin->afterFilter($subject, 'Dear Ada,', 'Dear {{var name}},');
+            return 'Dear Ada,';
+        });
 
         self::assertSame([], $lines, 'the parent was compared against the child\'s variables');
+    }
+
+    /**
+     * And each FILTER keeps its own, as the filter does.
+     *
+     * The plugin is shared by every filter instance. With one slot, a CMS block rendered
+     * inside an email - its own filter, never given variables - was rendered with the email's.
+     */
+    public function testEachFilterInstanceKeepsItsOwnVariables(): void
+    {
+        $lines = [];
+        $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
+        $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
+        $email = new LegacyTemplate();
+        $block = new LegacyTemplate();
+
+        // The block is told its scope first; the email's, told last, must not replace it.
+        $plugin->beforeSetVariables($block, ['name' => 'Grace']);
+        $plugin->beforeSetVariables($email, ['name' => 'Ada']);
+        $this->filter($plugin, $block, '[{{var name}}]', '[Grace]');
+
+        self::assertSame([], $lines, 'a filter was rendered with another filter\'s variables');
+    }
+
+    /** The filter's setVariables() merges into what it holds, and so does the capture. */
+    public function testVariablesSetTwiceAreMergedAsTheFilterMergesThem(): void
+    {
+        $lines = [];
+        $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
+        $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
+        $subject = new LegacyTemplate();
+
+        $plugin->beforeSetVariables($subject, ['first' => 'Ada', 'last' => 'X']);
+        $plugin->beforeSetVariables($subject, ['last' => 'Lovelace']);
+        $this->filter($plugin, $subject, '{{var first}} {{var last}}', 'Ada Lovelace');
+
+        self::assertSame([], $lines);
     }
 
     /**
@@ -376,8 +426,7 @@ final class MagentoIntegrationTest extends TestCase
         };
 
         $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
-        $plugin->beforeFilter($subject, '{{var name}}');
-        $result = $plugin->afterFilter($subject, 'SIGNATURE{{inlinecss file="x.css"}}SIGNATURE', '{{var name}}');
+        $result = $this->filter($plugin, $subject, '{{var name}}', 'SIGNATURE{{inlinecss file="x.css"}}SIGNATURE');
 
         self::assertSame('SIGNATURE{{inlinecss file="x.css"}}SIGNATURE', $result);
         self::assertSame([], $lines, 'a child render was compared');
@@ -427,8 +476,7 @@ final class MagentoIntegrationTest extends TestCase
 
         $source = '{{inlinecss file="css/email-inline.css"}}Dear {{var name}},';
         $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
-        $plugin->beforeFilter($subject, $source);
-        $plugin->afterFilter($subject, '<INLINED>Dear Ada,</INLINED>', $source);
+        $this->filter($plugin, $subject, $source, '<INLINED>Dear Ada,</INLINED>');
 
         self::assertSame([], $lines, 'the plugin did not put the candidate through applyInlineCss');
     }
@@ -486,15 +534,15 @@ final class MagentoIntegrationTest extends TestCase
             $plugin->beforeSetDesignParams($subject, ['theme' => 'Magento/luma'])
         );
         $plugin->beforeSetVariables($subject, []);
-        $plugin->beforeFilter($subject, '{{css file="a.css"}}');
 
-        // A child render with a design of its own, in the middle of the parent's.
-        $plugin->beforeSetDesignParams($subject, ['theme' => 'Vendor/child']);
-        $plugin->beforeFilter($subject, '{{css file="b.css"}}');
-        $plugin->afterFilter($subject, 'CSS', '{{css file="b.css"}}');
+        // A child render with a design of its own, in the middle of the parent's. The parent
+        // must still be compared against ITS design, not the child's.
+        $this->filter($plugin, $subject, '{{css file="a.css"}}', function () use ($plugin, $subject): string {
+            $plugin->beforeSetDesignParams($subject, ['theme' => 'Vendor/child']);
+            $this->filter($plugin, $subject, '{{css file="b.css"}}', 'CSS');
 
-        // The parent must still be compared against ITS design, not the child's.
-        $plugin->afterFilter($subject, 'CSS', '{{css file="a.css"}}');
+            return 'CSS';
+        });
 
         self::assertSame(['Vendor/child', 'Magento/luma'], $seen);
         self::assertSame([], $lines);
@@ -522,7 +570,7 @@ final class MagentoIntegrationTest extends TestCase
         $subject = new LegacyTemplate();
         $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
 
-        $result = $plugin->afterFilter($subject, 'Dear SOMEONE ELSE,', 'Dear {{var name}},');
+        $result = $this->filter($plugin, $subject, 'Dear {{var name}},', 'Dear SOMEONE ELSE,');
 
         self::assertSame('Dear SOMEONE ELSE,', $result, 'the legacy result is always what is returned');
         self::assertCount(1, $lines);
@@ -545,8 +593,7 @@ final class MagentoIntegrationTest extends TestCase
         $subject = $this->filterFor(1);
 
         $plugin->beforeSetVariables($subject, []);
-        $plugin->beforeFilter($subject, 'Dear {{var nope}},');
-        $result = $plugin->afterFilter($subject, 'LEGACY', 'Dear {{var nope}},');
+        $result = $this->filter($plugin, $subject, 'Dear {{var nope}},', 'LEGACY');
 
         self::assertSame('LEGACY', $result);
         self::assertSame([], $lines, 'a Legacy store was rendered through the new engine');
@@ -567,8 +614,7 @@ final class MagentoIntegrationTest extends TestCase
         foreach ([1, 2] as $storeId) {
             $subject = $this->filterFor($storeId);
             $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
-            $plugin->beforeFilter($subject, 'Dear {{var name}},');
-            $plugin->afterFilter($subject, 'Dear SOMEONE ELSE,', 'Dear {{var name}},');
+            $this->filter($plugin, $subject, 'Dear {{var name}},', 'Dear SOMEONE ELSE,');
         }
 
         self::assertCount(1, $lines, 'only the Shadow store should have been compared');
@@ -596,8 +642,7 @@ final class MagentoIntegrationTest extends TestCase
         );
         $subject = $this->filterFor(null);
 
-        $plugin->beforeFilter($subject, 'x');
-        $plugin->afterFilter($subject, 'x', 'x');
+        $this->filter($plugin, $subject, 'x', 'x');
 
         self::assertSame(0, $subject->getStoreIdCalls);
         self::assertNull($subject->storeIdAsSet());
@@ -605,10 +650,8 @@ final class MagentoIntegrationTest extends TestCase
     }
 
     /**
-     * Every beforeFilter pushes and every afterFilter pops, whatever the stage.
-     *
      * A render nested in another store's - a Legacy child in a Shadow parent and the reverse -
-     * is where a stack that only tracked compared renders would pop the wrong frame.
+     * is decided by its own store, and leaves its parent's decision alone.
      */
     public function testNestingAcrossStagesKeepsEachRenderInItsOwnFrame(): void
     {
@@ -622,40 +665,44 @@ final class MagentoIntegrationTest extends TestCase
         $shadow = $this->filterFor(2);
         $legacy = $this->filterFor(1);
 
-        // Shadow parent, Legacy child that would diverge: nothing logged, parent agrees.
+        // Shadow parent, Legacy child that would diverge: nothing recorded, parent agrees.
         $plugin->beforeSetVariables($shadow, ['name' => 'Ada']);
-        $plugin->beforeFilter($shadow, 'Dear {{var name}},');
-        $plugin->beforeSetVariables($legacy, ['name' => 'Grace']);
-        $plugin->beforeFilter($legacy, 'Hi {{var name}}');
-        $plugin->afterFilter($legacy, 'Hi SOMEONE ELSE', 'Hi {{var name}}');
-        $plugin->afterFilter($shadow, 'Dear Ada,', 'Dear {{var name}},');
+        $this->filter($plugin, $shadow, 'Dear {{var name}},', function () use ($plugin, $legacy): string {
+            $plugin->beforeSetVariables($legacy, ['name' => 'Grace']);
+            $this->filter($plugin, $legacy, 'Hi {{var name}}', 'Hi SOMEONE ELSE');
+
+            return 'Dear Ada,';
+        });
         self::assertSame([], $lines);
 
-        // Legacy parent, Shadow child that diverges: the child is logged, the parent is not.
+        // Legacy parent, Shadow child that diverges: the child is recorded, the parent is not.
         $plugin->beforeSetVariables($legacy, ['name' => 'Ada']);
-        $plugin->beforeFilter($legacy, 'Dear {{var name}},');
-        $plugin->beforeSetVariables($shadow, ['name' => 'Grace']);
-        $plugin->beforeFilter($shadow, 'Hi {{var name}}');
-        $plugin->afterFilter($shadow, 'Hi SOMEONE ELSE', 'Hi {{var name}}');
-        $plugin->afterFilter($legacy, 'Dear NOBODY,', 'Dear {{var name}},');
+        $this->filter($plugin, $legacy, 'Dear {{var name}},', function () use ($plugin, $shadow): string {
+            $plugin->beforeSetVariables($shadow, ['name' => 'Grace']);
+            $this->filter($plugin, $shadow, 'Hi {{var name}}', 'Hi SOMEONE ELSE');
+
+            return 'Dear NOBODY,';
+        });
         self::assertCount(1, $lines);
     }
 
     /** Anything unrecognised is Legacy: the stage that renders exactly as before. */
     public function testAnUnknownStageReadsAsLegacy(): void
     {
-        foreach ([null, '', 'parser', 'bogus', 1, ['shadow']] as $value) {
+        foreach ([null, '', 'parse', 'bogus', 1, ['shadow']] as $value) {
             self::assertSame(EngineMode::LEGACY, $this->mode(default: $value)->forStore(1), var_export($value, true));
         }
         self::assertSame(EngineMode::SHADOW, $this->mode(default: ' Shadow ')->forStore(1));
+        self::assertSame(EngineMode::PARSER, $this->mode(default: 'PARSER')->forStore(1));
     }
 
-    /** Parser is not offered until it can fall back to legacy on a refusal (issue #2). */
-    public function testTheAdminOffersLegacyAndShadowOnly(): void
+    /** Every stage, in rollout order. */
+    public function testTheAdminOffersEveryStageInRolloutOrder(): void
     {
         $values = array_column((new EngineModeOptions())->toOptionArray(), 'value');
 
-        self::assertSame([EngineMode::LEGACY, EngineMode::SHADOW], $values);
+        self::assertSame([EngineMode::LEGACY, EngineMode::SHADOW, EngineMode::PARSER], $values);
+        self::assertSame(EngineMode::ALL, $values);
     }
 
     /** The shipped configuration: wired, and defaulted to the stage that does nothing. */

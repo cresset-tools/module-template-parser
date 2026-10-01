@@ -8,6 +8,8 @@
             "diverged": true,
             "refused": true,
             "crashed": true,
+            "served": true,
+            "fell_back": true,
             "first_seen": true,
             "last_seen": true,
             "last_divergence_at": true,

@@ -8,17 +8,19 @@ use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
 use Cresset\TemplateParser\TemplateError;
 
 /**
- * Runs the new engine alongside the legacy filter and says whether they agree.
+ * Renders a template through the new engine the way the filter would have, and says whether
+ * that agrees with legacy.
  *
  * The templates that decide whether a migration is safe live in merchant databases and
- * cannot be audited in advance. Shadow mode turns that unknowable compatibility question
- * into measured data. This class only measures: it renders the candidate, classifies the
- * result as a ShadowOutcome and hands it back. What gets served is the plugin's business -
- * always the legacy result - and where the outcome is kept is ShadowRecorder's.
+ * cannot be audited in advance. Shadow mode turns that unknowable compatibility question into
+ * measured data, and Parser mode keeps measuring a sample of renders after the switch. Both
+ * use this class: render() produces the candidate - finished as the host would finish it - or
+ * says why there is none, and judge() compares it with legacy's. What gets served is the
+ * plugin's business, and where the outcome is kept is ShadowRecorder's.
  *
  * Whether it runs at all is not decided here either. TemplateFilterPlugin calls it only for a
- * render whose store is set to Shadow in `system/template_engine/mode`, so the store view is
- * the unit of rollout rather than the installation.
+ * store set to Shadow or Parser in `system/template_engine/mode`, so the store view is the
+ * unit of rollout rather than the installation.
  */
 class ShadowComparator
 {
@@ -27,17 +29,26 @@ class ShadowComparator
     }
 
     /**
+     * The candidate render, or the outcome that stands in for one.
+     *
+     * A string is output fit to serve. A ShadowOutcome is the reason there is none - refused,
+     * the host raised, or crashed - and in Parser mode means "fall back to legacy". The host
+     * raising counts even though the adapter caught it: the adapter's error text is its
+     * imitation of the filter's, and the filter's own - which differs between developer and
+     * production mode, and logs - is what a customer gets today.
+     *
      * @param array<string,mixed> $variables
      * @param bool $plainTemplateMode the subject is rendering the PLAIN part of an email
-     * @param array<string,mixed> $designParams the design the legacy filter resolved {{css}} against
-     * @param ?callable(string):string $finish whatever the host does to a FINISHED render
+     * @param ?callable(string,list<string>):string $finish what the host does to a FINISHED
+     *        render, given the stylesheets this render asked to have inlined
+     * @param array<string,mixed> $designParams the design {{css}} resolves against
      *
      * `$finish` matters more than it looks. A legacy `{{inlinecss}}` registers an after-filter
      * callback that runs Emogrifier over the whole document before filter() returns, so the
-     * legacy result handed to this method has its stylesheets inlined; this engine defers that
-     * step to its host and returns the document without it. Comparing the two directly
-     * reported a divergence for every template carrying a stylesheet - 118 of them on a stock
-     * store - none of which was a disagreement between the engines.
+     * legacy result has its stylesheets inlined; this engine defers that step to its host and
+     * returns the document without it. Comparing the two directly reported a divergence for
+     * every template carrying a stylesheet - 118 of them on a stock store - none of which was
+     * a disagreement between the engines.
      *
      * And only when THIS render asked for it. The callback is per render - the filter resets
      * it after each one - but the list of files it inlines is not, so an email's subject,
@@ -45,14 +56,13 @@ class ShadowComparator
      * stylesheets. Finishing unconditionally wrapped every subject in an HTML document and
      * reported each as a divergence, found on a real store: legacy 12 bytes, candidate 729.
      */
-    public function compare(
+    public function render(
         string $source,
-        string $legacyResult,
         array $variables = [],
         bool $plainTemplateMode = false,
         ?callable $finish = null,
         array $designParams = []
-    ): ShadowOutcome {
+    ): string|ShadowOutcome {
         try {
             $candidate = $this->adapter
                 ->setPlainTemplateMode($plainTemplateMode)
@@ -60,16 +70,33 @@ class ShadowComparator
                 ->setVariables($variables)
                 ->filter($source);
 
-            if ($finish !== null && $this->requestedInlineCss()) {
-                $candidate = $finish($candidate);
+            $hostError = $this->adapter->lastError();
+            if ($hostError !== null) {
+                return ShadowOutcome::hostRaised($hostError);
             }
+
+            $stylesheets = $this->stylesheetsToInline();
+            if ($finish !== null && $stylesheets !== []) {
+                $candidate = $finish($candidate, $stylesheets);
+            }
+
+            return $candidate;
         } catch (TemplateError $e) {
-            // Declined on purpose: in Parser mode this template falls back to legacy (#2).
+            // Declined on purpose: Parser mode falls back to legacy for this template.
             return ShadowOutcome::refused($e);
         } catch (\Throwable $e) {
             return ShadowOutcome::crashed($e);
         }
+    }
 
+    /**
+     * Whether a candidate from render() agrees with legacy, and why not when it does not.
+     *
+     * Reads the causes off the adapter, so call it straight after the render() that
+     * produced `$candidate`.
+     */
+    public function judge(string $candidate, string $legacyResult): ShadowOutcome
+    {
         if ($candidate === $legacyResult) {
             return ShadowOutcome::agreed();
         }
@@ -86,15 +113,41 @@ class ShadowComparator
         );
     }
 
-    /** Whether the render just finished deferred an {{inlinecss}}, its own or an include's. */
-    private function requestedInlineCss(): bool
+    /**
+     * render() and judge() in one: what Shadow mode does with every render.
+     *
+     * @param array<string,mixed> $variables
+     * @param ?callable(string,list<string>):string $finish
+     * @param array<string,mixed> $designParams
+     */
+    public function compare(
+        string $source,
+        string $legacyResult,
+        array $variables = [],
+        bool $plainTemplateMode = false,
+        ?callable $finish = null,
+        array $designParams = []
+    ): ShadowOutcome {
+        $candidate = $this->render($source, $variables, $plainTemplateMode, $finish, $designParams);
+
+        return $candidate instanceof ShadowOutcome ? $candidate : $this->judge($candidate, $legacyResult);
+    }
+
+    /**
+     * The stylesheets the render just finished asked to have inlined, its own or an
+     * include's, in the order it asked. Empty when it asked for none.
+     *
+     * @return list<string>
+     */
+    private function stylesheetsToInline(): array
     {
+        $files = [];
         foreach ($this->adapter->deferred() as $entry) {
             if (($entry['kind'] ?? null) === 'inlinecss') {
-                return true;
+                $files[] = (string)($entry['payload']['file'] ?? '');
             }
         }
 
-        return false;
+        return $files;
     }
 }
