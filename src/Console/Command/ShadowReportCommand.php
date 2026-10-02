@@ -140,7 +140,7 @@ HELP);
         }
         foreach ($store['rows'] as $row) {
             if ($row['refused'] > 0) {
-                $this->textRefused($row, $output);
+                $this->textRefused($row, (int)$store['store_id'], $output);
             }
         }
     }
@@ -171,7 +171,7 @@ HELP);
     }
 
     /** @param array<string,mixed> $row */
-    private function textRefused(array $row, OutputInterface $output): void
+    private function textRefused(array $row, int $storeId, OutputInterface $output): void
     {
         $refusal = $row['last_refusal'] ?? [];
         $output->writeln(sprintf('  <comment>REFUSED </comment> %s', $row['template']));
@@ -183,11 +183,74 @@ HELP);
                 isset($refusal['line']) ? sprintf(' (line %d, column %d)', $refusal['line'], $refusal['column'] ?? 0) : ''
             ));
         }
-        if (isset($refusal['hint'])) {
-            $output->writeln('    hint: ' . $refusal['hint']);
+        $output->writeln('    <fg=cyan>what to do:</> ' . $this->advice($row, $storeId));
+        // The engine's own hint is written for someone calling it from PHP - it names options
+        // and classes - so it is for whoever asked for detail, not the default reading.
+        if (isset($refusal['hint']) && $output->isVerbose()) {
+            $output->writeln('    <fg=gray>engine hint: ' . $refusal['hint'] . '</>');
         }
-        $output->writeln('    <fg=gray>Parser mode falls back to legacy for this template; fixing it lets the new engine render it.</>');
+        $output->writeln('    <fg=gray>Customers are not affected: in Parser mode Magento\'s own filter renders this template.</>');
         $output->writeln('');
+    }
+
+    /**
+     * What a store operator does about a refusal, in their terms.
+     *
+     * The record says what the engine refused in ITS terms - an error class, a policy kind, a
+     * hint naming an Options property. None of that is something an operator acts on. What
+     * they can act on is: the template (open it, change it), the allowlists a developer sets
+     * in di.xml, or the log a host error went to. Each refusal maps to one of those.
+     *
+     * @param array<string,mixed> $row
+     */
+    private function advice(array $row, int $storeId): string
+    {
+        $refusal = $row['last_refusal'] ?? [];
+        $check = sprintf('%s --store=%d --source=%s', $this->sibling('check'), $storeId, self::source((string)$row['template']));
+
+        foreach (array_merge($refusal['policy_violations'] ?? [], $row['last_divergence']['policy_violations'] ?? []) as $violation) {
+            if (!preg_match('/^policy refused (.+?) "(.*)" \(line/', (string)$violation, $m)) {
+                continue;
+            }
+            [, $kind, $name] = $m;
+
+            return match (true) {
+                $kind === 'layout handle' => sprintf(
+                    'the template renders layout handle "%s", which is not on the new engine\'s allow list. If it should render, have a developer add it to allowedHandles of AllowlistedLayoutRenderer in a module\'s di.xml.',
+                    $name
+                ),
+                str_starts_with($kind, 'block'), $kind === 'widget type' => sprintf(
+                    'the template uses %s "%s", which is not on the new engine\'s allow list. If it should render, have a developer allow it in di.xml; otherwise remove it from the template.',
+                    $kind,
+                    $name
+                ),
+                $kind === 'construct the filter reads differently' => sprintf(
+                    'the template contains something Magento\'s filter reads differently from how it is written (%s). Run %s to see the line, and rewrite it so it reads the same either way.',
+                    $name,
+                    $check
+                ),
+                default => sprintf(
+                    'the new engine would not render %s "%s" here, where Magento\'s filter does. Run %s to see where; usually the template can be changed to avoid it.',
+                    $kind,
+                    $name,
+                    $check
+                ),
+            };
+        }
+
+        $error = (string)($refusal['error'] ?? '');
+        if ($error === '' || !is_a($error, \Cresset\TemplateParser\TemplateError::class, true) && $error !== 'policy') {
+            return 'code the template calls - a block or a widget - raised an error while rendering; Magento\'s filter handles it as it always has. Look in var/log/exception.log for the cause.';
+        }
+
+        if (str_ends_with($error, 'LegacyIncompatibleError')) {
+            return sprintf(
+                'the template uses something the new engine can render but Magento\'s filter cannot, so switching would change the page. Run %s to see the line and rewrite it.',
+                $check
+            );
+        }
+
+        return sprintf('the new engine cannot render this template as written. Run %s to see the problem and how to fix it.', $check);
     }
 
     /**
@@ -264,7 +327,7 @@ HELP);
 
         return match ($kind) {
             'email' => ctype_digit(strtok($id, '/') ?: '') ? 'email' : 'codebase',
-            'newsletter' => 'newsletter',
+            'newsletter', 'newsletter_queue' => 'newsletter',
             'cms_block', 'cms_page' => 'cms',
             default => 'all',
         };
@@ -279,6 +342,7 @@ HELP);
         $storeId = (int)$store['store_id'];
         $store['templates_detail'] = array_map(function (array $row) use ($storeId): array {
             $row['fix'] = $row['last_divergence_at'] !== null ? $this->fix($row, $storeId) : null;
+            $row['advice'] = $row['refused'] > 0 ? $this->advice($row, $storeId) : null;
 
             return $row;
         }, $store['rows']);

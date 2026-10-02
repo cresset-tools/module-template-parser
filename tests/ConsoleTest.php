@@ -35,7 +35,7 @@ final class ConsoleTest extends TestCase
     }
 
     #[DataProvider('modeSpellings')]
-    public function testModesParseIncludingTheLegacyAlias(string $spelling, Mode $expected): void
+    public function testPosturesParse(string $spelling, Mode $expected): void
     {
         self::assertSame($expected, Mode::parse($spelling));
     }
@@ -46,9 +46,16 @@ final class ConsoleTest extends TestCase
             'strict' => ['strict', Mode::Strict],
             'lenient' => ['lenient', Mode::Lenient],
             'compatible' => ['compatible', Mode::Compatible],
-            'legacy is compatible' => ['legacy', Mode::Compatible],
             'case insensitive' => ['STRICT', Mode::Strict],
         ];
+    }
+
+    /** "Legacy" is a rollout stage now; as a posture it would say the opposite of what it does. */
+    public function testLegacyIsNotAPostureAndSaysWhichOneIsMeant(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/--posture=compatible/');
+        Mode::parse('legacy');
     }
 
     public function testAnUnknownModeSaysWhatIsValid(): void
@@ -485,6 +492,21 @@ final class ConsoleTest extends TestCase
         json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
     }
 
+    /** 0.2 accepted --mode=legacy; the deprecated option keeps doing so while it lasts. */
+    public function testTheDeprecatedModeStillReadsLegacyAsCompatible(): void
+    {
+        $tester = $this->tester('check');
+        $file = $this->writeTemplate('Hi {{var custmer}}');
+
+        $exit = $tester->execute(
+            ['path' => $file, '--mode' => 'legacy', '--fail-on' => 'error', '--format' => 'json'],
+            ['capture_stderr_separately' => true]
+        );
+
+        self::assertSame(0, $exit, 'compatible renders an unknown variable empty, as the filter does');
+        self::assertStringContainsString('--mode is deprecated', $tester->getErrorOutput());
+    }
+
     public function testPostureAndModeThatDisagreeAreRefused(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -627,9 +649,9 @@ final class ConsoleTest extends TestCase
     }
 
     /**
-     * The same commands in all three entrypoints, and each registered where that entrypoint
-     * looks: Application::commands() standalone, n98-magerun2.yaml for magerun, and the
-     * CommandListInterface argument in etc/di.xml for bin/magento.
+     * The same commands in both entrypoints, and each registered where that entrypoint looks:
+     * Application::commands() standalone, and the CommandListInterface argument in etc/di.xml
+     * for bin/magento - which is also how magerun gets them, since it lists Magento's commands.
      */
     public function testEveryCommandIsAvailableInEveryEntrypoint(): void
     {
@@ -642,7 +664,6 @@ final class ConsoleTest extends TestCase
         self::assertSame(['check', 'diff', 'repl', 'shadow:clear', 'shadow:report', 'status'], $standalone);
 
         $root = dirname(__DIR__);
-        $magerunYaml = (string)file_get_contents($root . '/n98-magerun2.yaml');
         $di = simplexml_load_file($root . '/etc/di.xml');
         $registered = [];
         foreach ($di->xpath('//type[@name="Magento\\Framework\\Console\\CommandListInterface"]//item') as $item) {
@@ -658,18 +679,25 @@ final class ConsoleTest extends TestCase
         foreach ($standalone as $name) {
             $class = str_replace(' ', '', ucwords(str_replace(':', ' ', $name))) . 'Command';
 
-            // magerun: renamed into its shared namespace, and listed in the module definition.
-            $magerun = 'Cresset\\TemplateParser\\Console\\Magerun\\' . $class;
-            self::assertTrue(class_exists($magerun), $magerun . ' is missing');
-            self::assertSame('template-parser:' . $name, (new $magerun())->getName());
-            self::assertStringContainsString($magerun, $magerunYaml, $magerun . ' is not in n98-magerun2.yaml');
-
             // bin/magento: under template:, built from an ObjectManager, and in the CommandList.
             $magento = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class;
             self::assertTrue(class_exists($magento), $magento . ' is missing');
             self::assertSame('template:' . $name, (new $magento($objectManager))->getName());
             self::assertContains($magento, $registered, $magento . ' is not registered in etc/di.xml');
         }
+
+        self::assertCount(count($standalone), $registered, 'etc/di.xml registers a command the standalone CLI lacks');
+    }
+
+    /**
+     * magerun lists bin/magento's commands itself once the module is installed, so a separate
+     * magerun registration put every command in its list twice - the second set without a
+     * description. There is one way in per host now.
+     */
+    public function testThereIsNoSeparateMagerunRegistration(): void
+    {
+        self::assertFileDoesNotExist(dirname(__DIR__) . '/n98-magerun2.yaml');
+        self::assertDirectoryDoesNotExist(dirname(__DIR__) . '/src/Console/Magerun');
     }
 
     /**

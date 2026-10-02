@@ -8,7 +8,28 @@ still move between minor versions.
 
 Entries say what changed and why it mattered. A line that only names a file has been left out.
 
-## [Unreleased]
+## [0.3.0] - not yet released
+
+The rollout release: the engine is chosen per store view in configuration — Legacy, Shadow,
+Parser — and operated from `bin/magento`. Closes #1 and #2.
+
+### Upgrading from 0.2
+
+- **The plugin is wired by the module.** Installing 0.3.0 and running `setup:upgrade` changes
+  no rendering, because every store view starts in Legacy. A project module that declared
+  `TemplateFilterPlugin` itself should drop that declaration, or every render is intercepted
+  twice.
+- **`ShadowComparator`'s `enabled` argument is gone.** A project module that set it in
+  `di.xml` should remove that entry and set the stage instead:
+  `bin/magento config:set --scope=stores --scope-code=<code> system/template_engine/mode shadow`.
+- **`setup:upgrade` creates the `cresset_template_shadow` table**, and adds Magento_Newsletter
+  to the modules this one loads after.
+- **Shadow no longer writes to `system.log`.** Read `bin/magento template:shadow:report`.
+- **`--mode` is `--posture`.** `--mode` still works for this release, with a warning.
+  `--posture=legacy` does not: use `compatible`.
+- **The magerun module is gone.** Drop `~/.n98-magerun2/modules/template-parser` or any
+  project yaml naming `Cresset\TemplateParser\Console\Magerun\*`; with the module enabled,
+  magerun runs `template:*` like any `bin/magento` command.
 
 ### Added
 
@@ -37,7 +58,7 @@ Entries say what changed and why it mattered. A line that only names a file has 
   or magerun. They take the ObjectManager bin/magento already booted, and building them does
   nothing else, because bin/magento builds every registered command on every run.
 
-- `shadow:report` (`template:shadow:report`, `template-parser:shadow:report`) reads the Shadow
+- `shadow:report` (`template:shadow:report` under bin/magento and magerun) reads the Shadow
   table and says, per store view, how many templates and renders were compared, how many
   diverged, were refused or crashed, and since when the store view has been clean. Each
   divergence comes with its causes and the `diff` command that reproduces it. The exit code is
@@ -48,10 +69,21 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - `shadow:clear` forgets recorded results for a store view or template, so what is measured
   next starts over. It refuses to run without `--store`, `--template` or an explicit `--all`.
 
-- `status` (`template:status`, `template-parser:status`) lists every website and store view
+- `status` (`template:status`) lists every website and store view
   with the stage renders use, whether it was set at default, website or store view level, when
   it was set, and one line of Shadow results. Where the value saved in the database is not the
   one in effect — a stale config cache, or an override in `app/etc` — it says so.
+
+- `shadow:report` tells an operator what to do about each refused template in their terms —
+  change the template, have a developer allow a layout handle or block in `di.xml`, or read
+  `var/log/exception.log` — with the `check` command to run, and that customers are not
+  affected. The engine's own hint, which names its PHP options, is shown with `-v`; the JSON
+  carries both, as `advice` and in `last_refusal`.
+
+- Newsletter subjects are named `newsletter:<id>/subject`, and a queued send
+  `newsletter_queue:<id>` (and `/subject`): the queue hands its copied text to an email model
+  with no id, so the send that reaches every subscriber was recorded as `email:unsaved`, like
+  an admin preview. An unsaved name no longer replaces a real one for the same text.
 
 - `check` warns about directives a module added as `fooDirective()` methods on a template
   filter. The legacy filter dispatches those by reflection and this engine never does, so in
@@ -65,7 +97,10 @@ Entries say what changed and why it mattered. A line that only names a file has 
 - `--mode` is now `--posture` on `check`, `diff` and `repl` (`-p`; `:posture` in the REPL),
   and the output says posture. "Mode" is the rollout stage — Legacy, Shadow, Parser — and the two
   appear side by side under bin/magento. `--mode` and `-m` still work for this release, with a
-  warning on stderr, and are removed in the next. `diff --store=N` is described as what it now
+  warning on stderr, and are removed in the next. `--posture=legacy` is refused with a pointer
+  to `compatible`: "Legacy" is the stage that does not run this engine, so as a posture it said
+  the opposite of what it did. The deprecated `--mode` and `:mode` still accept it, as 0.2 did.
+  `diff --store=N` is described as what it now
   answers: what switching that store view to Parser would change.
 
 - The module wires `TemplateFilterPlugin` on `Magento\Email\Model\Template\Filter` itself,
@@ -139,6 +174,11 @@ Entries say what changed and why it mattered. A line that only names a file has 
   `lastError()` is also reset per render rather than kept from the first host exception.
 
 ### Removed
+
+- The n98-magerun2 module (`n98-magerun2.yaml` and `Console\Magerun\*`). With the module
+  installed, magerun lists Magento's own commands, so it showed every command twice — as
+  `template:*` and, without descriptions, as `template-parser:*`. magerun now runs the
+  `bin/magento` commands; a store without the module installed uses `vendor/bin/template-parser`.
 
 - Shadow's `info` lines in `system.log` (`template-parser shadow: divergence` and
   `... engine raised`), and the SHA-256 of the template they carried. A hash could not be traced

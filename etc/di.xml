@@ -50,6 +50,14 @@
         <plugin name="cresset_template_parser_subject_identity"
                 type="Cresset\TemplateParser\Magento\Plugin\EmailSubjectIdentityPlugin"/>
     </type>
+    <type name="Magento\Newsletter\Model\Template">
+        <plugin name="cresset_template_parser_subject_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin"/>
+    </type>
+    <type name="Magento\Newsletter\Model\Queue">
+        <plugin name="cresset_template_parser_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin"/>
+    </type>
     <type name="Magento\Cms\Model\Block">
         <plugin name="cresset_template_parser_identity"
                 type="Cresset\TemplateParser\Magento\Plugin\CmsBlockIdentityPlugin"/>

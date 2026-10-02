@@ -177,7 +177,7 @@ and template:
 
 | Column | Holds |
 |---|---|
-| `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3`, `cms_block:7`, `cms_page:2`, or `unidentified:<filter class>` |
+| `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3` (and `/subject`) for a newsletter template, `newsletter_queue:5` (and `/subject`) for a queued send, `cms_block:7`, `cms_page:2`, or `unidentified:<filter class>` |
 | `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
 | `served`, `fell_back` | Parser mode: how many renders it served, and how many it handed to legacy |
 | `first_seen`, `last_seen` | when it was first and last compared (UTC) |
@@ -896,16 +896,17 @@ the fix; `shadow:clear --template=cms_block:7` deletes its history instead, and 
 
 ### Inside n98-magerun2
 
-The same commands, against the store magerun already booted:
+magerun lists Magento's own commands, so once the module is enabled the `template:*` commands
+are there too, with nothing to register:
 
 ```sh
-ln -s /path/to/module-template-parser ~/.n98-magerun2/modules/template-parser
-n98-magerun2 template-parser:check --source=email
+n98-magerun2 template:check --source=email
 ```
 
-The shipped `n98-magerun2.yaml` registers them. Nothing is reimplemented for magerun — the
-subclasses only rename the commands into magerun's shared namespace and hand over its
-ObjectManager instead of booting a second one.
+Before the module is enabled — sizing a migration on a store that has not installed it — use
+the standalone `vendor/bin/template-parser` instead, which finds the store from the working
+directory. (0.2 shipped an `n98-magerun2.yaml` for this; with the module installed it listed
+every command twice, so it is gone.)
 
 ### With bougie
 
@@ -914,7 +915,7 @@ package's own CI uses it. If you do too:
 
 ```sh
 bougie tool run cresset/module-template-parser check --source=codebase
-bougie run -- vendor/bin/n98-magerun2 template-parser:diff --source=email
+bougie run -- vendor/bin/n98-magerun2 template:diff --source=email
 ```
 
 ## Speed
@@ -1004,7 +1005,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12997 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+13010 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

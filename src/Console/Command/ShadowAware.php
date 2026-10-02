@@ -67,8 +67,8 @@ trait ShadowAware
     /**
      * The name a sibling command has in whichever entrypoint this one runs in.
      *
-     * The three entrypoints prefix differently - nothing standalone, `template:` under
-     * bin/magento, `template-parser:` under magerun - and advice naming a command that does
+     * The entrypoints prefix differently - nothing standalone, `template:` under bin/magento
+     * and magerun - and advice naming a command that does
      * not exist where the reader is typing is worse than none.
      */
     protected function sibling(string $command): string
