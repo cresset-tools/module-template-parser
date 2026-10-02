@@ -5,6 +5,7 @@ namespace Cresset\TemplateParser\Console\Command;
 
 use Cresset\TemplateParser\Console\MagentoContext;
 use Cresset\TemplateParser\Console\Mode;
+use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -125,13 +126,7 @@ trait MagentoAware
         $handles = (array)$input->getOption('allow-layout-handle');
 
         if (in_array('stock-email', $handles, true)) {
-            $handles = array_merge(array_diff($handles, ['stock-email']), [
-                'sales_email_order_items',
-                'sales_email_order_invoice_items',
-                'sales_email_order_shipment_items',
-                'sales_email_order_shipment_track',
-                'sales_email_order_creditmemo_items',
-            ]);
+            $handles = array_merge(array_diff($handles, ['stock-email']), AllowlistedLayoutRenderer::STOCK_EMAIL_HANDLES);
         }
 
         return array_values(array_unique(array_filter($handles, 'is_string')));

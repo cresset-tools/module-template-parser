@@ -27,15 +27,25 @@ use PHPUnit\Framework\TestCase;
  */
 final class MagentoUrlAdapterTest extends TestCase
 {
+    use AssertsRefusals;
+
     /** @param list<array{0:?string,1:mixed}> $calls */
     private function urlModel(array &$calls): UrlInterface
     {
         return new class ($calls) implements UrlInterface {
             public function __construct(private array &$calls) {}
+            /** The scope, as Url keeps it: once set, it stays. */
+            public mixed $scope = null;
             public function getUrl($routePath = null, $routeParams = null)
             {
-                $this->calls[] = [$routePath, $routeParams];
+                // With the scope it was built in, which is what storeDirective sets first.
+                $this->calls[] = [$routePath, $routeParams, $this->scope];
                 return 'https://shop.example/' . $routePath;
+            }
+            public function setScope($params)
+            {
+                $this->scope = $params;
+                return $this;
             }
         };
     }
@@ -114,6 +124,24 @@ final class MagentoUrlAdapterTest extends TestCase
         $builder->storeUrl('checkout/cart', []);
 
         self::assertTrue($calls[0][1]['_nosid'], '_nosid must be set');
+    }
+
+    /**
+     * The URL model's scope is set to the current store on every call, as storeDirective sets
+     * it. It is sticky and the instance shared, so left alone a store view's email was built
+     * with whichever store last set it.
+     */
+    public function testEveryStoreUrlIsBuiltInTheCurrentStoresScope(): void
+    {
+        $calls = [];
+        $urlModel = $this->urlModel($calls);
+        $urlModel->scope = 'A STORE SOMETHING ELSE LEFT BEHIND';
+        $builder = new StoreUrlBuilder($urlModel, $this->storeManager(), new Repository());
+
+        $builder->storeUrl('checkout/cart', []);
+
+        self::assertIsObject($calls[0][2], 'built in a scope something else left behind');
+        self::assertSame('default', $calls[0][2]->getCode());
     }
 
     public function testAStoreUrlWithNoParametersStillGetsAnEmptyQuery(): void
@@ -255,7 +283,7 @@ final class MagentoUrlAdapterTest extends TestCase
     }
 
     /** A missing or unreadable asset yields null rather than taking the render down. */
-    public function testAnAssetThatCannotBeLoadedYieldsNull(): void
+    public function testAnAssetThatCannotBeBuiltIsRefused(): void
     {
         $repository = new class extends Repository {
             public function createAsset($fileId, array $params = [])
@@ -266,7 +294,8 @@ final class MagentoUrlAdapterTest extends TestCase
 
         $loader = new AssetStylesheetLoader(new Processor(), $repository);
 
-        self::assertNull($loader->load('css/missing.css'));
+        // cssDirective does not catch this; the filter's catch makes it an error page.
+        self::assertRefused(fn () => $loader->load('css/missing.css'), 'stylesheet', 'css/missing.css');
     }
 
     /**

@@ -37,6 +37,8 @@ CREATE TABLE cresset_template_shadow (
     diverged INTEGER NOT NULL DEFAULT 0,
     refused INTEGER NOT NULL DEFAULT 0,
     crashed INTEGER NOT NULL DEFAULT 0,
+    served INTEGER NOT NULL DEFAULT 0,
+    fell_back INTEGER NOT NULL DEFAULT 0,
     first_seen TEXT NOT NULL,
     last_seen TEXT NOT NULL,
     last_divergence_at TEXT NULL,

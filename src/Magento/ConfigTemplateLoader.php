@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Cresset\TemplateParser\Magento;
 
+use Cresset\TemplateParser\LegacyReading;
+use Cresset\TemplateParser\Port\RefusedByPort;
 use Cresset\TemplateParser\Port\TemplateLoader;
 use Magento\Email\Model\TemplateFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -31,25 +33,34 @@ class ConfigTemplateLoader implements TemplateLoader
     ) {
     }
 
+    /**
+     * Every way this can fail to produce the include is a refusal, not a null.
+     *
+     * The filter's AbstractTemplate::getTemplateContent() loads ANY config path, and when the
+     * path holds nothing it calls loadDefault() on that nothing, which raises - so for none of
+     * these does legacy render the empty string a null would turn into here. Thrown, each is
+     * recorded and the render declined; in Parser mode the filter renders it as it always has.
+     * Only a template that loaded and is genuinely empty renders as empty.
+     */
     public function load(string $configPath): ?string
     {
         if (!$this->isAllowed($configPath)) {
-            return null;
+            throw new RefusedByPort('template config path', $configPath);
         }
 
         $identifier = $this->scopeConfig->getValue($configPath, ScopeInterface::SCOPE_STORE, $this->storeId);
         if (!is_string($identifier) && !is_numeric($identifier)) {
-            return null;
+            throw new RefusedByPort('template config path', $configPath);
         }
         $identifier = (string)$identifier;
         if ($identifier === '') {
-            return null;
+            throw new RefusedByPort('template config path', $configPath);
         }
 
         if ($this->templateFactory === null) {
             // Without the factory there is no way to turn an identifier into text, and
             // handing back the identifier would put it in the email.
-            return null;
+            throw new RefusedByPort('template include (no template factory wired)', $configPath);
         }
 
         try {
@@ -60,10 +71,18 @@ class ConfigTemplateLoader implements TemplateLoader
 
             $text = $template->getTemplateText();
         } catch (\Throwable) {
-            return null;
+            throw new RefusedByPort('template include', $configPath);
         }
 
-        return is_string($text) && $text !== '' ? $text : null;
+        $text = is_string($text) ? $text : '';
+
+        // The include is rendered by this engine as part of its parent, so a construct the
+        // filter reads differently declines the parent - as it would at the top level.
+        if (LegacyReading::firstDifference($text) !== null) {
+            throw new RefusedByPort('template include the filter reads differently', $configPath);
+        }
+
+        return $text;
     }
 
     private function isAllowed(string $configPath): bool

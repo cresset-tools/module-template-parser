@@ -5,7 +5,8 @@ namespace Cresset\TemplateParser\Magento;
 
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Cresset\TemplateParser\Port\UrlBuilder;
+use Cresset\TemplateParser\Port\RefusedByPort;
+use Cresset\TemplateParser\Port\StoreAwareUrlBuilder;
 
 /**
  * {{store}}, {{media}}, {{view}} and {{protocol}} through Magento's URL and asset services.
@@ -13,12 +14,13 @@ use Cresset\TemplateParser\Port\UrlBuilder;
  * Paths reaching these have already been through PathGuard, so no traversal, scheme or
  * absolute path arrives here.
  */
-class StoreUrlBuilder implements UrlBuilder
+class StoreUrlBuilder implements StoreAwareUrlBuilder
 {
     public function __construct(
         private readonly UrlInterface $urlModel,
         private readonly StoreManagerInterface $storeManager,
-        private readonly \Magento\Framework\View\Asset\Repository $assetRepository
+        private readonly \Magento\Framework\View\Asset\Repository $assetRepository,
+        private readonly ?RenderScope $scope = null
     ) {
     }
 
@@ -38,9 +40,29 @@ class StoreUrlBuilder implements UrlBuilder
         // difference matters: Url escapes route parameters only while it is truthy, so a
         // template that forwarded its own `_escape_params=0` would turn the escaping off for
         // every route parameter it also supplied.
-        $parameters['_escape_params'] = $this->storeManager->getStore()->getCode();
+        $store = $this->storeManager->getStore();
+        $parameters['_escape_params'] = $store->getCode();
 
-        return $this->urlModel->getUrl($path, $parameters);
+        // storeDirective sets the scope on every call, and so must this. A URL model's scope
+        // is sticky - Url::_getScope() resolves it once and keeps it - and the instance is
+        // shared, so without this a store view's email is built with whichever store last set
+        // it: a cron run sending for store 1 and then store 2 would link store 2's customers
+        // to store 1. Legacy skips it for the backend URL model, and so does this.
+        // The rendering filter's own model where there is one: see RenderScope.
+        $urlModel = $this->scope?->urlModel();
+        $urlModel = $urlModel instanceof UrlInterface ? $urlModel : $this->urlModel;
+
+        // The backend URL model - what a CMS filter built in the admin holds - is not one this
+        // engine can stand in for. Its route, controller and action persist on the shared
+        // instance between calls, so `{{store url=""}}` comes out as whatever route it built
+        // last: on a real store, a product widget's `swatches/ajax/media`. That is history,
+        // not something to reproduce, so the filter answers it.
+        if ($urlModel instanceof \Magento\Backend\Model\Url) {
+            throw new RefusedByPort('store url through the backend URL model', $path);
+        }
+        $urlModel->setScope($store);
+
+        return $urlModel->getUrl($path, $parameters);
     }
 
     public function mediaUrl(string $path): string
@@ -52,6 +74,18 @@ class StoreUrlBuilder implements UrlBuilder
     public function viewUrl(string $path, array $parameters): string
     {
         return $this->assetRepository->getUrlWithParams($path, $parameters);
+    }
+
+    /** As protocolDirective: that store's scheme, and a store that does not exist raises. */
+    public function isSecureFor(string $store): bool
+    {
+        try {
+            $resolved = $this->storeManager->getStore($store);
+        } catch (\Throwable) {
+            throw new RefusedByPort('protocol store', $store);
+        }
+
+        return (bool)$resolved->isCurrentlySecure();
     }
 
     public function isSecure(): bool

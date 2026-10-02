@@ -124,6 +124,34 @@
         </arguments>
     </type>
 
+    <!--
+        The default URL model is the one Magento\Email\Model\Template gives its filter
+        (Magento_Email's di.xml), rather than whatever UrlInterface the area prefers - in
+        adminhtml that is the backend model, and an order email sent from the admin would have
+        linked its customer into the admin. Inside a render, the filter's own model is used.
+    -->
+    <type name="Cresset\TemplateParser\Magento\StoreUrlBuilder">
+        <arguments>
+            <argument name="urlModel" xsi:type="object">Magento\Framework\Url</argument>
+            <!-- The rendering filter's own URL model wins over that default; see RenderScope. -->
+            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
+        </arguments>
+    </type>
+
+    <!-- {{widget}} gets the rendering filter's store as store_id, as generateWidget does. -->
+    <!-- The rendering filter's store and URL model, for the two ports above. -->
+    <type name="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin">
+        <arguments>
+            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
+        </arguments>
+    </type>
+
+    <type name="Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer">
+        <arguments>
+            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
+        </arguments>
+    </type>
+
     <type name="Cresset\TemplateParser\Magento\TemplateFilterAdapter">
         <arguments>
             <argument name="services" xsi:type="object">Cresset\TemplateParser\HostServices</argument>
@@ -157,12 +185,25 @@
     <!--
         AllowlistedLayoutRenderer takes a REQUIRED array. Without an entry here it compiles
         clean and then throws BadMethodCallException the first time anything asks for it,
-        because DI has no value to supply. Empty by design: a layout handle decides which
-        blocks get built, so the integrator names the ones they trust.
+        because DI has no value to supply.
+
+        A layout handle decides which blocks get built, so template text may only name the
+        handles listed here. These are the ones the stock sales emails build their item
+        tables and tracking with. Every one is already reachable from a template the store
+        ships, so allowing them grants nothing a stock installation does not already do - and
+        without them Parser mode declines every order, invoice, shipment and credit memo email
+        to the legacy filter. Add a module's own handles in your di.xml, keyed by name; a
+        handle not listed is recorded as a policy violation, and Parser falls back for it.
     -->
     <type name="Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer">
         <arguments>
-            <argument name="allowedHandles" xsi:type="array"/>
+            <argument name="allowedHandles" xsi:type="array">
+                <item name="sales_email_order_items" xsi:type="string">sales_email_order_items</item>
+                <item name="sales_email_order_invoice_items" xsi:type="string">sales_email_order_invoice_items</item>
+                <item name="sales_email_order_shipment_items" xsi:type="string">sales_email_order_shipment_items</item>
+                <item name="sales_email_order_shipment_track" xsi:type="string">sales_email_order_shipment_track</item>
+                <item name="sales_email_order_creditmemo_items" xsi:type="string">sales_email_order_creditmemo_items</item>
+            </argument>
         </arguments>
     </type>
 

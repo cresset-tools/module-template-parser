@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'shadow:report', description: 'Summarise what Shadow mode recorded, per store view')]
+#[AsCommand(name: 'shadow:report', description: 'Summarise what Shadow and Parser mode recorded, per store view')]
 class ShadowReportCommand extends Command
 {
     use MagentoAware;
@@ -27,13 +27,18 @@ class ShadowReportCommand extends Command
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'text or json', 'text')
             ->setHelp(<<<'HELP'
 Reads what Shadow mode recorded and says, per store view, whether its templates
-render the same through both engines.
+render the same through both engines. A store view in Parser mode records here
+too: what it served, what it handed back to legacy, and the outcome of the share
+of renders it also compares (system/template_engine/parser_shadow_rate), which
+count exactly as Shadow comparisons do - so a regression after the switch fails
+this report like one before it.
 
 The exit code is the rollout gate:
 
   0  compared, and nothing diverged or crashed (since --since, when given)
   1  something diverged or crashed
-  2  nothing in scope was compared at all - Shadow is off, or nothing rendered yet
+  2  nothing in scope was recorded at all - Shadow and Parser are off, or nothing
+     rendered yet
 
 2 is separate on purpose. "No divergences" and "no data" look alike in a count
 of failures, and only one of them is evidence for switching to Parser.
@@ -116,6 +121,13 @@ HELP);
             $store['refused'],
             $store['crashed']
         ));
+        if ($store['served'] > 0 || $store['fell_back'] > 0) {
+            $output->writeln(sprintf(
+                '  Parser mode: %d served by the new engine, %d fell back to legacy',
+                $store['served'],
+                $store['fell_back']
+            ));
+        }
         $output->writeln($store['last_divergence_at'] !== null
             ? sprintf('  last divergence %s UTC, in %s', $store['last_divergence_at'], $store['last_divergence_template'])
             : sprintf('  <info>clean since %s UTC</info>', $store['first_seen']));

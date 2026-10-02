@@ -4,7 +4,12 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Console\Shadow;
 
 /**
- * What Shadow mode's rows say, per store view.
+ * What Shadow mode's rows say, per store view - and Parser mode's.
+ *
+ * Parser mode records into the same rows: how many renders it served, how many it handed to
+ * legacy, and the outcome of each sampled comparison, which counts exactly as a Shadow one.
+ * `renders` is the number of outcomes - comparisons, refusals and crashes - so a served render
+ * that was not sampled is in `served` and nowhere else.
  *
  * Pure: rows in, summaries out, so the arithmetic the rollout decision rests on is tested
  * without a database. See Shadow\ShadowRecorder for what each column means; in short, a
@@ -49,6 +54,8 @@ final class ShadowReport
                 'diverged' => 0,
                 'refused' => 0,
                 'crashed' => 0,
+                'served' => 0,
+                'fell_back' => 0,
                 'first_seen' => null,
                 'last_seen' => null,
                 'last_divergence_at' => null,
@@ -67,6 +74,8 @@ final class ShadowReport
                 $store[$counter] += $template[$counter];
                 $store['renders'] += $template[$counter];
             }
+            $store['served'] += $template['served'];
+            $store['fell_back'] += $template['fell_back'];
             $store['first_seen'] = self::earliest($store['first_seen'], $template['first_seen']);
             $store['last_seen'] = self::latest($store['last_seen'], $template['last_seen']);
             if ($template['last_divergence_at'] !== null
@@ -127,6 +136,10 @@ final class ShadowReport
             $store['crashed']
         );
 
+        if ($store['served'] > 0 || $store['fell_back'] > 0) {
+            $line .= sprintf('; Parser served %d, fell back %d', $store['served'], $store['fell_back']);
+        }
+
         return $line . ($store['last_divergence_at'] !== null
             ? sprintf('; last divergence %s UTC', $store['last_divergence_at'])
             : sprintf('; clean since %s UTC', $store['first_seen']));
@@ -144,6 +157,9 @@ final class ShadowReport
             'diverged' => (int)$row['diverged'],
             'refused' => (int)$row['refused'],
             'crashed' => (int)$row['crashed'],
+            // Absent from a table created before Parser mode, until setup:upgrade adds them.
+            'served' => (int)($row['served'] ?? 0),
+            'fell_back' => (int)($row['fell_back'] ?? 0),
             'first_seen' => (string)$row['first_seen'],
             'last_seen' => (string)$row['last_seen'],
             'last_divergence_at' => $row['last_divergence_at'] !== null ? (string)$row['last_divergence_at'] : null,

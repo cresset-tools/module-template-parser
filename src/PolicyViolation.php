@@ -14,6 +14,8 @@ final class PolicyViolation
 {
     public const DIRECTIVE = 'directive';
     public const BLOCK = 'block';
+    /** A port declined it - see Port\RefusedByPort - for example a layout handle not allowed. */
+    public const LAYOUT_HANDLE = 'layout handle';
 
     public function __construct(
         public readonly string $kind,

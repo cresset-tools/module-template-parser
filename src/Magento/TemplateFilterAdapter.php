@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento;
 
 use Cresset\TemplateParser\Context;
+use Cresset\TemplateParser\Diagnostics;
+use Cresset\TemplateParser\LegacyReading;
+use Cresset\TemplateParser\PolicyViolation;
 use Cresset\TemplateParser\Options;
 use Cresset\TemplateParser\RenderPolicy;
 use Cresset\TemplateParser\HostServices;
@@ -29,6 +32,9 @@ class TemplateFilterAdapter implements TemplateFilterInterface
     private Context $context;
 
     private ?\Exception $lastError = null;
+
+    /** See unwiredDirectives(). */
+    private ?string $unwired = null;
 
     private readonly Options $options;
 
@@ -65,9 +71,42 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
         $this->engine = TemplateEngine::forHost($services, $this->options);
         $this->context = new Context();
+        $this->unwired = self::unwiredDirectives($services);
     }
 
-    /** The exception the last filter() swallowed, for a caller that wants to know. */
+    /**
+     * The filter's directives this adapter has no port for, as a pattern; null when it has
+     * every one.
+     *
+     * A directive with no port stays unregistered, and renders as its own text - where the
+     * filter renders it. The module's di.xml wires every port, so this is a host that left one
+     * out; a render that uses such a directive records it, and is declined rather than served.
+     */
+    private static function unwiredDirectives(HostServices $services): ?string
+    {
+        $ports = [
+            'block' => $services->blocks,
+            'template' => $services->templates,
+            'config' => $services->config,
+            'customvar' => $services->customVariables,
+            'store' => $services->urls,
+            'media' => $services->urls,
+            'view' => $services->urls,
+            'protocol' => $services->urls,
+            'css' => $services->stylesheets,
+            'layout' => $services->layouts,
+            'widget' => $services->widgets,
+            // The built-in {{trans}} renders untranslated without one.
+            'trans' => $services->translator,
+        ];
+        $missing = array_keys(array_filter($ports, static fn (?object $port): bool => $port === null));
+
+        // `(?![a-z])` because the filter's name is every letter up to ten: `{{stores}}` is not
+        // {{store}} to it either.
+        return $missing === [] ? null : '/\{\{(' . implode('|', $missing) . ')(?![a-z])/i';
+    }
+
+    /** The exception the last filter() swallowed, or null if it swallowed none. */
     public function lastError(): ?\Exception
     {
         return $this->lastError;
@@ -104,14 +143,27 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         // A fresh scope per call. Reusing one context makes deferred(), violations() and
         // incompatibilities() cumulative across every template this adapter has ever
         // filtered, so a caller acting on "the last render" acts on all of them.
-        $this->context = new Context($this->variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode, $this->designParams);
+        //
+        // Held locally and published only when the render is over, because filter() is
+        // RE-ENTRANT through the host: a {{block}} that renders a CMS block reaches that
+        // block's filter, whose plugin renders it through this same shared adapter in the
+        // middle of the outer render. Published on the way in, the inner render's context
+        // replaced the outer one, and the outer caller then read the inner render's
+        // deferrals, violations and error as its own. Published on the way out, each caller
+        // reads the render it just made, because the inner one finishes first.
+        $context = new Context($this->variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode, $this->designParams);
+        $error = null;
 
         try {
-            return $this->engine->render($value, context: $this->context);
+            $rendered = $this->engine->render($value, context: $context);
+            $this->noteUnwired($value, $context);
+            $this->noteLegacyReading($value, $context);
+
+            return $rendered;
         } catch (TemplateError $e) {
             // This engine's own diagnostics are the product, not a failure to hide. Shadow
-            // mode reports them as "engine raised", `check` turns them into findings, and a
-            // caller that wanted them swallowed can catch them itself.
+            // mode reports them as refusals, `check` turns them into findings, and a caller
+            // that wanted them swallowed can catch them itself.
             throw $e;
         } catch (\Exception $e) {
             // Email\Model\Template\Filter::filter() catches \Exception and substitutes this
@@ -123,14 +175,54 @@ class TemplateFilterAdapter implements TemplateFilterInterface
             //
             // So this arm is host code raising - a block's InvalidArgumentException, a
             // ValidatorException from the view layer - which is exactly what the filter's
-            // own catch is for.
+            // own catch is for. lastError() says it happened: Parser mode hands such a render
+            // to legacy rather than serving this imitation of the filter's message.
             //
             // \Error is deliberately not caught either, matching the filter: a TypeError from
             // a template is how a legacy fatal is detected, and swallowing it would hide the
             // one thing compatible mode is measured on.
-            $this->lastError = $e;
+            $error = $e;
 
             return (string)__('Error filtering template: %1', $e->getMessage());
+        } finally {
+            $this->context = $context;
+            $this->lastError = $error;
+        }
+    }
+
+    /**
+     * Records where the filter would read this template differently - see LegacyReading.
+     *
+     * Only for the compatible posture, which is the one that claims to render as the filter
+     * does; the others render differently on purpose and say so.
+     */
+    private function noteLegacyReading(string $source, Context $context): void
+    {
+        if (!$this->options->legacyQuirks) {
+            return;
+        }
+
+        $difference = LegacyReading::firstDifference($source);
+        if ($difference === null) {
+            return;
+        }
+
+        ['line' => $line, 'column' => $column] = Diagnostics::locate($source, $difference['offset']);
+        $context->recordViolation(new PolicyViolation('construct the filter reads differently', $difference['rule'], $line, $column));
+    }
+
+    /** Records each use of a directive this adapter has no port for, where it is. */
+    private function noteUnwired(string $source, Context $context): void
+    {
+        if ($this->unwired === null
+            || !preg_match_all($this->unwired, $source, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)
+        ) {
+            return;
+        }
+
+        foreach ($matches as $match) {
+            ['line' => $line, 'column' => $column] = Diagnostics::locate($source, $match[0][1]);
+            $context->recordViolation(new PolicyViolation('unwired directive', strtolower($match[1][0]), $line, $column));
         }
     }
 

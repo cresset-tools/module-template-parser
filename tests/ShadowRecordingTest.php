@@ -151,11 +151,8 @@ final class ShadowRecordingTest extends TestCase
         $subject = $this->filterFor(2);
 
         $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
-        $plugin->beforeFilter($subject, 'Dear {{var name}},');
-        $plugin->afterFilter($subject, 'Dear Ada,', 'Dear {{var name}},');
-
-        $plugin->beforeFilter($subject, 'Hello');
-        $plugin->afterFilter($subject, 'Goodbye', 'Hello');
+        $plugin->aroundFilter($subject, static fn () => 'Dear Ada,', 'Dear {{var name}},');
+        $plugin->aroundFilter($subject, static fn () => 'Goodbye', 'Hello');
 
         self::assertSame([
             [2, 'email:sales_email_order_template', ShadowOutcome::AGREE],
@@ -170,9 +167,11 @@ final class ShadowRecordingTest extends TestCase
         $plugin = $this->plugin(new TemplateIdentity(), $records);
         $subject = $this->filterFor(2);
 
-        $plugin->beforeFilter($subject, 'x');
-        (fn () => $this->_storeId = 5)->call($subject);
-        $plugin->afterFilter($subject, 'x', 'x');
+        $plugin->aroundFilter($subject, function () use ($subject): string {
+            (fn () => $this->_storeId = 5)->call($subject);
+
+            return 'x';
+        }, 'x');
 
         self::assertSame(2, $records[0][0]);
     }
@@ -182,8 +181,13 @@ final class ShadowRecordingTest extends TestCase
     {
         $recorder = new class extends ShadowRecorder {
             public function __construct() {}
-            public function record(int|string|null $storeId, string $template, ShadowOutcome $outcome): void
-            {
+            public function record(
+                int|string|null $storeId,
+                string $template,
+                ?ShadowOutcome $outcome,
+                bool $served = false,
+                bool $fellBack = false
+            ): void {
                 throw new \RuntimeException('recorder fell over');
             }
         };
@@ -195,8 +199,7 @@ final class ShadowRecordingTest extends TestCase
         );
         $subject = $this->filterFor(1);
 
-        $plugin->beforeFilter($subject, 'x');
-        self::assertSame('LEGACY', $plugin->afterFilter($subject, 'LEGACY', 'x'));
+        self::assertSame('LEGACY', $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'x'));
     }
 
     // ---------------------------------------------------------------- the recorder
@@ -550,9 +553,14 @@ final class ShadowRecordingTest extends TestCase
     {
         $recorder = new class ($records) extends ShadowRecorder {
             public function __construct(private array &$records) {}
-            public function record(int|string|null $storeId, string $template, ShadowOutcome $outcome): void
-            {
-                $this->records[] = [$storeId, $template, $outcome->outcome];
+            public function record(
+                int|string|null $storeId,
+                string $template,
+                ?ShadowOutcome $outcome,
+                bool $served = false,
+                bool $fellBack = false
+            ): void {
+                $this->records[] = [$storeId, $template, $outcome?->outcome];
             }
         };
 

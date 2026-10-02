@@ -18,7 +18,7 @@ Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console 
 `php:8.3-cli`'s default 128M `memory_limit` is below what the suite peaks at, which
 `GuardTripwireTest` is what pushes it to.
 
-12908 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
+12997 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ### Mutation testing, without taking the machine down
@@ -148,6 +148,9 @@ erode the agreeing set one case at a time in silence.
 | `GuardTripwireTest`, `MagentoGuardTest`, `SecurityRegressionTest` | one test per security guard, each written against a mutation that removed it |
 | `MagentoIntegrationTest` | the adoption path: the per-store stage, the plugin, the adapter's policy, and shadow mode |
 | `ShadowRecordingTest` | where a Shadow comparison ends up: the template it is named after, the row it is counted in, and the upsert that writes it |
+| `ParserModeTest` | Parser mode: what it serves, every way it falls back to legacy, the sampled comparison, and inlining a page the filter never rendered |
+| `SilentDegradationTest` | every place this engine would render less than the filter: declined and recorded where legacy renders more, silent where legacy renders the same nothing |
+| `LegacyFaithfulnessTest` | the known differences from 3.5.0: matched (widget data, URL model, protocol store) or declined (newsletter widgets, backend URLs, constructs the filter reads differently) |
 | `TemplateIncludeTest` | `{{template}}` semantics: scope, parameters, nesting, cycles, inheritance and output |
 | `MagentoUrlAdapterTest` | the adapters behind `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}` and `{{customvar}}` - the host directives that build a URL, load a stylesheet or read a merchant variable, none of which instantiates a class |
 | `KnownDivergenceTest` | the deliberate behavioural differences from the legacy filter |

@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser;
 
 use Cresset\TemplateParser\Ast\DirectiveNode;
+use Cresset\TemplateParser\Port\RefusedByPort;
+use Cresset\TemplateParser\Port\StoreAwareUrlBuilder;
 
 /**
  * Registers the directives that need something from the host application.
@@ -146,6 +148,23 @@ final class HostDirectives
         return $evaluator->options()->legacyQuirks ? '{Error in template processing}' : '';
     }
 
+    /**
+     * Renders nothing, and records why, where legacy would have rendered something.
+     *
+     * Every guard in this class that is stricter than the filter it stands in for ends here
+     * rather than in a bare `return ''`. A bare '' is invisible: the render looks complete,
+     * Shadow can only report it as a byte difference, and Parser mode SERVES it - which is how
+     * a real store's order emails went out without their item table. Recorded as a policy
+     * violation, it is declined instead: Shadow reports it as a refusal with the reason, and
+     * Parser hands the render to the legacy filter.
+     */
+    private static function declined(DirectiveNode $n, Context $c, Evaluator $e, string $kind, string $name): string
+    {
+        $e->refusedByPolicy($n, $c, $kind, $name);
+
+        return '';
+    }
+
     public static function register(
         Evaluator $evaluator,
         HostServices $services,
@@ -160,7 +179,12 @@ final class HostDirectives
                 $params = $e->params($n, $c);
                 $class = $params['class'] ?? '';
                 if ($class === '') {
-                    return '';
+                    // `{{block id="footer"}}` is a CMS block by identifier: blockDirective
+                    // builds Magento\Cms\Block\Block for it. This engine has no such path,
+                    // so it says so. Neither class nor id is legacy's own '' too.
+                    return isset($params['id']) && $params['id'] !== ''
+                        ? self::declined($n, $c, $e, 'block id', (string)$params['id'])
+                        : '';
                 }
 
                 // Checked before the port, so a refused class is never constructed.
@@ -172,7 +196,11 @@ final class HostDirectives
                 $method = $params['output'] ?? 'toHtml';
                 unset($params['class'], $params['output']);
 
-                return $blocks->render($class, $params, $method);
+                try {
+                    return $blocks->render($class, $params, $method);
+                } catch (RefusedByPort $refused) {
+                    return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                }
             });
         }
 
@@ -191,7 +219,14 @@ final class HostDirectives
                     // of its own choosing. The same overwrite, for the same reason.
                     $args[0] = $c->has('store') ? $c->get('store') : null;
 
-                    $url = $templateUrls->urlFor($target, $args);
+                    try {
+                        $url = $templateUrls->urlFor($target, $args);
+                    } catch (RefusedByPort $refused) {
+                        // No directive node to point at: this is a method call inside a
+                        // {{var}}. Recorded all the same, so the render is declined.
+                        $c->recordViolation(new PolicyViolation($refused->kind, $refused->name, 0, 0));
+                        $url = '';
+                    }
 
                     return $url === null ? null : Resolution::of($url);
                 }
@@ -233,7 +268,8 @@ final class HostDirectives
                 // ConfigTemplateLoader happens to allowlist, but the TemplateLoader port does
                 // not require an implementation to, so the check belongs on this side of it.
                 if (!PathGuard::isSafeConfigPath($path)) {
-                    return '';
+                    // The filter loads whatever path it is given.
+                    return self::declined($n, $c, $e, 'template config path', $path);
                 }
 
                 if ($c->includeBudgetExhausted()) {
@@ -251,7 +287,11 @@ final class HostDirectives
                 // Nothing found is not legacy's error case: with a processor set, legacy
                 // returns whatever the processor returned, which for an unknown path is
                 // empty. The error string is only for a missing config_path.
-                $source = $templates->load($path);
+                try {
+                    $source = $templates->load($path);
+                } catch (RefusedByPort $refused) {
+                    return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                }
                 if ($source === null) {
                     return '';
                 }
@@ -297,10 +337,16 @@ final class HostDirectives
             $config = $services->config;
             $evaluator->register('config', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($config): string {
                 $path = $e->params($n, $c)['path'] ?? '';
+                // A path the guard refuses cannot be on Magento's list of config variables,
+                // which is all configDirective renders - so legacy renders '' for it too.
                 if (!PathGuard::isSafeConfigPath($path)) {
                     return '';
                 }
-                return (string)($config->value($path) ?? '');
+                try {
+                    return (string)($config->value($path) ?? '');
+                } catch (RefusedByPort $refused) {
+                    return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                }
             });
         }
 
@@ -308,8 +354,12 @@ final class HostDirectives
             $vars = $services->customVariables;
             $evaluator->register('customvar', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($vars): string {
                 $code = $e->params($n, $c)['code'] ?? '';
-                if (!PathGuard::isSafeVariableCode($code)) {
+                if ($code === '') {
                     return '';
+                }
+                // The filter looks up any code it is given.
+                if (!PathGuard::isSafeVariableCode($code)) {
+                    return self::declined($n, $c, $e, 'custom variable code', $code);
                 }
                 // The plain flag decides which stored value is read. Passing false
                 // unconditionally puts the variable's HTML into a text/plain body.
@@ -335,14 +385,16 @@ final class HostDirectives
                 if ($direct !== null) {
                     $params['_direct'] = $direct;
                 }
+                // The filter builds a URL from whatever it is given; each refusal here is this
+                // engine's, so each is declined rather than rendered as nothing.
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
-                    return '';
+                    return self::declined($n, $c, $e, 'store url', $path);
                 }
                 // Magento\Framework\Url::getRouteUrl() returns getBaseUrl() . $params['_direct']
                 // with no filtering of its own, so a guard on `url=` alone is not a guard.
                 // Any remaining parameter that names a path gets the same check.
                 if (!PathGuard::routeParametersAreSafe($params)) {
-                    return '';
+                    return self::declined($n, $c, $e, 'store url parameters', (string)($direct ?? $path));
                 }
                 return $urls->storeUrl($path, $params);
             });
@@ -356,7 +408,10 @@ final class HostDirectives
                 if ($path === '') {
                     return $urls->mediaUrl('');
                 }
-                return PathGuard::isSafeRelativePath($path) ? $urls->mediaUrl($path) : '';
+                // The filter concatenates any path onto the media base URL.
+                return PathGuard::isSafeRelativePath($path)
+                    ? $urls->mediaUrl($path)
+                    : self::declined($n, $c, $e, 'media url', $path);
             });
 
             $evaluator->register('view', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
@@ -364,18 +419,33 @@ final class HostDirectives
                 $path = $params['url'] ?? '';
                 unset($params['url']);
                 // As for {{media}}: an absent path is the static root, not a refusal.
+                // The filter hands any of these to the asset repository.
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
-                    return '';
+                    return self::declined($n, $c, $e, 'view url', $path);
                 }
                 if (!PathGuard::routeParametersAreSafe($params) || !self::designParametersAreSafe($params)) {
-                    return '';
+                    return self::declined($n, $c, $e, 'view url parameters', $path);
                 }
                 return $urls->viewUrl($path, $params);
             });
 
             $evaluator->register('protocol', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
                 $params = $e->params($n, $c);
-                $secure = $urls->isSecure();
+                // protocolDirective reads the scheme of the store `store=` names, and raises for
+                // one that does not exist. Answered for that store where the port can; declined
+                // where it cannot, rather than answered for the wrong one.
+                if (isset($params['store'])) {
+                    if (!$urls instanceof StoreAwareUrlBuilder) {
+                        return self::declined($n, $c, $e, 'protocol store', (string)$params['store']);
+                    }
+                    try {
+                        $secure = $urls->isSecureFor((string)$params['store']);
+                    } catch (RefusedByPort $refused) {
+                        return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                    }
+                } else {
+                    $secure = $urls->isSecure();
+                }
                 $scheme = $secure ? 'https' : 'http';
 
                 // Legacy's order: url wins over the pair, and with neither the directive is
@@ -390,14 +460,14 @@ final class HostDirectives
                     // which refused the `example.com:8080/a` legacy renders, and allowed every
                     // markup delimiter after the first slash.
                     if (!preg_match('#^[a-zA-Z0-9.-]+(?::[0-9]{1,5})?(/[^\s]*)?\z#', $host, $m)) {
-                        return '';
+                        return self::declined($n, $c, $e, 'protocol url', $host);
                     }
                     // Only the tail goes through the path guard. The host cannot: to a guard
                     // written for relative paths, `example.com:8080` IS a scheme, so checking
                     // the whole value refused every URL carrying a port.
                     $tail = ltrim($m[1] ?? '', '/');
                     if ($tail !== '' && !PathGuard::isSafeRelativePath($tail)) {
-                        return '';
+                        return self::declined($n, $c, $e, 'protocol url', $host);
                     }
                     return $scheme . '://' . $host;
                 }
@@ -409,7 +479,9 @@ final class HostDirectives
                     if (!PathGuard::isSafeAbsoluteUrl((string)$params['http'], 'http')
                         || !PathGuard::isSafeAbsoluteUrl((string)$params['https'], 'https')
                     ) {
-                        return '';
+                        // Legacy throws a MailException for an invalid one, which its catch
+                        // turns into an error page - not this engine's '' either.
+                        return self::declined($n, $c, $e, 'protocol url', (string)$params['http'] . ' ' . (string)$params['https']);
                     }
                     return (string)($secure ? $params['https'] : $params['http']);
                 }
@@ -440,7 +512,11 @@ final class HostDirectives
                         // different arguments to a processor and the filter keeps them apart.
                         $body = $n->children() === [] ? null : $e->renderNodes($n->children(), $c);
 
-                        return (string)($custom->render($name, $value, $parameters, $body, $modifiers) ?? '');
+                        try {
+                            return (string)($custom->render($name, $value, $parameters, $body, $modifiers) ?? '');
+                        } catch (RefusedByPort $refused) {
+                            return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                        }
                     }
                 );
             }
@@ -464,9 +540,16 @@ final class HostDirectives
                     return '/* "file" parameter must be specified */';
                 }
                 if (!PathGuard::isSafeRelativePath($file)) {
+                    // The filter hands any file to the asset repository.
+                    self::declined($n, $c, $e, 'stylesheet', $file);
+
                     return '/* invalid file parameter */';
                 }
-                return (string)($stylesheets->load($file, $c->designParams()) ?? '');
+                try {
+                    return (string)($stylesheets->load($file, $c->designParams()) ?? '');
+                } catch (RefusedByPort $refused) {
+                    return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                }
             });
         }
 
@@ -474,14 +557,29 @@ final class HostDirectives
             $layouts = $services->layouts;
             $evaluator->register('layout', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($layouts): string {
                 $params = $e->params($n, $c);
-                $handle = $params['handle'] ?? '';
-                $area = $params['area'] ?? 'frontend';
+                $handle = (string)($params['handle'] ?? '');
+                // layoutDirective's reading of the area: trimmed, empty meaning frontend.
+                $area = trim((string)($params['area'] ?? ''));
+                $area = $area !== '' ? $area : 'frontend';
                 unset($params['handle'], $params['area']);
 
-                if (!PathGuard::isSafeIdentifier($handle) || !in_array($area, ['frontend', 'adminhtml'], true)) {
+                // Mage-OS 3.5.0 refuses an adminhtml handle outright, case-insensitively, and
+                // renders nothing for it. So does this - silently, because that IS legacy.
+                if (strcasecmp($area, 'adminhtml') === 0) {
                     return '';
                 }
-                return $layouts->render($handle, $area, $params);
+                // Any other area the filter emulates, and any handle it loads.
+                if ($area !== 'frontend') {
+                    return self::declined($n, $c, $e, 'layout area', $area);
+                }
+                if (!PathGuard::isSafeIdentifier($handle)) {
+                    return self::declined($n, $c, $e, PolicyViolation::LAYOUT_HANDLE, $handle);
+                }
+                try {
+                    return $layouts->render($handle, $area, $params);
+                } catch (RefusedByPort $refused) {
+                    return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                }
             });
         }
 
@@ -492,6 +590,13 @@ final class HostDirectives
                 $type = $params['type'] ?? '';
                 unset($params['type']);
 
+                // `{{widget id="3"}}` is a preconfigured widget instance, which generateWidget
+                // loads from the database. This engine has no such path.
+                if ($type === '' && isset($params['id']) && $params['id'] !== '') {
+                    return self::declined($n, $c, $e, 'widget id', (string)$params['id']);
+                }
+                // A type that is not an identifier is not in any widget.xml either, so
+                // generateWidget renders nothing for it too.
                 if (!PathGuard::isSafeIdentifier($type)) {
                     return '';
                 }
@@ -499,7 +604,11 @@ final class HostDirectives
                     $e->refusedByPolicy($n, $c, PolicyViolation::BLOCK, $type);
                     return '';
                 }
-                return $widgets->render($type, $params);
+                try {
+                    return $widgets->render($type, $params);
+                } catch (RefusedByPort $refused) {
+                    return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                }
             });
         }
     }

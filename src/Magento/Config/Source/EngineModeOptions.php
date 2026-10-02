@@ -7,11 +7,12 @@ use Cresset\TemplateParser\Magento\Config\EngineMode;
 use Magento\Framework\Data\OptionSourceInterface;
 
 /**
- * The stages an admin can choose for `system/template_engine/mode`.
+ * The stages an admin can choose for `system/template_engine/mode`, in rollout order.
  *
- * No Parser. Rendering through this engine is only safe with a fallback to the legacy filter
- * for whatever it refuses, and until that exists (issue #2) offering the option would put the
- * one choice that can break an email in the same dropdown as the two that cannot.
+ * Parser is offered because it cannot do worse than legacy on anything this engine declines:
+ * every refusal and every exception falls back to the legacy filter for that render. What it
+ * can do is serve different output without raising, which is what a Shadow run beforehand -
+ * and the sampled comparison Parser keeps running - measures.
  */
 class EngineModeOptions implements OptionSourceInterface
 {
@@ -21,6 +22,7 @@ class EngineModeOptions implements OptionSourceInterface
         return [
             ['value' => EngineMode::LEGACY, 'label' => __('Legacy')],
             ['value' => EngineMode::SHADOW, 'label' => __('Shadow (render both, serve legacy)')],
+            ['value' => EngineMode::PARSER, 'label' => __('Parser (serve the new engine, fall back to legacy)')],
         ];
     }
 }

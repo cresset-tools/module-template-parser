@@ -117,6 +117,7 @@ namespace Magento\Framework {
             public const URL_TYPE_MEDIA = 'media';
             public const URL_TYPE_STATIC = 'static';
             public function getUrl($routePath = null, $routeParams = null);
+            public function setScope($params);
         }
     }
 }
@@ -336,6 +337,15 @@ namespace {
             }
 
             return $map === [] ? $text : strtr((string)$text, $map);
+        }
+    }
+}
+namespace Magento\Backend\Model {
+    // StoreUrlBuilder refuses to build through it; a test extends it to check that.
+    if (!class_exists(Url::class)) {
+        class Url implements \Magento\Framework\UrlInterface {
+            public function getUrl($routePath = null, $routeParams = null) { return ''; }
+            public function setScope($params) { return $this; }
         }
     }
 }

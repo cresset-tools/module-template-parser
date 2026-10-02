@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <!--
-    Where Shadow mode keeps what it measured. See Shadow\ShadowRecorder for how a row is
-    written and what "clean since" means.
+    Where Shadow mode keeps what it measured, and Parser mode what it served, what it handed
+    back to legacy, and what its sampled comparisons found. See Shadow\ShadowRecorder for how
+    a row is written and what "clean since" means.
 
     One row per store view and template, with a counter per outcome, rather than a row per
     render: the table is bounded by stores x templates however long Shadow runs, so it needs no
@@ -18,7 +19,7 @@
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
     <table name="cresset_template_shadow" resource="default" engine="innodb"
-           comment="Template engine Shadow comparisons, per store view and template">
+           comment="Template engine Shadow comparisons and Parser renders, per store view and template">
         <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true"
                 comment="Entity ID"/>
         <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" default="0"
@@ -33,6 +34,10 @@
                 comment="Renders the new engine declined; Parser mode falls back to legacy for these"/>
         <column xsi:type="bigint" name="crashed" unsigned="true" nullable="false" default="0"
                 comment="Renders where the new engine raised anything else"/>
+        <column xsi:type="bigint" name="served" unsigned="true" nullable="false" default="0"
+                comment="Parser mode: renders served by the new engine"/>
+        <column xsi:type="bigint" name="fell_back" unsigned="true" nullable="false" default="0"
+                comment="Parser mode: renders handed to legacy because the new engine declined"/>
         <column xsi:type="datetime" name="first_seen" nullable="false" comment="First comparison, UTC"/>
         <column xsi:type="datetime" name="last_seen" nullable="false" comment="Latest comparison, UTC"/>
         <column xsi:type="datetime" name="last_divergence_at" nullable="true"

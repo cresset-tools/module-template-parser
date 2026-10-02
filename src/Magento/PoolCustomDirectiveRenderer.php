@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento;
 
 use Cresset\TemplateParser\Port\CustomDirectiveRenderer;
+use Cresset\TemplateParser\Port\RefusedByPort;
 use Magento\Framework\Filter\DirectiveProcessor\Filter\FilterPool;
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 
@@ -82,8 +83,8 @@ class PoolCustomDirectiveRenderer implements CustomDirectiveRenderer
         } catch (\Throwable) {
             // The pool changed under us, or the name was never really there. The filter
             // returns the construct verbatim in that case; this engine has already consumed
-            // it as a directive, so the closest honest answer is nothing.
-            return null;
+            // it as a directive, so it refuses rather than render nothing.
+            throw new RefusedByPort('custom directive', $name);
         }
 
         try {
@@ -91,7 +92,8 @@ class PoolCustomDirectiveRenderer implements CustomDirectiveRenderer
             // processor as null, not as '', because that is the test the filter makes.
             $rendered = $processor->process($value, $parameters, $body === '' ? null : $body);
         } catch (\Throwable) {
-            return null;
+            // The filter lets it out, and its catch makes it an error page.
+            throw new RefusedByPort('custom directive', $name);
         }
 
         return $this->applyModifiers((string)$rendered, $modifiers, $processor);
@@ -109,6 +111,10 @@ class PoolCustomDirectiveRenderer implements CustomDirectiveRenderer
         }
 
         if ($this->filters === null) {
+            // Unfiltered is not what the filter renders: the modifiers are usually escaping.
+            if (array_filter($modifiers) !== []) {
+                throw new RefusedByPort('custom directive modifiers (no filter pool wired)', implode('|', $modifiers));
+            }
             return $value;
         }
 
@@ -126,9 +132,8 @@ class PoolCustomDirectiveRenderer implements CustomDirectiveRenderer
             try {
                 $value = $filter->filterValue($value, $arguments);
             } catch (\Throwable) {
-                // A filter that raises leaves the value as it stood rather than losing the
-                // whole render, which is the posture every other port here takes.
-                return $value;
+                // FilterApplier lets it out, and the filter's catch makes it an error page.
+                throw new RefusedByPort('custom directive modifier', (string)$filterName);
             }
         }
 

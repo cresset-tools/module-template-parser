@@ -21,6 +21,9 @@ use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
 use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
 use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
 use Cresset\TemplateParser\ParameterParser;
+use Cresset\TemplateParser\Port\RefusedByPort;
+use Cresset\TemplateParser\HostServices;
+use Cresset\TemplateParser\Options;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,6 +33,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class MagentoGuardTest extends TestCase
 {
+    use AssertsRefusals;
+
     private function omConfig(): ConfigInterface
     {
         return new class implements ConfigInterface {
@@ -85,7 +90,7 @@ final class MagentoGuardTest extends TestCase
 
         $renderer = new TypeCheckedWidgetRenderer($this->layout($built), $this->omConfig(), ['Some\\Other\\Widget']);
 
-        self::assertSame('', $renderer->render($type, []));
+        self::assertRefused(fn () => $renderer->render($type, []), 'widget type');
         self::assertSame([], $built, 'an allowlist miss must not be constructed');
     }
 
@@ -135,7 +140,7 @@ final class MagentoGuardTest extends TestCase
         $built = [];
         $renderer = new LayoutBlockRenderer($this->layout($built), $this->omConfig(), ['toHtml'], ['Some\\Other\\Block']);
 
-        self::assertSame('', $renderer->render($class, [], 'toHtml'));
+        self::assertRefused(fn () => $renderer->render($class, [], 'toHtml'), 'block class');
         self::assertSame([], $built, 'an allowlist miss must not be constructed');
     }
 
@@ -204,7 +209,8 @@ final class MagentoGuardTest extends TestCase
 
         $renderer = new LayoutBlockRenderer($layout, $this->omConfig(), ['toHtml', 'toGone']);
 
-        self::assertSame('', $renderer->render($type, [], 'toGone'));
+        // Legacy falls back to toHtml() for a method the block lacks; this refuses instead.
+        self::assertRefused(fn () => $renderer->render($type, [], 'toGone'), 'block output method', 'toGone');
     }
 
     /**
@@ -234,7 +240,7 @@ final class MagentoGuardTest extends TestCase
         $renderer = new LayoutBlockRenderer($layout, $this->omConfig());
 
         self::assertSame('HTML', $renderer->render($type, [], 'toHtml'));
-        self::assertSame('', $renderer->render($type, [], 'toString'));
+        self::assertRefused(fn () => $renderer->render($type, [], 'toString'), 'block output method', 'toString');
     }
 
     // ------------------------------------------------ AllowlistedConfigReader
@@ -324,14 +330,19 @@ final class MagentoGuardTest extends TestCase
     }
 
     /** A host with no Information model keeps the raw value rather than losing the directive. */
-    public function testWithoutTheStoreInformationModelTheStoredValueStands(): void
+    /**
+     * Without the store information model there is only the stored code - `NL` where the
+     * filter renders `Netherlands` - so it is refused rather than served as if complete.
+     */
+    public function testWithoutTheStoreInformationModelTheCountryIsRefused(): void
     {
         $reader = new AllowlistedConfigReader(
-            $this->scopeConfig(['general/store_information/country_id' => 'NL']),
-            $this->variables(['general/store_information/country_id']),
+            $this->scopeConfig(['general/store_information/country_id' => 'NL', 'a/b' => 'V']),
+            $this->variables(['general/store_information/country_id', 'a/b']),
         );
 
-        self::assertSame('NL', $reader->value('general/store_information/country_id'));
+        self::assertRefused(fn () => $reader->value('general/store_information/country_id'), 'config path (store information not wired)');
+        self::assertSame('V', $reader->value('a/b'), 'any other path needs no store information');
     }
 
     /** @param array<string,string> $config @param array<string,?string> $info */
@@ -410,7 +421,7 @@ final class MagentoGuardTest extends TestCase
 
         $reader = new AllowlistedConfigReader($this->scopeConfig(['a/b' => 'V']), $throwing);
 
-        self::assertNull($reader->value('a/b'));
+        self::assertRefused(fn () => $reader->value('a/b'), 'config path', 'a/b');
     }
 
     /** A non-scalar config value must not be stringified into the template. */
@@ -576,8 +587,32 @@ final class MagentoGuardTest extends TestCase
         $loaded = [];
         $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
 
-        self::assertSame('', $renderer->render('customer_account_edit', 'frontend', []));
+        try {
+            $renderer->render('customer_account_edit', 'frontend', []);
+            self::fail('a handle outside the allowlist was not refused');
+        } catch (RefusedByPort $refused) {
+            self::assertSame(['layout handle', 'customer_account_edit'], [$refused->kind, $refused->name]);
+        }
         self::assertSame([], $layout->created, 'the handle was loaded despite being refused');
+    }
+
+    /**
+     * And the refusal is recorded, not an unexplained nothing.
+     *
+     * A silent '' is how Parser mode served every stock order email without its item table:
+     * nothing said the directive had been skipped, so nothing fell back to the filter.
+     */
+    public function testARefusedHandleIsRecordedAsAPolicyViolation(): void
+    {
+        $loaded = [];
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
+        $adapter = new TemplateFilterAdapter(new HostServices(layouts: $renderer), Options::compatible());
+
+        self::assertSame('ab', $adapter->setVariables(['x' => 1])->filter('a{{layout handle="sales_email_order_items"}}b'));
+        self::assertSame(
+            ['policy refused layout handle "sales_email_order_items" (line 1, column 2)'],
+            array_map(static fn ($v) => $v->describe(), $adapter->violations())
+        );
     }
 
     // ------------------------------------------------ adapter scope

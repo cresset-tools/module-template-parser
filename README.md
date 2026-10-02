@@ -93,13 +93,56 @@ Template Engine** (`system/template_engine/mode`):
 |---|---|---|
 | **Legacy** (default) | Magento's filter only | the legacy result |
 | **Shadow** | both engines, compared | the legacy result |
+| **Parser** | this engine; the filter only for what it declines, and for a sample | this engine's result, or legacy's where it declined |
 
 ```sh
 bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode shadow
 ```
 
-**Parser** — serving this engine's output, with a fallback to the legacy filter for anything
-it refuses — is not offered yet; see [#2](https://github.com/cresset-tools/module-template-parser/issues/2).
+**Parser** serves this engine's output, and falls back to the legacy filter for any render this
+engine declines: a refusal, a render the policy cut short (a layout handle not allowed), an
+exception from the host while rendering (a block that raises), or a crash. A fallback is the filter's own render of that template, so it is exactly what
+Legacy would have served. The one way Parser can do worse than Legacy is by serving different
+output without raising — which is what Shadow measures before the switch, and what Parser keeps
+measuring after it: `system/template_engine/parser_shadow_rate` percent of its renders (1 by
+default, shown in the admin only for Parser) are also rendered by the filter and compared. The
+customer still gets this engine's result.
+
+"Declines" is deliberately wide. Wherever this engine would render less than Mage-OS 3.5.0's
+filter for the same template — a guard stricter than the filter's, a port that cannot answer,
+a directive it does not model — the render records a policy violation instead of rendering an
+unexplained nothing, and Parser hands it to the filter. That covers:
+
+- a `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}`, `{{customvar}}` or
+  `{{template}}` parameter one of this engine's guards refuses (the filter checks none of them);
+- `{{block id=...}}` and `{{widget id=...}}`, which load a CMS block or a widget instance by id;
+- a `{{block output=...}}` method outside the allowed list, a class that is not a block, a
+  layout handle or area that is not allowed, and an integrator's class or widget allowlist;
+- a `{{template}}` include the loader cannot produce, a `{{config}}` country or region with no
+  store information to name it, a stylesheet that cannot be built, and a ProcessorPool
+  directive that is missing, raises, or has modifiers and no filter pool;
+- a directive whose port the host did not wire;
+- a directive only the filter itself renders: a `fooDirective()` a module added, a stock
+  directive a module put a plugin on, the CMS filter's own `{{media}}`, which returns a
+  filesystem path for the admin's WYSIWYG preview, and `{{widget}}` in the newsletter filter,
+  which renders each widget in an emulated frontend area;
+- `{{store}}` through the backend URL model - a CMS filter built in the admin - whose route
+  persists between calls, so legacy's output there depends on what it built last;
+- a template the filter *reads* differently: a `{{for}}` loop, a construct legacy's lazy
+  `{{name(.*?)}}` would end at a different `}}` (a `{{{`, a stray or quoted `{{`, a missing
+  brace), a quote still open at that `}}`, and `{{iframe}}`-style names legacy reads as
+  `{{if}}`. These are the "Quirks it does not reproduce" below; compatible mode keeps
+  rendering them its own way for `check` and `diff`, and the Magento layer declines them
+  (`LegacyReading`), for the top-level template and for every include.
+
+And it matches the filter where it can. `{{widget}}` gets what `generateWidget` gives a block -
+`type`, the filter's store as `store_id`, and `name` as the block name - and `{{store}}` and
+`{{protocol store=}}` answer for the filter's own URL model and the named store.
+
+Where the filter renders nothing as well — a block class on its deny list, an adminhtml layout
+handle (refused outright since 3.5.0), a `{{config}}` path not on Magento's list, a widget type
+no `widget.xml` declares — this engine stays quiet, because falling back would only render the
+same nothing twice. `SilentDegradationTest` pins both lists.
 
 A rollout, one store view at a time:
 
@@ -109,11 +152,14 @@ bin/magento template:diff --store=1              # what would Parser change, ove
 bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode shadow
 # ... let real emails and pages render for a while ...
 bin/magento template:shadow:report --store=1     # exit 0: compared, and nothing diverged
+bin/magento config:set --scope=stores --scope-code=default system/template_engine/mode parser
+# ... and keep reading the report: Parser's sampled comparisons land in it too
+bin/magento template:shadow:report --store=1
 ```
 
 A clean report — exit 0, with renders behind it — is the evidence for moving that store view
-on to Parser once [#2](https://github.com/cresset-tools/module-template-parser/issues/2) lands.
-`template:status` shows the stage renders actually use, and says so when the value saved in
+on to Parser. Moving back is the same `config:set` with `legacy`, and takes effect on the next
+render. `template:status` shows the stage renders actually use, and says so when the value saved in
 the database is not it: a stale config cache, or an override in `app/etc/env.php`.
 
 Adoption goes through a plugin, not a preference. Emails render through
@@ -133,14 +179,23 @@ and template:
 |---|---|
 | `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3`, `cms_block:7`, `cms_page:2`, or `unidentified:<filter class>` |
 | `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
+| `served`, `fell_back` | Parser mode: how many renders it served, and how many it handed to legacy |
 | `first_seen`, `last_seen` | when it was first and last compared (UTC) |
 | `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many renders have agreed or been refused since |
 | `last_divergence`, `last_refusal`, `last_crash` | JSON describing the most recent of each |
 
-A **refusal** is a construct this engine declines on purpose; Parser mode will fall back to
-legacy for it, so it counts as clean. A **crash** is anything else the engine raised, and counts
-against the template like a divergence. So "clean since" is `last_divergence_at`, or
-`first_seen` for a template that has never diverged.
+A **refusal** is a construct this engine declines on purpose, a render the policy cut short
+(a layout handle not allowed, say), or an exception the host raised while this engine
+rendered; Parser mode falls back to legacy for it, so it counts as clean. A
+**crash** is anything else the engine raised. Parser falls back for that too, but a crash is a
+bug in this engine rather than a property of the template, so it counts against the template
+like a divergence. "Clean since" is `last_divergence_at`, or `first_seen` for a template that
+has never diverged.
+
+Parser records into the same rows. A served render that was sampled counts as a comparison,
+exactly like a Shadow one — so a divergence after the switch fails `template:shadow:report` the
+way one before it did. A served render that was not sampled is only counted in `served`: it is
+no evidence either way, so it leaves `renders_since_divergence` alone.
 
 The template is named by where it came from — plugins on the email and CMS models register
 its identity as they hand its text to the filter — never by its content. No rendered output is
@@ -153,7 +208,9 @@ every 100 templates or 60 seconds in a long-running process. A failed write is l
 warning and never affects the render.
 
 One render is deliberately skipped, and one is adjusted before the diff. A **child** template —
-anything reached through `{{template}}` — is skipped, because the filter defers a directive it
+anything the filter reaches through `{{template}}` — always goes to the filter, in every stage,
+and is never compared. The filter only renders a child while rendering its parent (this engine
+loads includes itself, so a parent it serves never reaches one), and it is skipped because the filter defers a directive it
 cannot finish in a child by emitting a signed placeholder for the parent to resolve, and the
 signature is random per render. This engine records that deferral structurally instead, so a
 child's output can never be byte-equal to the filter's, whatever either engine does. The
@@ -483,7 +540,11 @@ Quirks it does not reproduce:
 - **Reflection dispatch of arbitrary filter methods.** There is none here; every directive
   reaches a named handler.
 - **`{{layout}}` without an allowlist.** A layout handle decides which blocks get built, so
-  the `LayoutRenderer` port takes the handles it may render and refuses the rest.
+  the `LayoutRenderer` port takes the handles it may render and refuses the rest. The module
+  allows the five the stock sales emails use (`AllowlistedLayoutRenderer::STOCK_EMAIL_HANDLES`,
+  in `etc/di.xml`); add a module's own there. A refused handle is recorded as a policy
+  violation rather than rendering an unexplained nothing, so Shadow reports it and Parser mode
+  hands that render to the legacy filter.
 - **`{{var x|modifier}}` rendering empty.** That is a defect in `Framework\Filter\Template`,
   whose `varDirective` hands `VarDirective` a legacy-shaped construction so the expression
   resolved is `" x|raw"`. `Email\Model\Template\Filter` overrides `varDirective` and handles
@@ -797,9 +858,10 @@ the legacy render (`store`, `logo_url`, `this` and the rest) are the variables t
 given, and the CSS inlining that runs after a render runs after both.
 
 `{{layout}}` is the exception, because a layout handle decides which blocks get built and
-template text is not a trustworthy source for one. Nothing is allowed by default, which makes
-every stock sales email report as a difference. `--allow-layout-handle` names the ones a run
-may render, and `stock-email` is shorthand for the five the stock sales emails use:
+template text is not a trustworthy source for one. Outside a store, nothing is allowed by
+default, which makes every stock sales email report as a difference. `--allow-layout-handle`
+names the ones a run may render, and `stock-email` is shorthand for the five the stock sales
+emails use - the five the module allows in a store:
 
 ```sh
 template-parser diff --source=codebase --allow-layout-handle=stock-email
@@ -942,7 +1004,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-12908 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+12997 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

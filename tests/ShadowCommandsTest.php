@@ -160,6 +160,39 @@ final class ShadowCommandsTest extends TestCase
     }
 
     /** Parser mode falls back for a refusal, so it is listed and never fails the gate. */
+    /**
+     * Parser's serves and fallbacks are reported per store view, and a divergence found by
+     * its sampled comparison fails the report like a Shadow one: that is how a regression
+     * after the switch shows up.
+     */
+    public function testParserServesAreReportedAndASampledDivergenceFails(): void
+    {
+        $this->db->insertShadow([
+            'store_id' => 1, 'template' => 'cms_block:9', 'agreed' => 9, 'diverged' => 1,
+            'served' => 1000, 'fell_back' => 2, 'refused' => 2,
+            'last_divergence_at' => '2026-09-28 10:00:00', 'renders_since_divergence' => 0,
+            'last_divergence' => json_encode(['legacy_length' => 5, 'candidate_length' => 6, 'first_difference_at' => 4]),
+        ]);
+
+        $tester = $this->report();
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('Parser mode: 1000 served by the new engine, 2 fell back to legacy', $tester->getDisplay());
+    }
+
+    /** A table from before Parser mode, without its columns, still reports. */
+    public function testATableWithoutTheParserColumnsStillReports(): void
+    {
+        $rows = [['store_id' => 1, 'template' => 'a', 'agreed' => 5, 'diverged' => 0, 'refused' => 0, 'crashed' => 0,
+            'first_seen' => '2026-09-01 00:00:00', 'last_seen' => '2026-09-02 00:00:00', 'last_divergence_at' => null,
+            'renders_since_divergence' => 5]];
+
+        $store = (new ShadowReport($rows, [1 => ['code' => 'default', 'name' => 'Default', 'website_id' => 1]]))->stores()[0];
+
+        self::assertSame([0, 0], [$store['served'], $store['fell_back']]);
+        self::assertStringNotContainsString('Parser', ShadowReport::oneLine($store));
+    }
+
     public function testARefusalIsListedButDoesNotFail(): void
     {
         $this->db->insertShadow([
@@ -352,12 +385,20 @@ final class ShadowCommandsTest extends TestCase
 
     // ---------------------------------------------------------------- status
 
-    /** @param array<int,string> $effective store id => the stage config resolves to */
-    private function runStatus(array $effective, array $options = []): CommandTester
+    /**
+     * @param array<int,string> $effective store id => the stage config resolves to
+     * @param array<int,string> $rates store id => the Parser sample rate config resolves to
+     */
+    private function runStatus(array $effective, array $options = [], array $rates = []): CommandTester
     {
-        $scopeConfig = new class ($effective) implements ScopeConfigInterface {
-            public function __construct(private array $effective) {}
-            public function getValue($path, $scope = 'default', $scopeCode = null) { return $this->effective[(int)$scopeCode] ?? null; }
+        $scopeConfig = new class ($effective, $rates) implements ScopeConfigInterface {
+            public function __construct(private array $effective, private array $rates) {}
+            public function getValue($path, $scope = 'default', $scopeCode = null)
+            {
+                return $path === EngineMode::XML_PATH_PARSER_SHADOW_RATE
+                    ? ($this->rates[(int)$scopeCode] ?? null)
+                    : ($this->effective[(int)$scopeCode] ?? null);
+            }
             public function isSetFlag($path, $scope = 'default', $scopeCode = null) { return false; }
         };
         $command = (new StatusCommand())
@@ -403,6 +444,21 @@ final class ShadowCommandsTest extends TestCase
 
         self::assertMatchesRegularExpression('/default \(1\) +Legacy/', $display);
         self::assertStringContainsString('the database says Shadow; the config cache is stale', $display);
+    }
+
+    /** A Parser store view shows its sample rate, and what Parser did there. */
+    public function testStatusShowsAParserStoreAndItsRate(): void
+    {
+        $this->db
+            ->setConfig('stores', 1, EngineMode::XML_PATH, 'parser', '2026-09-20 08:00:00')
+            ->insertShadow(['store_id' => 1, 'template' => 'email:12', 'agreed' => 3, 'refused' => 1,
+                'served' => 300, 'fell_back' => 1, 'renders_since_divergence' => 4]);
+
+        $display = $this->runStatus([1 => 'parser'], rates: [1 => '2.5'])->getDisplay();
+
+        self::assertMatchesRegularExpression('/default \(1\) +Parser +set at store view, since 2026-09-20 08:00:00 UTC/', $display);
+        self::assertStringContainsString('2.5% of renders also compared against legacy', $display);
+        self::assertStringContainsString('Parser served 300, fell back 1', $display);
     }
 
     public function testStatusWorksBeforeTheTableExists(): void

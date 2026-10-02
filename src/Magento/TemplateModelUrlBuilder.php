@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento;
 
 use Cresset\TemplateParser\PathGuard;
+use Cresset\TemplateParser\Port\RefusedByPort;
 use Cresset\TemplateParser\Port\TemplateUrlBuilder;
 
 /**
@@ -31,11 +32,13 @@ class TemplateModelUrlBuilder implements TemplateUrlBuilder
         $route = is_string($arguments[1] ?? null) ? $arguments[1] : '';
         $parameters = is_array($arguments[2] ?? null) ? $arguments[2] : [];
 
-        // '' rather than null from here on: the receiver IS a template model, so the call
-        // was served. Declining now would send it back to getData('url'), which is a
-        // different answer to the same question.
+        // Never null from here on: the receiver IS a template model, so the call was served.
+        // Declining now would send it back to getData('url'), which is a different answer to
+        // the same question. And refused rather than '': the filter calls getUrl() with
+        // whatever it is given, so a route this guard refuses is a URL there, and a missing
+        // store is a TypeError there - neither is an empty string.
         if (!$store instanceof \Magento\Store\Model\Store || !PathGuard::isSafeRelativePath($route)) {
-            return '';
+            throw new RefusedByPort('template url', $route);
         }
 
         // The route is not the only thing that reaches a URL. Url::getRouteUrl() returns
@@ -47,13 +50,13 @@ class TemplateModelUrlBuilder implements TemplateUrlBuilder
         // own. A list of parameter NAMES cannot do the job here: the set is open, so
         // `[x:'../../..']` walks past any such list. One guard, called twice.
         if (!PathGuard::routeParametersAreSafe($parameters)) {
-            return '';
+            throw new RefusedByPort('template url parameters', $route);
         }
 
         try {
             return (string)$target->getUrl($store, $route, $parameters);
         } catch (\Throwable) {
-            return '';
+            throw new RefusedByPort('template url', $route);
         }
     }
 }

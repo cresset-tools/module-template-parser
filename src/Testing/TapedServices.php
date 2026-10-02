@@ -12,6 +12,7 @@ use Cresset\TemplateParser\Port\StylesheetLoader;
 use Cresset\TemplateParser\Port\TemplateLoader;
 use Cresset\TemplateParser\Port\TemplateUrlBuilder;
 use Cresset\TemplateParser\Port\Translator;
+use Cresset\TemplateParser\Port\StoreAwareUrlBuilder;
 use Cresset\TemplateParser\Port\UrlBuilder;
 use Cresset\TemplateParser\Port\WidgetRenderer;
 
@@ -95,7 +96,7 @@ final class TapedServices
                         return $v === null ? null : (string)$v;
                     }
                 } : null,
-            urls: $has('urls') ? new class ($tape, $live?->urls) implements UrlBuilder {
+            urls: $has('urls') ? new class ($tape, $live?->urls) implements StoreAwareUrlBuilder {
                 use TapedPort;
                 public function storeUrl(string $path, array $parameters): string
                 {
@@ -112,6 +113,10 @@ final class TapedServices
                 public function isSecure(): bool
                 {
                     return (bool)$this->call('urls', 'isSecure', []);
+                }
+                public function isSecureFor(string $store): bool
+                {
+                    return (bool)$this->call('urls', 'isSecureFor', [$store]);
                 }
             } : null,
             stylesheets: $has('stylesheets') ? new class ($tape, $live?->stylesheets) implements StylesheetLoader {

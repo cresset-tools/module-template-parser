@@ -22,6 +22,8 @@ use PHPUnit\Framework\TestCase;
 
 final class MagentoAdapterTest extends TestCase
 {
+    use AssertsRefusals;
+
     /** Tripwire: records construction, so "was it built?" is observable. */
     private function layout(array &$built): LayoutInterface
     {
@@ -63,14 +65,15 @@ final class MagentoAdapterTest extends TestCase
     public function testNonBlockTypeIsRefusedWithoutBeingConstructed(): void
     {
         $built = [];
-        self::assertSame('', $this->renderer($built)->render(\stdClass::class, [], 'toHtml'));
+        // Refused out loud: the filter's createBlock() raises for it, which is not ''.
+        self::assertRefused(fn () => $this->renderer($built)->render(\stdClass::class, [], 'toHtml'), 'block class');
         self::assertSame([], $built, 'the class must never have been constructed');
     }
 
     public function testNonExistentClassIsRefusedWithoutBeingConstructed(): void
     {
         $built = [];
-        self::assertSame('', $this->renderer($built)->render('No\\Such\\Class', [], 'toHtml'));
+        self::assertRefused(fn () => $this->renderer($built)->render('No\\Such\\Class', [], 'toHtml'), 'block class');
         self::assertSame([], $built);
     }
 
@@ -79,7 +82,8 @@ final class MagentoAdapterTest extends TestCase
     {
         $built = [];
         $class = get_class(new class implements BlockInterface { public function toHtml() { return ''; } });
-        self::assertSame('', $this->renderer($built)->render($class, [], 'getCacheKey'));
+        // The filter would call it; this refuses, out loud, so Parser falls back.
+        self::assertRefused(fn () => $this->renderer($built)->render($class, [], 'getCacheKey'), 'block output method', 'getCacheKey');
         self::assertSame([], $built, 'refusal must happen before construction');
     }
 
@@ -88,7 +92,7 @@ final class MagentoAdapterTest extends TestCase
         $built = [];
         $class = get_class(new class implements BlockInterface { public function toHtml() { return ''; } });
         $renderer = $this->renderer($built, ['toHtml'], ['Only\\This\\One']);
-        self::assertSame('', $renderer->render($class, [], 'toHtml'));
+        self::assertRefused(fn () => $renderer->render($class, [], 'toHtml'), 'block class');
         self::assertSame([], $built);
     }
 
@@ -331,5 +335,57 @@ final class MagentoAdapterTest extends TestCase
         $adapter->setPlainTemplateMode(true);
 
         self::assertSame('TEXT', $adapter->filter('{{template config_path="design/email/footer"}}'));
+    }
+
+    /**
+     * A host error is reported for the render it happened in and forgotten by the next.
+     * Kept, it would make a clean render look like one the host raised in - and Parser mode
+     * falls back on that.
+     */
+    public function testAHostErrorIsForgottenByTheNextRender(): void
+    {
+        $raise = true;
+        $adapter = new TemplateFilterAdapter(new HostServices(blocks: new class ($raise) implements BlockRenderer {
+            public function __construct(private bool &$raise) {}
+            public function render(string $class, array $data, string $method): string
+            {
+                if ($this->raise) {
+                    throw new \RuntimeException('once');
+                }
+                return 'BLOCK';
+            }
+        }), Options::compatible());
+
+        $adapter->setVariables(['x' => 1])->filter('{{block class="Magento\\Cms\\Block\\Block"}}');
+        self::assertNotNull($adapter->lastError());
+
+        $raise = false;
+        $adapter->filter('{{block class="Magento\\Cms\\Block\\Block"}}');
+        self::assertNull($adapter->lastError());
+    }
+
+    /**
+     * filter() is re-entered through the host: our {{block}} renders a CMS block, whose filter
+     * renders it through this same adapter. What the adapter reports afterwards must be the
+     * OUTER render's - it is the one the caller just made.
+     */
+    public function testAnAdapterReEnteredMidRenderReportsTheOuterRender(): void
+    {
+        $adapter = null;
+        $blocks = new class ($adapter) implements BlockRenderer {
+            public function __construct(private ?TemplateFilterAdapter &$adapter) {}
+            public function render(string $class, array $data, string $method): string
+            {
+                // The inner render defers nothing.
+                return $this->adapter->setVariables(['y' => 1])->filter('[{{var y}}]');
+            }
+        };
+        $adapter = new TemplateFilterAdapter(new HostServices(blocks: $blocks), Options::compatible());
+
+        $out = $adapter->setVariables(['x' => 1])
+            ->filter('{{inlinecss file="a.css"}}{{block class="Magento\\Cms\\Block\\Block"}}');
+
+        self::assertSame('[1]', $out);
+        self::assertSame([['kind' => 'inlinecss', 'payload' => ['file' => 'a.css']]], $adapter->deferred());
     }
 }

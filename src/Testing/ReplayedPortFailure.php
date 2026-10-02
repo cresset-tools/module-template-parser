@@ -8,6 +8,7 @@ namespace Cresset\TemplateParser\Testing;
  *
  * Only the class name survives a tape, which is enough: what the engine does with a host
  * failure - let it out, or catch it and render a gap - does not depend on which failure it was.
+ * Port\RefusedByPort is the exception, and is replayed as itself - see PortTape::replay().
  */
 final class ReplayedPortFailure extends \RuntimeException
 {

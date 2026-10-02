@@ -32,9 +32,9 @@ class StatusCommand extends Command
         $this->addOption('format', null, InputOption::VALUE_REQUIRED, 'text or json', 'text')
             ->setHelp(<<<'HELP'
 Lists every website and store view with the stage it is at in the rollout -
-Legacy, Shadow, and later Parser - where that is configured, and since when.
-For a store view with Shadow results, one line of what they say; shadow:report
-has the rest.
+Legacy, Shadow or Parser - where that is configured, and since when. For a store
+view in Parser, the share of its renders also compared against legacy. For one
+with results recorded, one line of what they say; shadow:report has the rest.
 
 The stage shown is the one renders use, read the way the plugin reads it. Where
 the value saved in the database says something else, that is said too: the
@@ -82,6 +82,7 @@ HELP);
                 'set_at' => $origin['scope'],
                 'since' => $origin['updated_at'],
                 'saved_mode' => $savedMode,
+                'parser_shadow_rate' => $effective === EngineMode::PARSER ? $this->parserShadowRate($storeId) : null,
                 'shadow' => isset($summaries[$storeId]) ? ShadowReport::oneLine($summaries[$storeId]) : null,
             ];
         }
@@ -114,7 +115,7 @@ HELP);
             $output->writeln('<fg=gray>No Shadow table yet: enable the module and run bin/magento setup:upgrade.</>');
         }
         $output->writeln(sprintf(
-            '<fg=gray>Set a stage with bin/magento config:set --scope=stores --scope-code=CODE %s shadow; read Shadow results with %s.</>',
+            '<fg=gray>Set a stage with bin/magento config:set --scope=stores --scope-code=CODE %s shadow|parser; read the results with %s.</>',
             EngineMode::XML_PATH,
             $this->sibling('shadow:report')
         ));
@@ -134,6 +135,12 @@ HELP);
                 : sprintf('set at %s, since %s UTC', $row['set_at'], $row['since'] ?? '?')
         ));
 
+        if ($row['parser_shadow_rate'] !== null) {
+            $output->writeln(sprintf(
+                '    %s%% of renders also compared against legacy',
+                rtrim(rtrim(number_format($row['parser_shadow_rate'], 2, '.', ''), '0'), '.')
+            ));
+        }
         if ($row['saved_mode'] !== $row['mode']) {
             $output->writeln(sprintf(
                 '    <comment>the database says %s; the config cache is stale, or app/etc/env.php or config.php overrides it</comment>',
@@ -175,6 +182,22 @@ HELP);
 
         try {
             return $engineMode->forStore($storeId);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** The configured sample rate, read the way the plugin reads it; null when it cannot be. */
+    private function parserShadowRate(int $storeId): ?float
+    {
+        $engineMode = $this->engineMode ?? $this->magento()->get(EngineMode::class);
+
+        if (!$engineMode instanceof EngineMode) {
+            return null;
+        }
+
+        try {
+            return $engineMode->parserShadowRate($storeId);
         } catch (\Throwable) {
             return null;
         }

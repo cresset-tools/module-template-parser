@@ -6,6 +6,8 @@ namespace Cresset\TemplateParser\Magento;
 use Magento\Framework\App\State;
 use Magento\Framework\View\LayoutFactory;
 use Cresset\TemplateParser\Port\LayoutRenderer;
+use Cresset\TemplateParser\Port\RefusedByPort;
+use Cresset\TemplateParser\PolicyViolation;
 
 /**
  * {{layout}} restricted to handles the integrator has declared.
@@ -16,6 +18,21 @@ use Cresset\TemplateParser\Port\LayoutRenderer;
  */
 class AllowlistedLayoutRenderer implements LayoutRenderer
 {
+    /**
+     * The handles the stock sales emails build their item tables and tracking with.
+     *
+     * Every one is already reachable from a template the store ships, so allowing them grants
+     * nothing a stock installation does not already do. etc/di.xml allows exactly these, and
+     * the CLI's `--allow-layout-handle=stock-email` means them too.
+     */
+    public const STOCK_EMAIL_HANDLES = [
+        'sales_email_order_items',
+        'sales_email_order_invoice_items',
+        'sales_email_order_shipment_items',
+        'sales_email_order_shipment_track',
+        'sales_email_order_creditmemo_items',
+    ];
+
     /** @param string[] $allowedHandles */
     public function __construct(
         private readonly LayoutFactory $layoutFactory,
@@ -38,7 +55,9 @@ class AllowlistedLayoutRenderer implements LayoutRenderer
     public function render(string $handle, string $area, array $parameters): string
     {
         if (!in_array($handle, $this->allowedHandles, true)) {
-            return '';
+            // Declined out loud. A silent '' here is how Parser mode served every stock order
+            // email without its item table: nothing recorded that the directive was skipped.
+            throw new RefusedByPort(PolicyViolation::LAYOUT_HANDLE, $handle);
         }
 
         foreach (self::CAPABILITY_PARAMETERS as $key) {

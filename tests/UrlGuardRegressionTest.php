@@ -27,6 +27,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class UrlGuardRegressionTest extends TestCase
 {
+    use AssertsRefusals;
+
     private function engine(): TemplateEngine
     {
         $engine = TemplateEngine::withOptions(Options::compatible());
@@ -319,12 +321,12 @@ final class UrlGuardRegressionTest extends TestCase
             }
         };
 
-        $built = (new TemplateModelUrlBuilder())->urlFor(
+        // Refused out loud, never handed to the host: the filter would build the URL, so
+        // this is declined - and in Parser mode the filter renders it, as it does today.
+        self::assertRefused(fn () => (new TemplateModelUrlBuilder())->urlFor(
             $model,
             [new \Magento\Store\Model\Store(), 'customer/account', $parameters]
-        );
-
-        self::assertSame('', $built);
+        ), 'template url parameters');
         self::assertSame([], $model->served, 'the parameters reached the host');
     }
 
@@ -397,10 +399,10 @@ final class UrlGuardRegressionTest extends TestCase
     {
         $model = new class extends \Magento\Email\Model\AbstractTemplate {};
 
-        self::assertSame('', (new TemplateModelUrlBuilder())->urlFor(
+        self::assertRefused(fn () => (new TemplateModelUrlBuilder())->urlFor(
             $model,
             [new \Magento\Store\Model\Store(), 'customer/account/', ['_direct' => $payload]]
-        ));
+        ), 'template url parameters');
     }
 
     public static function directPayloads(): array

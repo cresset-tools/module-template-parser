@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Cresset\TemplateParser\Magento;
 
 use Cresset\TemplateParser\Port\StylesheetLoader;
+use Cresset\TemplateParser\Port\RefusedByPort;
 
 /**
  * {{css}} the way Email\Model\Template\Filter resolves it.
@@ -38,7 +39,9 @@ class AssetStylesheetLoader implements StylesheetLoader
         } catch (\Magento\Framework\View\Asset\ContentProcessorException $e) {
             return '/*' . PHP_EOL . $e->getMessage() . PHP_EOL . '*/';
         } catch (\Throwable) {
-            return null;
+            // cssDirective catches only the processor's exception; anything else - design
+            // params missing, an asset that cannot be built - reaches the filter's catch.
+            throw new RefusedByPort('stylesheet', $file);
         }
 
         return $css === ''

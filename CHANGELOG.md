@@ -16,7 +16,13 @@ Entries say what changed and why it mattered. A line that only names a file has 
   Template Engine** (`system/template_engine/mode`), with **Legacy**, the default, and
   **Shadow**. Rolling out is now a configuration change per store view instead of two `di.xml`
   entries in a project module, and a Shadow run is evidence for the store view it ran in.
-  Parser is not offered until it can fall back to legacy on a refusal (#2).
+
+- **Parser** mode serves this engine's output, and hands any render it declines — a refusal,
+  a render the policy cut short, an exception from the host, a crash — to the legacy filter, so
+  a fallback is byte for byte what Legacy serves. `system/template_engine/parser_shadow_rate` (1% by default) also renders
+  that share of Parser's renders through the filter and compares them, so a divergence after
+  the switch still fails `template:shadow:report`. The Shadow table counts what Parser served
+  and what fell back, and `template:status` shows a Parser store view's sample rate. (#2)
 
 - Shadow records every comparison in a `cresset_template_shadow` table, one row per store view
   and template, counting agreements, divergences, refusals and crashes, with when the template
@@ -68,6 +74,69 @@ Entries say what changed and why it mattered. A line that only names a file has 
   store without calling the filter's `getStoreId()`, which fills an unset store from the
   current one and keeps it — on the shared CMS filters that would have pinned every later
   render to the first store that rendered.
+
+- The plugin is an `around` plugin on `filter()`, because Parser has to be able not to run the
+  filter. Each invocation keeps its scope in its own call, which replaces the stack of frames
+  a before/after pair needed for re-entrant renders.
+
+- What the plugin captures from `setVariables()`, `setPlainTemplateMode()` and
+  `setDesignParams()` is kept per filter instance, and variables are merged as the filter
+  merges them. The plugin is shared by every filter, so with one slot a CMS block rendered
+  inside an email was rendered with the email's variables.
+
+- The module allows the five layout handles the stock sales emails build their item tables
+  and tracking with (`AllowlistedLayoutRenderer::STOCK_EMAIL_HANDLES`, also what the CLI's
+  `stock-email` means). Each is reachable from a template the store ships, so this grants
+  nothing a stock store does not already do. With none allowed, a real store in Parser mode
+  served every order, invoice, shipment and credit memo email without its item table.
+
+- A layout handle the allowlist refuses is recorded as a policy violation (`RefusedByPort`)
+  instead of rendering an unexplained nothing, and a render with a policy violation is declined
+  rather than compared: Shadow records it as refused, Parser falls back to the filter, and
+  `check` says which handle to allow.
+
+- Every place this engine rendered less than the filter would, silently, now records a policy
+  violation instead, so Parser falls back and Shadow reports it as a refusal: stricter guards on
+  `{{store}}`, `{{media}}`, `{{view}}`, `{{protocol}}`, `{{css}}`, `{{customvar}}` and
+  `{{template}}`; `{{block id=}}` and `{{widget id=}}`; disallowed block output methods,
+  non-block classes, layout areas and handles, and integrator allowlists; includes the loader
+  cannot produce, unnamed countries and regions, stylesheets that cannot be built, failing
+  ProcessorPool directives; unwired ports; and directives only the filter renders (module
+  methods, plugged stock directives, the CMS filter's filesystem `{{media}}`). Ports signal it
+  by throwing `Port\RefusedByPort`. Port tapes keep a refusal's kind and name and replay it as one.
+
+- Known differences from Mage-OS 3.5.0 are matched or declined, never served. `{{widget}}`
+  hands the block `type`, the filter's store as `store_id` and `name` as its layout name, as
+  `generateWidget` does. `{{store}}` builds with the rendering filter's own URL model
+  (`RenderScope`), and declines through the backend one, whose route persists between calls.
+  `{{protocol store=}}` answers for that store (`Port\StoreAwareUrlBuilder`), and declines a
+  store that does not exist. `{{widget}}` in the newsletter filter, which emulates the frontend
+  area per widget, is declined. And the constructs README lists under "Quirks it does not
+  reproduce" - `{{for}}`, a different `}}`, an open quote, `{{iframe}}` read as `{{if}}` - are
+  detected on the source (`LegacyReading`) and declined, top-level and in includes; over the
+  corpus that flags every case where compatible mode renders differently from the filter.
+
+- `tools/render-store.php` renders a store's emails, CMS blocks and pages through the paths
+  Magento takes, for comparing stages byte for byte. Its header records the two things that
+  vary between runs on their own: admin secret keys, and CatalogWidget's area-blind block
+  cache, which serves an admin-rendered product list on the storefront - in legacy as here.
+
+### Fixed
+
+- `{{layout area="adminhtml"}}` reached the layout port, where Mage-OS 3.5.0 refuses it. It is
+  now refused before the port, as legacy does, and renders nothing.
+
+- `{{store}}` URLs were built with whatever scope the shared URL model last had, and with the
+  area's preferred URL model - the backend one in adminhtml. On a real store, 9 of 18 order
+  emails rendered in the admin linked the customer to a backend URL carrying an admin secret
+  key. `StoreUrlBuilder` now sets the scope on every call, as `storeDirective` does, and is
+  given `Magento\Framework\Url`, the model `Magento\Email\Model\Template` gives its filter.
+
+- The adapter reported the wrong render when re-entered. A `{{block}}` that renders a CMS block
+  reaches that block's filter, which renders it through the same shared adapter mid-render;
+  afterwards `deferred()`, `violations()` and `incompatibilities()` described the inner render.
+  Each render's context is now published when it ends, so the caller reads its own.
+  `lastError()` is also reset per render rather than kept from the first host exception.
 
 ### Removed
 

@@ -9,6 +9,7 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Variable\Model\Source\Variables;
 use Cresset\TemplateParser\Port\ConfigReader;
+use Cresset\TemplateParser\Port\RefusedByPort;
 
 /**
  * {{config}} restricted to the variables Magento declares template-readable.
@@ -39,7 +40,8 @@ class AllowlistedConfigReader implements ConfigReader
         try {
             $allowed = $this->availableVariables->getAvailableVars();
         } catch (\Throwable) {
-            return null;
+            // configDirective asks the same source, and would raise too.
+            throw new RefusedByPort('config path', $path);
         }
 
         if (!in_array($path, $allowed, true)) {
@@ -66,15 +68,18 @@ class AllowlistedConfigReader implements ConfigReader
      */
     private function named(string $path, ?string $value): ?string
     {
-        // A fast path, not the safety: the catch below is what makes an absent service safe,
-        // so removing this changes performance rather than behaviour. Most config reads are
-        // neither of these two paths and have no reason to load a store.
-        if ($this->storeInformation === null
-            || $this->storeManager === null
-            || ($path !== Information::XML_PATH_STORE_INFO_COUNTRY_CODE
-                && $path !== Information::XML_PATH_STORE_INFO_REGION_CODE)
+        // Most config reads are neither of these two paths and have no reason to load a store.
+        if ($path !== Information::XML_PATH_STORE_INFO_COUNTRY_CODE
+            && $path !== Information::XML_PATH_STORE_INFO_REGION_CODE
         ) {
             return $value;
+        }
+
+        // Without the services, or with a lookup that fails, the stored value is all there is -
+        // `NL` where the filter renders `Netherlands`. That is less than legacy renders, so it
+        // is refused rather than served.
+        if ($this->storeInformation === null || $this->storeManager === null) {
+            throw new RefusedByPort('config path (store information not wired)', $path);
         }
 
         try {
@@ -82,9 +87,7 @@ class AllowlistedConfigReader implements ConfigReader
                 $this->storeManager->getStore($this->storeId)
             );
         } catch (\Throwable) {
-            // A lookup that cannot happen leaves the stored value, which is the behaviour a
-            // host without these services gets anyway.
-            return $value;
+            throw new RefusedByPort('config path', $path);
         }
 
         if ($path === Information::XML_PATH_STORE_INFO_COUNTRY_CODE) {
