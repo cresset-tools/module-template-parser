@@ -896,16 +896,17 @@ the fix; `shadow:clear --template=cms_block:7` deletes its history instead, and 
 
 ### Inside n98-magerun2
 
-The same commands, against the store magerun already booted:
+magerun lists Magento's own commands, so once the module is enabled the `template:*` commands
+are there too, with nothing to register:
 
 ```sh
-ln -s /path/to/module-template-parser ~/.n98-magerun2/modules/template-parser
-n98-magerun2 template-parser:check --source=email
+n98-magerun2 template:check --source=email
 ```
 
-The shipped `n98-magerun2.yaml` registers them. Nothing is reimplemented for magerun — the
-subclasses only rename the commands into magerun's shared namespace and hand over its
-ObjectManager instead of booting a second one.
+Before the module is enabled — sizing a migration on a store that has not installed it — use
+the standalone `vendor/bin/template-parser` instead, which finds the store from the working
+directory. (0.2 shipped an `n98-magerun2.yaml` for this; with the module installed it listed
+every command twice, so it is gone.)
 
 ### With bougie
 
@@ -914,7 +915,7 @@ package's own CI uses it. If you do too:
 
 ```sh
 bougie tool run cresset/module-template-parser check --source=codebase
-bougie run -- vendor/bin/n98-magerun2 template-parser:diff --source=email
+bougie run -- vendor/bin/n98-magerun2 template:diff --source=email
 ```
 
 ## Speed

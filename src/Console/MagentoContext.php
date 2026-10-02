@@ -7,8 +7,8 @@ namespace Cresset\TemplateParser\Console;
  * The Magento installation the tool is pointed at, if there is one.
  *
  * Two ways in, because the tool has two homes. Standalone it finds app/etc/env.php by walking
- * up from the working directory and boots Magento itself; inside n98-magerun2 the application
- * is already booted and hands over its ObjectManager, so booting again would be wrong. Both
+ * up from the working directory and boots Magento itself; under bin/magento (or magerun, which
+ * runs bin/magento's commands) the application is already booted and hands over its ObjectManager, so booting again would be wrong. Both
  * end up behind `get()`, which is the only way anything downstream asks for a class.
  *
  * Absent a store, this is still constructible - `detect()` returns an unavailable context

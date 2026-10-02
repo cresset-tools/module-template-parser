@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Shared wiring for commands that may or may not have a store.
  *
- * The context is injected when something else already booted Magento - n98-magerun2 does,
+ * The context is injected when something else already booted Magento - bin/magento does,
  * and booting a second time inside it would be wrong - and detected otherwise. Commands only
  * ever call magento(), so neither of them has to know which happened.
  */

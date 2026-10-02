@@ -15,7 +15,7 @@ use Cresset\TemplateParser\TemplateError;
  *
  * This is the whole library, as far as the commands are concerned: they collect subjects,
  * hand them here, and print what comes back. Keeping it free of Symfony types is what lets
- * the same logic run inside n98-magerun2, or in anything else that can require this package.
+ * the same logic run under bin/magento, or in anything else that can require this package.
  */
 class Auditor
 {

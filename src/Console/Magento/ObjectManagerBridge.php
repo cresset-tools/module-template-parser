@@ -10,8 +10,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 /**
  * Hands bin/magento's ObjectManager to the commands.
  *
- * The same idea as Magerun\MagerunBridge, delivered the way Magento delivers things: through
- * the constructor. That constructor runs on EVERY bin/magento invocation - CommandList
+ * Delivered the way Magento delivers things: through the constructor. That constructor runs on EVERY bin/magento invocation - CommandList
  * builds each registered command to list it, whether or not it is the one being run - so it
  * wraps the ObjectManager and nothing else. No store is resolved, no area set, no connection
  * opened until a command actually executes.

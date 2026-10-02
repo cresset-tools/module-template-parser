@@ -15,13 +15,11 @@ use Symfony\Component\Console\Command\Command;
 /**
  * The standalone CLI.
  *
- * The command list is written three times: commands() here; customCommands in
- * n98-magerun2.yaml, which names the Console\Magerun\* subclasses - magerun registers classes
- * and builds them itself, so it can inject the ObjectManager it has already booted; and the
- * CommandListInterface entry in etc/di.xml, which names the Console\Magento\* subclasses for
- * bin/magento. The subclasses only rename and inject, so anything that only works in some of
- * the entrypoints is a bug; ConsoleTest::testEveryCommandIsAvailableInEveryEntrypoint holds
- * the three lists together.
+ * The command list is written twice: commands() here, and the CommandListInterface entry in
+ * etc/di.xml, which names the Console\Magento\* subclasses for bin/magento - and through it for
+ * n98-magerun2, which lists Magento's own commands. The subclasses only rename and inject, so
+ * anything that only works in one entrypoint is a bug;
+ * ConsoleTest::testEveryCommandIsAvailableInEveryEntrypoint holds the two lists together.
  */
 class Application extends ConsoleApplication
 {

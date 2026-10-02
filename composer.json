@@ -26,7 +26,7 @@
     },
     "suggest": {
         "magento/framework": "Required only for the src/Magento adapters; the engine itself has no Magento dependency",
-        "n98/magerun2": "Load the same commands inside magerun with the shipped n98-magerun2.yaml"
+        "n98/magerun2": "Lists the module's bin/magento commands (template:*) once the module is enabled"
     },
     "archive": {
         "exclude": [
