@@ -40,6 +40,12 @@ class TemplateIdentity
         }
 
         $key = self::key($source);
+        // An unsaved name says only "no id here". When the same text already has a real name -
+        // a queued newsletter, named by its queue before the email model renders it - that one
+        // is kept, and only refreshed.
+        if (str_ends_with($identity, ':unsaved') || str_contains($identity, ':unsaved/')) {
+            $identity = $this->bySource[$key] ?? $identity;
+        }
         // Re-registering moves an entry to the young end, so a template rendered over and over
         // is never the one evicted.
         unset($this->bySource[$key]);

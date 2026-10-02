@@ -327,7 +327,7 @@ HELP);
 
         return match ($kind) {
             'email' => ctype_digit(strtok($id, '/') ?: '') ? 'email' : 'codebase',
-            'newsletter' => 'newsletter',
+            'newsletter', 'newsletter_queue' => 'newsletter',
             'cms_block', 'cms_page' => 'cms',
             default => 'all',
         };

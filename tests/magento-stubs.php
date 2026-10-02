@@ -283,7 +283,15 @@ namespace Magento\Cms\Model {
 }
 namespace Magento\Newsletter\Model {
     if (!class_exists(Template::class)) {
-        class Template extends \Magento\Email\Model\AbstractTemplate {}
+        class Template extends \Magento\Email\Model\AbstractTemplate {
+            public function getProcessedTemplateSubject(array $variables) { return ''; }
+        }
+    }
+    if (!class_exists(Queue::class)) {
+        class Queue {
+            public function getId() { return null; }
+            public function sendPerSubscriber($count = 20) { return $this; }
+        }
     }
 }
 namespace Magento\Framework\App {

@@ -2,8 +2,8 @@
 <!--
     The sequence is load order for configuration merging, and each entry is here for something
     this module's etc/ builds on: Backend declares the System section the setting is placed in,
-    Config reads it, Store resolves the store a render is recorded against, and Email and Cms
-    own the classes the plugins are declared on.
+    Config reads it, Store resolves the store a render is recorded against, and Email, Cms and
+    Newsletter own the classes the plugins are declared on.
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
@@ -13,6 +13,7 @@
             <module name="Magento_Cms"/>
             <module name="Magento_Config"/>
             <module name="Magento_Email"/>
+            <module name="Magento_Newsletter"/>
             <module name="Magento_Store"/>
         </sequence>
     </module>

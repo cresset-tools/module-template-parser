@@ -113,6 +113,58 @@ final class ShadowRecordingTest extends TestCase
         );
     }
 
+    public function testNewsletterSubjectsAreNamedApartFromTheirBodies(): void
+    {
+        $identity = new TemplateIdentity();
+        $subject = new class extends NewsletterTemplate {
+            public function getId() { return 4; }
+            public function getTemplateSubject() { return 'News from {{var store.frontend_name}}'; }
+        };
+
+        (new \Cresset\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin($identity))
+            ->beforeGetProcessedTemplateSubject($subject, []);
+
+        self::assertSame('newsletter:4/subject', $identity->identify('News from {{var store.frontend_name}}'));
+    }
+
+    /**
+     * A queued send renders through an email model with no id; the queue's name survives it,
+     * where `email:unsaved` would make it indistinguishable from an admin preview.
+     */
+    public function testAQueuedNewsletterKeepsItsQueueNameThroughTheEmailModel(): void
+    {
+        $identity = new TemplateIdentity();
+        $queue = new class extends \Magento\Newsletter\Model\Queue {
+            public function getId() { return 9; }
+            public function getNewsletterText() { return 'queued body'; }
+            public function getNewsletterSubject() { return 'queued subject'; }
+        };
+
+        (new \Cresset\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin($identity))->beforeSendPerSubscriber($queue, 20);
+        (new EmailTemplateIdentityPlugin($identity))->beforeGetProcessedTemplate($this->emailModel(AbstractTemplate::class, null, 'queued body'));
+        (new EmailSubjectIdentityPlugin($identity))->beforeGetProcessedTemplateSubject(new class extends EmailTemplate {
+            public function getId() { return null; }
+            public function getTemplateSubject() { return 'queued subject'; }
+        }, []);
+
+        self::assertSame('newsletter_queue:9', $identity->identify('queued body'));
+        self::assertSame('newsletter_queue:9/subject', $identity->identify('queued subject'));
+    }
+
+    /** A real name still replaces an unsaved one, and a saved model renames its text. */
+    public function testOnlyAnUnsavedNameDefersToAnExistingOne(): void
+    {
+        $identity = new TemplateIdentity();
+        $identity->remember('body', 'email:unsaved');
+        $identity->remember('body', 'email:12');
+        $identity->remember('body', 'email:unsaved');
+
+        self::assertSame('email:12', $identity->identify('body'));
+
+        $identity->remember('body', 'cms_block:3');
+        self::assertSame('cms_block:3', $identity->identify('body'));
+    }
+
     /** Naming must never break the render it precedes. */
     public function testAModelThatRaisesIsLeftUnnamed(): void
     {
@@ -401,6 +453,8 @@ final class ShadowRecordingTest extends TestCase
             TemplateFilterPlugin::class => 'Magento\\Email\\Model\\Template\\Filter',
             EmailTemplateIdentityPlugin::class => AbstractTemplate::class,
             EmailSubjectIdentityPlugin::class => EmailTemplate::class,
+            \Cresset\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin::class => NewsletterTemplate::class,
+            \Cresset\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin::class => \Magento\Newsletter\Model\Queue::class,
             CmsBlockIdentityPlugin::class => Block::class,
             CmsPageIdentityPlugin::class => Page::class,
         ], $declared);
@@ -453,7 +507,7 @@ final class ShadowRecordingTest extends TestCase
         $module = simplexml_load_file(__DIR__ . '/../etc/module.xml');
         $sequence = array_map(static fn ($m) => (string)$m['name'], $module->xpath('//sequence/module'));
 
-        foreach (['Magento_Backend', 'Magento_Cms', 'Magento_Config', 'Magento_Email', 'Magento_Store'] as $needed) {
+        foreach (['Magento_Backend', 'Magento_Cms', 'Magento_Config', 'Magento_Email', 'Magento_Newsletter', 'Magento_Store'] as $needed) {
             self::assertContains($needed, $sequence);
         }
     }

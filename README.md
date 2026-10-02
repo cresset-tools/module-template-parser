@@ -177,7 +177,7 @@ and template:
 
 | Column | Holds |
 |---|---|
-| `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3`, `cms_block:7`, `cms_page:2`, or `unidentified:<filter class>` |
+| `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3` (and `/subject`) for a newsletter template, `newsletter_queue:5` (and `/subject`) for a queued send, `cms_block:7`, `cms_page:2`, or `unidentified:<filter class>` |
 | `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
 | `served`, `fell_back` | Parser mode: how many renders it served, and how many it handed to legacy |
 | `first_seen`, `last_seen` | when it was first and last compared (UTC) |
