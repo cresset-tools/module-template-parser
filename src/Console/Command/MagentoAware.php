@@ -44,7 +44,8 @@ trait MagentoAware
      * which is why that is the default here.
      *
      * `--mode` still works for one release, with a warning, so scripts written against 0.2
-     * keep running while they are updated.
+     * keep running while they are updated - including `--mode=legacy`, which 0.2 accepted as a
+     * spelling of compatible and `--posture` no longer does.
      */
     protected function addPostureOption(): static
     {
@@ -75,6 +76,10 @@ trait MagentoAware
         $legacy = $input->getOption('mode');
 
         if ($legacy !== null) {
+            // 0.2 read "legacy" as compatible; honour that on the old option only.
+            if (strtolower(trim((string)$legacy)) === 'legacy') {
+                $legacy = Mode::Compatible->value;
+            }
             $errors = $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output;
             $errors->writeln('<comment>--mode is deprecated; use --posture. It will be removed in the next release.</comment>');
 

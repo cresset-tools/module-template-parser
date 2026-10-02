@@ -35,7 +35,7 @@ final class ConsoleTest extends TestCase
     }
 
     #[DataProvider('modeSpellings')]
-    public function testModesParseIncludingTheLegacyAlias(string $spelling, Mode $expected): void
+    public function testPosturesParse(string $spelling, Mode $expected): void
     {
         self::assertSame($expected, Mode::parse($spelling));
     }
@@ -46,9 +46,16 @@ final class ConsoleTest extends TestCase
             'strict' => ['strict', Mode::Strict],
             'lenient' => ['lenient', Mode::Lenient],
             'compatible' => ['compatible', Mode::Compatible],
-            'legacy is compatible' => ['legacy', Mode::Compatible],
             'case insensitive' => ['STRICT', Mode::Strict],
         ];
+    }
+
+    /** "Legacy" is a rollout stage now; as a posture it would say the opposite of what it does. */
+    public function testLegacyIsNotAPostureAndSaysWhichOneIsMeant(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/--posture=compatible/');
+        Mode::parse('legacy');
     }
 
     public function testAnUnknownModeSaysWhatIsValid(): void
@@ -483,6 +490,21 @@ final class ConsoleTest extends TestCase
         self::assertSame(1, $exit, 'strict reports the unknown variable, so --mode was honoured');
         self::assertStringContainsString('--mode is deprecated; use --posture', $tester->getErrorOutput());
         json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /** 0.2 accepted --mode=legacy; the deprecated option keeps doing so while it lasts. */
+    public function testTheDeprecatedModeStillReadsLegacyAsCompatible(): void
+    {
+        $tester = $this->tester('check');
+        $file = $this->writeTemplate('Hi {{var custmer}}');
+
+        $exit = $tester->execute(
+            ['path' => $file, '--mode' => 'legacy', '--fail-on' => 'error', '--format' => 'json'],
+            ['capture_stderr_separately' => true]
+        );
+
+        self::assertSame(0, $exit, 'compatible renders an unknown variable empty, as the filter does');
+        self::assertStringContainsString('--mode is deprecated', $tester->getErrorOutput());
     }
 
     public function testPostureAndModeThatDisagreeAreRefused(): void

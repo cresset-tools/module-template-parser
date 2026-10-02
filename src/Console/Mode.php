@@ -11,8 +11,10 @@ use Cresset\TemplateParser\Options;
  * Named Mode in code for history; the CLI says posture, because the rollout stage
  * (Legacy/Shadow/Parser) is what "mode" means to anyone configuring a store.
  *
- * `legacy` is accepted as a spelling of `compatible`, because that is what people call it
- * when they mean "behave like the old filter".
+ * `legacy` is NOT a spelling of compatible any more. Under bin/magento "Legacy" is the rollout
+ * stage that does not run this engine at all, so `--posture=legacy` reads as "use the old
+ * filter" while measuring this one. It is refused with a pointer to the name that means what
+ * was intended. Only the deprecated `--mode` still accepts it, so 0.2 scripts keep running.
  */
 enum Mode: string
 {
@@ -25,9 +27,13 @@ enum Mode: string
         return match (strtolower(trim($value))) {
             'strict' => self::Strict,
             'lenient', 'permissive' => self::Lenient,
-            'compatible', 'legacy', 'compat' => self::Compatible,
+            'compatible', 'compat' => self::Compatible,
+            'legacy' => throw new \InvalidArgumentException(
+                'There is no "legacy" posture. "Legacy" is the rollout stage that renders with Magento\'s'
+                . ' own filter only; to have this engine reproduce that filter, use --posture=compatible.'
+            ),
             default => throw new \InvalidArgumentException(sprintf(
-                'Unknown posture "%s". Use strict, lenient or compatible (legacy is a spelling of compatible).',
+                'Unknown posture "%s". Use strict, lenient or compatible.',
                 $value
             )),
         };
