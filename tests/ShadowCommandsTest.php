@@ -205,7 +205,63 @@ final class ShadowCommandsTest extends TestCase
         self::assertSame(0, $tester->getStatusCode());
         self::assertStringContainsString('REFUSED  cms_page:2', $tester->getDisplay());
         self::assertStringContainsString('Unknown directive {{shout}} (line 4, column 2)', $tester->getDisplay());
-        self::assertStringContainsString('hint: register it', $tester->getDisplay());
+        self::assertStringContainsString('what to do:', $tester->getDisplay());
+        self::assertStringContainsString('Customers are not affected', $tester->getDisplay());
+    }
+
+    /**
+     * The engine's hint names its own options and classes, so it is detail for whoever asks
+     * (-v), not what an operator reads first.
+     */
+    public function testTheEngineHintIsOnlyShownWhenVerbose(): void
+    {
+        $this->db->insertShadow([
+            'store_id' => 1, 'template' => 'cms_page:2', 'refused' => 1,
+            'last_refusal' => ['error' => \Cresset\TemplateParser\LegacyIncompatibleError::class, 'problem' => 'p', 'hint' => 'unset Options::$refuseLegacyIncompatible'],
+        ]);
+
+        self::assertStringNotContainsString('Options::', $this->report()->getDisplay());
+
+        $command = new ShadowReportCommand();
+        $command->setMagentoContext(MagentoContext::unavailable('tests'));
+        $command->setShadowTable(new ShadowTable($this->db));
+        $tester = new CommandTester($command);
+        $tester->execute([], ['verbosity' => \Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE]);
+
+        self::assertStringContainsString('engine hint: unset Options::$refuseLegacyIncompatible', $tester->getDisplay());
+    }
+
+    /** @return array<string,array{0:array<string,mixed>,1:string}> */
+    public static function refusals(): array
+    {
+        $policy = static fn (string $violation): array => ['error' => 'policy', 'problem' => 'p', 'policy_violations' => [$violation]];
+
+        return [
+            'layout handle' => [$policy('policy refused layout handle "acme_items" (line 1, column 1)'), 'layout handle "acme_items"'],
+            'block class' => [$policy('policy refused block class "Acme\\Block" (line 1, column 1)'), 'have a developer allow it in di.xml'],
+            'filter reads it differently' => [$policy('policy refused construct the filter reads differently "for loop" (line 1, column 1)'), 'reads the same either way'],
+            'other port refusal' => [$policy('policy refused config path "web/secure" (line 1, column 1)'), 'config path "web/secure"'],
+            'legacy cannot render it' => [['error' => \Cresset\TemplateParser\LegacyIncompatibleError::class, 'problem' => 'p'], 'Magento\'s filter cannot'],
+            'syntax' => [['error' => \Cresset\TemplateParser\SyntaxError::class, 'problem' => 'p'], 'cannot render this template as written'],
+            'host raised' => [['error' => \InvalidArgumentException::class, 'problem' => 'the host raised while rendering: x'], 'var/log/exception.log'],
+        ];
+    }
+
+    /**
+     * Each kind of refusal gets advice an operator can act on, naming the command to run.
+     *
+     * @param array<string,mixed> $refusal
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('refusals')]
+    public function testEachRefusalSaysWhatToDoInOperatorTerms(array $refusal, string $expected): void
+    {
+        $this->db->insertShadow(['store_id' => 1, 'template' => 'cms_block:7', 'refused' => 1, 'last_refusal' => $refusal]);
+
+        $display = $this->report()->getDisplay();
+        $advice = substr($display, (int)strpos($display, 'what to do:'));
+
+        self::assertStringContainsString($expected, preg_replace('/\s+/', ' ', $advice));
+        self::assertStringNotContainsString('Options::', $display);
     }
 
     /** A divergence before --since is history: still counted, no longer failing. */
