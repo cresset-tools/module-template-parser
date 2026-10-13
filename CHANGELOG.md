@@ -1,12 +1,62 @@
 # Changelog
 
-Notable changes to `cresset/module-template-parser`.
+Notable changes to `mage-os/module-template-parser`. Releases up to 0.3.0 were published as
+`cresset/module-template-parser`, and 0.1.0 as `cresset-tools/module-template-parser`.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [semantic versioning](https://semver.org/spec/v2.0.0.html). Pre-1.0, so the public API may
 still move between minor versions.
 
 Entries say what changed and why it mattered. A line that only names a file has been left out.
+
+## [Unreleased]
+
+The move to [Mage-OS Lab](https://github.com/mage-os-lab/module-template-parser), under the
+lab's naming. Nothing about rendering, the configuration or the commands changes.
+
+### Changed
+
+- **Renamed** to the lab convention:
+
+  | | was | now |
+  |---|---|---|
+  | Composer package | `cresset/module-template-parser` | `mage-os/module-template-parser` |
+  | PHP namespace | `Cresset\TemplateParser` | `MageOS\TemplateParser` |
+  | Magento module | `Cresset_TemplateParser` | `MageOS_TemplateParser` |
+  | Shadow table | `cresset_template_shadow` | `mageos_template_parser_shadow` |
+
+  The configuration paths (`system/template_engine/mode`, `parser_shadow_rate`), the
+  `bin/magento template:*` commands and `vendor/bin/template-parser` keep their names. Code
+  that referenced the engine's classes directly - a custom port, a `di.xml` argument - needs
+  the new namespace, and a project `di.xml` that named one of this module's plugins
+  (`cresset_template_parser*`) should use `mageos_template_parser*`.
+- **Shadow's history carries over.** A schema patch copies every row of
+  `cresset_template_shadow` into the new table and drops the old one, so "clean since" and the
+  renders since the last divergence survive the upgrade. A data patch could not do it: data
+  patches run in a transaction, where Magento refuses the `DROP TABLE`. Magento's
+  `migrateDataFromAnotherTable` could not either: it fails a fresh install, which has no old
+  table.
+
+### Upgrading from cresset/module-template-parser 0.3.0
+
+On a store that runs the old module, in this order:
+
+1. `bin/magento module:disable Cresset_TemplateParser`, while the old code is still
+   installed. It clears the generated classes and the cache, which still name the old
+   classes; without this, step 3 cannot boot (`Class "Cresset\TemplateParser\..." not found`).
+2. `composer remove cresset/module-template-parser && composer require mage-os/module-template-parser`
+3. `bin/magento setup:upgrade` - enables `MageOS_TemplateParser`, drops the stale entry from
+   `app/etc/config.php`, creates the new table and moves the rows across.
+4. In production mode, `setup:di:compile` and the static content deploy, as after any module
+   change.
+
+The engine setting is unchanged, so each store view stays on the stage it was on. A
+`Cresset_TemplateParser` row stays behind in `setup_module`; it is harmless, and can be deleted.
+
+A build-and-deploy pipeline that keeps `app/etc/config.php` in version control can skip step
+1: change the package, replace `Cresset_TemplateParser` with `MageOS_TemplateParser` in
+`config.php` in the same commit, and let the build compile from scratch. The deploy's
+`setup:upgrade` moves the rows.
 
 ## [0.3.0] - 2026-10-13
 
