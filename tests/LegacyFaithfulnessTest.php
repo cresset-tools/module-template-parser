@@ -354,7 +354,7 @@ final class LegacyFaithfulnessTest extends TestCase
 
     private function filter(int $storeId, ?UrlInterface $urlModel = null): \Magento\Framework\Filter\Template
     {
-        return new class ($storeId, $urlModel) extends \Magento\Framework\Filter\Template {
+        return new class ($storeId, $urlModel) extends \Magento\Email\Model\Template\Filter {
             protected $_storeId;
             protected $urlModel;
             public function __construct($storeId, $urlModel) { $this->_storeId = $storeId; $this->urlModel = $urlModel; }

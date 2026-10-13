@@ -24,6 +24,7 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 use Magento\Store\Model\StoreManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Magento\Email\Model\Template\Filter as EmailFilter;
 
 /**
  * Parser mode: this engine's render is served, and anything it declines goes to the filter.
@@ -60,7 +61,7 @@ final class ParserModeTest extends TestCase
 
         self::assertSame('Dear Ada,', $result);
         self::assertSame(0, $this->legacyRuns, 'the filter ran for a render Parser served');
-        self::assertSame([[null, null, 1, 'unidentified:' . LegacyTemplate::class, true, false]], $this->records);
+        self::assertSame([[null, null, 1, 'unidentified:' . EmailFilter::class, true, false]], $this->records);
     }
 
     public function testARefusalFallsBackToTheFilter(): void
@@ -152,7 +153,7 @@ final class ParserModeTest extends TestCase
     public function testAChildRenderGoesToTheFilter(): void
     {
         $plugin = $this->plugin($this->raising(new \LogicException('must not render')));
-        $subject = new class extends LegacyTemplate {
+        $subject = new class extends EmailFilter {
             protected $_storeId = 1;
             public function isChildTemplate() { return true; }
         };
@@ -205,7 +206,7 @@ final class ParserModeTest extends TestCase
     public function testAnInlinerThatRaisesFallsBack(): void
     {
         $plugin = $this->plugin($this->adapter());
-        $subject = new class extends LegacyTemplate {
+        $subject = new class extends EmailFilter {
             protected $_storeId = 1;
             protected function addInlineCssFile($file) { return $this; }
             public function applyInlineCss($html) { throw new \RuntimeException('design params must be set'); }
@@ -533,7 +534,7 @@ final class ParserModeTest extends TestCase
 
     private function filterFor(int $storeId): LegacyTemplate
     {
-        return new class ($storeId) extends LegacyTemplate {
+        return new class ($storeId) extends EmailFilter {
             protected $_storeId;
             public function __construct($storeId) { $this->_storeId = $storeId; }
         };
@@ -542,7 +543,7 @@ final class ParserModeTest extends TestCase
     /** Shaped like Email\Model\Template\Filter's inline-CSS step: files registered, then applied. */
     private function inliningFilter(): LegacyTemplate
     {
-        return new class extends LegacyTemplate {
+        return new class extends EmailFilter {
             public array $registered = [];
             protected $_storeId = 1;
             protected function addInlineCssFile($file)

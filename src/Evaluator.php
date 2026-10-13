@@ -130,7 +130,7 @@ final class Evaluator
 
         if ($this->options->legacyQuirks
             && $context->names() === []
-            && in_array($node->name(), ['var', 'if', 'depend'], true)
+            && in_array($node->name(), $this->options->plainFilter ? ['if', 'depend'] : ['var', 'if', 'depend'], true)
         ) {
             // With no variables set, IfDirective, DependDirective and the Email filter's
             // varDirective all return their construction unchanged - the path used when a
@@ -369,6 +369,10 @@ final class Evaluator
     private function registerDefaults(): void
     {
         $this->handlers['var'] = function (DirectiveNode $n, Context $c): string {
+            if ($this->options->plainFilter) {
+                return $this->plainVar($n, $c);
+            }
+
             [$expr, $modifiers] = $this->splitModifiers($n->params());
             $resolution = $this->resolveAt($expr, $c, $n);
 
@@ -724,6 +728,38 @@ final class Evaluator
             ? 'no variables are in scope here'
             : 'variables in scope: ' . implode(', ', array_slice($available, 0, 12))
                 . (count($available) > 12 ? ', …' : '');
+    }
+
+    /**
+     * {{var}} the way `Framework\Filter\DirectiveProcessor\VarDirective` renders it, for the
+     * plain filter - see Options::$plainFilter.
+     *
+     * Unescaped, because that filter does not escape: the address renderer escapes the values
+     * before the render, and escaping again here would double-encode every ampersand in a
+     * street name. What it does that is not worth imitating - resolving `a|escape` as a path -
+     * is recorded as a policy violation instead, which declines the render: in Parser mode the
+     * filter renders it, exactly as today. An object at the end of a path needs nothing here:
+     * the resolver returns nothing for one, as the filter's does, so it renders empty in both.
+     */
+    private function plainVar(DirectiveNode $node, Context $context): string
+    {
+        $params = $node->params();
+        if (trim($params) === '') {
+            $this->refusedByPolicy($node, $context, 'plain-filter {{var}}', 'no variable named');
+            return '';
+        }
+        if (str_contains($params, '|')) {
+            $this->refusedByPolicy($node, $context, 'plain-filter {{var}} modifier', trim($params));
+            return '';
+        }
+
+        $expr = trim($params);
+        $resolution = $this->resolveAt($expr, $context, $node);
+        if (!$resolution->found) {
+            $this->requireVariable($resolution, $node, $context, $expr);
+        }
+
+        return $this->toStringValue($resolution->value);
     }
 
     /**

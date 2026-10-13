@@ -166,9 +166,23 @@ Adoption goes through a plugin, not a preference. Emails render through
 `Magento\Email\Model\Template\Filter`, CMS extends that, and Newsletter extends
 `Widget\Model\Template\FilterEmulate` — all concrete classes DI instantiates directly, so a
 preference for the framework base class never applies. The module's `etc/di.xml` declares the
-plugin on the Email filter, and a plugin on a class applies to its subclasses, so that one
-declaration covers every template filter a stock store renders with. Each render reads the
-stage for its own store; under Legacy the plugin returns there, before any second render.
+plugin on `Magento\Framework\Filter\Template` itself, and a plugin on a class applies to its
+subclasses. Each render reads the stage for its own store; under Legacy the plugin returns
+there, before any second render.
+
+Two kinds of filter are rendered, each through its own adapter:
+
+- the **Email filter** and everything built on it — emails, CMS, newsletters;
+- the **plain filter** itself, which `FilterManager::template()` builds for customer and store
+  **address formats** — where values a customer typed meet directive processing. It renders
+  `{{var}}` unescaped (the address renderer escapes the values first), has no `{{trans}}`,
+  `{{store}}` or `{{block}}` — they come out as their own text, as they do there — and a
+  `{{var}}` modifier, `{{template}}` or `{{for}}` declines the render, so Parser mode hands it
+  to the filter. The plain filter has no store of its own, so its stage is the current
+  store's.
+
+Any other subclass — Catalog's filter, a module's own — adds directives neither adapter
+models, so the plugin hands it straight to the filter in every stage.
 
 In Shadow, `ShadowComparator` renders the template through this engine as well and the plugin
 returns the *legacy* result — so putting a store view in Shadow changes nothing a customer
@@ -177,7 +191,7 @@ and template:
 
 | Column | Holds |
 |---|---|
-| `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3` (and `/subject`) for a newsletter template, `newsletter_queue:5` (and `/subject`) for a queued send, `cms_block:7`, `cms_page:2`, `product:42/description` and `category:3/description` for a WYSIWYG attribute holding a directive, or `unidentified:<filter class>` |
+| `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3` (and `/subject`) for a newsletter template, `newsletter_queue:5` (and `/subject`) for a queued send, `cms_block:7`, `cms_page:2`, `address:html` (`text`, `oneline`, `pdf`) for a customer address format, `store_address` for the store's own, `product:42/description` and `category:3/description` for a WYSIWYG attribute holding a directive, or `unidentified:<filter class>` |
 | `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
 | `served`, `fell_back` | Parser mode: how many renders it served, and how many it handed to legacy |
 | `first_seen`, `last_seen` | when it was first and last compared (UTC) |
@@ -1005,7 +1019,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-13015 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+13359 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

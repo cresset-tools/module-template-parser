@@ -27,6 +27,7 @@ use Magento\Framework\Filter\Template as LegacyTemplate;
 use Magento\Newsletter\Model\Template as NewsletterTemplate;
 use Magento\Store\Model\StoreManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Magento\Email\Model\Template\Filter as EmailFilter;
 
 /**
  * Where a Shadow comparison ends up: named after the template it was, counted against the
@@ -232,7 +233,7 @@ final class ShadowRecordingTest extends TestCase
 
         self::assertSame([
             [2, 'email:sales_email_order_template', ShadowOutcome::AGREE],
-            [2, 'unidentified:' . LegacyTemplate::class, ShadowOutcome::DIVERGE],
+            [2, 'unidentified:' . EmailFilter::class, ShadowOutcome::DIVERGE],
         ], $records);
     }
 
@@ -497,7 +498,8 @@ final class ShadowRecordingTest extends TestCase
         }
 
         self::assertSame([
-            TemplateFilterPlugin::class => 'Magento\\Email\\Model\\Template\\Filter',
+            TemplateFilterPlugin::class => LegacyTemplate::class,
+            \Cresset\TemplateParser\Magento\Plugin\EmailFilterStatePlugin::class => EmailFilter::class,
             EmailTemplateIdentityPlugin::class => AbstractTemplate::class,
             EmailSubjectIdentityPlugin::class => EmailTemplate::class,
             \Cresset\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin::class => NewsletterTemplate::class,
@@ -505,14 +507,11 @@ final class ShadowRecordingTest extends TestCase
             CmsBlockIdentityPlugin::class => Block::class,
             CmsPageIdentityPlugin::class => Page::class,
             \Cresset\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin::class => \Magento\Catalog\Helper\Output::class,
+            \Cresset\TemplateParser\Magento\Plugin\AddressIdentityPlugin::class => \Magento\Customer\Block\Address\Renderer\DefaultRenderer::class,
+            \Cresset\TemplateParser\Magento\Plugin\StoreAddressIdentityPlugin::class => \Magento\Store\Model\Address\Renderer::class,
         ], $declared);
 
         foreach ($declared as $pluginClass => $intercepted) {
-            // The Email filter has no stub; the filter plugin's own tests exercise it against
-            // the framework base class it extends.
-            if (!class_exists($intercepted)) {
-                continue;
-            }
             foreach ((new \ReflectionClass($pluginClass))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
                 if (!preg_match('/^(before|after|around)([A-Z]\w*)$/', $method->getName(), $m)) {
                     continue;
@@ -676,7 +675,7 @@ final class ShadowRecordingTest extends TestCase
 
     private function filterFor(int $storeId): LegacyTemplate
     {
-        return new class ($storeId) extends LegacyTemplate {
+        return new class ($storeId) extends EmailFilter {
             protected $_storeId;
             public function __construct($storeId) { $this->_storeId = $storeId; }
         };

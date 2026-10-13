@@ -265,6 +265,36 @@ namespace Magento\Framework\Filter {
         }
     }
 }
+namespace Magento\Customer\Block\Address\Renderer {
+    // What AddressIdentityPlugin wraps: the format type, and the call that renders it.
+    if (!class_exists(DefaultRenderer::class)) {
+        class DefaultRenderer
+        {
+            public function __construct(private ?object $type = null) {}
+            public function getType() { return $this->type; }
+            public function renderArray($addressAttributes, $format = null) { return ''; }
+        }
+    }
+}
+namespace Magento\Store\Model\Address {
+    if (!class_exists(Renderer::class)) {
+        class Renderer
+        {
+            public function format($storeInfo, $type = 'html') { return ''; }
+        }
+    }
+}
+namespace Magento\Email\Model\Template {
+    // The filter emails, CMS and newsletters render through. Its place in the hierarchy is
+    // what TemplateFilterPlugin keys on; nothing else of it is needed here.
+    if (!class_exists(Filter::class)) {
+        class Filter extends \Magento\Framework\Filter\Template
+        {
+            public function setPlainTemplateMode($plainTemplateMode) { return $this; }
+            public function setDesignParams(array $designParams) { return $this; }
+        }
+    }
+}
 namespace Magento\Cms\Model {
     // The Shadow identity plugins are typed against these, as Magento's plugin validator
     // requires; a test extends them to supply an id and content.
