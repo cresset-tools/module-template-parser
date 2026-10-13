@@ -281,6 +281,15 @@ namespace Magento\Cms\Model {
         }
     }
 }
+namespace Magento\Catalog\Helper {
+    // Typed against by CatalogOutputIdentityPlugin, as Magento's plugin validator requires.
+    if (!class_exists(Output::class)) {
+        class Output {
+            public function productAttribute($product, $attributeHtml, $attributeName) { return $attributeHtml; }
+            public function categoryAttribute($category, $attributeHtml, $attributeName) { return $attributeHtml; }
+        }
+    }
+}
 namespace Magento\Newsletter\Model {
     if (!class_exists(Template::class)) {
         class Template extends \Magento\Email\Model\AbstractTemplate {

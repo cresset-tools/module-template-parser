@@ -192,6 +192,30 @@ final class ShadowRecordingTest extends TestCase
         self::assertSame('cms_page:2', $identity->identify('<h1>Home</h1>'));
     }
 
+    /**
+     * A WYSIWYG description is named by its product or category and attribute - but only
+     * when it holds a directive, since every attribute on a product page passes through here
+     * and the identity memory is bounded.
+     */
+    public function testCatalogContentIsNamedOnlyWhenItHoldsADirective(): void
+    {
+        $identity = new TemplateIdentity();
+        $plugin = new \Cresset\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin($identity);
+        $output = new \Magento\Catalog\Helper\Output();
+        $product = new class { public function getId() { return 42; } };
+        $category = new class { public function getId() { return '3'; } };
+
+        self::assertNull($plugin->beforeProductAttribute($output, $product, '<p>{{widget type="x"}}</p>', 'description'));
+        $plugin->beforeCategoryAttribute($output, $category, '{{media url="a.png"}}', 'description');
+        $plugin->beforeProductAttribute($output, $product, 'Plain text', 'name');
+        $plugin->beforeProductAttribute($output, null, '{{var x}}', 'description');
+
+        self::assertSame('product:42/description', $identity->identify('<p>{{widget type="x"}}</p>'));
+        self::assertSame('category:3/description', $identity->identify('{{media url="a.png"}}'));
+        self::assertNull($identity->identify('Plain text'));
+        self::assertNull($identity->identify('{{var x}}'));
+    }
+
     // ---------------------------------------------------------------- the filter plugin
 
     public function testThePluginRecordsAgainstTheTemplateAndStoreItRendered(): void
@@ -210,6 +234,29 @@ final class ShadowRecordingTest extends TestCase
             [2, 'email:sales_email_order_template', ShadowOutcome::AGREE],
             [2, 'unidentified:' . LegacyTemplate::class, ShadowOutcome::DIVERGE],
         ], $records);
+    }
+
+    /**
+     * A {{depend}} or {{if}} body is part of its template, not a template of its own.
+     *
+     * The filter renders one by calling filter() on itself mid-render. Recorded separately, 20
+     * of the first 119 renders on the demo store were bodies, all `unidentified`.
+     */
+    public function testAConditionalBodyIsNotRecordedAsATemplate(): void
+    {
+        $records = [];
+        $identity = new TemplateIdentity();
+        $identity->remember('{{depend name}}Dear {{var name}},{{/depend}}', 'email:12');
+        $plugin = $this->plugin($identity, $records);
+        $subject = $this->filterFor(1);
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $plugin->aroundFilter($subject, static function () use ($plugin, $subject): string {
+            return $plugin->aroundFilter($subject, static fn () => 'Dear Ada,', 'Dear {{var name}},');
+        }, '{{depend name}}Dear {{var name}},{{/depend}}');
+
+        self::assertSame('Dear Ada,', $result);
+        self::assertSame([[1, 'email:12', ShadowOutcome::AGREE]], $records);
     }
 
     /** The store is the one the render was decided for, even if the filter's changes mid-render. */
@@ -457,6 +504,7 @@ final class ShadowRecordingTest extends TestCase
             \Cresset\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin::class => \Magento\Newsletter\Model\Queue::class,
             CmsBlockIdentityPlugin::class => Block::class,
             CmsPageIdentityPlugin::class => Page::class,
+            \Cresset\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin::class => \Magento\Catalog\Helper\Output::class,
         ], $declared);
 
         foreach ($declared as $pluginClass => $intercepted) {
@@ -507,7 +555,7 @@ final class ShadowRecordingTest extends TestCase
         $module = simplexml_load_file(__DIR__ . '/../etc/module.xml');
         $sequence = array_map(static fn ($m) => (string)$m['name'], $module->xpath('//sequence/module'));
 
-        foreach (['Magento_Backend', 'Magento_Cms', 'Magento_Config', 'Magento_Email', 'Magento_Newsletter', 'Magento_Store'] as $needed) {
+        foreach (['Magento_Backend', 'Magento_Catalog', 'Magento_Cms', 'Magento_Config', 'Magento_Email', 'Magento_Newsletter', 'Magento_Store'] as $needed) {
             self::assertContains($needed, $sequence);
         }
     }

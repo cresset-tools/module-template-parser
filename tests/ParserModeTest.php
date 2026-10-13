@@ -274,6 +274,64 @@ final class ParserModeTest extends TestCase
         self::assertSame(ShadowOutcome::REFUSED, $this->records[0][0]);
     }
 
+    // ---------------------------------------------------------------- re-entrant bodies
+
+    /**
+     * A fallback is legacy's render all the way down.
+     *
+     * The filter renders a {{depend}} or {{if}} body by calling filter() on itself mid-render.
+     * That call reaches this plugin like any other, and was served by this engine: a fallback,
+     * promised to be exactly what Legacy serves, carried this engine's bodies inside it.
+     */
+    public function testAFallbackRendersItsConditionalBodiesThroughTheFilterToo(): void
+    {
+        $plugin = $this->plugin($this->adapter(Options::strict()));
+        $subject = $this->filterFor(1);
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $this->filter($plugin, $subject, '{{var nope}}{{depend name}}Dear {{var name}}{{/depend}}', function () use ($plugin, $subject): string {
+            return 'LEGACY:' . $this->filter($plugin, $subject, 'Dear {{var name}}', 'LEGACY BODY');
+        });
+
+        self::assertSame('LEGACY:LEGACY BODY', $result);
+        self::assertSame(2, $this->legacyRuns, 'the body was not rendered by the filter');
+        self::assertCount(1, $this->records, 'the body was recorded as a template of its own');
+        self::assertSame(ShadowOutcome::REFUSED, $this->records[0][0]);
+    }
+
+    /** The same inside a sampled legacy render, which is compared as one document. */
+    public function testASampledRenderRendersItsBodiesThroughTheFilter(): void
+    {
+        $plugin = $this->plugin($this->adapter(), $this->mode([1 => EngineMode::PARSER], rate: '100'));
+        $subject = $this->filterFor(1);
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $this->filter($plugin, $subject, '{{depend name}}Dear {{var name}},{{/depend}}', function () use ($plugin, $subject): string {
+            return $this->filter($plugin, $subject, 'Dear {{var name}},', 'Dear Ada,');
+        });
+
+        self::assertSame('Dear Ada,', $result);
+        self::assertSame(2, $this->legacyRuns);
+        self::assertCount(1, $this->records);
+        self::assertSame([ShadowOutcome::AGREE, true], [$this->records[0][0], $this->records[0][4]]);
+    }
+
+    /** A legacy render that raised still ends: the next render on the instance is served again. */
+    public function testTheNextRenderIsServedAgainAfterALegacyOneRaised(): void
+    {
+        $plugin = $this->plugin($this->adapter(), $this->mode([1 => EngineMode::PARSER], rate: '100'));
+        $subject = $this->filterFor(1);
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $plugin->aroundFilter($subject, static function (): string {
+            throw new \TypeError('legacy fatal');
+        }, 'Dear {{var name}},');
+        $next = $plugin->aroundFilter($subject, static fn (): string => 'LEGACY', 'Dear {{var name}},');
+
+        self::assertSame('Dear Ada,', $next, 'the instance was left marked as inside a legacy render');
+        self::assertCount(2, $this->records);
+    }
+
     /**
      * A legacy fatal in the sample is no reason to give the customer one: ours is served, and
      * there is nothing to compare it with.

@@ -85,6 +85,11 @@ Parser — and operated from `bin/magento`. Closes #1 and #2.
   with no id, so the send that reaches every subscriber was recorded as `email:unsaved`, like
   an admin preview. An unsaved name no longer replaces a real one for the same text.
 
+- Product and category attributes are named `product:<id>/<attribute>` and
+  `category:<id>/<attribute>`. A WYSIWYG description holding a directive goes through the
+  Widget filter, so every one of them was `unidentified`. Only text holding a directive is
+  remembered, to keep the bounded identity memory for what is actually filtered.
+
 - `check` warns about directives a module added as `fooDirective()` methods on a template
   filter. The legacy filter dispatches those by reflection and this engine never does, so in
   compatible mode such a directive renders as its own text — silently, until now. Found
@@ -157,6 +162,13 @@ Parser — and operated from `bin/magento`. Closes #1 and #2.
   cache, which serves an admin-rendered product list on the storefront - in legacy as here.
 
 ### Fixed
+
+- **A `{{depend}}` or `{{if}}` body is part of the render it is in.** The filter renders a
+  body by calling `filter()` on itself, mid-render, and the plugin took each call for a
+  template of its own. Shadow recorded every body separately — 20 of the first 119 renders on
+  the demo store, all `unidentified` — and Parser served this engine's render of the body
+  inside a sampled or fallback render, which is promised to be exactly legacy's. A call on
+  a filter instance that legacy is already rendering now goes to the filter, unrecorded.
 
 - `{{layout area="adminhtml"}}` reached the layout port, where Mage-OS 3.5.0 refuses it. It is
   now refused before the port, as legacy does, and renders nothing.

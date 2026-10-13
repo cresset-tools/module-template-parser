@@ -58,6 +58,20 @@ class TemplateFilterPlugin
     /** @var array<class-string,list<string>> filter class => directives only it can render */
     private array $legacyOnly = [];
 
+    /**
+     * How deep each filter instance is inside a filter() of its own that legacy is running.
+     *
+     * The filter is re-entrant on ITSELF: {{depend}} and {{if}} render their body by calling
+     * filter() on the same instance, mid-render. Such a call is not a template, it is part of
+     * the one legacy is already rendering. Shadow recorded every body as a template of its
+     * own - 20 of the first 119 renders on the demo store were `unidentified` bodies - and
+     * Parser was worse: a sampled or fallback render, promised to be exactly legacy's, had
+     * each body served by this engine inside it.
+     *
+     * @var \WeakMap<object,int>
+     */
+    private \WeakMap $legacyRunning;
+
     public function __construct(
         private readonly ShadowComparator $comparator,
         private readonly EngineMode $mode,
@@ -66,6 +80,7 @@ class TemplateFilterPlugin
         private readonly ?RenderScope $scope = null
     ) {
         $this->state = new \WeakMap();
+        $this->legacyRunning = new \WeakMap();
     }
 
     /**
@@ -143,6 +158,11 @@ class TemplateFilterPlugin
             return $proceed($value);
         }
 
+        // Part of a render legacy is already running on this instance - see $legacyRunning.
+        if (($this->legacyRunning[$subject] ?? 0) > 0) {
+            return $proceed($value);
+        }
+
         $storeId = $this->storeIdOf($subject);
 
         return match ($this->mode->forStore($storeId)) {
@@ -152,13 +172,34 @@ class TemplateFilterPlugin
         };
     }
 
+    /**
+     * Runs the filter, marking the subject as inside a legacy render while it does.
+     *
+     * Only around the calls this plugin makes to render a template through legacy. Under
+     * Legacy the plugin makes no such call, and nothing a nested call could do differs there.
+     */
+    private function legacy(LegacyTemplate $subject, callable $proceed, string $value): mixed
+    {
+        $this->legacyRunning[$subject] = ($this->legacyRunning[$subject] ?? 0) + 1;
+        try {
+            return $proceed($value);
+        } finally {
+            $depth = $this->legacyRunning[$subject] - 1;
+            if ($depth > 0) {
+                $this->legacyRunning[$subject] = $depth;
+            } else {
+                unset($this->legacyRunning[$subject]);
+            }
+        }
+    }
+
     /** Serves legacy, and records how this engine would have done. */
     private function shadow(LegacyTemplate $subject, callable $proceed, string $value, int|string|null $storeId): mixed
     {
         // Taken before the filter runs, as the scope this invocation was called with: by the
         // time it returns, an include may have told the subject something else.
         $state = $this->stateOf($subject);
-        $result = $proceed($value);
+        $result = $this->legacy($subject, $proceed, $value);
 
         try {
             $unmodelled = $this->unmodelledDirective($subject, $value);
@@ -207,7 +248,7 @@ class TemplateFilterPlugin
         $legacyRaised = false;
         if ($sampled) {
             try {
-                $legacy = $proceed($value);
+                $legacy = $this->legacy($subject, $proceed, $value);
             } catch (\Throwable) {
                 // A legacy fatal: today's customer got an error here. Served by this engine
                 // instead, which is no reason to give them one now, and nothing to compare
@@ -236,7 +277,7 @@ class TemplateFilterPlugin
             // sampled render already is that, so it is not rendered twice.
             $this->record($storeId, $template, $candidate, served: false, fellBack: true);
 
-            return $sampled && !$legacyRaised ? $legacy : $proceed($value);
+            return $sampled && !$legacyRaised ? $legacy : $this->legacy($subject, $proceed, $value);
         }
 
         $outcome = null;
