@@ -54,7 +54,24 @@ final class Options
          * This engine needs none of it - a value is never re-parsed here whatever the
          * setting - so outside compatible mode it does nothing.
          */
-        public readonly bool $neutralizeDirectiveOutput = true
+        public readonly bool $neutralizeDirectiveOutput = true,
+        /**
+         * Render {{var}} as `Magento\Framework\Filter\Template` does, rather than the Email
+         * filter every other template goes through.
+         *
+         * The plain filter is what `FilterManager::template()` builds - customer and store
+         * address formats - and its {{var}} is the framework's VarDirective, not the Email
+         * filter's varDirective(): the value is NOT escaped (the address renderer escapes the
+         * values itself, before the render), `{{var}}` with no variables in scope renders
+         * empty rather than verbatim, and a modifier is not applied at all - the construction
+         * reaches VarDirective without its `filters` group, so `a|escape` is resolved as a
+         * variable path and comes out empty. This engine does not imitate that last part: a
+         * modifier, or an empty `{{var}}`, is recorded as a policy violation, so the render is
+         * declined and the filter renders it.
+         *
+         * Only meaningful together with compatible mode.
+         */
+        public readonly bool $plainFilter = false
     ) {
         if ($this->maxNestingDepth < 1) {
             throw new \InvalidArgumentException('maxNestingDepth must be at least 1');
@@ -158,6 +175,12 @@ final class Options
         return $this->with(neutralizeDirectiveOutput: $enabled);
     }
 
+    /** See $plainFilter. */
+    public function withPlainFilter(bool $enabled): self
+    {
+        return $this->with(plainFilter: $enabled);
+    }
+
     public function withVariables(bool $strict): self
     {
         return $this->with(strictVariables: $strict);
@@ -166,7 +189,7 @@ final class Options
     /**
      * The one place a field is carried over, so a `with*()` cannot set a neighbour instead.
      *
-     * Seven of the eight fields are bool, so a positional constructor call that transposed
+     * Eight of the nine fields are bool, so a positional constructor call that transposed
      * two of them type-checks and quietly returns options with the wrong flag set. Every
      * caller names its field; null leaves a field as it is, which loses nothing because no
      * field is nullable and so none can legitimately be set to null.
@@ -179,7 +202,8 @@ final class Options
         ?bool $legacyQuirks = null,
         ?bool $refuseLegacyIncompatible = null,
         ?bool $failOnPolicyViolation = null,
-        ?bool $neutralizeDirectiveOutput = null
+        ?bool $neutralizeDirectiveOutput = null,
+        ?bool $plainFilter = null
     ): self {
         return new self(
             strictSyntax: $strictSyntax ?? $this->strictSyntax,
@@ -189,7 +213,8 @@ final class Options
             legacyQuirks: $legacyQuirks ?? $this->legacyQuirks,
             refuseLegacyIncompatible: $refuseLegacyIncompatible ?? $this->refuseLegacyIncompatible,
             failOnPolicyViolation: $failOnPolicyViolation ?? $this->failOnPolicyViolation,
-            neutralizeDirectiveOutput: $neutralizeDirectiveOutput ?? $this->neutralizeDirectiveOutput
+            neutralizeDirectiveOutput: $neutralizeDirectiveOutput ?? $this->neutralizeDirectiveOutput,
+            plainFilter: $plainFilter ?? $this->plainFilter
         );
     }
 }

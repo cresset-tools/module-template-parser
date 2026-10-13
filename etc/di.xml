@@ -2,8 +2,8 @@
 <!--
     Installing this module wires it, and changes no rendering behaviour.
 
-    The plugin below is declared on the Email filter, so it sits on every email, CMS and
-    newsletter render. What it does there is read `system/template_engine/mode` for the
+    The plugin below is declared on Magento\Framework\Filter\Template, so it sits on every
+    email, CMS and newsletter render, and on the customer and store address formats. What it does there is read `system/template_engine/mode` for the
     render's store (etc/config.xml defaults it to legacy) and, under Legacy, return. Rollout is
     a configuration change per store view - Stores > Configuration > Advanced > System >
     Template Engine - not a di.xml edit in a project module.
@@ -22,13 +22,24 @@
                 type="Cresset\TemplateParser\Magento\TemplateFilterAdapter"/>
 
     <!--
-        On the Email filter, which the CMS, Widget and Newsletter filters all extend - a plugin
-        on a class applies to its subclasses, so this one declaration covers every template
-        filter a stock store renders with.
+        On the framework base class, which every template filter extends - a plugin on a class
+        applies to its subclasses. That covers the Email filter and the CMS, Widget and
+        Newsletter filters built on it, and the plain filter FilterManager::template() builds
+        for address formats. Any other subclass is handed straight to the filter by the plugin
+        itself; see TemplateFilterPlugin.
     -->
-    <type name="Magento\Email\Model\Template\Filter">
+    <type name="Magento\Framework\Filter\Template">
         <plugin name="cresset_template_parser" sortOrder="10"
                 type="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin"/>
+    </type>
+    <!--
+        The Email filter's own setters - the plain-text flag and the design - which the plugin
+        above needs and cannot declare itself: Magento's compiler refuses a plugin method for a
+        method the class it is declared on lacks. See EmailFilterStatePlugin.
+    -->
+    <type name="Magento\Email\Model\Template\Filter">
+        <plugin name="cresset_template_parser_state"
+                type="Cresset\TemplateParser\Magento\Plugin\EmailFilterStatePlugin"/>
     </type>
 
     <!--
@@ -69,6 +80,15 @@
     <type name="Magento\Catalog\Helper\Output">
         <plugin name="cresset_template_parser_identity"
                 type="Cresset\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin"/>
+    </type>
+    <!-- Address formats render through FilterManager, so these hold a name for the call. -->
+    <type name="Magento\Customer\Block\Address\Renderer\DefaultRenderer">
+        <plugin name="cresset_template_parser_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\AddressIdentityPlugin"/>
+    </type>
+    <type name="Magento\Store\Model\Address\Renderer">
+        <plugin name="cresset_template_parser_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\StoreAddressIdentityPlugin"/>
     </type>
 
     <!--
@@ -155,8 +175,47 @@
     <type name="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin">
         <arguments>
             <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
+            <argument name="plainComparator" xsi:type="object">CressetTemplateParserPlainComparator</argument>
         </arguments>
     </type>
+
+    <!--
+        The plain filter's adapter. Its only host directives are the store's ProcessorPool
+        ones, which the plain filter dispatches exactly as the Email filter does; everything
+        else it renders as text, or - {{template}}, {{for}} - is declined. See
+        Options::$plainFilter.
+    -->
+    <virtualType name="CressetTemplateParserPlainServices" type="Cresset\TemplateParser\HostServices">
+        <arguments>
+            <!--
+                A virtual type inherits the arguments of the type it is built on, so every port
+                configured for HostServices above is cleared here by name; left out, the plain
+                adapter would render {{block}} and {{store}} where the plain filter prints them.
+            -->
+            <argument name="blocks" xsi:type="null"/>
+            <argument name="translator" xsi:type="null"/>
+            <argument name="templates" xsi:type="null"/>
+            <argument name="config" xsi:type="null"/>
+            <argument name="customVariables" xsi:type="null"/>
+            <argument name="urls" xsi:type="null"/>
+            <argument name="stylesheets" xsi:type="null"/>
+            <argument name="layouts" xsi:type="null"/>
+            <argument name="widgets" xsi:type="null"/>
+            <argument name="templateUrls" xsi:type="null"/>
+            <argument name="customDirectives" xsi:type="object">Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="CressetTemplateParserPlainAdapter" type="Cresset\TemplateParser\Magento\TemplateFilterAdapter">
+        <arguments>
+            <argument name="services" xsi:type="object">CressetTemplateParserPlainServices</argument>
+            <argument name="plainFilter" xsi:type="boolean">true</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="CressetTemplateParserPlainComparator" type="Cresset\TemplateParser\Magento\ShadowComparator">
+        <arguments>
+            <argument name="adapter" xsi:type="object">CressetTemplateParserPlainAdapter</argument>
+        </arguments>
+    </virtualType>
 
     <type name="Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer">
         <arguments>

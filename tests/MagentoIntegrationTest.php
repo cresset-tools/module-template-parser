@@ -23,6 +23,8 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 use PHPUnit\Framework\TestCase;
+use Cresset\TemplateParser\Magento\Plugin\EmailFilterStatePlugin;
+use Magento\Email\Model\Template\Filter as EmailFilter;
 
 /**
  * The path an integrator actually takes to adopt this engine.
@@ -133,7 +135,7 @@ final class MagentoIntegrationTest extends TestCase
     /** A filter for one store, shaped like Email\Model\Template\Filter where it matters here. */
     private function filterFor(int|string|null $storeId): LegacyTemplate
     {
-        return new class ($storeId) extends LegacyTemplate {
+        return new class ($storeId) extends EmailFilter {
             public int $getStoreIdCalls = 0;
             protected $_storeId;
             public function __construct($storeId) { $this->_storeId = $storeId; }
@@ -307,7 +309,7 @@ final class MagentoIntegrationTest extends TestCase
         $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
 
-        $subject = new LegacyTemplate();
+        $subject = new EmailFilter();
 
         self::assertSame([['name' => 'Ada']], $plugin->beforeSetVariables($subject, ['name' => 'Ada']));
 
@@ -339,9 +341,9 @@ final class MagentoIntegrationTest extends TestCase
             Options::compatible()
         );
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
-        $subject = new LegacyTemplate();
+        $subject = new EmailFilter();
 
-        self::assertSame([true], $plugin->beforeSetPlainTemplateMode($subject, true));
+        self::assertSame([true], (new EmailFilterStatePlugin($plugin))->beforeSetPlainTemplateMode($subject, true));
         $plugin->beforeSetVariables($subject, []);
 
         // The legacy side of a plain render produces TEXT, and so must ours - a divergence
@@ -350,7 +352,7 @@ final class MagentoIntegrationTest extends TestCase
         self::assertSame([], $lines, 'plain mode did not reach the candidate render');
 
         // And it is not sticky the wrong way: back to HTML, HTML is what agrees.
-        $plugin->beforeSetPlainTemplateMode($subject, false);
+        (new EmailFilterStatePlugin($plugin))->beforeSetPlainTemplateMode($subject, false);
         $this->filter($plugin, $subject, '{{customvar code="g"}}', '<b>HTML</b>');
         self::assertSame([], $lines);
     }
@@ -368,7 +370,7 @@ final class MagentoIntegrationTest extends TestCase
         $lines = [];
         $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
-        $subject = new LegacyTemplate();
+        $subject = new EmailFilter();
 
         // The parent takes its scope and starts rendering; an include renders inside it, with a
         // scope of its own. The parent's comparison must use ADA, which is what it was called with.
@@ -394,8 +396,8 @@ final class MagentoIntegrationTest extends TestCase
         $lines = [];
         $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
-        $email = new LegacyTemplate();
-        $block = new LegacyTemplate();
+        $email = new EmailFilter();
+        $block = new EmailFilter();
 
         // The block is told its scope first; the email's, told last, must not replace it.
         $plugin->beforeSetVariables($block, ['name' => 'Grace']);
@@ -411,7 +413,7 @@ final class MagentoIntegrationTest extends TestCase
         $lines = [];
         $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
-        $subject = new LegacyTemplate();
+        $subject = new EmailFilter();
 
         $plugin->beforeSetVariables($subject, ['first' => 'Ada', 'last' => 'X']);
         $plugin->beforeSetVariables($subject, ['last' => 'Lovelace']);
@@ -435,7 +437,7 @@ final class MagentoIntegrationTest extends TestCase
         $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
 
-        $subject = new class extends LegacyTemplate {
+        $subject = new class extends EmailFilter {
             public function isChildTemplate() { return true; }
         };
 
@@ -484,7 +486,7 @@ final class MagentoIntegrationTest extends TestCase
         $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
 
-        $subject = new class extends LegacyTemplate {
+        $subject = new class extends EmailFilter {
             public function applyInlineCss($html) { return '<INLINED>' . $html . '</INLINED>'; }
         };
 
@@ -541,11 +543,11 @@ final class MagentoIntegrationTest extends TestCase
             }
         ), Options::compatible());
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
-        $subject = new LegacyTemplate();
+        $subject = new EmailFilter();
 
         self::assertSame(
             [['theme' => 'Magento/luma']],
-            $plugin->beforeSetDesignParams($subject, ['theme' => 'Magento/luma'])
+            (new EmailFilterStatePlugin($plugin))->beforeSetDesignParams($subject, ['theme' => 'Magento/luma'])
         );
         $plugin->beforeSetVariables($subject, []);
 
@@ -554,7 +556,7 @@ final class MagentoIntegrationTest extends TestCase
         // its own; the render is compared once, against the design it was called with, not
         // the one it ended with.
         $this->filter($plugin, $subject, '{{css file="a.css"}}', function () use ($plugin, $subject): string {
-            $plugin->beforeSetDesignParams($subject, ['theme' => 'Vendor/child']);
+            (new EmailFilterStatePlugin($plugin))->beforeSetDesignParams($subject, ['theme' => 'Vendor/child']);
             $this->filter($plugin, $subject, '{{css file="b.css"}}', 'CSS');
 
             return 'CSS';
@@ -583,7 +585,7 @@ final class MagentoIntegrationTest extends TestCase
         $adapter = new TemplateFilterAdapter(new HostServices(), Options::compatible());
         $plugin = $this->plugin(new ShadowComparator($adapter), $lines);
 
-        $subject = new LegacyTemplate();
+        $subject = new EmailFilter();
         $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
 
         $result = $this->filter($plugin, $subject, 'Dear {{var name}},', 'Dear SOMEONE ELSE,');
@@ -725,7 +727,7 @@ final class MagentoIntegrationTest extends TestCase
     public function testTheModuleWiresThePluginAndDefaultsToLegacy(): void
     {
         $di = simplexml_load_file(__DIR__ . '/../etc/di.xml');
-        $plugins = $di->xpath('//type[@name="Magento\\Email\\Model\\Template\\Filter"]/plugin');
+        $plugins = $di->xpath('//type[@name="Magento\\Framework\\Filter\\Template"]/plugin');
         self::assertCount(1, $plugins);
         self::assertSame(TemplateFilterPlugin::class, (string)$plugins[0]['type']);
         self::assertSame([], $di->xpath('//type[@name="' . ShadowComparator::class . '"]'));

@@ -16,6 +16,12 @@ use Cresset\TemplateParser\TemplateError;
 /**
  * Presents the engine with the shape Magento's template filter uses.
  *
+ * Two profiles. The default renders as the Email filter does, which is what emails, CMS and
+ * newsletters go through. `$plainFilter` renders as the plain `Framework\Filter\Template`
+ * that `FilterManager::template()` builds for address formats: its directive surface is
+ * {{var}}, {{if}}, {{depend}} and the store's ProcessorPool directives, and anything else is
+ * its own text. The plugin holds one adapter of each - see TemplateFilterPlugin.
+ *
  * Deliberately NOT registered as a DI preference for Magento\Framework\Filter\Template.
  * Swapping the engine under every stored template is a decision for the integrator, taken
  * after running ShadowComparator over real content - not a side effect of installing this
@@ -33,8 +39,10 @@ class TemplateFilterAdapter implements TemplateFilterInterface
 
     private ?\Exception $lastError = null;
 
-    /** See unwiredDirectives(). */
+    /** See unwiredDirectives(), and PLAIN_DECLINED for the plain filter. */
     private ?string $unwired = null;
+
+    private readonly bool $plainFilter;
 
     private readonly Options $options;
 
@@ -59,9 +67,14 @@ class TemplateFilterAdapter implements TemplateFilterInterface
     public function __construct(
         ?HostServices $services = null,
         ?Options $options = null,
-        ?RenderPolicy $policy = null
+        ?RenderPolicy $policy = null,
+        bool $plainFilter = false
     ) {
         $services ??= new HostServices();
+        $this->plainFilter = $plainFilter;
+        if ($plainFilter) {
+            $options = ($options ?? Options::compatible())->withPlainFilter(true);
+        }
         // COMPATIBLE, not the strict default. This class stands in for
         // Magento\Framework\Filter\Template, and the strict default refuses what that filter
         // renders - an unknown variable raises instead of rendering empty, which is a thing
@@ -71,8 +84,29 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
         $this->engine = TemplateEngine::forHost($services, $this->options);
         $this->context = new Context();
-        $this->unwired = self::unwiredDirectives($services);
+        $this->unwired = $plainFilter ? self::PLAIN_DECLINED : self::unwiredDirectives($services);
+
+        if ($plainFilter) {
+            // Neither is a directive of the plain filter: it has no transDirective() or
+            // inlinecssDirective(), so `{{trans "x"}}` reaches SimpleDirective, finds no
+            // processor of that name, and comes out as its own text. Unregistered, this
+            // engine renders them as text too.
+            $this->engine->evaluator()->unregister('trans');
+            $this->engine->evaluator()->unregister('inlinecss');
+        }
     }
+
+    /**
+     * What the plain filter renders in a way this adapter does not model, so a render that
+     * uses it is declined - see Options::$plainFilter.
+     *
+     * {{template}} renders "{Error in template processing}" without a template processor,
+     * which FilterManager never sets, and with one calls whatever it was given. {{for}} goes
+     * through the framework's ForDirective rather than the Email filter's, and renders
+     * differently - an ordinary `{{for x in list}}` comes out empty. Neither appears in an
+     * address format; both are declined rather than imitated.
+     */
+    private const PLAIN_DECLINED = '/\{\{(template|for)(?![a-z])/i';
 
     /**
      * The filter's directives this adapter has no port for, as a pattern; null when it has
@@ -222,7 +256,12 @@ class TemplateFilterAdapter implements TemplateFilterInterface
 
         foreach ($matches as $match) {
             ['line' => $line, 'column' => $column] = Diagnostics::locate($source, $match[0][1]);
-            $context->recordViolation(new PolicyViolation('unwired directive', strtolower($match[1][0]), $line, $column));
+            $context->recordViolation(new PolicyViolation(
+                $this->plainFilter ? 'plain-filter directive' : 'unwired directive',
+                strtolower($match[1][0]),
+                $line,
+                $column
+            ));
         }
     }
 

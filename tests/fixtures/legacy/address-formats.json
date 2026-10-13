@@ -1,0 +1,2336 @@
+{
+    "formats": {
+        "html": "{{depend prefix}}{{var prefix}} {{/depend}}{{var firstname}} {{depend middlename}}{{var middlename}} {{/depend}}{{var lastname}}{{depend suffix}} {{var suffix}}{{/depend}}{{depend firstname}}<br />{{/depend}}\n{{depend company}}{{var company}}<br />{{/depend}}\n{{if street1}}{{var street1}}<br />{{/if}}\n{{depend street2}}{{var street2}}<br />{{/depend}}\n{{depend street3}}{{var street3}}<br />{{/depend}}\n{{depend street4}}{{var street4}}<br />{{/depend}}\n{{if city}}{{var city}},  {{/if}}{{if region}}{{var region}}, {{/if}}{{if postcode}}{{var postcode}}{{/if}}<br />\n{{var country}}<br />\n{{depend telephone}}T: <a href=\"tel:{{var telephone}}\">{{var telephone}}</a>{{/depend}}\n{{depend fax}}<br />F: {{var fax}}{{/depend}}\n{{depend vat_id}}<br />VAT: {{var vat_id}}{{/depend}}",
+        "text": "{{depend prefix}}{{var prefix}} {{/depend}}{{var firstname}} {{depend middlename}}{{var middlename}} {{/depend}}{{var lastname}}{{depend suffix}} {{var suffix}}{{/depend}}\n{{depend company}}{{var company}}{{/depend}}\n{{if street1}}{{var street1}}\n{{/if}}\n{{depend street2}}{{var street2}}{{/depend}}\n{{depend street3}}{{var street3}}{{/depend}}\n{{depend street4}}{{var street4}}{{/depend}}\n{{if city}}{{var city}},  {{/if}}{{if region}}{{var region}}, {{/if}}{{if postcode}}{{var postcode}}{{/if}}\n{{var country}}\n{{depend telephone}}T: {{var telephone}}{{/depend}}\n{{depend fax}}F: {{var fax}}{{/depend}}\n{{depend vat_id}}VAT: {{var vat_id}}{{/depend}}",
+        "oneline": "{{depend prefix}}{{var prefix}} {{/depend}}{{var firstname}} {{depend middlename}}{{var middlename}} {{/depend}}{{var lastname}}{{depend suffix}} {{var suffix}}{{/depend}}, {{var street}}, {{var city}}, {{var region}} {{var postcode}}, {{var country}}",
+        "pdf": "{{depend prefix}}{{var prefix}} {{/depend}}{{var firstname}} {{depend middlename}}{{var middlename}} {{/depend}}{{var lastname}}{{depend suffix}} {{var suffix}}{{/depend}}|\n{{depend company}}{{var company}}|{{/depend}}\n{{if street1}}{{var street1}}|{{/if}}\n{{depend street2}}{{var street2}}|{{/depend}}\n{{depend street3}}{{var street3}}|{{/depend}}\n{{depend street4}}{{var street4}}|{{/depend}}\n{{if city}}{{var city}}, {{/if}}{{if region}}{{var region}}, {{/if}}{{if postcode}}{{var postcode}}{{/if}}|\n{{var country}}|\n{{depend telephone}}T: {{var telephone}}|{{/depend}}\n{{depend fax}}F: {{var fax}}|{{/depend}}|\n{{depend vat_id}}VAT: {{var vat_id}}{{/depend}}|",
+        "store": "{{var name}}\n{{var street_line1}}\n{{depend street_line2}}{{var street_line2}}\n{{/depend}}{{depend city}}{{var city}},{{/depend}} {{var region}} {{depend postcode}}{{var postcode}},{{/depend}}\n{{var country}}"
+    },
+    "base": {
+        "prefix": "Dr",
+        "firstname": "Jan",
+        "middlename": "",
+        "lastname": "Jansen",
+        "suffix": "",
+        "company": "ACME",
+        "street": "Main 1\nFloor 2",
+        "street1": "Main 1",
+        "street2": "Floor 2",
+        "street3": "",
+        "street4": "",
+        "city": "Utrecht",
+        "region": "UT",
+        "postcode": "1234 AB",
+        "country": "Netherlands",
+        "telephone": "+31 6",
+        "fax": "",
+        "vat_id": "NL1",
+        "name": "Store",
+        "street_line1": "S1",
+        "street_line2": "S2"
+    },
+    "cases": {
+        "html/ordinary": {
+            "format": "html",
+            "set": [],
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/empty": {
+            "format": "html",
+            "set": {
+                "prefix": "",
+                "firstname": "",
+                "middlename": "",
+                "lastname": "",
+                "suffix": "",
+                "company": "",
+                "street": "",
+                "street1": "",
+                "street2": "",
+                "street3": "",
+                "street4": "",
+                "city": "",
+                "region": "",
+                "postcode": "",
+                "country": "",
+                "telephone": "",
+                "fax": "",
+                "vat_id": "",
+                "name": "",
+                "street_line1": "",
+                "street_line2": ""
+            },
+            "legacy": " \n\n\n\n\n\n<br />\n<br />\n\n\n"
+        },
+        "html/firstname/0": {
+            "format": "html",
+            "set": {
+                "firstname": "{{var lastname}}"
+            },
+            "legacy": "Dr &#123;&#123;var lastname}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/0": {
+            "format": "html",
+            "set": {
+                "company": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;var lastname}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/0": {
+            "format": "html",
+            "set": {
+                "street1": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;var lastname}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/0": {
+            "format": "html",
+            "set": {
+                "city": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;var lastname}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/1": {
+            "format": "html",
+            "set": {
+                "firstname": "{{var}}"
+            },
+            "legacy": "Dr &#123;&#123;var}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/1": {
+            "format": "html",
+            "set": {
+                "company": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;var}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/1": {
+            "format": "html",
+            "set": {
+                "street1": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;var}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/1": {
+            "format": "html",
+            "set": {
+                "city": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;var}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/2": {
+            "format": "html",
+            "set": {
+                "firstname": "}}"
+            },
+            "legacy": "Dr }} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/2": {
+            "format": "html",
+            "set": {
+                "company": "}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/2": {
+            "format": "html",
+            "set": {
+                "street1": "}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/2": {
+            "format": "html",
+            "set": {
+                "city": "}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/3": {
+            "format": "html",
+            "set": {
+                "firstname": "{{"
+            },
+            "legacy": "Dr &#123;&#123; Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/3": {
+            "format": "html",
+            "set": {
+                "company": "{{"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/3": {
+            "format": "html",
+            "set": {
+                "street1": "{{"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/3": {
+            "format": "html",
+            "set": {
+                "city": "{{"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/4": {
+            "format": "html",
+            "set": {
+                "firstname": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr &#123;&#123;depend city}}x&#123;&#123;/depend}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/4": {
+            "format": "html",
+            "set": {
+                "company": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;depend city}}x&#123;&#123;/depend}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/4": {
+            "format": "html",
+            "set": {
+                "street1": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;depend city}}x&#123;&#123;/depend}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/4": {
+            "format": "html",
+            "set": {
+                "city": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;depend city}}x&#123;&#123;/depend}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/5": {
+            "format": "html",
+            "set": {
+                "firstname": "{{/depend}}"
+            },
+            "legacy": "Dr &#123;&#123;/depend}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/5": {
+            "format": "html",
+            "set": {
+                "company": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;/depend}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/5": {
+            "format": "html",
+            "set": {
+                "street1": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;/depend}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/5": {
+            "format": "html",
+            "set": {
+                "city": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;/depend}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/6": {
+            "format": "html",
+            "set": {
+                "firstname": "{{/if}}"
+            },
+            "legacy": "Dr &#123;&#123;/if}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/6": {
+            "format": "html",
+            "set": {
+                "company": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;/if}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/6": {
+            "format": "html",
+            "set": {
+                "street1": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;/if}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/6": {
+            "format": "html",
+            "set": {
+                "city": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;/if}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/7": {
+            "format": "html",
+            "set": {
+                "firstname": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr &#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/7": {
+            "format": "html",
+            "set": {
+                "company": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/7": {
+            "format": "html",
+            "set": {
+                "street1": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/7": {
+            "format": "html",
+            "set": {
+                "city": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/8": {
+            "format": "html",
+            "set": {
+                "firstname": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr &#123;&#123;trans \"t\"}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/8": {
+            "format": "html",
+            "set": {
+                "company": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;trans \"t\"}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/8": {
+            "format": "html",
+            "set": {
+                "street1": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;trans \"t\"}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/8": {
+            "format": "html",
+            "set": {
+                "city": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;trans \"t\"}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/9": {
+            "format": "html",
+            "set": {
+                "firstname": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr &#123;&#123;block id=\"footer\"}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/9": {
+            "format": "html",
+            "set": {
+                "company": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;block id=\"footer\"}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/9": {
+            "format": "html",
+            "set": {
+                "street1": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;block id=\"footer\"}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/9": {
+            "format": "html",
+            "set": {
+                "city": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;block id=\"footer\"}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/10": {
+            "format": "html",
+            "set": {
+                "firstname": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr &#123;&#123;template config_path=\"a/b\"}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/10": {
+            "format": "html",
+            "set": {
+                "company": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;template config_path=\"a/b\"}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/10": {
+            "format": "html",
+            "set": {
+                "street1": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;template config_path=\"a/b\"}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/10": {
+            "format": "html",
+            "set": {
+                "city": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;template config_path=\"a/b\"}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/11": {
+            "format": "html",
+            "set": {
+                "firstname": "a}}b{{c"
+            },
+            "legacy": "Dr a}}b&#123;&#123;c Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/11": {
+            "format": "html",
+            "set": {
+                "company": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen<br />\na}}b&#123;&#123;c<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/11": {
+            "format": "html",
+            "set": {
+                "street1": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\na}}b&#123;&#123;c<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/11": {
+            "format": "html",
+            "set": {
+                "city": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\na}}b&#123;&#123;c,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/12": {
+            "format": "html",
+            "set": {
+                "firstname": "{{{{var city}}}}"
+            },
+            "legacy": "Dr &#123;&#123;&#123;&#123;var city}}}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/12": {
+            "format": "html",
+            "set": {
+                "company": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;&#123;&#123;var city}}}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/12": {
+            "format": "html",
+            "set": {
+                "street1": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;&#123;&#123;var city}}}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/12": {
+            "format": "html",
+            "set": {
+                "city": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;&#123;&#123;var city}}}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/13": {
+            "format": "html",
+            "set": {
+                "firstname": "{{/var}}"
+            },
+            "legacy": "Dr &#123;&#123;/var}} Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/13": {
+            "format": "html",
+            "set": {
+                "company": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&#123;&#123;/var}}<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/13": {
+            "format": "html",
+            "set": {
+                "street1": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&#123;&#123;/var}}<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/13": {
+            "format": "html",
+            "set": {
+                "city": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&#123;&#123;/var}},  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/14": {
+            "format": "html",
+            "set": {
+                "firstname": "&amp; <b>"
+            },
+            "legacy": "Dr &amp; <b> Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/14": {
+            "format": "html",
+            "set": {
+                "company": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen<br />\n&amp; <b><br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/14": {
+            "format": "html",
+            "set": {
+                "street1": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n&amp; <b><br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/14": {
+            "format": "html",
+            "set": {
+                "city": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n&amp; <b>,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/15": {
+            "format": "html",
+            "set": {
+                "firstname": "0"
+            },
+            "legacy": "Dr 0 Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/15": {
+            "format": "html",
+            "set": {
+                "company": "0"
+            },
+            "legacy": "Dr Jan Jansen<br />\n0<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/15": {
+            "format": "html",
+            "set": {
+                "street1": "0"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n0<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/15": {
+            "format": "html",
+            "set": {
+                "city": "0"
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\n0,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/firstname/16": {
+            "format": "html",
+            "set": {
+                "firstname": ""
+            },
+            "legacy": "Dr  Jansen\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/company/16": {
+            "format": "html",
+            "set": {
+                "company": ""
+            },
+            "legacy": "Dr Jan Jansen<br />\n\nMain 1<br />\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/street1/16": {
+            "format": "html",
+            "set": {
+                "street1": ""
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\n\nFloor 2<br />\n\n\nUtrecht,  UT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "html/city/16": {
+            "format": "html",
+            "set": {
+                "city": ""
+            },
+            "legacy": "Dr Jan Jansen<br />\nACME<br />\nMain 1<br />\nFloor 2<br />\n\n\nUT, 1234 AB<br />\nNetherlands<br />\nT: <a href=\"tel:+31 6\">+31 6</a>\n\n<br />VAT: NL1"
+        },
+        "text/ordinary": {
+            "format": "text",
+            "set": [],
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/empty": {
+            "format": "text",
+            "set": {
+                "prefix": "",
+                "firstname": "",
+                "middlename": "",
+                "lastname": "",
+                "suffix": "",
+                "company": "",
+                "street": "",
+                "street1": "",
+                "street2": "",
+                "street3": "",
+                "street4": "",
+                "city": "",
+                "region": "",
+                "postcode": "",
+                "country": "",
+                "telephone": "",
+                "fax": "",
+                "vat_id": "",
+                "name": "",
+                "street_line1": "",
+                "street_line2": ""
+            },
+            "legacy": " \n\n\n\n\n\n\n\n\n\n"
+        },
+        "text/firstname/0": {
+            "format": "text",
+            "set": {
+                "firstname": "{{var lastname}}"
+            },
+            "legacy": "Dr &#123;&#123;var lastname}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/0": {
+            "format": "text",
+            "set": {
+                "company": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;var lastname}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/0": {
+            "format": "text",
+            "set": {
+                "street1": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;var lastname}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/0": {
+            "format": "text",
+            "set": {
+                "city": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;var lastname}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/1": {
+            "format": "text",
+            "set": {
+                "firstname": "{{var}}"
+            },
+            "legacy": "Dr &#123;&#123;var}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/1": {
+            "format": "text",
+            "set": {
+                "company": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;var}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/1": {
+            "format": "text",
+            "set": {
+                "street1": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;var}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/1": {
+            "format": "text",
+            "set": {
+                "city": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;var}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/2": {
+            "format": "text",
+            "set": {
+                "firstname": "}}"
+            },
+            "legacy": "Dr }} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/2": {
+            "format": "text",
+            "set": {
+                "company": "}}"
+            },
+            "legacy": "Dr Jan Jansen\n}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/2": {
+            "format": "text",
+            "set": {
+                "street1": "}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/2": {
+            "format": "text",
+            "set": {
+                "city": "}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/3": {
+            "format": "text",
+            "set": {
+                "firstname": "{{"
+            },
+            "legacy": "Dr &#123;&#123; Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/3": {
+            "format": "text",
+            "set": {
+                "company": "{{"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/3": {
+            "format": "text",
+            "set": {
+                "street1": "{{"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/3": {
+            "format": "text",
+            "set": {
+                "city": "{{"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/4": {
+            "format": "text",
+            "set": {
+                "firstname": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr &#123;&#123;depend city}}x&#123;&#123;/depend}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/4": {
+            "format": "text",
+            "set": {
+                "company": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;depend city}}x&#123;&#123;/depend}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/4": {
+            "format": "text",
+            "set": {
+                "street1": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;depend city}}x&#123;&#123;/depend}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/4": {
+            "format": "text",
+            "set": {
+                "city": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;depend city}}x&#123;&#123;/depend}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/5": {
+            "format": "text",
+            "set": {
+                "firstname": "{{/depend}}"
+            },
+            "legacy": "Dr &#123;&#123;/depend}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/5": {
+            "format": "text",
+            "set": {
+                "company": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;/depend}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/5": {
+            "format": "text",
+            "set": {
+                "street1": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;/depend}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/5": {
+            "format": "text",
+            "set": {
+                "city": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;/depend}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/6": {
+            "format": "text",
+            "set": {
+                "firstname": "{{/if}}"
+            },
+            "legacy": "Dr &#123;&#123;/if}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/6": {
+            "format": "text",
+            "set": {
+                "company": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;/if}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/6": {
+            "format": "text",
+            "set": {
+                "street1": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;/if}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/6": {
+            "format": "text",
+            "set": {
+                "city": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;/if}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/7": {
+            "format": "text",
+            "set": {
+                "firstname": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr &#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/7": {
+            "format": "text",
+            "set": {
+                "company": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/7": {
+            "format": "text",
+            "set": {
+                "street1": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/7": {
+            "format": "text",
+            "set": {
+                "city": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/8": {
+            "format": "text",
+            "set": {
+                "firstname": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr &#123;&#123;trans \"t\"}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/8": {
+            "format": "text",
+            "set": {
+                "company": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;trans \"t\"}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/8": {
+            "format": "text",
+            "set": {
+                "street1": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;trans \"t\"}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/8": {
+            "format": "text",
+            "set": {
+                "city": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;trans \"t\"}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/9": {
+            "format": "text",
+            "set": {
+                "firstname": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr &#123;&#123;block id=\"footer\"}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/9": {
+            "format": "text",
+            "set": {
+                "company": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;block id=\"footer\"}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/9": {
+            "format": "text",
+            "set": {
+                "street1": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;block id=\"footer\"}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/9": {
+            "format": "text",
+            "set": {
+                "city": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;block id=\"footer\"}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/10": {
+            "format": "text",
+            "set": {
+                "firstname": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr &#123;&#123;template config_path=\"a/b\"}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/10": {
+            "format": "text",
+            "set": {
+                "company": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;template config_path=\"a/b\"}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/10": {
+            "format": "text",
+            "set": {
+                "street1": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;template config_path=\"a/b\"}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/10": {
+            "format": "text",
+            "set": {
+                "city": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;template config_path=\"a/b\"}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/11": {
+            "format": "text",
+            "set": {
+                "firstname": "a}}b{{c"
+            },
+            "legacy": "Dr a}}b&#123;&#123;c Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/11": {
+            "format": "text",
+            "set": {
+                "company": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen\na}}b&#123;&#123;c\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/11": {
+            "format": "text",
+            "set": {
+                "street1": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen\nACME\na}}b&#123;&#123;c\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/11": {
+            "format": "text",
+            "set": {
+                "city": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\na}}b&#123;&#123;c,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/12": {
+            "format": "text",
+            "set": {
+                "firstname": "{{{{var city}}}}"
+            },
+            "legacy": "Dr &#123;&#123;&#123;&#123;var city}}}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/12": {
+            "format": "text",
+            "set": {
+                "company": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;&#123;&#123;var city}}}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/12": {
+            "format": "text",
+            "set": {
+                "street1": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;&#123;&#123;var city}}}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/12": {
+            "format": "text",
+            "set": {
+                "city": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;&#123;&#123;var city}}}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/13": {
+            "format": "text",
+            "set": {
+                "firstname": "{{/var}}"
+            },
+            "legacy": "Dr &#123;&#123;/var}} Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/13": {
+            "format": "text",
+            "set": {
+                "company": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen\n&#123;&#123;/var}}\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/13": {
+            "format": "text",
+            "set": {
+                "street1": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&#123;&#123;/var}}\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/13": {
+            "format": "text",
+            "set": {
+                "city": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&#123;&#123;/var}},  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/14": {
+            "format": "text",
+            "set": {
+                "firstname": "&amp; <b>"
+            },
+            "legacy": "Dr &amp; <b> Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/14": {
+            "format": "text",
+            "set": {
+                "company": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen\n&amp; <b>\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/14": {
+            "format": "text",
+            "set": {
+                "street1": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n&amp; <b>\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/14": {
+            "format": "text",
+            "set": {
+                "city": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n&amp; <b>,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/15": {
+            "format": "text",
+            "set": {
+                "firstname": "0"
+            },
+            "legacy": "Dr 0 Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/15": {
+            "format": "text",
+            "set": {
+                "company": "0"
+            },
+            "legacy": "Dr Jan Jansen\n0\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/15": {
+            "format": "text",
+            "set": {
+                "street1": "0"
+            },
+            "legacy": "Dr Jan Jansen\nACME\n0\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/15": {
+            "format": "text",
+            "set": {
+                "city": "0"
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\n0,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/firstname/16": {
+            "format": "text",
+            "set": {
+                "firstname": ""
+            },
+            "legacy": "Dr  Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/company/16": {
+            "format": "text",
+            "set": {
+                "company": ""
+            },
+            "legacy": "Dr Jan Jansen\n\nMain 1\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/street1/16": {
+            "format": "text",
+            "set": {
+                "street1": ""
+            },
+            "legacy": "Dr Jan Jansen\nACME\n\nFloor 2\n\n\nUtrecht,  UT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "text/city/16": {
+            "format": "text",
+            "set": {
+                "city": ""
+            },
+            "legacy": "Dr Jan Jansen\nACME\nMain 1\n\nFloor 2\n\n\nUT, 1234 AB\nNetherlands\nT: +31 6\n\nVAT: NL1"
+        },
+        "oneline/ordinary": {
+            "format": "oneline",
+            "set": [],
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/empty": {
+            "format": "oneline",
+            "set": {
+                "prefix": "",
+                "firstname": "",
+                "middlename": "",
+                "lastname": "",
+                "suffix": "",
+                "company": "",
+                "street": "",
+                "street1": "",
+                "street2": "",
+                "street3": "",
+                "street4": "",
+                "city": "",
+                "region": "",
+                "postcode": "",
+                "country": "",
+                "telephone": "",
+                "fax": "",
+                "vat_id": "",
+                "name": "",
+                "street_line1": "",
+                "street_line2": ""
+            },
+            "legacy": " , , ,  , "
+        },
+        "oneline/firstname/0": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{var lastname}}"
+            },
+            "legacy": "Dr &#123;&#123;var lastname}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/0": {
+            "format": "oneline",
+            "set": {
+                "street": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;var lastname}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/0": {
+            "format": "oneline",
+            "set": {
+                "city": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;var lastname}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/1": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{var}}"
+            },
+            "legacy": "Dr &#123;&#123;var}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/1": {
+            "format": "oneline",
+            "set": {
+                "street": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;var}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/1": {
+            "format": "oneline",
+            "set": {
+                "city": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;var}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/2": {
+            "format": "oneline",
+            "set": {
+                "firstname": "}}"
+            },
+            "legacy": "Dr }} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/2": {
+            "format": "oneline",
+            "set": {
+                "street": "}}"
+            },
+            "legacy": "Dr Jan Jansen, }}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/2": {
+            "format": "oneline",
+            "set": {
+                "city": "}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, }}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/3": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{"
+            },
+            "legacy": "Dr &#123;&#123; Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/3": {
+            "format": "oneline",
+            "set": {
+                "street": "{{"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/3": {
+            "format": "oneline",
+            "set": {
+                "city": "{{"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/4": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr &#123;&#123;depend city}}x&#123;&#123;/depend}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/4": {
+            "format": "oneline",
+            "set": {
+                "street": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;depend city}}x&#123;&#123;/depend}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/4": {
+            "format": "oneline",
+            "set": {
+                "city": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;depend city}}x&#123;&#123;/depend}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/5": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{/depend}}"
+            },
+            "legacy": "Dr &#123;&#123;/depend}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/5": {
+            "format": "oneline",
+            "set": {
+                "street": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;/depend}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/5": {
+            "format": "oneline",
+            "set": {
+                "city": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;/depend}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/6": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{/if}}"
+            },
+            "legacy": "Dr &#123;&#123;/if}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/6": {
+            "format": "oneline",
+            "set": {
+                "street": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;/if}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/6": {
+            "format": "oneline",
+            "set": {
+                "city": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;/if}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/7": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr &#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/7": {
+            "format": "oneline",
+            "set": {
+                "street": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/7": {
+            "format": "oneline",
+            "set": {
+                "city": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/8": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr &#123;&#123;trans \"t\"}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/8": {
+            "format": "oneline",
+            "set": {
+                "street": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;trans \"t\"}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/8": {
+            "format": "oneline",
+            "set": {
+                "city": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;trans \"t\"}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/9": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr &#123;&#123;block id=\"footer\"}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/9": {
+            "format": "oneline",
+            "set": {
+                "street": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;block id=\"footer\"}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/9": {
+            "format": "oneline",
+            "set": {
+                "city": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;block id=\"footer\"}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/10": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr &#123;&#123;template config_path=\"a/b\"}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/10": {
+            "format": "oneline",
+            "set": {
+                "street": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;template config_path=\"a/b\"}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/10": {
+            "format": "oneline",
+            "set": {
+                "city": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;template config_path=\"a/b\"}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/11": {
+            "format": "oneline",
+            "set": {
+                "firstname": "a}}b{{c"
+            },
+            "legacy": "Dr a}}b&#123;&#123;c Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/11": {
+            "format": "oneline",
+            "set": {
+                "street": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen, a}}b&#123;&#123;c, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/11": {
+            "format": "oneline",
+            "set": {
+                "city": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, a}}b&#123;&#123;c, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/12": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{{{var city}}}}"
+            },
+            "legacy": "Dr &#123;&#123;&#123;&#123;var city}}}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/12": {
+            "format": "oneline",
+            "set": {
+                "street": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;&#123;&#123;var city}}}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/12": {
+            "format": "oneline",
+            "set": {
+                "city": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;&#123;&#123;var city}}}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/13": {
+            "format": "oneline",
+            "set": {
+                "firstname": "{{/var}}"
+            },
+            "legacy": "Dr &#123;&#123;/var}} Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/13": {
+            "format": "oneline",
+            "set": {
+                "street": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen, &#123;&#123;/var}}, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/13": {
+            "format": "oneline",
+            "set": {
+                "city": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &#123;&#123;/var}}, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/14": {
+            "format": "oneline",
+            "set": {
+                "firstname": "&amp; <b>"
+            },
+            "legacy": "Dr &amp; <b> Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/14": {
+            "format": "oneline",
+            "set": {
+                "street": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen, &amp; <b>, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/14": {
+            "format": "oneline",
+            "set": {
+                "city": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, &amp; <b>, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/15": {
+            "format": "oneline",
+            "set": {
+                "firstname": "0"
+            },
+            "legacy": "Dr 0 Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/15": {
+            "format": "oneline",
+            "set": {
+                "street": "0"
+            },
+            "legacy": "Dr Jan Jansen, 0, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/15": {
+            "format": "oneline",
+            "set": {
+                "city": "0"
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, 0, UT 1234 AB, Netherlands"
+        },
+        "oneline/firstname/16": {
+            "format": "oneline",
+            "set": {
+                "firstname": ""
+            },
+            "legacy": "Dr  Jansen, Main 1\nFloor 2, Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/street/16": {
+            "format": "oneline",
+            "set": {
+                "street": ""
+            },
+            "legacy": "Dr Jan Jansen, , Utrecht, UT 1234 AB, Netherlands"
+        },
+        "oneline/city/16": {
+            "format": "oneline",
+            "set": {
+                "city": ""
+            },
+            "legacy": "Dr Jan Jansen, Main 1\nFloor 2, , UT 1234 AB, Netherlands"
+        },
+        "pdf/ordinary": {
+            "format": "pdf",
+            "set": [],
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/empty": {
+            "format": "pdf",
+            "set": {
+                "prefix": "",
+                "firstname": "",
+                "middlename": "",
+                "lastname": "",
+                "suffix": "",
+                "company": "",
+                "street": "",
+                "street1": "",
+                "street2": "",
+                "street3": "",
+                "street4": "",
+                "city": "",
+                "region": "",
+                "postcode": "",
+                "country": "",
+                "telephone": "",
+                "fax": "",
+                "vat_id": "",
+                "name": "",
+                "street_line1": "",
+                "street_line2": ""
+            },
+            "legacy": " |\n\n\n\n\n\n|\n|\n\n|\n|"
+        },
+        "pdf/firstname/0": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{var lastname}}"
+            },
+            "legacy": "Dr &#123;&#123;var lastname}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/0": {
+            "format": "pdf",
+            "set": {
+                "company": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;var lastname}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/0": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;var lastname}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/0": {
+            "format": "pdf",
+            "set": {
+                "city": "{{var lastname}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;var lastname}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/1": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{var}}"
+            },
+            "legacy": "Dr &#123;&#123;var}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/1": {
+            "format": "pdf",
+            "set": {
+                "company": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;var}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/1": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;var}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/1": {
+            "format": "pdf",
+            "set": {
+                "city": "{{var}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;var}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/2": {
+            "format": "pdf",
+            "set": {
+                "firstname": "}}"
+            },
+            "legacy": "Dr }} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/2": {
+            "format": "pdf",
+            "set": {
+                "company": "}}"
+            },
+            "legacy": "Dr Jan Jansen|\n}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/2": {
+            "format": "pdf",
+            "set": {
+                "street1": "}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/2": {
+            "format": "pdf",
+            "set": {
+                "city": "}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/3": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{"
+            },
+            "legacy": "Dr &#123;&#123; Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/3": {
+            "format": "pdf",
+            "set": {
+                "company": "{{"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/3": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/3": {
+            "format": "pdf",
+            "set": {
+                "city": "{{"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/4": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr &#123;&#123;depend city}}x&#123;&#123;/depend}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/4": {
+            "format": "pdf",
+            "set": {
+                "company": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;depend city}}x&#123;&#123;/depend}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/4": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;depend city}}x&#123;&#123;/depend}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/4": {
+            "format": "pdf",
+            "set": {
+                "city": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;depend city}}x&#123;&#123;/depend}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/5": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{/depend}}"
+            },
+            "legacy": "Dr &#123;&#123;/depend}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/5": {
+            "format": "pdf",
+            "set": {
+                "company": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;/depend}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/5": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;/depend}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/5": {
+            "format": "pdf",
+            "set": {
+                "city": "{{/depend}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;/depend}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/6": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{/if}}"
+            },
+            "legacy": "Dr &#123;&#123;/if}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/6": {
+            "format": "pdf",
+            "set": {
+                "company": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;/if}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/6": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;/if}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/6": {
+            "format": "pdf",
+            "set": {
+                "city": "{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;/if}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/7": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr &#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/7": {
+            "format": "pdf",
+            "set": {
+                "company": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/7": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/7": {
+            "format": "pdf",
+            "set": {
+                "city": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/8": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr &#123;&#123;trans \"t\"}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/8": {
+            "format": "pdf",
+            "set": {
+                "company": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;trans \"t\"}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/8": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;trans \"t\"}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/8": {
+            "format": "pdf",
+            "set": {
+                "city": "{{trans \"t\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;trans \"t\"}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/9": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr &#123;&#123;block id=\"footer\"}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/9": {
+            "format": "pdf",
+            "set": {
+                "company": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;block id=\"footer\"}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/9": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;block id=\"footer\"}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/9": {
+            "format": "pdf",
+            "set": {
+                "city": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;block id=\"footer\"}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/10": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr &#123;&#123;template config_path=\"a/b\"}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/10": {
+            "format": "pdf",
+            "set": {
+                "company": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;template config_path=\"a/b\"}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/10": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;template config_path=\"a/b\"}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/10": {
+            "format": "pdf",
+            "set": {
+                "city": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;template config_path=\"a/b\"}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/11": {
+            "format": "pdf",
+            "set": {
+                "firstname": "a}}b{{c"
+            },
+            "legacy": "Dr a}}b&#123;&#123;c Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/11": {
+            "format": "pdf",
+            "set": {
+                "company": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen|\na}}b&#123;&#123;c|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/11": {
+            "format": "pdf",
+            "set": {
+                "street1": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\na}}b&#123;&#123;c|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/11": {
+            "format": "pdf",
+            "set": {
+                "city": "a}}b{{c"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\na}}b&#123;&#123;c, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/12": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{{{var city}}}}"
+            },
+            "legacy": "Dr &#123;&#123;&#123;&#123;var city}}}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/12": {
+            "format": "pdf",
+            "set": {
+                "company": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;&#123;&#123;var city}}}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/12": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;&#123;&#123;var city}}}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/12": {
+            "format": "pdf",
+            "set": {
+                "city": "{{{{var city}}}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;&#123;&#123;var city}}}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/13": {
+            "format": "pdf",
+            "set": {
+                "firstname": "{{/var}}"
+            },
+            "legacy": "Dr &#123;&#123;/var}} Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/13": {
+            "format": "pdf",
+            "set": {
+                "company": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen|\n&#123;&#123;/var}}|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/13": {
+            "format": "pdf",
+            "set": {
+                "street1": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&#123;&#123;/var}}|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/13": {
+            "format": "pdf",
+            "set": {
+                "city": "{{/var}}"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&#123;&#123;/var}}, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/14": {
+            "format": "pdf",
+            "set": {
+                "firstname": "&amp; <b>"
+            },
+            "legacy": "Dr &amp; <b> Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/14": {
+            "format": "pdf",
+            "set": {
+                "company": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen|\n&amp; <b>|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/14": {
+            "format": "pdf",
+            "set": {
+                "street1": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n&amp; <b>|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/14": {
+            "format": "pdf",
+            "set": {
+                "city": "&amp; <b>"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n&amp; <b>, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/15": {
+            "format": "pdf",
+            "set": {
+                "firstname": "0"
+            },
+            "legacy": "Dr 0 Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/15": {
+            "format": "pdf",
+            "set": {
+                "company": "0"
+            },
+            "legacy": "Dr Jan Jansen|\n0|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/15": {
+            "format": "pdf",
+            "set": {
+                "street1": "0"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n0|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/15": {
+            "format": "pdf",
+            "set": {
+                "city": "0"
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\n0, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/firstname/16": {
+            "format": "pdf",
+            "set": {
+                "firstname": ""
+            },
+            "legacy": "Dr  Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/company/16": {
+            "format": "pdf",
+            "set": {
+                "company": ""
+            },
+            "legacy": "Dr Jan Jansen|\n\nMain 1|\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/street1/16": {
+            "format": "pdf",
+            "set": {
+                "street1": ""
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\n\nFloor 2|\n\n\nUtrecht, UT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "pdf/city/16": {
+            "format": "pdf",
+            "set": {
+                "city": ""
+            },
+            "legacy": "Dr Jan Jansen|\nACME|\nMain 1|\nFloor 2|\n\n\nUT, 1234 AB|\nNetherlands|\nT: +31 6|\n|\nVAT: NL1|"
+        },
+        "store/ordinary": {
+            "format": "store",
+            "set": [],
+            "legacy": "Store\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/empty": {
+            "format": "store",
+            "set": {
+                "prefix": "",
+                "firstname": "",
+                "middlename": "",
+                "lastname": "",
+                "suffix": "",
+                "company": "",
+                "street": "",
+                "street1": "",
+                "street2": "",
+                "street3": "",
+                "street4": "",
+                "city": "",
+                "region": "",
+                "postcode": "",
+                "country": "",
+                "telephone": "",
+                "fax": "",
+                "vat_id": "",
+                "name": "",
+                "street_line1": "",
+                "street_line2": ""
+            },
+            "legacy": "\n\n  \n"
+        },
+        "store/city/0": {
+            "format": "store",
+            "set": {
+                "city": "{{var lastname}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;var lastname}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/0": {
+            "format": "store",
+            "set": {
+                "name": "{{var lastname}}"
+            },
+            "legacy": "&#123;&#123;var lastname}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/0": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{var lastname}}"
+            },
+            "legacy": "Store\n&#123;&#123;var lastname}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/1": {
+            "format": "store",
+            "set": {
+                "city": "{{var}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;var}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/1": {
+            "format": "store",
+            "set": {
+                "name": "{{var}}"
+            },
+            "legacy": "&#123;&#123;var}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/1": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{var}}"
+            },
+            "legacy": "Store\n&#123;&#123;var}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/2": {
+            "format": "store",
+            "set": {
+                "city": "}}"
+            },
+            "legacy": "Store\nS1\nS2\n}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/2": {
+            "format": "store",
+            "set": {
+                "name": "}}"
+            },
+            "legacy": "}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/2": {
+            "format": "store",
+            "set": {
+                "street_line1": "}}"
+            },
+            "legacy": "Store\n}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/3": {
+            "format": "store",
+            "set": {
+                "city": "{{"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/3": {
+            "format": "store",
+            "set": {
+                "name": "{{"
+            },
+            "legacy": "&#123;&#123;\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/3": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{"
+            },
+            "legacy": "Store\n&#123;&#123;\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/4": {
+            "format": "store",
+            "set": {
+                "city": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;depend city}}x&#123;&#123;/depend}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/4": {
+            "format": "store",
+            "set": {
+                "name": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "&#123;&#123;depend city}}x&#123;&#123;/depend}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/4": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{depend city}}x{{/depend}}"
+            },
+            "legacy": "Store\n&#123;&#123;depend city}}x&#123;&#123;/depend}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/5": {
+            "format": "store",
+            "set": {
+                "city": "{{/depend}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;/depend}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/5": {
+            "format": "store",
+            "set": {
+                "name": "{{/depend}}"
+            },
+            "legacy": "&#123;&#123;/depend}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/5": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{/depend}}"
+            },
+            "legacy": "Store\n&#123;&#123;/depend}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/6": {
+            "format": "store",
+            "set": {
+                "city": "{{/if}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;/if}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/6": {
+            "format": "store",
+            "set": {
+                "name": "{{/if}}"
+            },
+            "legacy": "&#123;&#123;/if}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/6": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{/if}}"
+            },
+            "legacy": "Store\n&#123;&#123;/if}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/7": {
+            "format": "store",
+            "set": {
+                "city": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/7": {
+            "format": "store",
+            "set": {
+                "name": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/7": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{if city}}y{{else}}n{{/if}}"
+            },
+            "legacy": "Store\n&#123;&#123;if city}}y&#123;&#123;else}}n&#123;&#123;/if}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/8": {
+            "format": "store",
+            "set": {
+                "city": "{{trans \"t\"}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;trans \"t\"}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/8": {
+            "format": "store",
+            "set": {
+                "name": "{{trans \"t\"}}"
+            },
+            "legacy": "&#123;&#123;trans \"t\"}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/8": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{trans \"t\"}}"
+            },
+            "legacy": "Store\n&#123;&#123;trans \"t\"}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/9": {
+            "format": "store",
+            "set": {
+                "city": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;block id=\"footer\"}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/9": {
+            "format": "store",
+            "set": {
+                "name": "{{block id=\"footer\"}}"
+            },
+            "legacy": "&#123;&#123;block id=\"footer\"}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/9": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{block id=\"footer\"}}"
+            },
+            "legacy": "Store\n&#123;&#123;block id=\"footer\"}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/10": {
+            "format": "store",
+            "set": {
+                "city": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;template config_path=\"a/b\"}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/10": {
+            "format": "store",
+            "set": {
+                "name": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "&#123;&#123;template config_path=\"a/b\"}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/10": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{template config_path=\"a/b\"}}"
+            },
+            "legacy": "Store\n&#123;&#123;template config_path=\"a/b\"}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/11": {
+            "format": "store",
+            "set": {
+                "city": "a}}b{{c"
+            },
+            "legacy": "Store\nS1\nS2\na}}b&#123;&#123;c, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/11": {
+            "format": "store",
+            "set": {
+                "name": "a}}b{{c"
+            },
+            "legacy": "a}}b&#123;&#123;c\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/11": {
+            "format": "store",
+            "set": {
+                "street_line1": "a}}b{{c"
+            },
+            "legacy": "Store\na}}b&#123;&#123;c\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/12": {
+            "format": "store",
+            "set": {
+                "city": "{{{{var city}}}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;&#123;&#123;var city}}}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/12": {
+            "format": "store",
+            "set": {
+                "name": "{{{{var city}}}}"
+            },
+            "legacy": "&#123;&#123;&#123;&#123;var city}}}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/12": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{{{var city}}}}"
+            },
+            "legacy": "Store\n&#123;&#123;&#123;&#123;var city}}}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/13": {
+            "format": "store",
+            "set": {
+                "city": "{{/var}}"
+            },
+            "legacy": "Store\nS1\nS2\n&#123;&#123;/var}}, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/13": {
+            "format": "store",
+            "set": {
+                "name": "{{/var}}"
+            },
+            "legacy": "&#123;&#123;/var}}\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/13": {
+            "format": "store",
+            "set": {
+                "street_line1": "{{/var}}"
+            },
+            "legacy": "Store\n&#123;&#123;/var}}\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/14": {
+            "format": "store",
+            "set": {
+                "city": "&amp; <b>"
+            },
+            "legacy": "Store\nS1\nS2\n&amp; <b>, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/14": {
+            "format": "store",
+            "set": {
+                "name": "&amp; <b>"
+            },
+            "legacy": "&amp; <b>\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/14": {
+            "format": "store",
+            "set": {
+                "street_line1": "&amp; <b>"
+            },
+            "legacy": "Store\n&amp; <b>\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/15": {
+            "format": "store",
+            "set": {
+                "city": "0"
+            },
+            "legacy": "Store\nS1\nS2\n0, UT 1234 AB,\nNetherlands"
+        },
+        "store/name/15": {
+            "format": "store",
+            "set": {
+                "name": "0"
+            },
+            "legacy": "0\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/15": {
+            "format": "store",
+            "set": {
+                "street_line1": "0"
+            },
+            "legacy": "Store\n0\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/city/16": {
+            "format": "store",
+            "set": {
+                "city": ""
+            },
+            "legacy": "Store\nS1\nS2\n UT 1234 AB,\nNetherlands"
+        },
+        "store/name/16": {
+            "format": "store",
+            "set": {
+                "name": ""
+            },
+            "legacy": "\nS1\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        },
+        "store/street_line1/16": {
+            "format": "store",
+            "set": {
+                "street_line1": ""
+            },
+            "legacy": "Store\n\nS2\nUtrecht, UT 1234 AB,\nNetherlands"
+        }
+    }
+}

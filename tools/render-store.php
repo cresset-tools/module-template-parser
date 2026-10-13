@@ -9,7 +9,9 @@ declare(strict_types=1);
  * Emails go through the path a sender takes - Mail\Template\FactoryInterface, then
  * processTemplate() and getSubject() - with the variables OrderSender, InvoiceSender,
  * ShipmentSender and CreditmemoSender build, for every order in the store. Blocks render
- * through Cms\Block\Block, pages through the page filter. Run it once per stage and compare
+ * through Cms\Block\Block, pages through the page filter, and every order's addresses in the
+ * html, text, oneline and pdf formats - plus each store's own address - through the plain
+ * filter FilterManager builds. Run it once per stage and compare
  * the files: that is how Parser mode was verified byte for byte against Legacy.
  *
  * Two things to know when comparing:
@@ -96,6 +98,30 @@ foreach ($orders as $order) {
     }
     foreach ($order->getCreditmemosCollection() as $creditmemo) {
         $email("$n creditmemo", "sales_email/creditmemo/{$guest}template", $storeId, $base + ['creditmemo' => $creditmemo, 'creditmemo_id' => $creditmemo->getId(), 'comment' => '']);
+    }
+}
+
+// Address formats - the plain filter FilterManager builds - in every format the store has.
+if ($prefix === '' || str_starts_with($prefix, 'address')) {
+    $addressRenderer = $om->get(\Magento\Sales\Model\Order\Address\Renderer::class);
+    foreach ($orders as $order) {
+        $order = $om->get(\Magento\Sales\Api\OrderRepositoryInterface::class)->get($order->getId());
+        foreach (['billing' => $order->getBillingAddress(), 'shipping' => $order->getShippingAddress()] as $kind => $address) {
+            if ($address === null) {
+                continue;
+            }
+            foreach (['html', 'text', 'oneline', 'pdf'] as $type) {
+                try {
+                    $out["address order{$order->getIncrementId()} $kind $type"] = (string)$addressRenderer->format($address, $type);
+                } catch (\Throwable $e) {
+                    $out["address order{$order->getIncrementId()} $kind $type ERROR"] = get_class($e) . ': ' . $e->getMessage();
+                }
+            }
+        }
+    }
+    $information = $om->get(\Magento\Store\Model\Information::class);
+    foreach ($om->get(\Magento\Store\Model\StoreManagerInterface::class)->getStores() as $store) {
+        $out['address store ' . $store->getCode()] = (string)$information->getFormattedAddress($store);
     }
 }
 

@@ -21,6 +21,12 @@ namespace Cresset\TemplateParser\Magento\Shadow;
  *
  * Two templates with byte-identical source share an entry, and the one registered last names
  * it. They render identically, so the comparison is the same either way.
+ *
+ * Some callers never hand the text over where a plugin can see it: the customer address
+ * renderer computes its format inside renderArray() - a country lookup, for most addresses -
+ * and passes it straight to FilterManager. For those a name is held for the duration of the
+ * call instead - see during() - and the filter plugin falls back to it for the plain filter
+ * those calls render through.
  */
 class TemplateIdentity
 {
@@ -29,8 +35,34 @@ class TemplateIdentity
     /** @var array<string,string> hash of the source => identity, oldest first */
     private array $bySource = [];
 
+    /** @var list<string> names held by during(), innermost last */
+    private array $ambient = [];
+
     public function __construct(private readonly int $capacity = self::CAPACITY)
     {
+    }
+
+    /**
+     * Runs `$call` with `$identity` as the name of whatever renders inside it.
+     *
+     * @template T
+     * @param callable():T $call
+     * @return T
+     */
+    public function during(string $identity, callable $call): mixed
+    {
+        $this->ambient[] = $identity;
+        try {
+            return $call();
+        } finally {
+            array_pop($this->ambient);
+        }
+    }
+
+    /** The innermost name held by during(), or null outside one. */
+    public function ambient(): ?string
+    {
+        return $this->ambient === [] ? null : $this->ambient[array_key_last($this->ambient)];
     }
 
     public function remember(string $source, string $identity): void

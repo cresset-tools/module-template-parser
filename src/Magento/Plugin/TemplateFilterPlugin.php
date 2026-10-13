@@ -19,7 +19,20 @@ use Magento\Framework\Filter\Template as LegacyTemplate;
  * Widget\Model\Template\FilterEmulate - all concrete subclasses that DI instantiates
  * directly, so a preference for the Framework base class never applies. Interception is the
  * only mechanism that reaches them, which is what this is: the module's own di.xml declares it
- * on the Email filter, and a plugin on a class applies to its subclasses.
+ * on `Framework\Filter\Template`, and a plugin on a class applies to its subclasses.
+ *
+ * On the base class rather than the Email filter so it also reaches the plain filter itself,
+ * which `FilterManager::template()` builds for customer and store address formats - where
+ * customer-entered values meet directive processing. Two kinds of filter are rendered, each
+ * through its own adapter, and every other subclass is left alone:
+ *
+ * - the Email filter and its subclasses (CMS, Widget, Newsletter), as before;
+ * - exactly `Framework\Filter\Template`, through an adapter that renders as it does - see
+ *   Options::$plainFilter.
+ *
+ * Any other subclass - Catalog's, a module's own - adds directives of its own that neither
+ * adapter models, so the plugin hands it straight to the filter in every stage. That check is
+ * per class and cached, so for those it costs one array lookup.
  *
  * Wired on install, and off until configured. Each render reads `system/template_engine/mode`
  * for the subject's store:
@@ -58,6 +71,13 @@ class TemplateFilterPlugin
     /** @var array<class-string,list<string>> filter class => directives only it can render */
     private array $legacyOnly = [];
 
+    /** @var array<class-string,?string> filter class => self::EMAIL, self::PLAIN or null */
+    private array $profiles = [];
+
+    private const EMAIL = 'email';
+    private const PLAIN = 'plain';
+    private const EMAIL_FILTER = 'Magento\\Email\\Model\\Template\\Filter';
+
     /**
      * How deep each filter instance is inside a filter() of its own that legacy is running.
      *
@@ -77,7 +97,8 @@ class TemplateFilterPlugin
         private readonly EngineMode $mode,
         private readonly TemplateIdentity $identity,
         private readonly ShadowRecorder $recorder,
-        private readonly ?RenderScope $scope = null
+        private readonly ?RenderScope $scope = null,
+        private readonly ?ShadowComparator $plainComparator = null
     ) {
         $this->state = new \WeakMap();
         $this->legacyRunning = new \WeakMap();
@@ -109,34 +130,30 @@ class TemplateFilterPlugin
      * while the legacy render used the text one, and every plain email would report as a
      * divergence caused by nothing.
      *
-     * `$plain` is untyped because the method it plugs into is: forwarded as given, cast only
-     * for the copy kept here.
-     *
-     * @return array{0:mixed}
+     * Not a `before` method itself: setPlainTemplateMode() is the Email filter's, and this
+     * plugin is declared on the framework class, where Magento's compiler refuses a plugin
+     * method for a method the class does not have. EmailFilterStatePlugin, declared on the
+     * Email filter, hands it over.
      */
-    public function beforeSetPlainTemplateMode(LegacyTemplate $subject, $plain): array
+    public function rememberPlainTemplateMode(LegacyTemplate $subject, bool $plain): void
     {
         $state = $this->stateOf($subject);
-        $state['plain'] = (bool)$plain;
+        $state['plain'] = $plain;
         $this->state[$subject] = $state;
-
-        return [$plain];
     }
 
     /**
      * Captured for the same reason again: it is set on the subject, and by the time filter()
-     * returns the emulation it was taken inside is gone.
+     * returns the emulation it was taken inside is gone. Handed over by EmailFilterStatePlugin,
+     * like the plain flag.
      *
      * @param array<string,mixed> $designParams
-     * @return array{0:array<string,mixed>}
      */
-    public function beforeSetDesignParams(LegacyTemplate $subject, array $designParams): array
+    public function rememberDesignParams(LegacyTemplate $subject, array $designParams): void
     {
         $state = $this->stateOf($subject);
         $state['design'] = $designParams;
         $this->state[$subject] = $state;
-
-        return [$designParams];
     }
 
     /**
@@ -155,6 +172,11 @@ class TemplateFilterPlugin
         // the signature is random per render, so it could never match, and the parent's
         // comparison covers the same content.
         if (!is_string($value) || (method_exists($subject, 'isChildTemplate') && $subject->isChildTemplate())) {
+            return $proceed($value);
+        }
+
+        // A filter neither adapter models, in every stage - see the class docblock.
+        if ($this->profileOf($subject) === null) {
             return $proceed($value);
         }
 
@@ -213,7 +235,7 @@ class TemplateFilterPlugin
             // only has to apply them. Registering them again would be harmless here, but not in
             // general: one this engine accepted and legacy did not would then be inlined into
             // later LEGACY renders on the same instance, which Shadow promises not to change.
-            $outcome = $this->inScopeOf($subject, $storeId, fn () => $this->comparator->compare(
+            $outcome = $this->inScopeOf($subject, $storeId, fn () => $this->comparatorFor($subject)->compare(
                 $value,
                 (string)$result,
                 $state['variables'],
@@ -260,7 +282,7 @@ class TemplateFilterPlugin
 
         try {
             $candidate = $this->unmodelledDirective($subject, $value)
-                ?? $this->inScopeOf($subject, $storeId, fn () => $this->comparator->render(
+                ?? $this->inScopeOf($subject, $storeId, fn () => $this->comparatorFor($subject)->render(
                     $value,
                     $state['variables'],
                     $state['plain'],
@@ -283,7 +305,7 @@ class TemplateFilterPlugin
         $outcome = null;
         if ($sampled && !$legacyRaised) {
             try {
-                $outcome = $this->comparator->judge($candidate, (string)$legacy);
+                $outcome = $this->comparatorFor($subject)->judge($candidate, (string)$legacy);
             } catch (\Throwable) {
                 // Nothing to record but the serve.
             }
@@ -451,7 +473,39 @@ class TemplateFilterPlugin
 
     private function templateOf(LegacyTemplate $subject, string $value): string
     {
-        return $this->identity->identify($value) ?? TemplateIdentity::unidentified($subject);
+        return $this->identity->identify($value)
+            // The name an address renderer holds for the call - see TemplateIdentity::during().
+            // Only for the plain filter: that is what those calls render through, and an email
+            // rendered inside one would otherwise borrow its name.
+            ?? ($this->profileOf($subject) === self::PLAIN ? $this->identity->ambient() : null)
+            ?? TemplateIdentity::unidentified($subject);
+    }
+
+    /**
+     * Which adapter renders this filter's templates, or null for one neither models.
+     *
+     * By class, so a generated Interceptor counts as the class it stands in for. The plain
+     * filter only when its comparator is wired; without one it is left alone, as before.
+     */
+    private function profileOf(LegacyTemplate $subject): ?string
+    {
+        $class = $subject::class;
+        if (!array_key_exists($class, $this->profiles)) {
+            $this->profiles[$class] = match (true) {
+                is_a($subject, self::EMAIL_FILTER) => self::EMAIL,
+                self::originalClass($class) === LegacyTemplate::class && $this->plainComparator !== null => self::PLAIN,
+                default => null,
+            };
+        }
+
+        return $this->profiles[$class];
+    }
+
+    private function comparatorFor(LegacyTemplate $subject): ShadowComparator
+    {
+        return $this->profileOf($subject) === self::PLAIN && $this->plainComparator !== null
+            ? $this->plainComparator
+            : $this->comparator;
     }
 
     /** @return array{variables:array<string,mixed>,plain:bool,design:array<string,mixed>} */

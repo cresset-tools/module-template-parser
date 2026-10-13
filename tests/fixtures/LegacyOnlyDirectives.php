@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Magento\Cms\Model\Template {
     if (!class_exists(Filter::class)) {
-        class Filter extends \Magento\Framework\Filter\Template
+        class Filter extends \Magento\Email\Model\Template\Filter
         {
             protected $_storeId = 1;
             public function mediaDirective($construction) { return '/var/www/pub/media/'; }

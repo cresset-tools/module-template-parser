@@ -11,7 +11,7 @@ Entries say what changed and why it mattered. A line that only names a file has 
 ## [0.3.0] - not yet released
 
 The rollout release: the engine is chosen per store view in configuration — Legacy, Shadow,
-Parser — and operated from `bin/magento`. Closes #1 and #2.
+Parser — and operated from `bin/magento`. Closes #1, #2 and #7.
 
 ### Upgrading from 0.2
 
@@ -23,7 +23,11 @@ Parser — and operated from `bin/magento`. Closes #1 and #2.
   `di.xml` should remove that entry and set the stage instead:
   `bin/magento config:set --scope=stores --scope-code=<code> system/template_engine/mode shadow`.
 - **`setup:upgrade` creates the `cresset_template_shadow` table**, and adds Magento_Newsletter
-  to the modules this one loads after.
+  and Magento_Customer to the modules this one loads after.
+- **The plugin is declared on `Magento\Framework\Filter\Template`**, not the Email filter, so
+  that it reaches address formats. A project module that re-declared `cresset_template_parser`
+  on the Email filter should drop it; the Email filter's own setters are captured by a second
+  plugin, `cresset_template_parser_state`.
 - **Shadow no longer writes to `system.log`.** Read `bin/magento template:shadow:report`.
 - **`--mode` is `--posture`.** `--mode` still works for this release, with a warning.
   `--posture=legacy` does not: use `compatible`.
@@ -96,6 +100,18 @@ Parser — and operated from `bin/magento`. Closes #1 and #2.
   without calling anything: the store's filter classes are resolved through the ObjectManager,
   and a method counts when a non-Magento class declares it, which catches overrides of stock
   directives too.
+
+- **Address formats** are covered. Customer address formats (`html`, `text`, `oneline`,
+  `pdf`) and the store's address render through the plain `Framework\Filter\Template` that
+  `FilterManager::template()` builds, which the plugin never reached — and it is where values a
+  customer typed meet directive processing. The plugin is now declared on that class and
+  renders the plain filter through an adapter of its own (`Options::$plainFilter`): `{{var}}`
+  unescaped, no `{{trans}}`, `{{store}}` or `{{block}}`, and a `{{var}}` modifier,
+  `{{template}}` or `{{for}}` declined so Parser hands the render to the filter. Renders are
+  named `address:<format>` and `store_address`. Recorded against Mage-OS 3.5.0, the stock
+  formats with directive-shaped values in every customer field — 316 cases — render byte for
+  byte as the filter does, and none of the values is parsed. Any other subclass of the
+  framework filter is left to the filter in every stage. (#7)
 
 ### Changed
 
