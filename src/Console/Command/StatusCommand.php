@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\Shadow\ShadowReport;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Console\Shadow\ShadowReport;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

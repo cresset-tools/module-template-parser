@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Ast\DirectiveNode;
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\Ast\DirectiveNode;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -127,7 +127,7 @@ final class CompatibilityModeTest extends TestCase
      */
     public function testSameNameNestingIsRefusedLikeLegacy(): void
     {
-        $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
+        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
         $this->engine->render('{{depend a}}A{{depend b}}B{{/depend}}Z{{/depend}}', ['a' => 1, 'b' => 1]);
     }
 
@@ -142,7 +142,7 @@ final class CompatibilityModeTest extends TestCase
             try {
                 $this->engine->render($template, ['x' => 1]);
                 self::fail('expected refusal for ' . $template);
-            } catch (\Cresset\TemplateParser\LegacyIncompatibleError $e) {
+            } catch (\MageOS\TemplateParser\LegacyIncompatibleError $e) {
                 self::assertStringContainsString('does not start with a letter', $e->getMessage(), $template);
             }
         }
@@ -163,7 +163,7 @@ final class CompatibilityModeTest extends TestCase
         try {
             $this->engine->render($template, ['who' => 'you']);
             self::fail('expected a refusal');
-        } catch (\Cresset\TemplateParser\LegacyIncompatibleError $e) {
+        } catch (\MageOS\TemplateParser\LegacyIncompatibleError $e) {
             // Line 4 is the {{trans}}; line 2 is the {{var}} whose offset it used to borrow.
             self::assertStringContainsString('on line 4, column 1', $e->getMessage());
         }
@@ -195,7 +195,7 @@ final class CompatibilityModeTest extends TestCase
         $rows = ['a' => [['n' => 1], ['n' => 2]]];
 
         if ($refused) {
-            $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
+            $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
             $this->engine->render($template, $rows);
 
             return;
@@ -238,7 +238,7 @@ final class CompatibilityModeTest extends TestCase
         $variables = ['a' => 1, 'name' => 'N'];
 
         if ($legacy === null) {
-            $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
+            $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
         }
 
         self::assertSame($legacy, $this->engine->render($template, $variables));
@@ -274,7 +274,7 @@ final class CompatibilityModeTest extends TestCase
     /** Same-name nesting is refused before the depth bound is ever reached. */
     public function testLegacyIncompatibilityBitesBeforeTheNestingBound(): void
     {
-        $this->expectException(\Cresset\TemplateParser\LegacyIncompatibleError::class);
+        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
         $this->engine->render(
             '{{if a}}{{if a}}{{if a}}{{if a}}X{{/if}}{{/if}}{{/if}}{{/if}}',
             ['a' => 1]
@@ -293,7 +293,7 @@ final class CompatibilityModeTest extends TestCase
             Options::compatible()->withRefuseLegacyIncompatible(false)
         );
 
-        $this->expectException(\Cresset\TemplateParser\NestingLimitError::class);
+        $this->expectException(\MageOS\TemplateParser\NestingLimitError::class);
         $permissive->render('{{if a}}{{if a}}{{if a}}{{if a}}X{{/if}}{{/if}}{{/if}}{{/if}}', ['a' => 1]);
     }
 

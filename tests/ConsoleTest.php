@@ -1,19 +1,19 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Console\Application;
-use Cresset\TemplateParser\Console\Auditor;
-use Cresset\TemplateParser\Console\LegacyRender;
-use Cresset\TemplateParser\Console\EngineFactory;
-use Cresset\TemplateParser\Console\HostExtensions;
-use Cresset\TemplateParser\Console\Finding;
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\Mode;
-use Cresset\TemplateParser\Console\Source\CodebaseEmailTemplates;
-use Cresset\TemplateParser\Console\StoreEmulator;
-use Cresset\TemplateParser\Console\TemplateSubject;
+use MageOS\TemplateParser\Console\Application;
+use MageOS\TemplateParser\Console\Auditor;
+use MageOS\TemplateParser\Console\LegacyRender;
+use MageOS\TemplateParser\Console\EngineFactory;
+use MageOS\TemplateParser\Console\HostExtensions;
+use MageOS\TemplateParser\Console\Finding;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\Mode;
+use MageOS\TemplateParser\Console\Source\CodebaseEmailTemplates;
+use MageOS\TemplateParser\Console\StoreEmulator;
+use MageOS\TemplateParser\Console\TemplateSubject;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -341,7 +341,7 @@ final class ConsoleTest extends TestCase
      */
     public function testANarrowExcerptStillReachesTheDifference(): void
     {
-        $divergence = new \Cresset\TemplateParser\Console\Divergence(
+        $divergence = new \MageOS\TemplateParser\Console\Divergence(
             new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: ''),
             legacy: str_repeat('same', 10) . 'LEFT',
             candidate: str_repeat('same', 10) . 'RIGHT',
@@ -680,7 +680,7 @@ final class ConsoleTest extends TestCase
             $class = str_replace(' ', '', ucwords(str_replace(':', ' ', $name))) . 'Command';
 
             // bin/magento: under template:, built from an ObjectManager, and in the CommandList.
-            $magento = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class;
+            $magento = 'MageOS\\TemplateParser\\Console\\Magento\\' . $class;
             self::assertTrue(class_exists($magento), $magento . ' is missing');
             self::assertSame('template:' . $name, (new $magento($objectManager))->getName());
             self::assertContains($magento, $registered, $magento . ' is not registered in etc/di.xml');
@@ -713,7 +713,7 @@ final class ConsoleTest extends TestCase
         };
 
         foreach (['Check', 'Diff', 'Repl', 'ShadowReport', 'ShadowClear', 'Status'] as $class) {
-            $class = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
+            $class = 'MageOS\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
             self::assertInstanceOf(\Symfony\Component\Console\Command\Command::class, new $class($objectManager));
         }
     }
@@ -734,7 +734,7 @@ final class ConsoleTest extends TestCase
         };
 
         foreach (['Check' => 'check', 'Diff' => 'diff', 'Repl' => 'repl', 'ShadowReport' => 'shadow:report', 'ShadowClear' => 'shadow:clear', 'Status' => 'status'] as $class => $name) {
-            $parent = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
+            $parent = 'MageOS\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
             $interceptor = 'InterceptedFixture' . $class . 'Command';
             if (!class_exists($interceptor, false)) {
                 eval(sprintf('class %s extends \\%s {}', $interceptor, $parent));

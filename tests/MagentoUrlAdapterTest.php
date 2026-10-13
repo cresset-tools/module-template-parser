@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Magento\AssetStylesheetLoader;
-use Cresset\TemplateParser\Magento\StoreUrlBuilder;
-use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
+use MageOS\TemplateParser\Magento\AssetStylesheetLoader;
+use MageOS\TemplateParser\Magento\StoreUrlBuilder;
+use MageOS\TemplateParser\Magento\VariableCustomVariableReader;
 use Magento\Email\Model\Template\Css\Processor;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository;

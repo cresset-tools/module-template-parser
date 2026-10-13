@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Testing;
+namespace MageOS\TemplateParser\Testing;
 
-use Cresset\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\RefusedByPort;
 
 /**
  * A record of every question the engine asked its ports, and the answer it got.

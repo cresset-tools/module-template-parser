@@ -1,21 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Magento\AllowlistedConfigReader;
-use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
-use Cresset\TemplateParser\Magento\AssetStylesheetLoader;
-use Cresset\TemplateParser\Magento\TemplateModelUrlBuilder;
-use Cresset\TemplateParser\Magento\ConfigTemplateLoader;
-use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
-use Cresset\TemplateParser\Magento\PhraseTranslator;
-use Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer;
-use Cresset\TemplateParser\Magento\StoreUrlBuilder;
-use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
-use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Magento\AllowlistedConfigReader;
+use MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer;
+use MageOS\TemplateParser\Magento\AssetStylesheetLoader;
+use MageOS\TemplateParser\Magento\TemplateModelUrlBuilder;
+use MageOS\TemplateParser\Magento\ConfigTemplateLoader;
+use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
+use MageOS\TemplateParser\Magento\PhraseTranslator;
+use MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer;
+use MageOS\TemplateParser\Magento\StoreUrlBuilder;
+use MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer;
+use MageOS\TemplateParser\Magento\VariableCustomVariableReader;
+use MageOS\TemplateParser\TemplateEngine;
 
 /**
  * Builds an engine for a mode, wiring whatever ports the host can supply.

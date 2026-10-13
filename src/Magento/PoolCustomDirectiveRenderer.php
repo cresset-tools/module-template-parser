@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\Port\CustomDirectiveRenderer;
-use Cresset\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\CustomDirectiveRenderer;
+use MageOS\TemplateParser\Port\RefusedByPort;
 use Magento\Framework\Filter\DirectiveProcessor\Filter\FilterPool;
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 

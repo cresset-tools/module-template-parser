@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Shadow;
+namespace MageOS\TemplateParser\Console\Shadow;
 
-use Cresset\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\MagentoContext;
 
 /**
  * Read and clear access to what Shadow mode recorded, and to the store and config tables the
@@ -21,7 +21,7 @@ use Cresset\TemplateParser\Console\MagentoContext;
  */
 class ShadowTable
 {
-    public const TABLE = 'cresset_template_shadow';
+    public const TABLE = 'mageos_template_parser_shadow';
 
     /** @var \Closure(string):string */
     private \Closure $tableName;

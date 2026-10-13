@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\State;
@@ -11,19 +11,19 @@ use Magento\Framework\View\LayoutFactory;
 use Magento\Framework\View\LayoutInterface;
 use Magento\Variable\Model\Source\Variables;
 use Magento\Widget\Block\BlockInterface as WidgetBlockInterface;
-use Cresset\TemplateParser\Diagnostics;
-use Cresset\TemplateParser\Magento\AllowlistedConfigReader;
-use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
-use Cresset\TemplateParser\PathGuard;
+use MageOS\TemplateParser\Diagnostics;
+use MageOS\TemplateParser\Magento\AllowlistedConfigReader;
+use MageOS\TemplateParser\Magento\VariableCustomVariableReader;
+use MageOS\TemplateParser\PathGuard;
 use Magento\Variable\Model\VariableFactory;
-use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
-use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
-use Cresset\TemplateParser\ParameterParser;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Options;
+use MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer;
+use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer;
+use MageOS\TemplateParser\ParameterParser;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Options;
 use PHPUnit\Framework\TestCase;
 
 /**

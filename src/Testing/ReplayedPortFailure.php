@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Testing;
+namespace MageOS\TemplateParser\Testing;
 
 /**
  * Stands in for whatever the host threw when the tape was recorded.

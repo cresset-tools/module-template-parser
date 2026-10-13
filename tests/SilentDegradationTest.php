@@ -1,28 +1,28 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
-use Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
-use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
-use Cresset\TemplateParser\Magento\ShadowComparator;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\ConfigReader;
-use Cresset\TemplateParser\Port\CustomDirectiveRenderer;
-use Cresset\TemplateParser\Port\CustomVariableReader;
-use Cresset\TemplateParser\Port\LayoutRenderer;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\Port\StylesheetLoader;
-use Cresset\TemplateParser\Port\TemplateLoader;
-use Cresset\TemplateParser\Port\TemplateUrlBuilder;
-use Cresset\TemplateParser\Port\UrlBuilder;
-use Cresset\TemplateParser\Port\WidgetRenderer;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
+use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
+use MageOS\TemplateParser\Magento\ShadowComparator;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\ConfigReader;
+use MageOS\TemplateParser\Port\CustomDirectiveRenderer;
+use MageOS\TemplateParser\Port\CustomVariableReader;
+use MageOS\TemplateParser\Port\LayoutRenderer;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\StylesheetLoader;
+use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\Port\TemplateUrlBuilder;
+use MageOS\TemplateParser\Port\UrlBuilder;
+use MageOS\TemplateParser\Port\WidgetRenderer;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -267,7 +267,7 @@ final class SilentDegradationTest extends TestCase
                 public function __construct(private \Closure $refuse) {}
                 public function render(string $class, array $data, string $method): string { ($this->refuse)('blocks'); return 'BLOCK'; }
             },
-            translator: new class implements \Cresset\TemplateParser\Port\Translator {
+            translator: new class implements \MageOS\TemplateParser\Port\Translator {
                 public function translate(string $text, array $arguments): string { return $text; }
             },
             templates: new class ($refuse) implements TemplateLoader {

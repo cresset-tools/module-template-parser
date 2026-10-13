@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\Port\Translator;
+use MageOS\TemplateParser\Port\Translator;
 
 /**
  * {{trans}} via Magento's translation layer.

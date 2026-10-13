@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
 /**
  * What the store's current filter made of a template, and what it had to work with.

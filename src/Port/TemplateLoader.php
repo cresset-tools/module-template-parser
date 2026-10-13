@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Port;
+namespace MageOS\TemplateParser\Port;
 
 /**
  * Loads a child template by config path, for {{template config_path="..."}}.

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\RenderPolicy;
 
 /**
  * The shape the Magento integration renders through.
@@ -47,10 +47,10 @@ interface TemplateFilterInterface
     /** @return array<int,array{kind:string,payload:array}> deferred work from the last render */
     public function deferred(): array;
 
-    /** @return \Cresset\TemplateParser\PolicyViolation[] refusals from the last render */
+    /** @return \MageOS\TemplateParser\PolicyViolation[] refusals from the last render */
     public function violations(): array;
 
-    /** @return \Cresset\TemplateParser\LegacyIncompatibility[] from the last render */
+    /** @return \MageOS\TemplateParser\LegacyIncompatibility[] from the last render */
     public function incompatibilities(): array;
 
     /**

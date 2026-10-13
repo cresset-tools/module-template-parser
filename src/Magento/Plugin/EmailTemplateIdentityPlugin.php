@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento\Plugin;
+namespace MageOS\TemplateParser\Magento\Plugin;
 
-use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
+use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
 use Magento\Email\Model\AbstractTemplate;
 
 /**

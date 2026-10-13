@@ -1,19 +1,19 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\CustomDirectiveRenderer;
-use Cresset\TemplateParser\Port\ConfigReader;
-use Cresset\TemplateParser\Port\CustomVariableReader;
-use Cresset\TemplateParser\Port\LayoutRenderer;
-use Cresset\TemplateParser\Port\StylesheetLoader;
-use Cresset\TemplateParser\Port\TemplateLoader;
-use Cresset\TemplateParser\Port\TemplateUrlBuilder;
-use Cresset\TemplateParser\Port\Translator;
-use Cresset\TemplateParser\Port\UrlBuilder;
-use Cresset\TemplateParser\Port\WidgetRenderer;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\CustomDirectiveRenderer;
+use MageOS\TemplateParser\Port\ConfigReader;
+use MageOS\TemplateParser\Port\CustomVariableReader;
+use MageOS\TemplateParser\Port\LayoutRenderer;
+use MageOS\TemplateParser\Port\StylesheetLoader;
+use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\Port\TemplateUrlBuilder;
+use MageOS\TemplateParser\Port\Translator;
+use MageOS\TemplateParser\Port\UrlBuilder;
+use MageOS\TemplateParser\Port\WidgetRenderer;
 
 /**
  * The host capabilities a template may draw on.

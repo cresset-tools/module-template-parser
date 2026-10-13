@@ -15,11 +15,11 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
-    <preference for="Cresset\TemplateParser\Port\Translator"
-                type="Cresset\TemplateParser\Magento\PhraseTranslator"/>
+    <preference for="MageOS\TemplateParser\Port\Translator"
+                type="MageOS\TemplateParser\Magento\PhraseTranslator"/>
 
-    <preference for="Cresset\TemplateParser\Magento\TemplateFilterInterface"
-                type="Cresset\TemplateParser\Magento\TemplateFilterAdapter"/>
+    <preference for="MageOS\TemplateParser\Magento\TemplateFilterInterface"
+                type="MageOS\TemplateParser\Magento\TemplateFilterAdapter"/>
 
     <!--
         On the framework base class, which every template filter extends - a plugin on a class
@@ -29,8 +29,8 @@
         itself; see TemplateFilterPlugin.
     -->
     <type name="Magento\Framework\Filter\Template">
-        <plugin name="cresset_template_parser" sortOrder="10"
-                type="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin"/>
+        <plugin name="mageos_template_parser" sortOrder="10"
+                type="MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin"/>
     </type>
     <!--
         The Email filter's own setters - the plain-text flag and the design - which the plugin
@@ -38,8 +38,8 @@
         method the class it is declared on lacks. See EmailFilterStatePlugin.
     -->
     <type name="Magento\Email\Model\Template\Filter">
-        <plugin name="cresset_template_parser_state"
-                type="Cresset\TemplateParser\Magento\Plugin\EmailFilterStatePlugin"/>
+        <plugin name="mageos_template_parser_state"
+                type="MageOS\TemplateParser\Magento\Plugin\EmailFilterStatePlugin"/>
     </type>
 
     <!--
@@ -54,41 +54,41 @@
         getProcessedTemplateSubject() is.
     -->
     <type name="Magento\Email\Model\AbstractTemplate">
-        <plugin name="cresset_template_parser_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\EmailTemplateIdentityPlugin"/>
+        <plugin name="mageos_template_parser_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\EmailTemplateIdentityPlugin"/>
     </type>
     <type name="Magento\Email\Model\Template">
-        <plugin name="cresset_template_parser_subject_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\EmailSubjectIdentityPlugin"/>
+        <plugin name="mageos_template_parser_subject_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\EmailSubjectIdentityPlugin"/>
     </type>
     <type name="Magento\Newsletter\Model\Template">
-        <plugin name="cresset_template_parser_subject_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin"/>
+        <plugin name="mageos_template_parser_subject_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin"/>
     </type>
     <type name="Magento\Newsletter\Model\Queue">
-        <plugin name="cresset_template_parser_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin"/>
+        <plugin name="mageos_template_parser_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin"/>
     </type>
     <type name="Magento\Cms\Model\Block">
-        <plugin name="cresset_template_parser_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\CmsBlockIdentityPlugin"/>
+        <plugin name="mageos_template_parser_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\CmsBlockIdentityPlugin"/>
     </type>
     <type name="Magento\Cms\Model\Page">
-        <plugin name="cresset_template_parser_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\CmsPageIdentityPlugin"/>
+        <plugin name="mageos_template_parser_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\CmsPageIdentityPlugin"/>
     </type>
     <type name="Magento\Catalog\Helper\Output">
-        <plugin name="cresset_template_parser_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin"/>
+        <plugin name="mageos_template_parser_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin"/>
     </type>
     <!-- Address formats render through FilterManager, so these hold a name for the call. -->
     <type name="Magento\Customer\Block\Address\Renderer\DefaultRenderer">
-        <plugin name="cresset_template_parser_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\AddressIdentityPlugin"/>
+        <plugin name="mageos_template_parser_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\AddressIdentityPlugin"/>
     </type>
     <type name="Magento\Store\Model\Address\Renderer">
-        <plugin name="cresset_template_parser_identity"
-                type="Cresset\TemplateParser\Magento\Plugin\StoreAddressIdentityPlugin"/>
+        <plugin name="mageos_template_parser_identity"
+                type="MageOS\TemplateParser\Magento\Plugin\StoreAddressIdentityPlugin"/>
     </type>
 
     <!--
@@ -116,43 +116,43 @@
         They are nullable so the engine still loads on a tree that lacks the class. This is
         what supplies them where it exists.
     -->
-    <type name="Cresset\TemplateParser\Magento\ConfigTemplateLoader">
+    <type name="MageOS\TemplateParser\Magento\ConfigTemplateLoader">
         <arguments>
             <argument name="templateFactory" xsi:type="object">Magento\Email\Model\TemplateFactory</argument>
         </arguments>
     </type>
 
-    <type name="Cresset\TemplateParser\Magento\AllowlistedConfigReader">
+    <type name="MageOS\TemplateParser\Magento\AllowlistedConfigReader">
         <arguments>
             <argument name="storeInformation" xsi:type="object">Magento\Store\Model\Information</argument>
             <argument name="storeManager" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
         </arguments>
     </type>
 
-    <type name="Cresset\TemplateParser\Magento\AssetStylesheetLoader">
+    <type name="MageOS\TemplateParser\Magento\AssetStylesheetLoader">
         <arguments>
             <argument name="design" xsi:type="object">Magento\Framework\View\DesignInterface</argument>
             <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem</argument>
         </arguments>
     </type>
 
-    <type name="Cresset\TemplateParser\HostServices">
+    <type name="MageOS\TemplateParser\HostServices">
         <arguments>
-            <argument name="blocks" xsi:type="object">Cresset\TemplateParser\Magento\LayoutBlockRenderer</argument>
-            <argument name="translator" xsi:type="object">Cresset\TemplateParser\Magento\PhraseTranslator</argument>
-            <argument name="templates" xsi:type="object">Cresset\TemplateParser\Magento\ConfigTemplateLoader</argument>
-            <argument name="config" xsi:type="object">Cresset\TemplateParser\Magento\AllowlistedConfigReader</argument>
-            <argument name="customVariables" xsi:type="object">Cresset\TemplateParser\Magento\VariableCustomVariableReader</argument>
-            <argument name="urls" xsi:type="object">Cresset\TemplateParser\Magento\StoreUrlBuilder</argument>
-            <argument name="stylesheets" xsi:type="object">Cresset\TemplateParser\Magento\AssetStylesheetLoader</argument>
-            <argument name="layouts" xsi:type="object">Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer</argument>
-            <argument name="widgets" xsi:type="object">Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer</argument>
-            <argument name="templateUrls" xsi:type="object">Cresset\TemplateParser\Magento\TemplateModelUrlBuilder</argument>
+            <argument name="blocks" xsi:type="object">MageOS\TemplateParser\Magento\LayoutBlockRenderer</argument>
+            <argument name="translator" xsi:type="object">MageOS\TemplateParser\Magento\PhraseTranslator</argument>
+            <argument name="templates" xsi:type="object">MageOS\TemplateParser\Magento\ConfigTemplateLoader</argument>
+            <argument name="config" xsi:type="object">MageOS\TemplateParser\Magento\AllowlistedConfigReader</argument>
+            <argument name="customVariables" xsi:type="object">MageOS\TemplateParser\Magento\VariableCustomVariableReader</argument>
+            <argument name="urls" xsi:type="object">MageOS\TemplateParser\Magento\StoreUrlBuilder</argument>
+            <argument name="stylesheets" xsi:type="object">MageOS\TemplateParser\Magento\AssetStylesheetLoader</argument>
+            <argument name="layouts" xsi:type="object">MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer</argument>
+            <argument name="widgets" xsi:type="object">MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer</argument>
+            <argument name="templateUrls" xsi:type="object">MageOS\TemplateParser\Magento\TemplateModelUrlBuilder</argument>
             <!--
                 {{mydir}} through the store's own SimpleDirective\ProcessorPool. Renders
                 nothing on a store that registered no processor, which is every stock one.
             -->
-            <argument name="customDirectives" xsi:type="object">Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer</argument>
+            <argument name="customDirectives" xsi:type="object">MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer</argument>
         </arguments>
     </type>
 
@@ -162,20 +162,20 @@
         adminhtml that is the backend model, and an order email sent from the admin would have
         linked its customer into the admin. Inside a render, the filter's own model is used.
     -->
-    <type name="Cresset\TemplateParser\Magento\StoreUrlBuilder">
+    <type name="MageOS\TemplateParser\Magento\StoreUrlBuilder">
         <arguments>
             <argument name="urlModel" xsi:type="object">Magento\Framework\Url</argument>
             <!-- The rendering filter's own URL model wins over that default; see RenderScope. -->
-            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
+            <argument name="scope" xsi:type="object">MageOS\TemplateParser\Magento\RenderScope</argument>
         </arguments>
     </type>
 
     <!-- {{widget}} gets the rendering filter's store as store_id, as generateWidget does. -->
     <!-- The rendering filter's store and URL model, for the two ports above. -->
-    <type name="Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin">
+    <type name="MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin">
         <arguments>
-            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
-            <argument name="plainComparator" xsi:type="object">CressetTemplateParserPlainComparator</argument>
+            <argument name="scope" xsi:type="object">MageOS\TemplateParser\Magento\RenderScope</argument>
+            <argument name="plainComparator" xsi:type="object">MageOSTemplateParserPlainComparator</argument>
         </arguments>
     </type>
 
@@ -185,7 +185,7 @@
         else it renders as text, or - {{template}}, {{for}} - is declined. See
         Options::$plainFilter.
     -->
-    <virtualType name="CressetTemplateParserPlainServices" type="Cresset\TemplateParser\HostServices">
+    <virtualType name="MageOSTemplateParserPlainServices" type="MageOS\TemplateParser\HostServices">
         <arguments>
             <!--
                 A virtual type inherits the arguments of the type it is built on, so every port
@@ -202,34 +202,34 @@
             <argument name="layouts" xsi:type="null"/>
             <argument name="widgets" xsi:type="null"/>
             <argument name="templateUrls" xsi:type="null"/>
-            <argument name="customDirectives" xsi:type="object">Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer</argument>
+            <argument name="customDirectives" xsi:type="object">MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer</argument>
         </arguments>
     </virtualType>
-    <virtualType name="CressetTemplateParserPlainAdapter" type="Cresset\TemplateParser\Magento\TemplateFilterAdapter">
+    <virtualType name="MageOSTemplateParserPlainAdapter" type="MageOS\TemplateParser\Magento\TemplateFilterAdapter">
         <arguments>
-            <argument name="services" xsi:type="object">CressetTemplateParserPlainServices</argument>
+            <argument name="services" xsi:type="object">MageOSTemplateParserPlainServices</argument>
             <argument name="plainFilter" xsi:type="boolean">true</argument>
         </arguments>
     </virtualType>
-    <virtualType name="CressetTemplateParserPlainComparator" type="Cresset\TemplateParser\Magento\ShadowComparator">
+    <virtualType name="MageOSTemplateParserPlainComparator" type="MageOS\TemplateParser\Magento\ShadowComparator">
         <arguments>
-            <argument name="adapter" xsi:type="object">CressetTemplateParserPlainAdapter</argument>
+            <argument name="adapter" xsi:type="object">MageOSTemplateParserPlainAdapter</argument>
         </arguments>
     </virtualType>
 
-    <type name="Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer">
+    <type name="MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer">
         <arguments>
-            <argument name="scope" xsi:type="object">Cresset\TemplateParser\Magento\RenderScope</argument>
+            <argument name="scope" xsi:type="object">MageOS\TemplateParser\Magento\RenderScope</argument>
         </arguments>
     </type>
 
-    <type name="Cresset\TemplateParser\Magento\TemplateFilterAdapter">
+    <type name="MageOS\TemplateParser\Magento\TemplateFilterAdapter">
         <arguments>
-            <argument name="services" xsi:type="object">Cresset\TemplateParser\HostServices</argument>
+            <argument name="services" xsi:type="object">MageOS\TemplateParser\HostServices</argument>
         </arguments>
     </type>
 
-    <type name="Cresset\TemplateParser\Magento\LayoutBlockRenderer">
+    <type name="MageOS\TemplateParser\Magento\LayoutBlockRenderer">
         <arguments>
             <!-- Only these methods may be named by {{block output="..."}}. -->
             <argument name="allowedOutputMethods" xsi:type="array">
@@ -245,7 +245,7 @@
         </arguments>
     </type>
 
-    <type name="Cresset\TemplateParser\Magento\ConfigTemplateLoader">
+    <type name="MageOS\TemplateParser\Magento\ConfigTemplateLoader">
         <arguments>
             <argument name="allowedPathPrefixes" xsi:type="array">
                 <item name="email" xsi:type="string">design/email/</item>
@@ -266,7 +266,7 @@
         to the legacy filter. Add a module's own handles in your di.xml, keyed by name; a
         handle not listed is recorded as a policy violation, and Parser falls back for it.
     -->
-    <type name="Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer">
+    <type name="MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer">
         <arguments>
             <argument name="allowedHandles" xsi:type="array">
                 <item name="sales_email_order_items" xsi:type="string">sales_email_order_items</item>
@@ -287,12 +287,12 @@
     <type name="Magento\Framework\Console\CommandListInterface">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="cresset_template_check" xsi:type="object">Cresset\TemplateParser\Console\Magento\CheckCommand</item>
-                <item name="cresset_template_diff" xsi:type="object">Cresset\TemplateParser\Console\Magento\DiffCommand</item>
-                <item name="cresset_template_repl" xsi:type="object">Cresset\TemplateParser\Console\Magento\ReplCommand</item>
-                <item name="cresset_template_shadow_report" xsi:type="object">Cresset\TemplateParser\Console\Magento\ShadowReportCommand</item>
-                <item name="cresset_template_shadow_clear" xsi:type="object">Cresset\TemplateParser\Console\Magento\ShadowClearCommand</item>
-                <item name="cresset_template_status" xsi:type="object">Cresset\TemplateParser\Console\Magento\StatusCommand</item>
+                <item name="mageos_template_check" xsi:type="object">MageOS\TemplateParser\Console\Magento\CheckCommand</item>
+                <item name="mageos_template_diff" xsi:type="object">MageOS\TemplateParser\Console\Magento\DiffCommand</item>
+                <item name="mageos_template_repl" xsi:type="object">MageOS\TemplateParser\Console\Magento\ReplCommand</item>
+                <item name="mageos_template_parser_shadow_report" xsi:type="object">MageOS\TemplateParser\Console\Magento\ShadowReportCommand</item>
+                <item name="mageos_template_parser_shadow_clear" xsi:type="object">MageOS\TemplateParser\Console\Magento\ShadowClearCommand</item>
+                <item name="mageos_template_status" xsi:type="object">MageOS\TemplateParser\Console\Magento\StatusCommand</item>
             </argument>
         </arguments>
     </type>

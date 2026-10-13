@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Source;
+namespace MageOS\TemplateParser\Console\Source;
 
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\TemplateSubject;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\TemplateSubject;
 
 /**
  * Templates a merchant edited, read straight from their tables.

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer;
+use MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer;
 use Magento\Framework\Filter\DirectiveProcessor\Filter\FilterPool;
 use Magento\Framework\Filter\DirectiveProcessor\FilterInterface;
 use Magento\Framework\Filter\SimpleDirective\ProcessorInterface;

@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\Diagnostics;
-use Cresset\TemplateParser\LegacyReading;
-use Cresset\TemplateParser\PolicyViolation;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\Diagnostics;
+use MageOS\TemplateParser\LegacyReading;
+use MageOS\TemplateParser\PolicyViolation;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateError;
 
 /**
  * Presents the engine with the shape Magento's template filter uses.

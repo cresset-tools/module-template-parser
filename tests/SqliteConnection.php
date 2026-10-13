@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
 /**
  * The three methods of Magento's DB adapter the shadow commands use, over an in-memory SQLite.
@@ -26,10 +26,10 @@ INSERT INTO store VALUES (0, 'admin', 'Admin', 0, 0), (1, 'default', 'Default St
 SQL);
     }
 
-    public function createShadowTable(): self
+    public function createShadowTable(string $name = 'mageos_template_parser_shadow'): self
     {
-        $this->pdo->exec(<<<'SQL'
-CREATE TABLE cresset_template_shadow (
+        $this->pdo->exec('CREATE TABLE ' . $name . <<<'SQL'
+ (
     entity_id INTEGER PRIMARY KEY,
     store_id INTEGER NOT NULL,
     template TEXT NOT NULL,
@@ -54,7 +54,7 @@ SQL);
     }
 
     /** @param array<string,mixed> $row */
-    public function insertShadow(array $row): self
+    public function insertShadow(array $row, string $table = 'mageos_template_parser_shadow'): self
     {
         $row += [
             'agreed' => 0, 'diverged' => 0, 'refused' => 0, 'crashed' => 0,
@@ -70,7 +70,8 @@ SQL);
 
         $this->query(
             sprintf(
-                'INSERT INTO cresset_template_shadow (%s) VALUES (%s)',
+                'INSERT INTO %s (%s) VALUES (%s)',
+                $table,
                 implode(', ', array_keys($row)),
                 implode(', ', array_fill(0, count($row), '?'))
             ),

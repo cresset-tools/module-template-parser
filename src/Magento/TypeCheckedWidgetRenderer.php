@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Widget\Block\BlockInterface as WidgetBlockInterface;
-use Cresset\TemplateParser\Port\WidgetRenderer;
-use Cresset\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\WidgetRenderer;
+use MageOS\TemplateParser\Port\RefusedByPort;
 
 /**
  * {{widget}} with the type validated BEFORE instantiation.

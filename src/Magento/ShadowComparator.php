@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\Diagnostics;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Diagnostics;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\TemplateError;
 
 /**
  * Renders a template through the new engine the way the filter would have, and says whether

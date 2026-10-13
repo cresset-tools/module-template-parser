@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
-use Cresset\TemplateParser\Diagnostics;
+use MageOS\TemplateParser\Diagnostics;
 
 /** One template that renders differently, with enough context to see why. */
 class Divergence

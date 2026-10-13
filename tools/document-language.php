@@ -20,7 +20,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }
-define('CRESSET_TEMPLATE_PARSER_TOOL', true);
+define('MAGEOS_TEMPLATE_PARSER_TOOL', true);
 require __DIR__ . '/harness.php';
 
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
@@ -45,7 +45,7 @@ use Magento\Framework\Filter\DirectiveProcessor\{IfDirective, DependDirective, T
 use Magento\Framework\Filter\DirectiveProcessor\Filter\{FilterApplier, FilterPool};
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use Magento\Framework\Filter\Template\Tokenizer\{VariableFactory, ParameterFactory};
-use Cresset\TemplateParser\{Options, TemplateEngine};
+use MageOS\TemplateParser\{Options, TemplateEngine};
 
 /**
  * The filter as email and CMS templates actually render through it.

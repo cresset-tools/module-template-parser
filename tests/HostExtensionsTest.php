@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Console\HostExtensions;
-use Cresset\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\HostExtensions;
+use MageOS\TemplateParser\Console\MagentoContext;
 use Magento\Framework\Filter\DirectiveProcessor\Filter\FilterPool;
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use PHPUnit\Framework\TestCase;
@@ -143,12 +143,12 @@ final class HostExtensionsTest extends TestCase
             }
         });
 
-        $engine = (new \Cresset\TemplateParser\Console\EngineFactory($context))
-            ->create(\Cresset\TemplateParser\Console\Mode::Compatible);
+        $engine = (new \MageOS\TemplateParser\Console\EngineFactory($context))
+            ->create(\MageOS\TemplateParser\Console\Mode::Compatible);
 
-        $render = static fn (string $t): string => $engine->render($t, context: new \Cresset\TemplateParser\Context(
+        $render = static fn (string $t): string => $engine->render($t, context: new \MageOS\TemplateParser\Context(
             [],
-            \Cresset\TemplateParser\RenderPolicy::unrestricted()
+            \MageOS\TemplateParser\RenderPolicy::unrestricted()
         ));
 
         self::assertSame('[v:NULL]', $render('{{mydir "v"}}'));

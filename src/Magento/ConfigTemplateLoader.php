@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\LegacyReading;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\LegacyReading;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\TemplateLoader;
 use Magento\Email\Model\TemplateFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;

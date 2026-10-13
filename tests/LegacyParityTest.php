@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\LegacyIncompatibleError;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\LegacyIncompatibleError;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

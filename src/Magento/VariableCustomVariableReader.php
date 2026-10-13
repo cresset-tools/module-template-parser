@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
 use Magento\Variable\Model\Variable;
 use Magento\Variable\Model\VariableFactory;
-use Cresset\TemplateParser\Port\CustomVariableReader;
+use MageOS\TemplateParser\Port\CustomVariableReader;
 
 /** {{customvar}} through Magento's custom variable model. */
 class VariableCustomVariableReader implements CustomVariableReader

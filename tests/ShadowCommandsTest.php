@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Console\Command\ShadowClearCommand;
-use Cresset\TemplateParser\Console\Command\ShadowReportCommand;
-use Cresset\TemplateParser\Console\Command\StatusCommand;
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\Magento\ShadowReportCommand as BinMagentoReport;
-use Cresset\TemplateParser\Console\Shadow\ShadowReport;
-use Cresset\TemplateParser\Console\Shadow\ShadowTable;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Console\Command\ShadowClearCommand;
+use MageOS\TemplateParser\Console\Command\ShadowReportCommand;
+use MageOS\TemplateParser\Console\Command\StatusCommand;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\Magento\ShadowReportCommand as BinMagentoReport;
+use MageOS\TemplateParser\Console\Shadow\ShadowReport;
+use MageOS\TemplateParser\Console\Shadow\ShadowTable;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
@@ -217,7 +217,7 @@ final class ShadowCommandsTest extends TestCase
     {
         $this->db->insertShadow([
             'store_id' => 1, 'template' => 'cms_page:2', 'refused' => 1,
-            'last_refusal' => ['error' => \Cresset\TemplateParser\LegacyIncompatibleError::class, 'problem' => 'p', 'hint' => 'unset Options::$refuseLegacyIncompatible'],
+            'last_refusal' => ['error' => \MageOS\TemplateParser\LegacyIncompatibleError::class, 'problem' => 'p', 'hint' => 'unset Options::$refuseLegacyIncompatible'],
         ]);
 
         self::assertStringNotContainsString('Options::', $this->report()->getDisplay());
@@ -241,8 +241,8 @@ final class ShadowCommandsTest extends TestCase
             'block class' => [$policy('policy refused block class "Acme\\Block" (line 1, column 1)'), 'have a developer allow it in di.xml'],
             'filter reads it differently' => [$policy('policy refused construct the filter reads differently "for loop" (line 1, column 1)'), 'reads the same either way'],
             'other port refusal' => [$policy('policy refused config path "web/secure" (line 1, column 1)'), 'config path "web/secure"'],
-            'legacy cannot render it' => [['error' => \Cresset\TemplateParser\LegacyIncompatibleError::class, 'problem' => 'p'], 'Magento\'s filter cannot'],
-            'syntax' => [['error' => \Cresset\TemplateParser\SyntaxError::class, 'problem' => 'p'], 'cannot render this template as written'],
+            'legacy cannot render it' => [['error' => \MageOS\TemplateParser\LegacyIncompatibleError::class, 'problem' => 'p'], 'Magento\'s filter cannot'],
+            'syntax' => [['error' => \MageOS\TemplateParser\SyntaxError::class, 'problem' => 'p'], 'cannot render this template as written'],
             'host raised' => [['error' => \InvalidArgumentException::class, 'problem' => 'the host raised while rendering: x'], 'var/log/exception.log'],
         ];
     }
@@ -351,7 +351,7 @@ final class ShadowCommandsTest extends TestCase
         $tester = $this->report();
 
         self::assertSame(1, $tester->getStatusCode());
-        self::assertStringContainsString('No cresset_template_shadow table', $tester->getDisplay());
+        self::assertStringContainsString('No mageos_template_parser_shadow table', $tester->getDisplay());
         self::assertStringContainsString('setup:upgrade', $tester->getDisplay());
     }
 

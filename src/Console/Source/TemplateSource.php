@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Source;
+namespace MageOS\TemplateParser\Console\Source;
 
-use Cresset\TemplateParser\Console\TemplateSubject;
+use MageOS\TemplateParser\Console\TemplateSubject;
 
 /**
  * Somewhere templates live.

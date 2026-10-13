@@ -23,7 +23,7 @@ declare(strict_types=1);
 // list covers only `/Test`, not `tools/`. Without this guard, `setup:di:compile` runs
 // this file: it would exit(1) for want of MAGENTO_ROOT, and the stub classes below
 // would collide with the real Magento ones. Returning here declares none of them.
-if (!defined('CRESSET_TEMPLATE_PARSER_TOOL')) {
+if (!defined('MAGEOS_TEMPLATE_PARSER_TOOL')) {
     return;
 }
 
