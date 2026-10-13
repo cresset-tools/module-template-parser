@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\EngineFactory;
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\Mode;
-use Cresset\TemplateParser\Console\StoreEmulator;
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Console\EngineFactory;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\Mode;
+use MageOS\TemplateParser\Console\StoreEmulator;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateError;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

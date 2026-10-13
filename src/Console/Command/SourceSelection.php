@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\Source\CodebaseEmailTemplates;
-use Cresset\TemplateParser\Console\Source\DatabaseTemplates;
-use Cresset\TemplateParser\Console\Source\TemplateSource;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\Source\CodebaseEmailTemplates;
+use MageOS\TemplateParser\Console\Source\DatabaseTemplates;
+use MageOS\TemplateParser\Console\Source\TemplateSource;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 

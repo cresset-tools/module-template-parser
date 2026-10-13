@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Console\LegacyRenderer;
-use Cresset\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\LegacyRenderer;
+use MageOS\TemplateParser\Console\MagentoContext;
 use PHPUnit\Framework\TestCase;
 
 /**

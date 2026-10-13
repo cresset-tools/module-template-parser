@@ -1,19 +1,19 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\DirectiveSpec;
-use Cresset\TemplateParser\Evaluator;
-use Cresset\TemplateParser\HostDirectives;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Parser;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\Testing\PortTape;
-use Cresset\TemplateParser\Testing\ReplayedPortFailure;
-use Cresset\TemplateParser\Testing\TapedServices;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\DirectiveSpec;
+use MageOS\TemplateParser\Evaluator;
+use MageOS\TemplateParser\HostDirectives;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Parser;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\Testing\PortTape;
+use MageOS\TemplateParser\Testing\ReplayedPortFailure;
+use MageOS\TemplateParser\Testing\TapedServices;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

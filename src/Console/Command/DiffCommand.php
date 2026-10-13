@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\Auditor;
-use Cresset\TemplateParser\Console\Divergence;
-use Cresset\TemplateParser\Console\EngineFactory;
-use Cresset\TemplateParser\Console\HostExtensions;
-use Cresset\TemplateParser\Console\LegacyRender;
-use Cresset\TemplateParser\Console\LegacyRenderer;
-use Cresset\TemplateParser\Console\Mode;
-use Cresset\TemplateParser\Console\StoreEmulator;
-use Cresset\TemplateParser\Console\TemplateSubject;
+use MageOS\TemplateParser\Console\Auditor;
+use MageOS\TemplateParser\Console\Divergence;
+use MageOS\TemplateParser\Console\EngineFactory;
+use MageOS\TemplateParser\Console\HostExtensions;
+use MageOS\TemplateParser\Console\LegacyRender;
+use MageOS\TemplateParser\Console\LegacyRenderer;
+use MageOS\TemplateParser\Console\Mode;
+use MageOS\TemplateParser\Console\StoreEmulator;
+use MageOS\TemplateParser\Console\TemplateSubject;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

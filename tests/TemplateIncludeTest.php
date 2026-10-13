@@ -1,21 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\DirectiveSpec;
-use Cresset\TemplateParser\Evaluator;
-use Cresset\TemplateParser\HostDirectives;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Parser;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\TemplateLoader;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateCycleError;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\UnknownVariableError;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\DirectiveSpec;
+use MageOS\TemplateParser\Evaluator;
+use MageOS\TemplateParser\HostDirectives;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Parser;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateCycleError;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\UnknownVariableError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

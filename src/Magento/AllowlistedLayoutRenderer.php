@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
 use Magento\Framework\App\State;
 use Magento\Framework\View\LayoutFactory;
-use Cresset\TemplateParser\Port\LayoutRenderer;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\PolicyViolation;
+use MageOS\TemplateParser\Port\LayoutRenderer;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\PolicyViolation;
 
 /**
  * {{layout}} restricted to handles the integrator has declared.

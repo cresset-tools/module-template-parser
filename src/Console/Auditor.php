@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
-use Cresset\TemplateParser\Console\Source\TemplateSource;
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\PolicyViolation;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Console\Source\TemplateSource;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\PolicyViolation;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateError;
 
 /**
  * Renders subjects through the engine and reports what happened.

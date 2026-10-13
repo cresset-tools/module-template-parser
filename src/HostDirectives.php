@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
-use Cresset\TemplateParser\Ast\DirectiveNode;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\Port\StoreAwareUrlBuilder;
+use MageOS\TemplateParser\Ast\DirectiveNode;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\StoreAwareUrlBuilder;
 
 /**
  * Registers the directives that need something from the host application.

@@ -11,7 +11,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }
-define('CRESSET_TEMPLATE_PARSER_TOOL', true);
+define('MAGEOS_TEMPLATE_PARSER_TOOL', true);
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
@@ -31,7 +31,7 @@ use Magento\Framework\Filter\DirectiveProcessor\{IfDirective, DependDirective, T
 use Magento\Framework\Filter\DirectiveProcessor\Filter\{FilterApplier, FilterPool};
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use Magento\Framework\Filter\Template\Tokenizer\{VariableFactory, ParameterFactory};
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateEngine;
 
 function parityLegacyFilter(array $vars): LegacyTemplate {
     $r = new StrictResolver(new VariableFactory());

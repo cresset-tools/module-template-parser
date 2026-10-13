@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
 /**
  * Evaluation scope for one render.
@@ -30,10 +30,10 @@ final class Context
      */
     private \stdClass $includeBudget;
 
-    /** @var \Cresset\TemplateParser\LegacyIncompatibility[] */
+    /** @var \MageOS\TemplateParser\LegacyIncompatibility[] */
     private array $incompatibilities = [];
 
-    /** @var \Cresset\TemplateParser\PolicyViolation[] */
+    /** @var \MageOS\TemplateParser\PolicyViolation[] */
     private array $violations = [];
 
     private RenderPolicy $policy;
@@ -91,7 +91,7 @@ final class Context
         $this->violations[] = $violation;
     }
 
-    /** @return \Cresset\TemplateParser\PolicyViolation[] */
+    /** @return \MageOS\TemplateParser\PolicyViolation[] */
     public function violations(): array
     {
         return $this->violations;
@@ -176,7 +176,7 @@ final class Context
     /**
      * Records a construct that renders here but not on the legacy filter.
      *
-     * @param \Cresset\TemplateParser\LegacyIncompatibility[] $found
+     * @param \MageOS\TemplateParser\LegacyIncompatibility[] $found
      */
     public function noteIncompatibilities(array $found): void
     {
@@ -185,7 +185,7 @@ final class Context
         }
     }
 
-    /** @return \Cresset\TemplateParser\LegacyIncompatibility[] */
+    /** @return \MageOS\TemplateParser\LegacyIncompatibility[] */
     public function incompatibilities(): array
     {
         return $this->incompatibilities;

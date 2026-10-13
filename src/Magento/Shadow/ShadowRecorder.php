@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento\Shadow;
+namespace MageOS\TemplateParser\Magento\Shadow;
 
 use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Records Shadow outcomes in `cresset_template_shadow`, one row per store view and template.
+ * Records Shadow outcomes in `mageos_template_parser_shadow`, one row per store view and template.
  *
  * And Parser's: every render Parser mode served (`served`), every one it handed to legacy
  * (`fell_back`, alongside the refusal or crash that caused it), and the outcome of every
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  */
 class ShadowRecorder
 {
-    public const TABLE = 'cresset_template_shadow';
+    public const TABLE = 'mageos_template_parser_shadow';
 
     public const FLUSH_AT_ROWS = 100;
     public const FLUSH_AFTER_SECONDS = 60;

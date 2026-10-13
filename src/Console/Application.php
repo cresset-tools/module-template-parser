@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
-use Cresset\TemplateParser\Console\Command\CheckCommand;
-use Cresset\TemplateParser\Console\Command\DiffCommand;
-use Cresset\TemplateParser\Console\Command\ReplCommand;
-use Cresset\TemplateParser\Console\Command\ShadowClearCommand;
-use Cresset\TemplateParser\Console\Command\ShadowReportCommand;
-use Cresset\TemplateParser\Console\Command\StatusCommand;
+use MageOS\TemplateParser\Console\Command\CheckCommand;
+use MageOS\TemplateParser\Console\Command\DiffCommand;
+use MageOS\TemplateParser\Console\Command\ReplCommand;
+use MageOS\TemplateParser\Console\Command\ShadowClearCommand;
+use MageOS\TemplateParser\Console\Command\ShadowReportCommand;
+use MageOS\TemplateParser\Console\Command\StatusCommand;
 use Symfony\Component\Console\Application as ConsoleApplication;
 use Symfony\Component\Console\Command\Command;
 

@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\SyntaxError;
-use Cresset\TemplateParser\TemplateTypeError;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\UnknownDirectiveError;
-use Cresset\TemplateParser\UnknownVariableError;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\SyntaxError;
+use MageOS\TemplateParser\TemplateTypeError;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\UnknownDirectiveError;
+use MageOS\TemplateParser\UnknownVariableError;
 use PHPUnit\Framework\TestCase;
 
 /**

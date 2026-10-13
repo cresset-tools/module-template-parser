@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
-use Cresset\TemplateParser\LegacyIncompatibleError;
-use Cresset\TemplateParser\NestingLimitError;
-use Cresset\TemplateParser\SyntaxError;
-use Cresset\TemplateParser\TemplateError;
-use Cresset\TemplateParser\UnknownDirectiveError;
-use Cresset\TemplateParser\UnknownVariableError;
+use MageOS\TemplateParser\LegacyIncompatibleError;
+use MageOS\TemplateParser\NestingLimitError;
+use MageOS\TemplateParser\SyntaxError;
+use MageOS\TemplateParser\TemplateError;
+use MageOS\TemplateParser\UnknownDirectiveError;
+use MageOS\TemplateParser\UnknownVariableError;
 
 /**
  * Turns an engine error into something a merchant can act on.

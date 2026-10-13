@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento\Shadow;
+namespace MageOS\TemplateParser\Magento\Shadow;
 
 /**
  * Which template a render was, recovered from its source text.

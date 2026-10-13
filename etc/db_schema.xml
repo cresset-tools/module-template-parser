@@ -18,7 +18,7 @@
 -->
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
-    <table name="cresset_template_shadow" resource="default" engine="innodb"
+    <table name="mageos_template_parser_shadow" resource="default" engine="innodb"
            comment="Template engine Shadow comparisons and Parser renders, per store view and template">
         <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true"
                 comment="Entity ID"/>
@@ -51,7 +51,7 @@
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="entity_id"/>
         </constraint>
-        <constraint xsi:type="unique" referenceId="CRESSET_TEMPLATE_SHADOW_STORE_ID_TEMPLATE">
+        <constraint xsi:type="unique" referenceId="MAGEOS_TEMPLATE_PARSER_SHADOW_STORE_ID_TEMPLATE">
             <column name="store_id"/>
             <column name="template"/>
         </constraint>

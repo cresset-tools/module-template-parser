@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\Shadow\ShadowReport;
+use MageOS\TemplateParser\Console\Shadow\ShadowReport;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -239,7 +239,7 @@ HELP);
         }
 
         $error = (string)($refusal['error'] ?? '');
-        if ($error === '' || !is_a($error, \Cresset\TemplateParser\TemplateError::class, true) && $error !== 'policy') {
+        if ($error === '' || !is_a($error, \MageOS\TemplateParser\TemplateError::class, true) && $error !== 'policy') {
             return 'code the template calls - a block or a widget - raised an error while rendering; Magento\'s filter handles it as it always has. Look in var/log/exception.log for the cause.';
         }
 
@@ -294,7 +294,7 @@ HELP);
     {
         if ($row['last_crash'] !== null && ($row['last_divergence'] === null || $row['crashed'] >= $row['diverged'])) {
             return 'a crash is a bug in the new engine, not in the template - please report it with the error above at '
-                . 'https://github.com/cresset-tools/module-template-parser/issues';
+                . 'https://github.com/mage-os-lab/module-template-parser/issues';
         }
 
         $template = (string)$row['template'];

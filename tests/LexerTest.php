@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Lexer\Lexer;
-use Cresset\TemplateParser\Lexer\TokenType;
+use MageOS\TemplateParser\Lexer\Lexer;
+use MageOS\TemplateParser\Lexer\TokenType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

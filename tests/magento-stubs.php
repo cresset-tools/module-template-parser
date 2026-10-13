@@ -396,3 +396,21 @@ namespace Magento\Backend\Model {
         }
     }
 }
+namespace Magento\Framework\Setup {
+    // The two methods the rename's schema patch uses.
+    if (!interface_exists(SchemaSetupInterface::class)) {
+        interface SchemaSetupInterface {
+            public function getConnection();
+            public function getTable($tableName);
+        }
+    }
+}
+namespace Magento\Framework\Setup\Patch {
+    if (!interface_exists(SchemaPatchInterface::class)) {
+        interface SchemaPatchInterface {
+            public static function getDependencies();
+            public function getAliases();
+            public function apply();
+        }
+    }
+}

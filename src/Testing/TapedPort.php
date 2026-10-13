@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Testing;
+namespace MageOS\TemplateParser\Testing;
 
 /** Records through to a live port, or answers from the tape when there is none. */
 trait TapedPort

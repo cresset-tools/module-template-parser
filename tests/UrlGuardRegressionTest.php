@@ -1,18 +1,18 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\HostDirectives;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Magento\TemplateModelUrlBuilder;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\PathGuard;
-use Cresset\TemplateParser\Port\TemplateUrlBuilder;
-use Cresset\TemplateParser\Port\UrlBuilder;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\HostDirectives;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Magento\TemplateModelUrlBuilder;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\PathGuard;
+use MageOS\TemplateParser\Port\TemplateUrlBuilder;
+use MageOS\TemplateParser\Port\UrlBuilder;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

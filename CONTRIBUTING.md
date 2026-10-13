@@ -18,7 +18,7 @@ Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console 
 `php:8.3-cli`'s default 128M `memory_limit` is below what the suite peaks at, which
 `GuardTripwireTest` is what pushes it to.
 
-13359 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
+13362 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ### Mutation testing, without taking the machine down
@@ -108,7 +108,7 @@ something is leaking.
 Re-record it from inside a store:
 
 ```sh
-cd /path/to/store && php vendor/cresset/module-template-parser/tools/record-store-ports.php
+cd /path/to/store && php vendor/mage-os/module-template-parser/tools/record-store-ports.php
 ```
 
 It writes next to the package it is run from, so copy the result back if the store holds a

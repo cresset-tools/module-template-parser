@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Shadow;
+namespace MageOS\TemplateParser\Console\Shadow;
 
 /**
  * What Shadow mode's rows say, per store view - and Parser mode's.

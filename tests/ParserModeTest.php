@@ -1,24 +1,24 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
-use Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
-use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
-use Cresset\TemplateParser\Magento\ShadowComparator;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Magento\TemplateFilterInterface;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\LayoutRenderer;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\PolicyViolation;
-use Cresset\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
+use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
+use MageOS\TemplateParser\Magento\ShadowComparator;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Magento\TemplateFilterInterface;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\LayoutRenderer;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\PolicyViolation;
+use MageOS\TemplateParser\RenderPolicy;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Filter\Template as LegacyTemplate;
@@ -411,7 +411,7 @@ final class ParserModeTest extends TestCase
     public function testTheModuleAllowsTheStockEmailLayoutHandles(): void
     {
         $di = simplexml_load_file(__DIR__ . '/../etc/di.xml');
-        $items = $di->xpath('//type[@name="Cresset\\TemplateParser\\Magento\\AllowlistedLayoutRenderer"]/arguments/argument[@name="allowedHandles"]/item');
+        $items = $di->xpath('//type[@name="MageOS\\TemplateParser\\Magento\\AllowlistedLayoutRenderer"]/arguments/argument[@name="allowedHandles"]/item');
 
         self::assertSame(
             AllowlistedLayoutRenderer::STOCK_EMAIL_HANDLES,

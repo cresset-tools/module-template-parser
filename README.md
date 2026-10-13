@@ -1,11 +1,11 @@
-# cresset/module-template-parser
+# mage-os/module-template-parser
 
 A parser for Magento's `{{...}}` template directives. It builds an AST and evaluates it once,
 instead of matching regexes against its own output the way `Magento\Framework\Filter\Template`
 does.
 
 ```php
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateEngine;
 
 $engine = new TemplateEngine();
 
@@ -13,14 +13,20 @@ echo $engine->render('Dear {{var name}},', ['name' => 'Ada']);
 // Dear Ada,
 ```
 
-Everything in this README lives under `Cresset\TemplateParser\`; later snippets leave the
+Everything in this README lives under `MageOS\TemplateParser\`; later snippets leave the
 `use` lines out.
 
 ```sh
-composer require cresset/module-template-parser
+composer require mage-os/module-template-parser
 ```
 
 That puts `vendor/bin/template-parser` in place too, which is what the CLI section below runs.
+
+This is a [Mage-OS Lab](https://github.com/mage-os-lab) project. It started at
+[cresset-tools/module-template-parser](https://github.com/cresset-tools/module-template-parser),
+where releases up to 0.3.0 were published as `cresset/module-template-parser` with the
+`Cresset_TemplateParser` module and `Cresset\TemplateParser` namespace. The
+[changelog](CHANGELOG.md) has the upgrade path; Shadow's recorded history carries over.
 
 Requires PHP 8.3, 8.4 or 8.5. The engine is plain PHP with no Magento dependency; the Magento
 bindings sit behind narrow interfaces — *ports* — in `src/Magento/`.
@@ -186,7 +192,7 @@ models, so the plugin hands it straight to the filter in every stage.
 
 In Shadow, `ShadowComparator` renders the template through this engine as well and the plugin
 returns the *legacy* result — so putting a store view in Shadow changes nothing a customer
-sees. Each comparison is recorded in the `cresset_template_shadow` table, one row per store view
+sees. Each comparison is recorded in the `mageos_template_parser_shadow` table, one row per store view
 and template:
 
 | Column | Holds |
@@ -883,7 +889,7 @@ template-parser diff --source=codebase --allow-layout-handle=stock-email
 
 ### Reading what Shadow measured
 
-`shadow:report` summarises the `cresset_template_shadow` table per store view: templates and
+`shadow:report` summarises the `mageos_template_parser_shadow` table per store view: templates and
 renders compared, how many diverged, were refused or crashed, and since when the store view has
 been clean. Each diverging template is listed with its causes and the `diff` command that
 reproduces it; refusals are listed too, but never fail the report, because Parser mode falls
@@ -928,7 +934,7 @@ every command twice, so it is gone.)
 package's own CI uses it. If you do too:
 
 ```sh
-bougie tool run cresset/module-template-parser check --source=codebase
+bougie tool run mage-os/module-template-parser check --source=codebase
 bougie run -- vendor/bin/n98-magerun2 template:diff --source=email
 ```
 
@@ -1019,7 +1025,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-13359 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+13362 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

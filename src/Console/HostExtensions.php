@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
 /**
  * The directives a store has that this engine does not implement.
@@ -51,7 +51,7 @@ class HostExtensions
         // is asking the same thing that renders them and the two cannot drift apart.
         return $pool === null
             ? []
-            : (new \Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer($pool))->names();
+            : (new \MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer($pool))->names();
     }
 
     /**
