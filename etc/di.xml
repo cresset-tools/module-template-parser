@@ -66,6 +66,10 @@
         <plugin name="cresset_template_parser_identity"
                 type="Cresset\TemplateParser\Magento\Plugin\CmsPageIdentityPlugin"/>
     </type>
+    <type name="Magento\Catalog\Helper\Output">
+        <plugin name="cresset_template_parser_identity"
+                type="Cresset\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin"/>
+    </type>
 
     <!--
         The ports the adapter renders through.

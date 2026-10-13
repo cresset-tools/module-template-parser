@@ -549,8 +549,10 @@ final class MagentoIntegrationTest extends TestCase
         );
         $plugin->beforeSetVariables($subject, []);
 
-        // A child render with a design of its own, in the middle of the parent's. The parent
-        // must still be compared against ITS design, not the child's.
+        // A design set on the instance in the middle of its render, and a nested filter() on
+        // it. The nested call is part of the render legacy is running, so it is not compared on
+        // its own; the render is compared once, against the design it was called with, not
+        // the one it ended with.
         $this->filter($plugin, $subject, '{{css file="a.css"}}', function () use ($plugin, $subject): string {
             $plugin->beforeSetDesignParams($subject, ['theme' => 'Vendor/child']);
             $this->filter($plugin, $subject, '{{css file="b.css"}}', 'CSS');
@@ -558,7 +560,7 @@ final class MagentoIntegrationTest extends TestCase
             return 'CSS';
         });
 
-        self::assertSame(['Vendor/child', 'Magento/luma'], $seen);
+        self::assertSame(['Magento/luma'], $seen);
         self::assertSame([], $lines);
     }
 
