@@ -8,7 +8,7 @@ still move between minor versions.
 
 Entries say what changed and why it mattered. A line that only names a file has been left out.
 
-## [0.3.0] - not yet released
+## [0.3.0] - 2026-10-13
 
 The rollout release: the engine is chosen per store view in configuration — Legacy, Shadow,
 Parser — and operated from `bin/magento`. Closes #1, #2 and #7.
