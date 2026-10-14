@@ -14,11 +14,15 @@ docker run --rm -v "$PWD":/m -w /m composer:2 sh -c 'composer install && vendor/
 ```
 
 The `composer` image rather than `php:8.3-cli`: the suite needs the autoloader and Symfony
-Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console tests, and
-`php:8.3-cli`'s default 128M `memory_limit` is below what the suite peaks at, which
-`GuardTripwireTest` is what pushes it to.
+Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console tests.
+`tests/bootstrap.php` raises a `memory_limit` below 512M to 512M - the suite peaks near 240 MB,
+most of it `LegacyParityTest`'s replay of the corpus - so php-cli's stock 128M no longer dies
+part way through.
 
-13362 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
+A PHP warning, notice or deprecation fails the run (`phpunit.xml`): on a store, Magento's error
+handler makes each of them an exception.
+
+13629 tests. 295 are skipped by design: they are the shapes compatible mode deliberately
 refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
 
 ### Mutation testing, without taking the machine down

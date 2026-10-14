@@ -18,13 +18,19 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/**'
       - 'tools/**'
       - 'tests/fixtures/corpus/**'
       - 'tests/fixtures/legacy/cases.json'
+      - 'docs/directives.md'
   pull_request:
+    # src/ too: the language reference renders every example through the engine, and the
+    # recorder runs legacy under src/Console/StoreErrorHandler.
     paths:
+      - 'src/**'
       - 'tools/**'
       - 'tests/fixtures/corpus/**'
+      - 'docs/directives.md'
 
 permissions:
   contents: read
@@ -40,8 +46,13 @@ jobs:
 
       - uses: cresset-tools/setup-bougie@v1
         with:
-          telemetry: true
+          telemetry: false
           cache-dependency-glob: composer.json
+
+      # tools/document-language.php loads vendor/autoload.php, and with no composer.lock
+      # committed there is nothing to install from until one is resolved - see tests.yml.
+      - name: Resolve dependencies
+        run: bougie lock
 
       # A source checkout, not a composer install: the recorder loads about twenty
       # framework files by path and needs no autoloader, database or services.

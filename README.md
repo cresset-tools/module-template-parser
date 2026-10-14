@@ -1030,7 +1030,7 @@ composer install
 vendor/bin/phpunit
 ```
 
-13362 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+13629 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
 - `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with

@@ -65,7 +65,11 @@ $VARS = [
     'store_phone' => '123', 'store_hours' => '9-5',
     'logo_width' => '180', 'logo_height' => '50',
     'street1' => '1 Test St', 'city' => 'Andorra la Vella', 'postcode' => 'AD500',
-    'items' => [['n' => 'a'], ['n' => 'b'], ['n' => 'c']],
+    // A string, as the stock failed-payment and wish-list emails declare it ("Shopping Cart
+    // Items", raw HTML). An array there is a warning on {{var}} - the store's error page - and
+    // the two emails dropped out of the timing once the engine refused it as the store does.
+    'items' => '<table><tr><td>Item</td></tr></table>',
+    'rows' => [['n' => 'a'], ['n' => 'b'], ['n' => 'c']],
 ];
 
 $resolver = new StrictResolver(new VariableFactory());
@@ -127,7 +131,7 @@ foreach (glob(PKGROOT . '/tests/fixtures/corpus/*.html') ?: [] as $file) {
 $corpus['synthetic: plain text'] = str_repeat("Dear customer, your order has shipped.\n", 20);
 $corpus['synthetic: variables'] = str_repeat('{{var customer_name}} <{{var store_name}}> ', 40);
 $corpus['synthetic: conditionals'] = str_repeat('{{if a}}{{var name}}{{else}}none{{/if}}', 40);
-$corpus['synthetic: loop'] = str_repeat('{{for i in items}}{{var i.n}}{{/for}}', 40);
+$corpus['synthetic: loop'] = str_repeat('{{for i in rows}}{{var i.n}}{{/for}}', 40);
 
 printf("iterations per template: %d\nPHP %s\n\n", $iterations, PHP_VERSION);
 printf("%-52s %10s %10s %10s %8s\n", 'template', 'legacy', 'compatible', 'lenient', 'ratio');

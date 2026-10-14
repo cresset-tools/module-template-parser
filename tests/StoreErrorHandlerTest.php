@@ -29,7 +29,9 @@ final class StoreErrorHandlerTest extends TestCase
     public function testADateTimeZoneWarningIsLetThrough(): void
     {
         self::assertTrue(StoreErrorHandler::run(static function (): bool {
-            trigger_error('DateTimeZone::__construct(): Unknown or bad timezone', E_USER_NOTICE);
+            // Suppressed only so PHP's own handler, which it falls through to, prints nothing:
+            // the DateTimeZone rule is checked before the error level is.
+            @trigger_error('DateTimeZone::__construct(): Unknown or bad timezone', E_USER_NOTICE);
             return true;
         }));
     }

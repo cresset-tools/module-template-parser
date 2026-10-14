@@ -138,6 +138,11 @@ lab's naming, and the fixes from a whole-project review before the donation.
   `diff`, which shows both readings, not `check`; a CMS block by id says nothing needs
   changing; and a product, category or address template is no longer sent to
   `--source=all`, which holds none of them.
+- **The test suite fails on any PHP warning, notice or deprecation**, and raises a
+  `memory_limit` below 512M so `php vendor/bin/phpunit` runs on a stock php-cli.
+- **CI:** `setup-bougie` runs with telemetry off; the parity-drift job resolves dependencies
+  before `tools/document-language.php` needs them, and runs on changes to `src/` and
+  `docs/directives.md` too.
 - **Compatible mode answers as a store does when legacy warns.** Every store installs
   Magento's error handler, which turns a PHP warning into an exception, and the Email filter
   renders that as its error message in place of the whole template. The parity corpus was

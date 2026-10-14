@@ -44,7 +44,14 @@ function parityLegacyFilter(array $vars): LegacyTemplate {
     $t->setVariables($vars); return $t;
 }
 function parityAttempt(callable $fn): string {
-    try { return 'OK:' . $fn(); } catch (\Throwable $e) { return 'THROW:' . get_class($e); }
+    try { return 'OK:' . $fn(); }
+    // The store's error page, reached from either side: legacy warning under the store's
+    // handler, or compatible mode refusing what would warn. The same answer.
+    catch (\MageOS\TemplateParser\Console\StoreError) { return 'STORE ERROR'; }
+    catch (\MageOS\TemplateParser\LegacyIncompatibleError $e) {
+        return str_contains($e->getMessage(), "store's error handler") ? 'STORE ERROR' : 'THROW:' . get_class($e);
+    }
+    catch (\Throwable $e) { return 'THROW:' . get_class($e); }
 }
 /**
  * The legacy half of one comparison, as a store runs it.
