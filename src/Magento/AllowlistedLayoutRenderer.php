@@ -48,8 +48,13 @@ class AllowlistedLayoutRenderer implements LayoutRenderer
      * which is arbitrary .phtml execution from template text, the same escape closed in
      * LayoutBlockRenderer by dropping a non-frontend `area`. Legacy forwards it; this does
      * not. Dropped rather than refused, so the layout still renders with its own templates.
+     *
+     * Matched as setDataUsingMethod() resolves them - see DataKey - so `Template=` and
+     * `tem_plate=` are dropped too: they call setTemplate() just the same. `area` is here as
+     * well: the directive has already read its own `area`, and any other spelling of it would
+     * reach every block as its area, which is where the block resolves its template from.
      */
-    private const CAPABILITY_PARAMETERS = ['template', 'module_name'];
+    private const CAPABILITY_PARAMETERS = ['template', 'module_name', 'area'];
 
     /** @param array<string,string|null> $parameters */
     public function render(string $handle, string $area, array $parameters): string
@@ -60,8 +65,12 @@ class AllowlistedLayoutRenderer implements LayoutRenderer
             throw new RefusedByPort(PolicyViolation::LAYOUT_HANDLE, $handle);
         }
 
-        foreach (self::CAPABILITY_PARAMETERS as $key) {
-            unset($parameters[$key]);
+        foreach (array_keys($parameters) as $key) {
+            foreach (self::CAPABILITY_PARAMETERS as $capability) {
+                if (DataKey::is($key, $capability)) {
+                    unset($parameters[$key]);
+                }
+            }
         }
 
         $render = function () use ($handle, $parameters): string {

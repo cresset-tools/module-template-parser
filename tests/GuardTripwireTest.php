@@ -205,9 +205,9 @@ final class GuardTripwireTest extends TestCase
 
     // ---------------------------------------------------------------- resolver
 
-    /** Every reflection guard in invokeAccessor, one test each. */
+    /** No method is reachable from template text, whatever its shape. */
     #[DataProvider('unreachableMethods')]
-    public function testOnlyPublicNonStaticArglessAccessorsAreCallable(string $expression, string $marker): void
+    public function testNoAccessorIsCallable(string $expression, string $marker): void
     {
         $object = new class {
             public static function getFactory(): string { return 'STATIC-REACHED'; }
@@ -227,27 +227,19 @@ final class GuardTripwireTest extends TestCase
             'static'    => ['getFactory()', 'a static factory'],
             'protected' => ['getSecret()', 'a protected method'],
             'arguments' => ['getWithArg()', 'a method requiring arguments'],
+            // An ordinary getter too: only getData() is ever called, as in StrictResolver.
+            'ordinary'  => ['getOk()', 'an ordinary getter'],
+            'member'    => ['ok', 'a getter through a member'],
         ];
     }
 
-    public function testAnOrdinaryAccessorStillWorks(): void
-    {
-        $object = new class {
-            public function getOk(): string { return 'OK'; }
-        };
-        self::assertSame(
-            '[OK]',
-            TemplateEngine::withOptions(Options::lenient())->render('[{{var o.getOk()}}]', ['o' => $object])
-        );
-    }
-
-    /** getData must be public, non-static, and able to take a key. */
+    /** getData must be public, non-static, and able to take a key - and nothing stands in for it. */
     #[DataProvider('unusableDataBags')]
     public function testOnlyAUsableDataBagIsWalked(object $object, string $marker): void
     {
         $out = TemplateEngine::withOptions(Options::lenient())->render('[{{var o.title}}]', ['o' => $object]);
 
-        self::assertSame('[REAL]', $out, $marker);
+        self::assertSame('[]', $out, $marker);
     }
 
     public static function unusableDataBags(): array
@@ -325,11 +317,11 @@ final class GuardTripwireTest extends TestCase
             ->render('{{var o.nope}}', ['o' => new \FakeDataObject(['a' => 1])]);
     }
 
-    /** A host accessor that raises must not escape the render as a host exception. */
+    /** A data bag that raises - a lazily loading getData() - must not escape the render. */
     public function testAnAccessorExceptionIsReportedAsATemplateError(): void
     {
         $object = new class {
-            public function getBoom(): string
+            public function getData($key = '')
             {
                 throw new \RuntimeException('accessor blew up: /etc/secret');
             }
@@ -340,7 +332,7 @@ final class GuardTripwireTest extends TestCase
             self::fail('expected a TemplateError');
         } catch (TemplateError $e) {
             self::assertStringNotContainsString('/etc/secret', $e->getMessage());
-            self::assertStringContainsString('getBoom', $e->getMessage());
+            self::assertStringContainsString('getData', $e->getMessage());
         }
     }
 

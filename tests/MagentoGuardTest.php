@@ -24,6 +24,7 @@ use MageOS\TemplateParser\ParameterParser;
 use MageOS\TemplateParser\Port\RefusedByPort;
 use MageOS\TemplateParser\HostServices;
 use MageOS\TemplateParser\Options;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -554,6 +555,31 @@ final class MagentoGuardTest extends TestCase
         self::assertSame('LAYOUT-OUTPUT', $out, 'the render must still happen');
         self::assertSame(['order_id' => '42'], $layout->blockData['root']);
         self::assertSame(['order_id' => '42'], $layout->blockData['items']);
+    }
+
+    /**
+     * setDataUsingMethod() builds its method name case-insensitively and without underscores,
+     * so `Template=` is setTemplate() as surely as `template=` is - and `Area=` sets the area
+     * every block resolves its template from. Dropping only the lowercase key dropped nothing.
+     */
+    #[DataProvider('capabilitySpellings')]
+    public function testACapabilityParameterIsDroppedHoweverItIsSpelled(string $key): void
+    {
+        $loaded = [];
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
+
+        $renderer->render('ok_handle', 'frontend', [$key => 'adminhtml-or-admin.phtml', 'order_id' => '42']);
+
+        self::assertSame(['order_id' => '42'], $layout->blockData['root']);
+    }
+
+    /** @return array<string,array{string}> */
+    public static function capabilitySpellings(): array
+    {
+        return array_combine(
+            $keys = ['Template', 'TEMPLATE', 'tem_plate', 'moduleName', 'Module_Name', 'modulename', 'Area', 'AREA', 'ar_ea'],
+            array_map(static fn (string $k): array => [$k], $keys)
+        );
     }
 
     /**

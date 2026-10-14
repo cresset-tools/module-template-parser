@@ -95,6 +95,19 @@ lab's naming, and the fixes from a whole-project review before the donation.
   backend URL model, and the same from `{{media}}`, `{{view}}`, `{{customvar}}` and
   `{{protocol}}`, escaped the render and became "Error filtering template".
 - **A numeric parameter name (`1="x"`) is no longer a TypeError.**
+- **No method on a template variable is ever called, in any posture.** Strict and lenient
+  fell back to any public argument-less `get*`/`has*`/`is*` method and to public properties,
+  chaining through what each returned, so template text could walk from the email model to
+  whatever its accessors reach - running each one. Every posture now reaches objects only
+  through `getData()`, as Magento's `StrictResolver` does: `a.getB()` reads `getData('b')`,
+  and the one real call is the host's `this.getUrl()`. Library code that relied on getters in
+  strict or lenient mode should put the values in the data bag or the variables. Compatible
+  mode also reads `getData()` without asking `hasData()` first, as the filter does, so a value
+  a model computes in an overridden `getData()` renders.
+- **`{{layout}}` drops `template`, `module_name` and `area` however they are spelled.**
+  `setDataUsingMethod()` resolves `Template=` and `tem_plate=` to `setTemplate()` just as it
+  does `template=`, so dropping only the lowercase keys let template text choose an admin
+  `.phtml` for every block in an allowed handle.
 - **`{{widget}}` never forwards a non-frontend `area`**, which let template text render an
   admin `.phtml` through a widget's `template`, as `{{block}}` already prevented.
 

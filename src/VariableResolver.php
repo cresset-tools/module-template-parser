@@ -15,17 +15,15 @@ namespace MageOS\TemplateParser;
  * `getData('foo_bar')`; both are reproduced here.
  *
  * Legacy is emphatic that the data bag is the ONLY way into an object - its own comment reads
- * "Strict mode should not call getter methods except DataObject's getData". Compatible mode
- * therefore never invokes a real accessor. Outside compatible mode a real accessor is a
- * useful thing to reach, so it is consulted after the bag, and restricted to public,
- * NON-STATIC, argument-less methods with an accessor-shaped name. Statics are excluded
- * deliberately: a static factory is reachable from any class name, not just from the object
- * graph the host put in scope.
+ * "Strict mode should not call getter methods except DataObject's getData" - and so is this,
+ * in every posture. Strict and lenient used to fall back to any public argument-less
+ * get/has/is method and to public properties, which let template text walk from the email
+ * model through whatever its accessors return, running each one; the postures now differ in
+ * what they refuse, never in what they run. The one real method call is a host's method-call
+ * server - `this.getUrl()` - which the host installs on purpose.
  */
 final class VariableResolver
 {
-    private const ACCESSOR = '/^(get|has|is)[A-Z0-9_]/';
-
     /** Argument arrays nested deeper than this are refused; legacy segfaults instead. */
     private const MAX_ARGUMENT_DEPTH = 64;
 
@@ -220,7 +218,7 @@ final class VariableResolver
         return $this->callAccessor($value, $name, substr($part, $paren + 1), $context);
     }
 
-    /** `foo.bar` - an array key, a data bag entry, a real getter, or a public property. */
+    /** `foo.bar` - an array key or a data bag entry, and nothing else. */
     private function member(mixed $value, string $key): Resolution
     {
         $key = self::stripInnerWhitespace($key);
@@ -236,42 +234,31 @@ final class VariableResolver
             return Resolution::missing($key);
         }
 
-        if ($this->hasDataBag($value)) {
-            // Asking the bag whether it holds the key, rather than treating any getData()
-            // return as a hit, is what lets strict mode report a typo'd member. Every real
-            // Magento template variable is a DataObject, so without this the unknown-variable
-            // check is off for precisely the common case.
-            if ($this->bagHas($value, $key)) {
-                return Resolution::of($this->readBag($value, $key));
-            }
-        }
-
-        if ($this->legacyQuirks) {
-            // StrictResolver reaches object members only through getData(). A plain object
-            // is never walked, and its final value fails the is_scalar||is_array guard, so
-            // legacy yields nothing - getters and public properties are not consulted.
-            return Resolution::missing($key);
-        }
-
-        $getter = 'get' . $this->studly($key);
-        if (preg_match(self::ACCESSOR, $getter) === 1) {
-            $viaGetter = $this->invokeAccessor($value, $getter);
-            if ($viaGetter !== null) {
-                return $viaGetter;
-            }
-        }
-
-        if (property_exists($value, $key)) {
-            $property = new \ReflectionProperty($value, $key);
-            return $property->isPublic()
-                ? Resolution::of($property->getValue($value))
-                : Resolution::missing($key);
+        // StrictResolver reaches object members only through getData(). A plain object is
+        // never walked, and getters and public properties are not consulted.
+        if ($this->hasDataBag($value) && $this->inBag($value, $key)) {
+            return Resolution::of($this->readBag($value, $key));
         }
 
         return Resolution::missing($key);
     }
 
-    /** `foo.getBar()` - a data bag entry under the mapped name, or a real method. */
+    /**
+     * Whether to read this key from the bag.
+     *
+     * Compatible mode always does: StrictResolver calls getData() unconditionally, and a model
+     * that computes a value in an overridden getData() - custom attributes, a lazily loaded
+     * field - holds nothing hasData() can see. Otherwise the bag is asked whether it holds
+     * the key, which is what lets strict mode report a typo'd member: every real Magento
+     * template variable is a DataObject, so without it the unknown-variable check would be off
+     * for precisely the common case.
+     */
+    private function inBag(object $value, string $key): bool
+    {
+        return $this->legacyQuirks || $this->bagHas($value, $key);
+    }
+
+    /** `foo.getBar()` - the host's method-call server, or a data bag entry under the mapped name. */
     private function callAccessor(mixed $value, string $method, string $arguments, Context $context): Resolution
     {
         $label = $method . '()';
@@ -312,20 +299,13 @@ final class VariableResolver
 
         if ($this->hasDataBag($value) && $isGetter) {
             $key = $this->dataKeyFromGetter($method);
-            if ($this->bagHas($value, $key)) {
+            if ($this->inBag($value, $key)) {
                 return Resolution::of($this->readBag($value, $key));
             }
         }
 
-        if ($this->legacyQuirks) {
-            return Resolution::missing($label);
-        }
-
-        if (preg_match(self::ACCESSOR, $method) !== 1) {
-            return Resolution::missing($label);
-        }
-
-        return $this->invokeAccessor($value, $method) ?? Resolution::missing($label);
+        // Never the method itself: `getBar()` is a spelling of getData('bar').
+        return Resolution::missing($label);
     }
 
     /**
@@ -557,28 +537,6 @@ final class VariableResolver
     }
 
 
-    /** Invokes a public, non-static, argument-less method, or null if it is not one. */
-    private function invokeAccessor(object $value, string $method): ?Resolution
-    {
-        if (!method_exists($value, $method)) {
-            return null;
-        }
-
-        $reflection = new \ReflectionMethod($value, $method);
-        if (!$reflection->isPublic()
-            || $reflection->isStatic()
-            || $reflection->getNumberOfRequiredParameters() > 0
-        ) {
-            return null;
-        }
-
-        try {
-            return Resolution::of($reflection->invoke($value));
-        } catch (\Throwable $e) {
-            throw $this->accessorFailure($method, $e);
-        }
-    }
-
     /** Whether this object keeps its values in a DataObject-style bag. */
     private function hasDataBag(object $value): bool
     {
@@ -674,12 +632,6 @@ final class VariableResolver
             sprintf('reading %s() on the host object raised %s', $method, $e::class),
             'the template cannot be responsible for this - it is a defect in the host object'
         );
-    }
-
-    /** first_name -> FirstName */
-    private function studly(string $key): string
-    {
-        return str_replace(' ', '', ucwords(str_replace('_', ' ', $key)));
     }
 
     /**
