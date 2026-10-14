@@ -104,6 +104,20 @@ lab's naming, and the fixes from a whole-project review before the donation.
   strict or lenient mode should put the values in the data bag or the variables. Compatible
   mode also reads `getData()` without asking `hasData()` first, as the filter does, so a value
   a model computes in an overridden `getData()` renders.
+- **An apostrophe no longer ends a single-quoted value.** `{{trans 'Don't forget'}}` read
+  `n't` as the closing quote, and the "quote" opened at the real one swallowed the template
+  out to the next apostrophe - three paragraphs became `<p>.</p>`, in every posture and with
+  no error. A quote now opens a value only where one starts (after `=`, or first after the
+  directive's name) and closes it only where it ends a word, as the filter's trans pattern
+  reads it. `LegacyReading` uses the lexer's own rule, so what the Magento layer declines is
+  exactly what the lexer reads differently; a stock template like the order-cancellation email
+  is no longer declined for its apostrophes.
+- **Lexing and parsing are linear.** A chain of broken openers, unterminated quotes, many
+  unknown paired directives, a long `{{if}}` or `{{for}}` body and unclosed custom directives
+  were each quadratic - 100 KB of crafted CMS content cost seconds on every Shadow render. A
+  run-on is now seen however far away the next `{{` is (it was missed beyond 64 bytes, and
+  both branches of an `{{if}}` rendered), and harmless run-ons no longer fill the list that
+  hid a fatal one after sixteen of them.
 - **`{{layout}}` drops `template`, `module_name` and `area` however they are spelled.**
   `setDataUsingMethod()` resolves `Template=` and `tem_plate=` to `setTemplate()` just as it
   does `template=`, so dropping only the lowercase keys let template text choose an admin

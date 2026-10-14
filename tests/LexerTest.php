@@ -6,6 +6,8 @@ namespace MageOS\TemplateParser\Test;
 use MageOS\TemplateParser\Lexer\Lexer;
 use MageOS\TemplateParser\Lexer\TokenType;
 use PHPUnit\Framework\Attributes\DataProvider;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\TestCase;
 
 final class LexerTest extends TestCase
@@ -133,6 +135,59 @@ final class LexerTest extends TestCase
             // A backslash with no quote at all must not reach the walk either.
             'bare backslash'  => ['{{var a\\b}} tail', '{{var a\\b}}'],
         ];
+    }
+
+    /**
+     * An apostrophe inside a single-quoted value. The lexer read `n't` as the closing quote,
+     * opened a new "quote" at the real one, and swallowed the document out to the next
+     * apostrophe - in every posture, silently: `<p>.</p>` for three paragraphs. The filter's
+     * trans pattern takes a closing quote only before whitespace or the end, and so does this.
+     */
+    public function testAnApostropheDoesNotCloseASingleQuotedValue(): void
+    {
+        $template = "<p>{{trans 'Don't forget your receipt'}}</p><p>Total: {{var total}}</p>"
+            . "<p>We're happy to help, {{var name}}.</p>";
+
+        foreach ([Options::compatible(), Options::lenient(), Options::strict()] as $options) {
+            self::assertSame(
+                "<p>Don&#039;t forget your receipt</p><p>Total: 10.00</p><p>We're happy to help, Ada.</p>",
+                TemplateEngine::withOptions($options)->render($template, ['total' => '10.00', 'name' => 'Ada'])
+            );
+        }
+    }
+
+    /**
+     * One missing brace, with the next `{{` more than 64 bytes on. The run-on check only
+     * looked that far, so here the `{{var` swallowed the `{{else}}` and BOTH branches rendered.
+     */
+    public function testARunOnIsSeenHoweverFarTheNextOpenerIs(): void
+    {
+        $template = '{{if a}}Ships to {{var name}, to the address on file, which we will confirm by email '
+            . 'before dispatch{{else}}Pickup only{{/if}}';
+
+        $out = TemplateEngine::withOptions(Options::lenient())->render($template, ['a' => 1, 'name' => 'Ada']);
+
+        self::assertStringNotContainsString('Pickup only', $out);
+    }
+
+    /**
+     * Sixteen harmless run-ons filled the list the parser reads, so a fatal one after them was
+     * never refused - and compatible mode rendered what the filter dies on.
+     */
+    public function testHarmlessRunOnsDoNotHideAFatalOne(): void
+    {
+        $template = str_repeat('Hi {{var a}, bye {{var a}} ', 20) . 'A{{if a} B {{var a}} C';
+
+        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        TemplateEngine::compatible()->render($template, ['a' => 1]);
+    }
+
+    /** A quote that is not where a value starts - mid-word, or after `(` - shelters nothing. */
+    public function testOnlyAQuoteStartingAValueShelters(): void
+    {
+        $tokens = $this->lexer->tokenize("{{var a.getUrl('x}}y')}} tail");
+
+        self::assertSame("{{var a.getUrl('x}}", $tokens[0]->raw);
     }
 
     /** Round-tripping every token must reproduce the source exactly. */

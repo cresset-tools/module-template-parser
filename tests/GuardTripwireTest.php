@@ -575,6 +575,55 @@ final class GuardTripwireTest extends TestCase
         ];
     }
 
+    /**
+     * Doubling the input roughly doubles the work, through the lexer AND the parser.
+     *
+     * Each of these was quadratic: a run-on chain recounted its quotes to a shared distant
+     * closer per opener; an unterminated quote was walked to the end of the source per
+     * opener; a verbatim span, a loop body and an unclosed custom directive were each found by
+     * a scan per token. Crafted CMS content paid that on every Shadow render - 100 KB of
+     * `{{var "}}` took five seconds. A ratio, as in SecurityRegressionTest, because a stopwatch
+     * measures the machine as much as the code.
+     */
+    #[DataProvider('quadraticShapes')]
+    public function testParsingStaysLinear(string $unit, string $tail, string $head = ''): void
+    {
+        $spec = new DirectiveSpec([], [], ['mydir']);
+        $elapsed = [];
+        foreach ([20000, 40000] as $count) {
+            $source = $head . str_repeat($unit, $count) . $tail;
+            $started = microtime(true);
+            try {
+                (new Parser($spec, Options::compatible()))->parse($source);
+            } catch (TemplateError) {
+                // Refusing is fine; refusing slowly is not.
+            }
+            $elapsed[$count] = max(microtime(true) - $started, 0.002);
+        }
+
+        $ratio = $elapsed[40000] / $elapsed[20000];
+        self::assertLessThan(
+            3.0,
+            $ratio,
+            sprintf('%s: doubling the input multiplied the work by %.1f (%.3fs then %.3fs)', $unit, $ratio, $elapsed[20000], $elapsed[40000])
+        );
+    }
+
+    /** @return array<string,array{0:string,1:string,2?:string}> unit, tail, head */
+    public static function quadraticShapes(): array
+    {
+        return [
+            'run-on chain'          => ['{{foo ', '}}'],
+            'unterminated quotes'   => ['{{trans "x {{', '}}'],
+            'escaped quotes'        => ['{{var \\"}}', ''],
+            'quoted closers'        => ['{{trans "x}}', '}}'],
+            'apostrophes'           => ["{{trans 'it's", "'}}"],
+            'unknown paired blocks' => ['{{foo}}x{{/foo}}', ''],
+            'one long loop body'    => ['{{var a}}', '{{/for}}', '{{for a in b}}'],
+            'unclosed custom'       => ['{{mydir}}', '{{/mydir}}'],
+        ];
+    }
+
     /** Time for a fixed amount of non-lexer work, as a machine-speed reference. */
     private static function calibrationUnit(): float
     {

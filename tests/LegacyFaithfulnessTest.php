@@ -267,7 +267,6 @@ final class LegacyFaithfulnessTest extends TestCase
             'one missing brace' => ['Hi {{var a}, bye {{var a}}', 'a construct the filter reads to the first }}'],
             'a quoted opener' => ['{{trans "a {{b}}"}}', 'a construct the filter reads to the first }}'],
             'a quoted closer' => ['{{trans "a }}b"}}', 'a quoted }} the filter ends the directive at'],
-            'an apostrophe in a single-quoted string' => ["{{trans 'you'd like'}}", 'a quoted }} the filter ends the directive at'],
             'a name the filter reads as {{if}}' => ['{{iframe}}x{{if a}}y{{/if}}', 'a name the filter reads as {{if}}'],
         ];
     }
@@ -292,6 +291,11 @@ final class LegacyFaithfulnessTest extends TestCase
         return [
             'prose that starts like a loop' => ['{{Forgot Your Password?}}'],
             'a quoted apostrophe' => ['{{trans "it\'s here"}}'],
+            // An apostrophe ends no quote, here or in the filter's trans pattern, which takes a
+            // closing quote only before whitespace or the end - so both read one string. This
+            // was flagged while the lexer read `'d` as the quote's end.
+            'an apostrophe in a single-quoted string' => ["{{trans 'you'd like'}}"],
+            'the stock cancellation email' => ["{{trans 'It seems that you'd like to cancel your order'}}\n<p>{{var x}}</p>"],
             'an ordinary template' => ['Dear {{var name}}, {{if a}}{{trans "Hi"}}{{else}}x{{/if}} {{depend b}}y{{/depend}}'],
             'a directive name merely starting with if' => ['{{iframe}} with no closer'],
             'no directives at all' => ['plain text { } }}'],
@@ -302,6 +306,35 @@ final class LegacyFaithfulnessTest extends TestCase
     public function testAReadingTheFilterSharesIsNotFlagged(string $template): void
     {
         self::assertNull(LegacyReading::firstDifference($template));
+    }
+
+    /**
+     * LegacyReading and the lexer decide "a quote is open at the first `}}`" with one rule.
+     * They had two - the lexer honoured backslashes and LegacyReading did not - so a template
+     * the lexer read past its first `}}` could pass as one the filter reads the same way, and
+     * Parser served the swallowed reading.
+     */
+    #[DataProvider('quoteShapes')]
+    public function testLegacyReadingFlagsExactlyWhatTheLexerReadsPastTheFirstCloser(string $template): void
+    {
+        $first = (new \MageOS\TemplateParser\Lexer\Lexer())->tokenize($template)[0];
+        $readsPast = $first->type !== \MageOS\TemplateParser\Lexer\TokenType::Text
+            && strlen($first->raw) !== strpos($template, '}}') + 2;
+
+        self::assertSame($readsPast, LegacyReading::firstDifference($template) !== null, $template);
+    }
+
+    /** @return array<string,array{string}> */
+    public static function quoteShapes(): array
+    {
+        return [
+            'quoted closer' => ['{{trans "a }}b"}} tail'],
+            'escaped quote' => ['{{trans "a\\"b}}c"}} tail'],
+            'backslash then apostrophe' => ['{{trans "Save it in John\'s folder C:\\docs\\"}} He said "hi {{var name}}" ok}}'],
+            'apostrophe in single quotes' => ["{{trans 'Don't forget'}}</p><p>{{var total}}</p><p>We're here}}"],
+            'quote mid-value' => ['{{var a.getUrl(\'x}}y\')}} tail'],
+            'value after =' => ['{{mydir p="a }}b"}} tail'],
+        ];
     }
 
     /** Only the compatible posture claims to render as the filter does. */
