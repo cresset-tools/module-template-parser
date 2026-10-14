@@ -416,10 +416,10 @@ HELP);
         // in the future holds nothing, and an empty window passes the gate.
         if ($moment->getTimestamp() > $now + 60) {
             throw new \InvalidArgumentException(sprintf(
-                '--since "%s" is %s UTC, which is in the future. Did you mean "-%s"?',
+                '--since "%s" is %s UTC, which is in the future.%s',
                 $since,
                 $moment->setTimezone($utc)->format('Y-m-d H:i:s'),
-                ltrim($since, '+')
+                preg_match('/^\+?\s*\d/', $since) === 1 ? sprintf(' Did you mean "-%s"?', ltrim($since, '+ ')) : ' Give a time in the past, such as "-7 days".'
             ));
         }
 
