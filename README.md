@@ -419,9 +419,9 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**4788 cases recorded. 804 are constructs the legacy filter cannot render at all, 843 put the
-two engines on surfaces that cannot be compared, and 307 are shapes compatible mode refuses on
-purpose. Over the remaining 2834 cases, where both engines render, output is byte-identical.**
+**4788 cases recorded. 920 are constructs the legacy filter cannot render at all, 843 put the
+two engines on surfaces that cannot be compared, and 295 are shapes compatible mode refuses on
+purpose. Over the remaining 2730 cases, where both engines render, output is byte-identical.**
 
 That corpus is recorded from a filter built out of a handful of files and no application, so
 the directives it can compare are the six the base `Framework\Filter\Template` implements:
@@ -463,7 +463,10 @@ than what is true. Two properties are asserted absolutely:
 
 - **Nothing the legacy filter crashes on is rendered here.** A construct the old filter died
   on is one nobody has ever seen the output of, so rendering it would be inventing behaviour,
-  not reproducing it.
+  not reproducing it. That includes a PHP warning: a store's error handler turns every one
+  into an exception, which the Email filter renders as its error message in place of the
+  template - so the corpus is recorded under that handler, and a construct that warns counts
+  as one the filter cannot render.
 - **Where both render, they agree byte for byte** — for every case in the corpus except the
   declared divergences named below, each of which is *recorded* as a case rather than left
   out of one, so the disagreement is measured and pinned rather than avoided.
@@ -477,8 +480,8 @@ Quirks it reproduces:
 |---|---|
 | truthiness | `resolve(...) == ''`, so on PHP 8 `0`, `'0'`, `0.0` and `[]` are truthy — and `false` and `null` are not |
 | partial paths | member access is only attempted on an array or DataObject parent, so a scalar parent yields itself (`{{var store.frontend_name}}` renders the store) |
-| missing keys | an array parent with a missing key yields nothing, not the parent |
-| arrays | cast to the literal string `Array` |
+| missing keys | an array parent with a missing key is a PHP warning - on a store, the error handler's exception and the filter's error message - so it is refused |
+| arrays | cast to a string with a PHP warning, the same store error - so refused; an array argument to `{{trans}}` makes `Phrase` render its raw text, which is reproduced |
 | no variables | directives pass through verbatim, which is the template-validation path |
 | getter keys | `getAddress1()` reads `address_1`, because a run of digits is its own segment |
 | member access | only through `getData()`; a real getter is never called, bar the one exception below |

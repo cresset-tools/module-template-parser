@@ -104,6 +104,16 @@ lab's naming, and the fixes from a whole-project review before the donation.
   strict or lenient mode should put the values in the data bag or the variables. Compatible
   mode also reads `getData()` without asking `hasData()` first, as the filter does, so a value
   a model computes in an overridden `getData()` renders.
+- **Compatible mode answers as a store does when legacy warns.** Every store installs
+  Magento's error handler, which turns a PHP warning into an exception, and the Email filter
+  renders that as its error message in place of the whole template. The parity corpus was
+  recorded with warnings swallowed, so it pinned output no store sends: `{{var a}}` of an
+  array as `Array`, `{{var a.b}}` on an array without `b` as nothing. Both are now refused in
+  compatible mode, so Parser falls back and the customer gets what they get today; an array
+  argument to `{{trans}}` renders `Phrase`'s raw text, as the store does. The corpus is
+  re-recorded under the store's handler (`tools/record-legacy.php` records such a case as
+  outcome `error`), and so are `docs/directives.md`, `tools/parity.php` and the "today" side
+  of `template:diff`.
 - **An apostrophe no longer ends a single-quoted value.** `{{trans 'Don't forget'}}` read
   `n't` as the closing quote, and the "quote" opened at the real one swallowed the template
   out to the next apostrophe - three paragraphs became `<p>.</p>`, in every posture and with

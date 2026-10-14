@@ -129,13 +129,17 @@ final class TemplateIncludeTest extends TestCase
      * A parameter named after an existing variable collides, and legacy's merge is recursive.
      *
      * array_merge_recursive turns two scalars under one key into an array of both, so the
-     * variable renders as "Array" rather than either value. Reproduced in compatible mode;
-     * elsewhere the parameter wins, which is what writing one implies.
+     * variable is an array - which {{var}} casts with a warning, and a store's error handler
+     * turns into the filter's error message. Compatible mode refuses it; elsewhere the
+     * parameter wins, which is what writing one implies.
      */
     #[DataProvider('collisionModes')]
-    public function testAParameterCollidingWithAVariable(string $mode, Options $options, string $expected): void
+    public function testAParameterCollidingWithAVariable(string $mode, Options $options, ?string $expected): void
     {
         $engine = $this->engine(['greet' => '[{{var name}}]'], $options);
+        if ($expected === null) {
+            $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        }
 
         self::assertSame(
             $expected,
@@ -147,7 +151,7 @@ final class TemplateIncludeTest extends TestCase
     public static function collisionModes(): array
     {
         return [
-            'compatible reproduces the merge quirk' => ['compatible', Options::compatible(), '[Array]'],
+            'compatible refuses the merged array'   => ['compatible', Options::compatible(), null],
             'lenient lets the parameter win'        => ['lenient', Options::lenient(), '[Bob]'],
         ];
     }

@@ -95,21 +95,30 @@ function documentedFilter(array $vars, array $includes = []): LegacyTemplate
 /** @param array<string,mixed> $vars */
 function renderLegacy(string $template, array $vars, array $includes = []): string
 {
-    set_error_handler(static fn (): bool => true);   // legacy emits notices; not the contract
+    // As a store renders it: a warning there is the error handler's exception, and the Email
+    // filter's error message in place of the template - see StoreErrorHandler.
     try {
-        return (string)documentedFilter($vars, $includes)->filter($template);
+        return (string)\MageOS\TemplateParser\Console\StoreErrorHandler::run(
+            static fn () => documentedFilter($vars, $includes)->filter($template)
+        );
+    } catch (\MageOS\TemplateParser\Console\StoreError) {
+        return STORE_ERROR;
     } catch (\Throwable $e) {
         return '!' . (new \ReflectionClass($e))->getShortName();
-    } finally {
-        restore_error_handler();
     }
 }
+
+/** What a store sends for a template whose render warned: the Email filter's error message. */
+const STORE_ERROR = "!the store's error message";
 
 /** @param array<string,mixed> $vars */
 function renderOurs(Options $options, string $template, array $vars): string
 {
     try {
         return TemplateEngine::withOptions($options)->render($template, $vars);
+    } catch (\MageOS\TemplateParser\LegacyIncompatibleError $e) {
+        // Refusing what the store errors on is agreeing with it.
+        return str_contains($e->getMessage(), "store's error handler") ? STORE_ERROR : '!LegacyIncompatibleError';
     } catch (\Throwable $e) {
         return '!' . (new \ReflectionClass($e))->getShortName();
     }
@@ -136,6 +145,9 @@ function describeOutput(string $value): string
 {
     if ($value === '') {
         return '(nothing)';
+    }
+    if ($value === STORE_ERROR) {
+        return "(the store's error message)";
     }
     $shown = str_replace(["\n", "\r", "\t"], ['\n', '', '\t'], $value);
 
@@ -164,14 +176,14 @@ $sections = [
     example('{{var nope}}', ['a' => 1], 'an unknown variable renders as nothing, silently'),
     example('{{var a}}', [], 'with NO variables at all the directive is passed through verbatim'),
     example('{{trans "Hello"}}', [], 'but only the variable-reading directives do that - {{trans}} still runs'),
-    example('{{var a}}', ['a' => ['x', 'y']], 'an array is cast to the string "Array"'),
+    example('{{var a}}', ['a' => ['x', 'y']], 'an array is cast to a string with a warning, which a store\'s error handler makes an exception'),
     example('{{var a}}', ['a' => 0]),
     example('{{var a}}', ['a' => true]),
     example('{{var a}}', ['a' => false], 'false casts to the empty string'),
 ],
 'paths' => [
     example('{{var a.b}}', ['a' => ['b' => 'deep']], 'array key'),
-    example('{{var a.b}}', ['a' => ['x' => 1]], 'a missing key yields nothing, not the parent'),
+    example('{{var a.b}}', ['a' => ['x' => 1]], 'a missing ARRAY key is an "Undefined array key" warning - the same store error'),
     example('{{var c.name}}', ['c' => $customer], 'an object is read through getData()'),
     example('{{var c.getName()}}', ['c' => $customer], 'a getter maps to getData("name") - it is never called'),
     example('{{var c.getAddress1()}}', ['c' => $customer], 'a run of digits is its own segment, so this reads address_1'),
@@ -185,7 +197,7 @@ $sections = [
     example('{{var a.b.c}}', ['a' => ['b' => ['c' => 'deep']]], 'paths nest freely'),
     example('{{var a b}}', ['ab' => 'AB'], 'whitespace ANYWHERE in a name is skipped, not just at the edges'),
     example('{{var a()}}', ['a' => 'Ada'], 'a call at the HEAD of a path is the variable itself - the type is ignored there'),
-    example('{{var c.get()}}', ['c' => $customer], '.get() maps to getData("") and hands back the whole data bag'),
+    example('{{var c.get()}}', ['c' => $customer], '.get() maps to getData("") and hands back the whole data bag, an array - the same store error'),
     example('{{var a.getB(}}', ['a' => ['b' => 1]], 'an UNCLOSED call is still a call - on an array parent legacy raises, so this is refused', divergent: true),
 ],
 'modifiers' => [
@@ -249,7 +261,7 @@ $sections = [
 'template' => [
     example('{{template config_path="greet"}}', ['a' => 'Ada'], 'the include is rendered with the parent\'s variables',
         includes: ['greet' => 'Hi {{var a}}']),
-    example('{{template config_path="greet" a="Bob"}}', ['a' => 'Ada'], 'a parameter COLLIDING with a parent variable becomes an array of both - legacy merges recursively',
+    example('{{template config_path="greet" a="Bob"}}', ['a' => 'Ada'], 'a parameter COLLIDING with a parent variable becomes an array of both - legacy merges recursively, and {{var}} of an array is the store error',
         includes: ['greet' => 'Hi {{var a}}']),
     example('{{template config_path="greet" who="Bob"}}', ['a' => 'Ada'], 'a parameter that does not collide is just a variable',
         includes: ['greet' => 'Hi {{var who}}']),

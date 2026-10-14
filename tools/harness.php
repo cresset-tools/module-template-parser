@@ -105,6 +105,9 @@ foreach ([
 //
 // Each stub guards its declarations on class_exists: inside a real installation the genuine
 // classes exist and redeclaring them is fatal.
+// Legacy renders run as a store runs them, warnings and all - see StoreErrorHandler.
+require_once PKGROOT . '/src/Console/StoreError.php';
+require_once PKGROOT . '/src/Console/StoreErrorHandler.php';
 require __DIR__ . '/stubs/Harness.php.stub';
 require __DIR__ . '/stubs/LaminasFilter.php.stub';
 require __DIR__ . '/stubs/MagentoFramework.php.stub';

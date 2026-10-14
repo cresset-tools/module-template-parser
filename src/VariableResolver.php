@@ -225,9 +225,22 @@ final class VariableResolver
 
         if (is_array($value)) {
             // array_key_exists, not ??, so a key holding null is found rather than missing.
-            return array_key_exists($key, $value)
-                ? Resolution::of($value[$key])
-                : Resolution::missing($key);
+            if (array_key_exists($key, $value)) {
+                return Resolution::of($value[$key]);
+            }
+            if ($this->legacyQuirks) {
+                // StrictResolver indexes the array without isset(): an "Undefined array key"
+                // warning, which a store's error handler makes an exception and the filter
+                // renders as its error message in place of the whole template.
+                throw new LegacyFatalShape(sprintf(
+                    'the legacy filter reads the missing array key "%s" - a PHP warning, which a '
+                    . "store's error handler makes an exception and the filter renders as its "
+                    . 'error message in place of the template',
+                    $key
+                ));
+            }
+
+            return Resolution::missing($key);
         }
 
         if (!is_object($value)) {

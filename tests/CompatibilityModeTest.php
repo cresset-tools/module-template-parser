@@ -69,10 +69,26 @@ final class CompatibilityModeTest extends TestCase
     }
 
     /** But an array parent with a missing key DID attempt access, and yields nothing. */
-    public function testArrayParentWithMissingKeyYieldsNothing(): void
+    /**
+     * StrictResolver indexes an array parent without isset(): an "Undefined array key"
+     * warning, which a store's error handler makes an exception, and the filter renders its
+     * error message in place of the template. Rendering nothing - what PHP gives with the
+     * warning swallowed - is output no store sends.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('missingArrayKeys')]
+    public function testArrayParentWithMissingKeyIsTheStoresError(string $template, array $variables): void
     {
-        self::assertSame('', $this->engine->render('{{var a.nosuch}}', ['a' => ['b' => 1]]));
-        self::assertSame('', $this->engine->render('{{var a.b}}', ['a' => []]));
+        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        $this->engine->render($template, $variables);
+    }
+
+    public static function missingArrayKeys(): array
+    {
+        return [
+            'a missing key' => ['{{var a.nosuch}}', ['a' => ['b' => 1]]],
+            'an empty array' => ['{{var a.b}}', ['a' => []]],
+            'in a condition' => ['{{if a.nosuch}}x{{/if}}', ['a' => ['b' => 1]]],
+        ];
     }
 
     public function testResolvablePathsStillResolve(): void
@@ -80,11 +96,17 @@ final class CompatibilityModeTest extends TestCase
         self::assertSame('deep', $this->engine->render('{{var a.b}}', ['a' => ['b' => 'deep']]));
     }
 
-    /** Legacy casts arrays, emitting the literal string "Array". */
-    public function testArraysStringifyAsArray(): void
+    /**
+     * Legacy casts an array to "Array" with a warning - on a store, the error handler's
+     * exception and the filter's error message instead of the template. So compatible mode
+     * refuses it; strict renders nothing.
+     */
+    public function testAnArrayValueIsTheStoresError(): void
     {
-        self::assertSame('Array', $this->engine->render('{{var a}}', ['a' => [1, 2]]));
         self::assertSame('', (new TemplateEngine())->render('{{var a}}', ['a' => [1, 2]]));
+
+        $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        $this->engine->render('{{var a}}', ['a' => [1, 2]]);
     }
 
     /** With no variables at all, legacy returns directives verbatim (the validation path). */

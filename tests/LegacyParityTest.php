@@ -77,9 +77,14 @@ final class LegacyParityTest extends TestCase
         );
     }
 
+    /**
+     * What the filter cannot render: a fatal (`throw`), or a PHP warning that a store's error
+     * handler turns into an exception and the filter into its error text (`error`). Either
+     * way the template never reaches anyone as written, so rendering it is inventing output.
+     */
     public static function legacyFatalCases(): array
     {
-        return array_filter(self::recordedCases(), static fn ($c) => $c[0]['outcome'] === 'throw');
+        return array_filter(self::recordedCases(), static fn ($c) => in_array($c[0]['outcome'], ['throw', 'error'], true));
     }
 
     /**
@@ -167,7 +172,7 @@ final class LegacyParityTest extends TestCase
         $preHardening = 0;
 
         foreach ($cases as [$case]) {
-            if ($case['outcome'] === 'throw') {
+            if ($case['outcome'] === 'throw' || $case['outcome'] === 'error') {
                 $fatal++;
                 continue;
             }

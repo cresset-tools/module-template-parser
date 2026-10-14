@@ -122,13 +122,20 @@ function parityEligible(string $tpl, string $id = ''): bool {
     return true;
 }
 
-/** @return array{0:string,1:?string} [outcome, value] */
+/**
+ * What the filter does with this, on a store.
+ *
+ * Under the store's own error handler, not with warnings swallowed: on a store a warning is
+ * an exception, which the Email filter turns into its error text in place of the whole
+ * template. Such a case is outcome `error`, with the warning as `expected`; the old recorder
+ * kept the output PHP produced while warning, which no store ever sends.
+ *
+ * @return array{0:string,1:?string} [outcome, value]
+ */
 function record(string $tpl, array $vars, bool $neutralize = true): array {
-    set_error_handler(static fn () => true);   // legacy emits notices; not part of the contract
-    try { $out = ['ok', legacy($vars, $neutralize)->filter($tpl)]; }
-    catch (\Throwable $e) { $out = ['throw', get_class($e)]; }
-    restore_error_handler();
-    return $out;
+    try { return ['ok', \MageOS\TemplateParser\Console\StoreErrorHandler::run(static fn () => legacy($vars, $neutralize)->filter($tpl))]; }
+    catch (\MageOS\TemplateParser\Console\StoreError $e) { return ['error', $e->described()]; }
+    catch (\Throwable $e) { return ['throw', get_class($e)]; }
 }
 
 /**
@@ -466,6 +473,7 @@ if ($json === false) {
 file_put_contents(PKGROOT . '/tests/fixtures/legacy/cases.json', $json);
 
 $throws = count(array_filter($cases, static fn ($c) => $c['outcome'] === 'throw'));
+$errors = count(array_filter($cases, static fn ($c) => $c['outcome'] === 'error'));
 $parity = count(array_filter($cases, static fn ($c) => $c['parity']));
-printf("recorded %d cases: %d render, %d legacy fatals, %d parity-eligible -> tests/fixtures/legacy/cases.json\n",
-    count($cases), count($cases) - $throws, $throws, $parity);
+printf("recorded %d cases: %d render, %d legacy fatals, %d store errors, %d parity-eligible -> tests/fixtures/legacy/cases.json\n",
+    count($cases), count($cases) - $throws - $errors, $throws, $errors, $parity);

@@ -47,8 +47,8 @@ recordings, so the differential runs anywhere with no Magento installation.
 The corpus is a matrix of value shapes against construct shapes, plus a no-variables pass and
 the 45 real templates in `tests/fixtures/corpus/`. Those templates are harvested from the
 Magento/Mage-OS tree and include `.html` files whose `{{` sequences are not directives at all,
-such as translation strings and JS templates. 4788 cases in total, 804 of which crash the
-stock filter. 751 carry a second expectation for the filter as it was before the
+such as translation strings and JS templates. 4788 cases in total, 920 of which crash the
+stock filter, or warn - which a store's error handler makes the same thing. 751 carry a second expectation for the filter as it was before the
 [StyleSmuggler](https://sansec.io/research/stylesmuggler-0day) hardening in Mage-OS 3.5.0,
 which compatible mode can target with `Options::withOutputNeutralizer(false)`.
 
@@ -159,7 +159,7 @@ erode the agreeing set one case at a time in silence.
 ### The sensitivity canary
 
 Green assertions mean nothing if the corpus cannot tell a correct engine from a broken one, so
-each deliberate mis-configuration must produce divergences over the 2834 rendering-comparable
+each deliberate mis-configuration must produce divergences over the 2730 rendering-comparable
 cases:
 
 | Engine | Divergences |

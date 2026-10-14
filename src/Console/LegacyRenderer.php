@@ -49,19 +49,16 @@ class LegacyRenderer
         ?int $storeId = null,
         string $kind = TemplateSubject::KIND_EMAIL,
     ): ?LegacyRender {
-        // The legacy filter emits notices for exactly the constructs this tool exists to
-        // find, so letting them through would bury the report in PHP warnings about
-        // templates the report is already telling you about.
-        set_error_handler(static fn (): bool => true);
-
+        // Under the store's own error handler, so "today" is what the store sends: a warning
+        // there is an exception, which the Email filter catches and renders as its error
+        // message in place of the template. Swallowing the warning showed output no store
+        // produces, and the diff called the engine wrong for refusing it.
         try {
-            return $kind === TemplateSubject::KIND_CMS
+            return StoreErrorHandler::run(fn (): ?LegacyRender => $kind === TemplateSubject::KIND_CMS
                 ? $this->renderCms($template)
-                : $this->renderEmail($template, $variables, $storeId, $kind);
+                : $this->renderEmail($template, $variables, $storeId, $kind));
         } catch (\Throwable) {
             return null;
-        } finally {
-            restore_error_handler();
         }
     }
 

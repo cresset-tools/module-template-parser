@@ -294,7 +294,7 @@ final class Evaluator
      * @param array<string,mixed> $params
      * @return array<string,mixed>
      */
-    public function resolveParameterValues(array $params, Context $context, DirectiveNode $node): array
+    public function resolveParameterValues(array $params, Context $context, DirectiveNode $node, bool $keepArrays = false): array
     {
         foreach ($params as $key => $value) {
             if (!is_string($value) || !str_starts_with($value, '$')) {
@@ -313,7 +313,9 @@ final class Evaluator
                 continue;
             }
 
-            $params[$key] = $this->toStringValue($resolution->value);
+            $params[$key] = $keepArrays && is_array($resolution->value)
+                ? $resolution->value
+                : $this->toStringValue($resolution->value);
         }
 
         return $params;
@@ -598,7 +600,13 @@ final class Evaluator
         }
 
         $resolved = [];
-        foreach ($this->resolveParameterValues($args, $context, $node) as $key => $value) {
+        foreach ($this->resolveParameterValues($args, $context, $node, keepArrays: true) as $key => $value) {
+            // An array argument is a warning when Phrase's renderer casts it - an exception on
+            // a store, and Phrase::render() catches anything its renderer throws and hands back
+            // its raw text: untranslated, nothing substituted.
+            if ($this->options->legacyQuirks && is_array($value)) {
+                return $this->applyModifiers($text, $modifiers, $context, $node->offset());
+            }
             // toStringValue(), not a cast - an object with no __toString is a perfectly
             // ordinary template variable and must not be a fatal.
             $resolved[self::placeholderFor($key)] = $this->toStringValue($value);
@@ -806,7 +814,7 @@ final class Evaluator
             // varDirective defaults to, so the no-modifier path has to behave exactly like
             // an explicit one - including recursing into an array, which is where legacy
             // dies on an element it cannot cast.
-            return $this->toStringValue($this->applyEscapeModifier($value, 'html', $context, $offset));
+            return $this->outputString($this->applyEscapeModifier($value, 'html', $context, $offset), $context, $offset);
         }
 
         /** @var list<array{0:string,1:string[]}> $parsed */
@@ -858,6 +866,29 @@ final class Evaluator
                 'escape' => $this->applyEscapeModifier($value, $params[0] ?? 'html', $context, $offset),
                 default => $value,      // legacy skips an unknown modifier
             };
+        }
+
+        return $this->outputString($value, $context, $offset);
+    }
+
+    /**
+     * What {{var}} puts in the output.
+     *
+     * An array there is cast to string, which is a PHP warning - and on a store, whose error
+     * handler turns every warning into an exception, the Email filter catches it and renders
+     * its error text in place of the whole template. So compatible mode does not render the
+     * "Array" PHP leaves when the warning is swallowed: no store sends that.
+     */
+    private function outputString(mixed $value, Context $context, int $offset): string
+    {
+        if ($this->options->legacyQuirks && is_array($value)) {
+            $this->noteLegacyIncompatible(
+                $context,
+                'the value is an array, which {{var}} casts to a string - a PHP warning, which '
+                . "a store's error handler makes an exception and the filter renders as its "
+                . 'error message in place of the template',
+                $offset
+            );
         }
 
         return $this->toStringValue($value);
