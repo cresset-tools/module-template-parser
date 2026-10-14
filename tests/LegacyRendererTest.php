@@ -274,7 +274,35 @@ final class LegacyRendererTest extends TestCase
         $emulation = $this->emulation();
         (new LegacyRenderer($this->context($this->model(), $emulation)))->render('X', [], 7);
 
-        self::assertSame(['start:7:frontend:true', 'stop'], $emulation->calls);
+        // Started, started again after getProcessedTemplate() - see the next test - and stopped once.
+        self::assertSame(['start:7:frontend:true', 'start:7:frontend:true', 'stop'], $emulation->calls);
+    }
+
+    /**
+     * getProcessedTemplate() ends in cancelDesignConfig(), which stops the SHARED emulation -
+     * so the filter() the comparison is made from ran in the CLI's own store, and
+     * `diff --store=2` compared store 1's translations and theme.
+     */
+    public function testTheFilterRendersInsideTheEmulationEvenAfterTheModelStoppedIt(): void
+    {
+        $emulation = $this->emulation();
+        $filter = new class ($emulation) extends \Magento\Framework\Filter\Template {
+            public function __construct(private object $emulation) {}
+            public function filter($value) { $this->emulation->calls[] = 'filter'; return 'LEGACY:' . $value; }
+        };
+        $model = new class ($filter, $emulation) {
+            public function __construct(private object $filter, private object $emulation) {}
+            public function setTemplateType($t) { return $this; }
+            public function setTemplateText($t) { return $this; }
+            public function setDesignConfig($c) { return $this; }
+            public function setUseAbsoluteLinks($f) { return $this; }
+            public function getProcessedTemplate(array $v = []) { $this->emulation->stopEnvironmentEmulation(); return ''; }
+            public function getTemplateFilter() { return $this->filter; }
+        };
+
+        (new LegacyRenderer($this->context($model, $emulation)))->render('X', [], 2);
+
+        self::assertSame(['start:2:frontend:true', 'stop', 'start:2:frontend:true', 'filter', 'stop'], $emulation->calls);
     }
 
     /** Emulation left running would leak the store into everything the tool renders next. */
@@ -291,7 +319,7 @@ final class LegacyRendererTest extends TestCase
         };
 
         self::assertNull((new LegacyRenderer($this->context($model, $emulation)))->render('X', [], 7));
-        self::assertSame(['start:7:frontend:true', 'stop'], $emulation->calls);
+        self::assertSame(['start:7:frontend:true', 'start:7:frontend:true', 'stop'], $emulation->calls);
     }
 
     /** A store with no emulation service still gets compared, just without a theme. */

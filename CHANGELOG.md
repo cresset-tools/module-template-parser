@@ -104,6 +104,30 @@ lab's naming, and the fixes from a whole-project review before the donation.
   strict or lenient mode should put the values in the data bag or the variables. Compatible
   mode also reads `getData()` without asking `hasData()` first, as the filter does, so a value
   a model computes in an overridden `getData()` renders.
+- **The rollout gate (`template:shadow:report`) no longer passes on no evidence.**
+  - `--since=-24h`, `-7d`, `-30m` and `-1w` count back from now; PHP read them as UTC
+    offsets, landing hours in the future, so every divergence predated them and the gate
+    passed for ever. A `--since` that parses as the future ("7 days", "tomorrow") is refused.
+  - Exit 2 ("nothing recorded") now means no comparisons in scope, not no rows: a store view
+    in Parser that only served, or a `--since` window no template was compared in, exited 0.
+  - Renders recorded against admin (store 0) - emails sent with no store view - are reported
+    and gated instead of being filed under deleted store views.
+- **`--store` takes a store view code as well as an id, and refuses anything else.** It was
+  cast with `(int)`, so `--store=nl` was store 0 - and `template:shadow:clear --store=nl`
+  deleted the admin store's rows and reported success.
+- **`template:diff` compares against the filter's own render, in the store asked for.** The
+  "today" side went through the store's filter, which carries this module's plugin: on a store
+  view in Parser it was this engine, compared with itself, and in Shadow every CLI render was
+  recorded into the live table. And `getProcessedTemplate()` stopped the store emulation
+  before the comparison ran, so `--store=2` compared the CLI's own store.
+- **`diff --format=json` no longer prints an empty line** when an excerpt cut a multibyte
+  character; every console JSON output substitutes invalid UTF-8 and fails loudly otherwise.
+- **`template:check` exits 2 when there was nothing to check**, and the codebase source judges
+  paths below its root, so a checkout under a `tests/` directory is no longer empty.
+- **The report's advice fits the refusal.** A construct the filter reads differently points at
+  `diff`, which shows both readings, not `check`; a CMS block by id says nothing needs
+  changing; and a product, category or address template is no longer sent to
+  `--source=all`, which holds none of them.
 - **Compatible mode answers as a store does when legacy warns.** Every store installs
   Magento's error handler, which turns a PHP warning into an exception, and the Email filter
   renders that as its error message in place of the whole template. The parity corpus was

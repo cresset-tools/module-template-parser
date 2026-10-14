@@ -90,16 +90,22 @@ class ShadowTable
     }
 
     /**
-     * Every store view except admin, keyed by id.
+     * Every store view, keyed by id - and admin (store 0) when asked for.
+     *
+     * Admin for the report, because renders are recorded there: an email sent with no store
+     * view - a payment-failure notice, an admin-triggered send - is store 0. Leaving it out
+     * reported those rows as belonging to deleted store views, and kept them out of the gate.
+     * Not for status, which lists the stages store views can be switched to.
      *
      * @return array<int,array{code:string,name:string,website_id:int}>
      */
-    public function stores(): array
+    public function stores(bool $withAdmin = false): array
     {
         $stores = [];
         foreach ($this->connection->fetchAll(sprintf(
-            'SELECT store_id, code, name, website_id FROM %s WHERE store_id <> 0 ORDER BY website_id, sort_order, store_id',
-            $this->table('store')
+            'SELECT store_id, code, name, website_id FROM %s%s ORDER BY website_id, sort_order, store_id',
+            $this->table('store'),
+            $withAdmin ? '' : ' WHERE store_id <> 0'
         )) as $row) {
             $stores[(int)$row['store_id']] = [
                 'code' => (string)$row['code'],

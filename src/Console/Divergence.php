@@ -38,9 +38,12 @@ class Divergence
         $at = $this->firstDifference() ?? 0;
         $from = max(0, $at - min(20, intdiv($width, 3)));
 
+        // mb_strcut, not substr: a byte cut through a multibyte character left invalid UTF-8,
+        // and json_encode() returned false for the whole report - `diff --format=json`
+        // printed an empty line for a tenth of German divergences and most Russian ones.
         return [
-            $this->legacy === null ? '(did not render)' : substr($this->legacy, $from, $width),
-            $this->candidate === null ? '(did not render)' : substr($this->candidate, $from, $width),
+            $this->legacy === null ? '(did not render)' : mb_strcut($this->legacy, $from, $width, 'UTF-8'),
+            $this->candidate === null ? '(did not render)' : mb_strcut($this->candidate, $from, $width, 'UTF-8'),
         ];
     }
 }

@@ -205,6 +205,8 @@
             <argument name="plainComparator" xsi:type="object">MageOSTemplateParserPlainComparator</argument>
             <!-- Which directive methods a module has actually plugged; see legacyOnlyDirectives(). -->
             <argument name="pluginList" xsi:type="object">Magento\Framework\Interception\PluginListInterface</argument>
+            <!-- What template:diff renders as "today" must be the filter's own; see LegacyOnlyRenders. -->
+            <argument name="legacyOnlyRenders" xsi:type="object">MageOS\TemplateParser\Magento\LegacyOnlyRenders</argument>
         </arguments>
     </type>
 

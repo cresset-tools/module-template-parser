@@ -36,6 +36,9 @@ class StoreEmulator
      */
     private int $depth = 0;
 
+    /** The store the outermost around() emulates, for reestablish(). */
+    private ?int $storeId = null;
+
     public function __construct(private readonly MagentoContext $magento)
     {
     }
@@ -73,16 +76,39 @@ class StoreEmulator
         }
 
         $this->depth = 1;
+        $this->storeId = $storeId;
 
         try {
             return $work();
         } finally {
             $this->depth = 0;
+            $this->storeId = null;
             try {
                 $emulation->stopEnvironmentEmulation();
             } catch (\Throwable) {
                 // nothing useful to do; the process is about to end either way
             }
+        }
+    }
+
+    /**
+     * Starts the current emulation again, after something inside it stopped it.
+     *
+     * AbstractTemplate::getProcessedTemplate() ends with cancelDesignConfig(), which stops
+     * the SHARED Emulation outright - so everything after it ran in the CLI's own store, and
+     * `diff --store=2` compared store 1's translations and theme. A fresh start inside the
+     * same around() is stopped by around() as usual.
+     */
+    public function reestablish(): void
+    {
+        if ($this->depth === 0 || $this->storeId === null) {
+            return;
+        }
+        try {
+            $this->magento->get(\Magento\Store\Model\App\Emulation::class)
+                ?->startEnvironmentEmulation($this->storeId, \Magento\Framework\App\Area::AREA_FRONTEND, true);
+        } catch (\Throwable) {
+            // as in around(): an un-emulatable store should not stop the check
         }
     }
 

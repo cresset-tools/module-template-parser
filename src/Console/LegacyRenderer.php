@@ -53,10 +53,15 @@ class LegacyRenderer
         // there is an exception, which the Email filter catches and renders as its error
         // message in place of the template. Swallowing the warning showed output no store
         // produces, and the diff called the engine wrong for refusing it.
+        // And as the filter's own: the store's filter carries this module's plugin, which on a
+        // store view in Parser would make "today" this engine. See LegacyOnlyRenders.
+        $render = fn (): ?LegacyRender => StoreErrorHandler::run(fn (): ?LegacyRender => $kind === TemplateSubject::KIND_CMS
+            ? $this->renderCms($template)
+            : $this->renderEmail($template, $variables, $storeId, $kind));
+        $legacyOnly = $this->magento->get(\MageOS\TemplateParser\Magento\LegacyOnlyRenders::class);
+
         try {
-            return StoreErrorHandler::run(fn (): ?LegacyRender => $kind === TemplateSubject::KIND_CMS
-                ? $this->renderCms($template)
-                : $this->renderEmail($template, $variables, $storeId, $kind));
+            return $legacyOnly instanceof \MageOS\TemplateParser\Magento\LegacyOnlyRenders ? $legacyOnly->run($render) : $render();
         } catch (\Throwable) {
             return null;
         }
@@ -120,7 +125,7 @@ class LegacyRenderer
         // the package's emulator instead - never directly; see StoreEmulator::$depth.
         return $stores->around(
             $storeId,
-            fn (): LegacyRender => $this->renderEmailIn($model, $template, $variables)
+            fn (): LegacyRender => $this->renderEmailIn($model, $template, $variables, $stores)
         );
     }
 
@@ -129,7 +134,7 @@ class LegacyRenderer
      *
      * @param array<string,mixed> $variables
      */
-    private function renderEmailIn(object $model, string $template, array $variables): LegacyRender
+    private function renderEmailIn(object $model, string $template, array $variables, StoreEmulator $stores): LegacyRender
     {
         // Render once through the model and throw the result away. getProcessedTemplate() is
         // the only public path that configures the filter the way production configures it -
@@ -142,6 +147,8 @@ class LegacyRenderer
             // A template the pipeline as a whole cannot render still has a filter worth
             // comparing, and the filter is what this tool is about.
         }
+        // ...which ended by stopping the emulation this render runs in. Start it again.
+        $stores->reestablish();
 
         $filter = $model->getTemplateFilter();
 

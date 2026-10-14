@@ -12,6 +12,7 @@ use MageOS\TemplateParser\Console\Shadow\ShadowReport;
 use MageOS\TemplateParser\Console\Shadow\ShadowTable;
 use MageOS\TemplateParser\Magento\Config\EngineMode;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -239,7 +240,11 @@ final class ShadowCommandsTest extends TestCase
         return [
             'layout handle' => [$policy('policy refused layout handle "acme_items" (line 1, column 1)'), 'layout handle "acme_items"'],
             'block class' => [$policy('policy refused block class "Acme\\Block" (line 1, column 1)'), 'have a developer allow it in di.xml'],
-            'filter reads it differently' => [$policy('policy refused construct the filter reads differently "for loop" (line 1, column 1)'), 'reads the same either way'],
+            // diff, which shows both readings; check never asks how the filter reads it.
+            'filter reads it differently' => [$policy('policy refused construct the filter reads differently "for loop" (line 1, column 1)'), 'diff --store=1 --source=cms to see both readings'],
+            // Nobody can allow a CMS block by id: the engine has no path to one.
+            'block id' => [$policy('policy refused block id "footer" (line 1, column 1)'), 'nothing needs changing'],
+            'migrated from 0.3.0' => [['error' => 'MageOS\\TemplateParser\\SyntaxError', 'problem' => 'p'], 'cannot render this template as written'],
             'other port refusal' => [$policy('policy refused config path "web/secure" (line 1, column 1)'), 'config path "web/secure"'],
             'legacy cannot render it' => [['error' => \MageOS\TemplateParser\LegacyIncompatibleError::class, 'problem' => 'p'], 'Magento\'s filter cannot'],
             'syntax' => [['error' => \MageOS\TemplateParser\SyntaxError::class, 'problem' => 'p'], 'cannot render this template as written'],
@@ -279,6 +284,103 @@ final class ShadowCommandsTest extends TestCase
         self::assertSame(0, $after->getStatusCode());
         self::assertStringContainsString('No divergences since 2026-09-10 09:00:01 UTC', $after->getDisplay());
         self::assertStringContainsString('DIVERGED cms_block:9', $after->getDisplay(), 'still shown, just not failing');
+    }
+
+    /**
+     * The spellings a CI gate reaches for. PHP reads `-24h` and `-7d` as UTC offsets, with only
+     * a warning, so each landed in the future, every divergence predated it, and the gate
+     * passed for ever.
+     */
+    public function testShorthandSinceCountsBackFromNow(): void
+    {
+        $this->db->insertShadow([
+            'store_id' => 1, 'template' => 'email:12', 'agreed' => 5, 'diverged' => 1,
+            'last_seen' => gmdate('Y-m-d H:i:s'), 'last_divergence_at' => gmdate('Y-m-d H:i:s', time() - 300),
+        ]);
+
+        foreach (['-24h', '-7d', '-30m', '-1w', '-7 days'] as $since) {
+            self::assertSame(1, $this->report(['--since' => $since])->getStatusCode(), $since);
+        }
+    }
+
+    /** "7 days", "tomorrow" and "+1 hour" parse - as times to come. A window there holds nothing. */
+    #[DataProvider('futureSinces')]
+    public function testASinceInTheFutureIsRefused(string $since): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/in the future/');
+
+        $this->report(['--since' => $since]);
+    }
+
+    public static function futureSinces(): array
+    {
+        return ['7 days' => ['7 days'], 'tomorrow' => ['tomorrow'], '+1 hour' => ['+1 hour']];
+    }
+
+    /** No template compared since --since is no evidence, whatever came before: exit 2, not 0. */
+    public function testAWindowWithNoComparisonsInItRecordedNothing(): void
+    {
+        $this->db->insertShadow(['store_id' => 1, 'template' => 'cms_block:7', 'agreed' => 900, 'last_seen' => '2026-09-29 12:00:00']);
+
+        self::assertSame(0, $this->report()->getStatusCode());
+        self::assertSame(ShadowReportCommand::NOTHING_RECORDED, $this->report(['--since' => '2026-10-01'])->getStatusCode());
+    }
+
+    /** Parser records every serve but compares only a sample; serves alone prove nothing. */
+    public function testServesWithoutComparisonsRecordedNothing(): void
+    {
+        $this->db->insertShadow(['store_id' => 1, 'template' => 'cms_block:7', 'served' => 30]);
+
+        self::assertSame(ShadowReportCommand::NOTHING_RECORDED, $this->report()->getStatusCode());
+    }
+
+    /** An email sent with no store view is recorded against admin; it is reported and gated. */
+    public function testAdminRendersAreReportedAndGated(): void
+    {
+        $this->db->insertShadow([
+            'store_id' => 0, 'template' => 'email:payment_failed_template', 'agreed' => 3, 'diverged' => 1,
+            'last_divergence_at' => '2026-09-20 10:00:00',
+        ]);
+
+        $tester = $this->report();
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('Admin', $tester->getDisplay());
+        self::assertStringNotContainsString('deleted store views', $tester->getDisplay());
+    }
+
+    /** A product attribute is in no source check or diff reads; sending the operator to --source=all found nothing. */
+    public function testATemplateNoSourceHoldsIsNotSentToOne(): void
+    {
+        $this->db->insertShadow([
+            'store_id' => 1, 'template' => 'product:12/description', 'agreed' => 3, 'diverged' => 1,
+            'last_divergence_at' => '2026-09-20 10:00:00', 'last_divergence' => ['first_difference_at' => 4],
+        ]);
+
+        $display = $this->report()->getDisplay();
+
+        self::assertStringNotContainsString('--source=all', $display);
+        self::assertStringContainsString('no source diff reads holds product:12/description', preg_replace('/\s+/', ' ', $display));
+    }
+
+    /** `--store=nl` was (int)"nl", store 0 - and clear deleted admin's rows and said so. */
+    public function testAStoreIsNamedByIdOrCode(): void
+    {
+        $this->db
+            ->insertShadow(['store_id' => 0, 'template' => 'email:1', 'agreed' => 1])
+            ->insertShadow(['store_id' => 2, 'template' => 'email:1', 'agreed' => 1]);
+
+        self::assertStringContainsString('Cleared 1 row(s)', $this->clear(['--store' => 'nl'])->getDisplay());
+        self::assertSame([0], array_map(static fn (array $r): int => (int)$r['store_id'], $this->db->fetchAll('SELECT store_id FROM mageos_template_parser_shadow')));
+
+        try {
+            $this->clear(['--store' => 'bogus']);
+            self::fail('an unknown store code was accepted');
+        } catch (\InvalidArgumentException $e) {
+            self::assertStringContainsString('Unknown --store "bogus"', $e->getMessage());
+        }
+        self::assertCount(1, $this->db->fetchAll('SELECT store_id FROM mageos_template_parser_shadow'), 'nothing was deleted');
     }
 
     public function testAnUnreadableSinceIsRefusedBeforeTheQuery(): void

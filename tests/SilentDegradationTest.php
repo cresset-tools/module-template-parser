@@ -312,6 +312,35 @@ final class SilentDegradationTest extends TestCase
         self::assertSame('Ada', $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{var name}}'));
     }
 
+    /**
+     * template:diff renders "today" through the store's filter, which carries this plugin: on
+     * a Parser store view "today" was this engine, compared with itself, and in Shadow every
+     * CLI render went into the live table. Inside LegacyOnlyRenders the plugin stands aside.
+     */
+    #[DataProvider('stages')]
+    public function testARenderMarkedLegacyOnlyIsTheFiltersAndIsNotRecorded(string $stage): void
+    {
+        $records = [];
+        $legacyOnly = new \MageOS\TemplateParser\Magento\LegacyOnlyRenders();
+        $plugin = $this->plugin($records, $stage, $legacyOnly);
+        $subject = new \Magento\Email\Model\Template\Filter();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $legacyOnly->run(static fn () => $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}'));
+
+        self::assertSame('LEGACY', $result);
+        self::assertSame([], $records);
+
+        // The control: outside it, the same render is the plugin's again, and recorded.
+        $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}');
+        self::assertCount(1, $records);
+    }
+
+    public static function stages(): array
+    {
+        return ['shadow' => [EngineMode::SHADOW], 'parser' => [EngineMode::PARSER]];
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private function adapter(HostServices $services): TemplateFilterAdapter
@@ -388,7 +417,7 @@ final class SilentDegradationTest extends TestCase
     }
 
     /** @param list<array{0:?string,1:?array,2:bool,3:bool}> $records outcome, detail, served, fell back */
-    private function plugin(array &$records, string $stage): TemplateFilterPlugin
+    private function plugin(array &$records, string $stage, ?\MageOS\TemplateParser\Magento\LegacyOnlyRenders $legacyOnly = null): TemplateFilterPlugin
     {
         $recorder = new class ($records) extends ShadowRecorder {
             public function __construct(private array &$records) {}
@@ -410,7 +439,8 @@ final class SilentDegradationTest extends TestCase
             new ShadowComparator($this->adapter($this->everyPort())),
             $mode,
             new TemplateIdentity(),
-            $recorder
+            $recorder,
+            legacyOnlyRenders: $legacyOnly
         );
     }
 }

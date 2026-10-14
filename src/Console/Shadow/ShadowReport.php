@@ -28,6 +28,9 @@ final class ShadowReport
 
     private int $orphanedRows = 0;
 
+    /** Whether any row in scope holds a comparison - see isEmpty(). */
+    private bool $compared = false;
+
     /**
      * @param list<array<string,mixed>> $rows from ShadowTable::rows()
      * @param array<int,array{code:string,name:string,website_id:int}> $stores from ShadowTable::stores()
@@ -84,6 +87,10 @@ final class ShadowReport
                 $store['last_divergence_template'] = $template['template'];
             }
             $store['failing'] += $template['failing'] ? 1 : 0;
+            $comparisons = $template['agreed'] + $template['diverged'] + $template['refused'] + $template['crashed'];
+            if ($comparisons > 0 && ($this->since === null || (string)$template['last_seen'] >= $this->since)) {
+                $this->compared = true;
+            }
             $store['rows'][] = $template;
             unset($store);
         }
@@ -97,9 +104,17 @@ final class ShadowReport
         return array_values($this->stores);
     }
 
+    /**
+     * Nothing in scope was compared.
+     *
+     * Comparisons, not rows: a store view in Parser records every render it serves, but only
+     * the sampled share is compared, so rows of serves alone are no evidence - and with
+     * --since, a template last seen before then was not compared in the window at all. Both
+     * read as "clean" while proving nothing; this is the report's exit 2.
+     */
     public function isEmpty(): bool
     {
-        return $this->stores === [];
+        return !$this->compared;
     }
 
     /** Anything diverged or crashed (since `$since`, when given). */

@@ -88,7 +88,7 @@ HELP);
         }
 
         if ($format === 'json') {
-            $output->writeln((string)json_encode([
+            $output->writeln(json_encode([
                 'shadow_table' => $recorded,
                 'websites' => array_map(
                     static fn (int $id, array $website): array => ['website_id' => $id] + $website,
@@ -96,7 +96,7 @@ HELP);
                     array_values($websites)
                 ),
                 'stores' => $rows,
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            ], JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
             return Command::SUCCESS;
         }

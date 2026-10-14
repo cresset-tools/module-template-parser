@@ -49,17 +49,22 @@ class CodebaseEmailTemplates implements TemplateSource
 
             foreach ($iterator as $file) {
                 $path = $file->getPathname();
+                // Judged on the path below the root, not the absolute one: a checkout that
+                // happens to live under a `tests/` directory - a CI workspace - matched the
+                // test-fixture rule for every file, found nothing, and passed.
+                $relative = substr($path, strlen($this->root) + 1);
+                $judged = '/' . $relative;
                 // The convention every module follows: view/<area>/email/<name>.html
-                if (!str_ends_with($path, '.html') || !str_contains($path, '/email/')) {
+                if (!str_ends_with($judged, '.html') || !str_contains($judged, '/email/')) {
                     continue;
                 }
-                if (str_contains($path, '/Test/') || str_contains($path, '/tests/')) {
+                if (str_contains($judged, '/Test/') || str_contains($judged, '/tests/')) {
                     continue;
                 }
 
                 yield new TemplateSubject(
-                    id: 'file:' . substr($path, strlen($this->root) + 1),
-                    label: substr($path, strlen($this->root) + 1),
+                    id: 'file:' . $relative,
+                    label: $relative,
                     origin: 'codebase',
                     content: (string)file_get_contents($path),
                     variables: $this->variables,

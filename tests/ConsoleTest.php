@@ -339,6 +339,26 @@ final class ConsoleTest extends TestCase
      * - the floor `DiffCommand` clamps to - the window ended one byte before the difference
      * and both sides printed identically.
      */
+    /**
+     * A byte cut through a multibyte character is invalid UTF-8, and json_encode() then
+     * returned false for the whole `diff --format=json` report - one empty line, exit 0.
+     */
+    public function testAnExcerptNeverCutsACharacterInHalf(): void
+    {
+        foreach (range(15, 40) as $lead) {
+            $divergence = new \MageOS\TemplateParser\Console\Divergence(
+                new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: ''),
+                legacy: str_repeat('я', $lead) . 'Привет LEFT ' . str_repeat('ж', 40),
+                candidate: str_repeat('я', $lead) . 'Привет RIGHT ' . str_repeat('ж', 40),
+                note: null
+            );
+
+            foreach ($divergence->excerpt() as $side) {
+                self::assertTrue(mb_check_encoding($side, 'UTF-8'), "lead $lead: " . bin2hex($side));
+            }
+        }
+    }
+
     public function testANarrowExcerptStillReachesTheDifference(): void
     {
         $divergence = new \MageOS\TemplateParser\Console\Divergence(
@@ -744,6 +764,36 @@ final class ConsoleTest extends TestCase
             self::assertSame('template:' . $name, $command->getName());
             self::assertNotSame('', $command->getDescription(), $interceptor . ' lost its description');
         }
+    }
+
+    /** A checkout under a `tests/` directory - a CI workspace - had every file judged a test fixture. */
+    public function testTheCodebaseSourceJudgesPathsBelowItsRoot(): void
+    {
+        $root = sys_get_temp_dir() . '/tp-' . bin2hex(random_bytes(4)) . '/tests/shop';
+        mkdir($root . '/app/code/Acme/Mail/view/frontend/email', 0777, true);
+        mkdir($root . '/app/code/Acme/Mail/Test/email', 0777, true);
+        file_put_contents($root . '/app/code/Acme/Mail/view/frontend/email/hello.html', 'Hi');
+        file_put_contents($root . '/app/code/Acme/Mail/Test/email/fixture.html', 'Hi');
+
+        try {
+            $found = array_map(
+                static fn (TemplateSubject $s): string => $s->label,
+                iterator_to_array((new CodebaseEmailTemplates($root))->subjects(), false)
+            );
+        } finally {
+            exec('rm -rf ' . escapeshellarg(dirname($root, 2)));
+        }
+
+        self::assertSame(['app/code/Acme/Mail/view/frontend/email/hello.html'], $found);
+    }
+
+    /** Nothing to check is not a pass: "0 error(s)" from a scan of nothing exited 0. */
+    public function testCheckWithNothingToCheckExitsTwo(): void
+    {
+        $tester = $this->tester('check');
+
+        self::assertSame(2, $tester->execute(['--source' => 'codebase']));
+        self::assertStringContainsString('Nothing to check', $tester->getDisplay());
     }
 
     public function testTheCodebaseSourceIsInertWithoutARoot(): void

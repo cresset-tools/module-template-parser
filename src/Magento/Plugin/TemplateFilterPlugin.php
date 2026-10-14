@@ -5,6 +5,7 @@ namespace MageOS\TemplateParser\Magento\Plugin;
 
 use MageOS\TemplateParser\Magento\Config\EngineMode;
 use MageOS\TemplateParser\Magento\HostOnlyDirectives;
+use MageOS\TemplateParser\Magento\LegacyOnlyRenders;
 use MageOS\TemplateParser\Magento\RenderScope;
 use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
 use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
@@ -101,7 +102,8 @@ class TemplateFilterPlugin
         private readonly ShadowRecorder $recorder,
         private readonly ?RenderScope $scope = null,
         private readonly ?ShadowComparator $plainComparator = null,
-        private readonly ?PluginListInterface $pluginList = null
+        private readonly ?PluginListInterface $pluginList = null,
+        private readonly ?LegacyOnlyRenders $legacyOnlyRenders = null
     ) {
         $this->state = new \WeakMap();
         $this->legacyRunning = new \WeakMap();
@@ -184,7 +186,8 @@ class TemplateFilterPlugin
         }
 
         // Part of a render legacy is already running on this instance - see $legacyRunning.
-        if (($this->legacyRunning[$subject] ?? 0) > 0) {
+        // Or one the caller needs to be legacy's own - see LegacyOnlyRenders.
+        if (($this->legacyRunning[$subject] ?? 0) > 0 || $this->legacyOnlyRenders?->active()) {
             return $proceed($value);
         }
 

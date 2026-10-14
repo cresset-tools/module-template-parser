@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MageOS\TemplateParser\Console\Command;
 
+use MageOS\TemplateParser\Console\StoreOption;
 use MageOS\TemplateParser\Console\Auditor;
 use MageOS\TemplateParser\Console\Divergence;
 use MageOS\TemplateParser\Console\EngineFactory;
@@ -29,7 +30,7 @@ class DiffCommand extends Command
         $this->addPostureOption()
             ->addLayoutOption()
             ->addSourceOptions()
-            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store view id: what switching this store view to Parser would change')
+            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store view, by id or code: what switching this store view to Parser would change')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'text or json', 'text')
             ->addOption('show', null, InputOption::VALUE_REQUIRED, 'Excerpt width around the first difference', '60')
             ->addOption('fail-on-divergence', null, InputOption::VALUE_NONE, 'Exit non-zero if anything differs')
@@ -68,7 +69,7 @@ HELP);
         }
 
         $mode = $this->posture($input, $output);
-        $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
+        $storeId = StoreOption::resolve($input->getOption('store'), StoreOption::codes((new StoreEmulator($magento))->stores()));
         $width = max(20, (int)$input->getOption('show'));
 
         $auditor = new Auditor(
@@ -146,9 +147,9 @@ HELP);
             ];
         }
 
-        $output->writeln((string)json_encode(
+        $output->writeln(json_encode(
             ['examined' => $examined, 'divergent' => count($rows), 'divergences' => $rows],
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+            JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
         ));
 
         return $failOnDivergence && $rows !== [] ? Command::FAILURE : Command::SUCCESS;

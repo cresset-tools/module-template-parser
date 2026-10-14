@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MageOS\TemplateParser\Console\Command;
 
+use MageOS\TemplateParser\Console\StoreOption;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,7 +18,7 @@ class ShadowClearCommand extends Command
 
     protected function configure(): void
     {
-        $this->addOption('store', null, InputOption::VALUE_REQUIRED, 'Only this store view id')
+        $this->addOption('store', null, InputOption::VALUE_REQUIRED, 'Only this store view, by id or code')
             ->addOption('template', null, InputOption::VALUE_REQUIRED, 'Only this template, e.g. cms_block:7; * matches anything')
             ->addOption('all', null, InputOption::VALUE_NONE, 'Everything, for every store view')
             ->setHelp(<<<'HELP'
@@ -38,18 +39,19 @@ HELP);
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
+        $store = $input->getOption('store');
+        $store = $store === null || $store === '' ? null : (string)$store;
         $template = $input->getOption('template') !== null && $input->getOption('template') !== ''
             ? (string)$input->getOption('template')
             : null;
         $all = (bool)$input->getOption('all');
 
-        if ($storeId === null && $template === null && !$all) {
+        if ($store === null && $template === null && !$all) {
             $output->writeln('<error>Say what to clear: --store, --template, or --all for everything.</error>');
 
             return Command::INVALID;
         }
-        if ($all && ($storeId !== null || $template !== null)) {
+        if ($all && ($store !== null || $template !== null)) {
             $output->writeln('<error>--all clears everything; leave it out to clear a selection.</error>');
 
             return Command::INVALID;
@@ -60,6 +62,8 @@ HELP);
             return Command::FAILURE;
         }
 
+        // A code is looked up rather than cast: (int)"nl" is 0, and that cleared admin's rows.
+        $storeId = StoreOption::resolve($store, StoreOption::codes($table->stores(withAdmin: true)));
         $removed = $table->clear($storeId, $template);
         $output->writeln(sprintf('Cleared %d row(s).', $removed));
 

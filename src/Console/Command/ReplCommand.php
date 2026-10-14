@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MageOS\TemplateParser\Console\Command;
 
+use MageOS\TemplateParser\Console\StoreOption;
 use MageOS\TemplateParser\Console\EngineFactory;
 use MageOS\TemplateParser\Console\MagentoContext;
 use MageOS\TemplateParser\Console\Mode;
@@ -25,7 +26,7 @@ class ReplCommand extends Command
     protected function configure(): void
     {
         $this->addPostureOption()
-            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store id to render in')
+            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store view to render in, by id or code')
             ->addOption('var', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Preset a variable, name=value');
     }
 
@@ -33,7 +34,7 @@ class ReplCommand extends Command
     {
         $magento = $this->magento();
         $mode = $this->posture($input, $output);
-        $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
+        $storeId = StoreOption::resolve($input->getOption('store'), StoreOption::codes((new StoreEmulator($magento))->stores()));
         $variables = $this->parseVariables((array)$input->getOption('var'));
 
         $factory = new EngineFactory($magento);
@@ -256,7 +257,12 @@ TYPES);
                 return true;
 
             case ':store':
-                $storeId = $argument === null || trim($argument) === '' ? null : (int)$argument;
+                try {
+                    $storeId = StoreOption::resolve($argument, StoreOption::codes((new StoreEmulator($magento))->stores()));
+                } catch (\InvalidArgumentException $e) {
+                    $output->writeln('  <error>' . $e->getMessage() . '</error>');
+                    return true;
+                }
                 $output->writeln('  store ' . ($storeId ?? 'none'));
                 return true;
 
