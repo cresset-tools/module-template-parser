@@ -27,8 +27,9 @@ require __DIR__ . '/fixtures/legacy/ObjectFixtures.php';
 
 spl_autoload_register(static function (string $class): void {
     foreach ([
-        'MageOS\\TemplateParser\\Test\\' => __DIR__ . '/',
-        'MageOS\\TemplateParser\\'       => __DIR__ . '/../src/',
+        'MageOS\\TemplateParser\\Test\\'  => __DIR__ . '/',
+        'MageOS\\TemplateParser\\Setup\\' => __DIR__ . '/../Setup/',
+        'MageOS\\TemplateParser\\'        => __DIR__ . '/../src/',
     ] as $prefix => $dir) {
         if (str_starts_with($class, $prefix)) {
             $file = $dir . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';

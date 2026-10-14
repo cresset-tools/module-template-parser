@@ -89,6 +89,9 @@ it. Parser mode runs the compatible posture, which is why that is the CLI's defa
 
 The package is a `magento2-module` with `registration.php` and `etc/`, so
 `bin/magento setup:upgrade` after the `composer require` above adds it to `app/etc/config.php`.
+It runs on Magento Open Source 2.4.x and on Mage-OS; where the host has Mage-OS's
+`BlockDirectivePolicy`, `{{block}}` uses it. A store on the old `cresset/module-template-parser`
+package follows the [upgrade steps in the changelog](CHANGELOG.md) - the two packages conflict.
 **Installing it changes no rendering behaviour.** The module wires its plugin on install, and
 the plugin does nothing until a store view is told to.
 

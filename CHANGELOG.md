@@ -12,7 +12,7 @@ Entries say what changed and why it mattered. A line that only names a file has 
 ## [Unreleased]
 
 The move to [Mage-OS Lab](https://github.com/mage-os-lab/module-template-parser), under the
-lab's naming. Nothing about rendering, the configuration or the commands changes.
+lab's naming, and the fixes from a whole-project review before the donation.
 
 ### Changed
 
@@ -30,12 +30,38 @@ lab's naming. Nothing about rendering, the configuration or the commands changes
   that referenced the engine's classes directly - a custom port, a `di.xml` argument - needs
   the new namespace, and a project `di.xml` that named one of this module's plugins
   (`cresset_template_parser*`) should use `mageos_template_parser*`.
-- **Shadow's history carries over.** A schema patch copies every row of
+- **Shadow's history carries over.** A schema patch moves every row of
   `cresset_template_shadow` into the new table and drops the old one, so "clean since" and the
-  renders since the last divergence survive the upgrade. A data patch could not do it: data
-  patches run in a transaction, where Magento refuses the `DROP TABLE`. Magento's
-  `migrateDataFromAnotherTable` could not either: it fails a fresh install, which has no old
-  table.
+  renders since the last divergence survive the upgrade. A row the store recorded under the new
+  name before the patch ran - `setup:upgrade` creates the table and enables the module first,
+  and cron does not wait - is merged with the old one rather than replacing it: counters add
+  up, the earliest first comparison and the latest divergence stand. Refusals and crashes
+  recorded under `Cresset\TemplateParser\...` class names are renamed, so the report's advice
+  still recognises them. A data patch could not do it: data patches run in a transaction,
+  where Magento refuses the `DROP TABLE`. Magento's `migrateDataFromAnotherTable` could not
+  either: it fails a fresh install, which has no old table.
+- **`composer.json` conflicts with `cresset/module-template-parser`**, so the two cannot be
+  installed side by side - two plugins on every filter, and the old module recreating the
+  table the patch drops. The unused `symfony/string` requirement is gone.
+
+### Fixed
+
+- **The module no longer breaks every render on Magento Open Source 2.4.x and Mage-OS 3.4.0
+  and earlier.** `LayoutBlockRenderer`'s constructor was typed against
+  `Magento\Email\Model\Template\Filter\BlockDirectivePolicy`, which only Mage-OS trees
+  hardened since 2026-09-08 have. Magento's DI reflects constructor types before it builds
+  anything, so on every other host the plugin on every template filter could not be built -
+  every CMS page, email and address format failed, Legacy mode included, and
+  `setup:di:compile` failed in production mode. The policy is now reached through the
+  module's own `BlockClassPolicy` port, which looks it up by name and restricts nothing
+  where the host has none. A project `di.xml` that set the `blockDirectivePolicy` argument
+  should drop it.
+- **Shadow and Parser work on a store without compiled DI.** In developer mode, or default
+  mode without `setup:di:compile`, Magento's generated Interceptors redeclare every public
+  method, and the plugin read each redeclared `*Directive()` as one a module had plugged. Every
+  render with a directive in it was declined: Shadow recorded refusals, which count as clean,
+  so `template:shadow:report` said "No divergences" over zero comparisons. The plugin now asks
+  the plugin list whether a directive method really has a plugin.
 
 ### Upgrading from cresset/module-template-parser 0.3.0
 
@@ -44,7 +70,11 @@ On a store that runs the old module, in this order:
 1. `bin/magento module:disable Cresset_TemplateParser`, while the old code is still
    installed. It clears the generated classes and the cache, which still name the old
    classes; without this, step 3 cannot boot (`Class "Cresset\TemplateParser\..." not found`).
+   Do not run `setup:upgrade` between this step and the next: with the old module disabled
+   but installed, the declarative schema drops `cresset_template_shadow` before anything can
+   move its rows.
 2. `composer remove cresset/module-template-parser && composer require mage-os/module-template-parser`
+   - both, in one go. The packages conflict, so `composer require` alone refuses.
 3. `bin/magento setup:upgrade` - enables `MageOS_TemplateParser`, drops the stale entry from
    `app/etc/config.php`, creates the new table and moves the rows across.
 4. In production mode, `setup:di:compile` and the static content deploy, as after any module

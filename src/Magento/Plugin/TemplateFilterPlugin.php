@@ -10,6 +10,7 @@ use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
 use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
 use MageOS\TemplateParser\Magento\ShadowComparator;
 use Magento\Framework\Filter\Template as LegacyTemplate;
+use Magento\Framework\Interception\PluginListInterface;
 
 /**
  * The integration point.
@@ -98,7 +99,8 @@ class TemplateFilterPlugin
         private readonly TemplateIdentity $identity,
         private readonly ShadowRecorder $recorder,
         private readonly ?RenderScope $scope = null,
-        private readonly ?ShadowComparator $plainComparator = null
+        private readonly ?ShadowComparator $plainComparator = null,
+        private readonly ?PluginListInterface $pluginList = null
     ) {
         $this->state = new \WeakMap();
         $this->legacyRunning = new \WeakMap();
@@ -423,7 +425,7 @@ class TemplateFilterPlugin
      */
     private function unmodelledDirective(LegacyTemplate $subject, string $value): ?ShadowOutcome
     {
-        $names = $this->legacyOnly[$subject::class] ??= self::legacyOnlyDirectives($subject);
+        $names = $this->legacyOnly[$subject::class] ??= $this->legacyOnlyDirectives($subject);
         if ($names === [] || !preg_match('/\{\{(' . implode('|', $names) . ')(?![a-z])/i', $value, $m)) {
             return null;
         }
@@ -435,16 +437,39 @@ class TemplateFilterPlugin
         )]);
     }
 
-    /** @return list<string> */
-    private static function legacyOnlyDirectives(LegacyTemplate $subject): array
+    /**
+     * A directive method declared outside Magento is a module's own; one a generated
+     * Interceptor declares is plugged - but only if a plugin is actually configured on it.
+     *
+     * The two Interceptor generators differ. `setup:di:compile` redeclares only the methods
+     * that have plugins; the on-demand generator - developer mode, or default mode without a
+     * compile - redeclares EVERY public method. Reading the declaration alone classed all
+     * sixteen stock directives as legacy-only on such a store, so every render with a
+     * directive in it was declined: Shadow recorded refusals, which count as clean, and the
+     * report said "No divergences" over zero comparisons.
+     *
+     * @return list<string>
+     */
+    private function legacyOnlyDirectives(LegacyTemplate $subject): array
     {
         $names = [];
+        $original = self::originalClass($subject::class);
         foreach ((new \ReflectionClass($subject))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
             if ($method->isStatic() || !preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m)) {
                 continue;
             }
             $declaring = $method->getDeclaringClass()->getName();
-            if (str_ends_with($declaring, '\\Interceptor') || !str_starts_with($declaring, 'Magento\\')) {
+            if (str_ends_with($declaring, '\\Interceptor')) {
+                if ($this->isPlugged($subject, $original, $method->getName())) {
+                    $names[] = strtolower($m[1]);
+                    continue;
+                }
+                if (!method_exists($original, $method->getName())) {
+                    continue;
+                }
+                $declaring = (new \ReflectionMethod($original, $method->getName()))->getDeclaringClass()->getName();
+            }
+            if (!str_starts_with($declaring, 'Magento\\')) {
                 $names[] = strtolower($m[1]);
             }
         }
@@ -463,6 +488,35 @@ class TemplateFilterPlugin
         }
 
         return array_values(array_unique($names));
+    }
+
+    /**
+     * Whether a plugin is configured on this method of a generated Interceptor.
+     *
+     * Asked of the plugin list the Interceptor itself dispatches through - its private
+     * `pluginList` and `subjectType`, which `___init()` sets - and failing that of the one
+     * injected here. With neither, an Interceptor-declared method is taken as plugged, which is
+     * what the compiled generator's output means.
+     */
+    private function isPlugged(LegacyTemplate $subject, string $original, string $method): bool
+    {
+        [$list, $type] = (function (): array {
+            return [
+                property_exists($this, 'pluginList') ? $this->pluginList : null,
+                property_exists($this, 'subjectType') ? $this->subjectType : null,
+            ];
+        })->call($subject);
+
+        $list = $list instanceof PluginListInterface ? $list : $this->pluginList;
+        if ($list === null) {
+            return true;
+        }
+
+        try {
+            return $list->getNext(is_string($type) && $type !== '' ? $type : $original, $method) !== null;
+        } catch (\Throwable) {
+            return true;
+        }
     }
 
     /** The class a generated Interceptor stands in for, for a message a person reads. */

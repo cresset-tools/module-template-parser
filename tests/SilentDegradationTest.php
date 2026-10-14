@@ -246,6 +246,66 @@ final class SilentDegradationTest extends TestCase
         self::assertSame([true, true], [$records[0][2], $records[1][2]], 'declined a render it can serve');
     }
 
+    /**
+     * Developer mode, or default mode without setup:di:compile: the generated Interceptor
+     * redeclares every public method, so the declaration says nothing about plugins. Classing
+     * them all as plugged declined every render with a directive in it - Shadow recorded
+     * refusals, which count as clean, and the report said "No divergences" over nothing.
+     */
+    public function testAnOnDemandInterceptorWithNothingPluggedIsServedInParser(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $records = [];
+        $plugin = $this->plugin($records, EngineMode::PARSER);
+        $subject = new \Magento\Email\Model\Template\Filter\Interceptor();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}{{if name}}!{{/if}}');
+
+        self::assertSame('Dear Ada!', $result);
+        self::assertSame([null, true, false], [$records[0][0], $records[0][2], $records[0][3]]);
+    }
+
+    public function testAnOnDemandInterceptorWithNothingPluggedIsComparedInShadow(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $records = [];
+        $plugin = $this->plugin($records, EngineMode::SHADOW);
+        $subject = new \Magento\Email\Model\Template\Filter\Interceptor();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $plugin->aroundFilter($subject, static fn () => 'Dear Ada', 'Dear {{var name}}');
+
+        self::assertSame(ShadowOutcome::AGREE, $records[0][0]);
+    }
+
+    /** The same shape, with a plugin really configured on one directive: that one is the filter's. */
+    public function testAnOnDemandInterceptorDeclinesOnlyThePluggedDirective(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $records = [];
+        $plugin = $this->plugin($records, EngineMode::PARSER);
+        $subject = new \Magento\Email\Model\Template\Filter\Interceptor(['cssDirective']);
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        self::assertSame('LEGACY', $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{css file="a.css"}}'));
+        self::assertStringContainsString('directive "css"', $records[0][1]['problem']);
+        self::assertSame('Ada', $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{var name}}'));
+    }
+
+    /** Over a module's subclass, its own directive is still its own however the Interceptor was made. */
+    public function testAnOnDemandInterceptorKeepsAModulesOwnDirective(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $records = [];
+        $plugin = $this->plugin($records, EngineMode::PARSER);
+        $subject = new \Acme\Promo\Filter\Interceptor();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        self::assertSame('LEGACY', $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Use {{coupon}}'));
+        self::assertSame('Ada', $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{var name}}'));
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private function adapter(HostServices $services): TemplateFilterAdapter

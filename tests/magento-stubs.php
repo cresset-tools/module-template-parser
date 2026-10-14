@@ -341,6 +341,14 @@ namespace Magento\Framework\App {
         }
     }
 }
+namespace Magento\Framework\Interception {
+    if (!interface_exists(PluginListInterface::class)) {
+        interface PluginListInterface {
+            public function getPlugin($type, $code);
+            public function getNext($type, $method, $code = '__self');
+        }
+    }
+}
 namespace Magento\Framework {
     if (!interface_exists(ObjectManagerInterface::class)) {
         interface ObjectManagerInterface {

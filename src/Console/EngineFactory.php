@@ -9,6 +9,7 @@ use MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer;
 use MageOS\TemplateParser\Magento\AssetStylesheetLoader;
 use MageOS\TemplateParser\Magento\TemplateModelUrlBuilder;
 use MageOS\TemplateParser\Magento\ConfigTemplateLoader;
+use MageOS\TemplateParser\Magento\HostBlockClassPolicy;
 use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
 use MageOS\TemplateParser\Magento\PhraseTranslator;
 use MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer;
@@ -72,11 +73,11 @@ class EngineFactory
                     ? new LayoutBlockRenderer(
                         $layout,
                         $config,
-                        // Mage-OS's deny list for exactly this directive. Null on a tree that
-                        // predates it, which is the behaviour that tree has anyway.
-                        blockDirectivePolicy: $m->get(
-                            \Magento\Email\Model\Template\Filter\BlockDirectivePolicy::class
-                        ),
+                        // Mage-OS's deny list for exactly this directive, where the tree has
+                        // one; a tree that predates it restricts nothing, as its filter does.
+                        blockClassPolicy: ($om = $m->get(\Magento\Framework\ObjectManagerInterface::class))
+                            ? new HostBlockClassPolicy($om)
+                            : null,
                     )
                     : null),
             translator: $this->build(static fn (MagentoContext $m): ?object => new PhraseTranslator()),

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace MageOS\TemplateParser\Magento;
 
-use Magento\Email\Model\Template\Filter\BlockDirectivePolicy;
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\LayoutInterface;
@@ -24,10 +23,10 @@ use MageOS\TemplateParser\Port\RefusedByPort;
  * MORE permissive than the thing it replaces - the wrong way round for a package whose
  * argument is safety:
  *
- * 3. `Filter\BlockDirectivePolicy`, the deny list Mage-OS added for exactly this directive.
- *    It denies `\Block\Adminhtml\`, `\Block\Backend\` and friends - 919 of the 1480 block
- *    classes in a stock store. Resolved from the object manager rather than reimplemented, so
- *    a store that tightens its di.xml tightens this too.
+ * 3. `Filter\BlockDirectivePolicy`, the deny list Mage-OS added for exactly this directive,
+ *    through BlockClassPolicy. It denies `\Block\Adminhtml\`, `\Block\Backend\` and friends
+ *    - 919 of the 1480 block classes in a stock store. Resolved from the object manager rather
+ *    than reimplemented, so a store that tightens its di.xml tightens this too.
  * 4. The SAME check again on `get_class($block)`. A class name is a spelling; DI resolves
  *    preferences and virtual types, so the thing built can be a class the written name is not.
  * 5. `area` may only be `frontend`. Forwarding it made Magento resolve the block's template
@@ -50,18 +49,16 @@ class LayoutBlockRenderer implements BlockRenderer
     /**
      * @param string[] $allowedOutputMethods
      * @param ?string[] $allowedClasses
-     * @param ?BlockDirectivePolicy $blockDirectivePolicy Mage-OS's deny list for this
-     *        directive. Typed concretely because a compiled DI factory decides how to resolve
-     *        an argument from its declared type and hands an `object` one the raw descriptor
-     *        array; nullable so a tree predating the policy can pass null, which is the
-     *        behaviour such a tree has anyway.
+     * @param ?BlockClassPolicy $blockClassPolicy the store's deny list for this directive.
+     *        Never the host's BlockDirectivePolicy itself: DI reflects constructor types, and
+     *        that class is missing from Magento Open Source and older Mage-OS.
      */
     public function __construct(
         private readonly LayoutInterface $layout,
         private readonly ConfigInterface $objectManagerConfig,
         private readonly array $allowedOutputMethods = self::DEFAULT_OUTPUT_METHODS,
         private readonly ?array $allowedClasses = null,
-        private readonly ?BlockDirectivePolicy $blockDirectivePolicy = null
+        private readonly ?BlockClassPolicy $blockClassPolicy = null
     ) {
     }
 
@@ -136,21 +133,17 @@ class LayoutBlockRenderer implements BlockRenderer
     }
 
     /**
-     * Whether the store's own policy refuses this class.
-     *
-     * Deliberately not a reimplementation of the patterns: a store that adds a rule to its
-     * di.xml gets it here for free, and a store whose Magento predates the policy gets the
-     * behaviour it has today. Any failure is treated as a refusal - a policy that cannot
-     * answer is not a licence to instantiate.
+     * Whether the store's own policy refuses this class. Any failure is treated as a refusal -
+     * a policy that cannot answer is not a licence to instantiate.
      */
     private function isRestricted(string $class): bool
     {
-        if ($this->blockDirectivePolicy === null) {
+        if ($this->blockClassPolicy === null) {
             return false;
         }
 
         try {
-            return (bool)$this->blockDirectivePolicy->isRestricted($class);
+            return $this->blockClassPolicy->isRestricted($class);
         } catch (\Throwable) {
             return true;
         }

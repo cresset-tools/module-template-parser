@@ -21,6 +21,9 @@
     <preference for="MageOS\TemplateParser\Magento\TemplateFilterInterface"
                 type="MageOS\TemplateParser\Magento\TemplateFilterAdapter"/>
 
+    <preference for="MageOS\TemplateParser\Magento\BlockClassPolicy"
+                type="MageOS\TemplateParser\Magento\HostBlockClassPolicy"/>
+
     <!--
         On the framework base class, which every template filter extends - a plugin on a class
         applies to its subclasses. That covers the Email filter and the CMS, Widget and
@@ -176,6 +179,8 @@
         <arguments>
             <argument name="scope" xsi:type="object">MageOS\TemplateParser\Magento\RenderScope</argument>
             <argument name="plainComparator" xsi:type="object">MageOSTemplateParserPlainComparator</argument>
+            <!-- Which directive methods a module has actually plugged; see legacyOnlyDirectives(). -->
+            <argument name="pluginList" xsi:type="object">Magento\Framework\Interception\PluginListInterface</argument>
         </arguments>
     </type>
 
@@ -237,11 +242,10 @@
             </argument>
             <!--
                 The store's own deny list for this directive, reused rather than reimplemented:
-                a rule added to Magento_Email's di.xml applies here too. The constructor takes
-                it loosely typed so a tree without the class still loads; this argument is what
-                supplies it where it exists. Remove this line on such a tree.
+                a rule added to Magento_Email's di.xml applies here too. HostBlockClassPolicy
+                looks BlockDirectivePolicy up by name, so a tree without it still loads.
             -->
-            <argument name="blockDirectivePolicy" xsi:type="object">Magento\Email\Model\Template\Filter\BlockDirectivePolicy</argument>
+            <argument name="blockClassPolicy" xsi:type="object">MageOS\TemplateParser\Magento\BlockClassPolicy</argument>
         </arguments>
     </type>
 

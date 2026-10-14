@@ -681,7 +681,7 @@ final class MagentoGuardTest extends TestCase
         });
 
         $built = [];
-        $policy = new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$class]);
+        $policy = HostBlockClassPolicyTest::around(new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$class]));
         $renderer = new LayoutBlockRenderer($this->layout($built), $this->omConfig(), ['toHtml'], null, $policy);
 
         self::assertSame('', $renderer->render($class, [], 'toHtml'));
@@ -721,7 +721,7 @@ final class MagentoGuardTest extends TestCase
                 return $this->block;      // a preference resolving somewhere else entirely
             }
         };
-        $policy = new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$denied::class]);
+        $policy = HostBlockClassPolicyTest::around(new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$denied::class]));
         $renderer = new LayoutBlockRenderer($layout, $this->omConfig(), ['toHtml'], null, $policy);
 
         self::assertSame('', $renderer->render(\Magento\Framework\View\Element\BlockInterface::class, [], 'toHtml'));
