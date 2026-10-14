@@ -104,6 +104,16 @@ lab's naming, and the fixes from a whole-project review before the donation.
   strict or lenient mode should put the values in the data bag or the variables. Compatible
   mode also reads `getData()` without asking `hasData()` first, as the filter does, so a value
   a model computes in an overridden `getData()` renders.
+- **`--mode` and the REPL's `:mode` are gone**, as 0.3.0 announced; use `--posture` and
+  `:posture`.
+- **The `bin/magento` command items in `di.xml` are named `mageos_template_parser_*`**
+  throughout; four of the six had lost the `_parser`. A project `di.xml` that removed or
+  replaced one by name should use the new name.
+- **`entity_id` in the Shadow table is a `bigint`.** Every upsert reserves an id whether or not
+  it inserts a row, so a busy Parser store used up an `int`'s ids long before it had that many
+  rows - after which MySQL updates the wrong template's row and MariaDB rejects every write.
+- **A Shadow table that cannot be written is warned about once per PHP process**, not once per
+  request, which with a DI-shared recorder was once per page view.
 - **The rollout gate (`template:shadow:report`) no longer passes on no evidence.**
   - `--since=-24h`, `-7d`, `-30m` and `-1w` count back from now; PHP read them as UTC
     offsets, landing hours in the future, so every divergence predated them and the gate

@@ -20,7 +20,12 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
     <table name="mageos_template_parser_shadow" resource="default" engine="innodb"
            comment="Template engine Shadow comparisons and Parser renders, per store view and template">
-        <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true"
+        <!--
+            bigint: every ON DUPLICATE KEY upsert reserves an id, written or not, so a busy store
+            consumed an int's 4.29e9 ids long before it had that many rows - after which MySQL
+            updates the wrong template's row and MariaDB rejects every write.
+        -->
+        <column xsi:type="bigint" name="entity_id" unsigned="true" nullable="false" identity="true"
                 comment="Entity ID"/>
         <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" default="0"
                 comment="Store view the render was for"/>

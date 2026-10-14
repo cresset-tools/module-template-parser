@@ -188,7 +188,7 @@ class ReplCommand extends Command
 
             case ':help':
                 $output->writeln(<<<'HELP'
-  <comment>:posture</comment> strict|lenient|compatible switch engine posture (:mode too)
+  <comment>:posture</comment> strict|lenient|compatible switch engine posture
   <comment>:set</comment> name=value                   set a variable (see :types)
   <comment>:unset</comment> name                       remove one
   <comment>:vars</comment>                             list variables in scope
@@ -220,12 +220,8 @@ TYPES);
                 return true;
 
             case ':posture':
-            case ':mode':
                 try {
-                    // :mode is the 0.2 spelling, and 0.2 read "legacy" as compatible.
-                    $mode = $name === ':mode' && strtolower(trim((string)$argument)) === 'legacy'
-                        ? Mode::Compatible
-                        : Mode::parse((string)$argument);
+                    $mode = Mode::parse((string)$argument);
                     $output->writeln('  ' . $mode->describe());
                 } catch (\InvalidArgumentException $e) {
                     $output->writeln('<error>' . $e->getMessage() . '</error>');

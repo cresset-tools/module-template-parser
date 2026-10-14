@@ -319,12 +319,12 @@
     <type name="Magento\Framework\Console\CommandListInterface">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="mageos_template_check" xsi:type="object">MageOS\TemplateParser\Console\Magento\CheckCommand</item>
-                <item name="mageos_template_diff" xsi:type="object">MageOS\TemplateParser\Console\Magento\DiffCommand</item>
-                <item name="mageos_template_repl" xsi:type="object">MageOS\TemplateParser\Console\Magento\ReplCommand</item>
+                <item name="mageos_template_parser_check" xsi:type="object">MageOS\TemplateParser\Console\Magento\CheckCommand</item>
+                <item name="mageos_template_parser_diff" xsi:type="object">MageOS\TemplateParser\Console\Magento\DiffCommand</item>
+                <item name="mageos_template_parser_repl" xsi:type="object">MageOS\TemplateParser\Console\Magento\ReplCommand</item>
                 <item name="mageos_template_parser_shadow_report" xsi:type="object">MageOS\TemplateParser\Console\Magento\ShadowReportCommand</item>
                 <item name="mageos_template_parser_shadow_clear" xsi:type="object">MageOS\TemplateParser\Console\Magento\ShadowClearCommand</item>
-                <item name="mageos_template_status" xsi:type="object">MageOS\TemplateParser\Console\Magento\StatusCommand</item>
+                <item name="mageos_template_parser_status" xsi:type="object">MageOS\TemplateParser\Console\Magento\StatusCommand</item>
             </argument>
         </arguments>
     </type>

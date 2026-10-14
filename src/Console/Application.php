@@ -23,7 +23,7 @@ use Symfony\Component\Console\Command\Command;
  */
 class Application extends ConsoleApplication
 {
-    public const VERSION = '0.3.0';
+    public const VERSION = '0.4.0';
 
     public static function create(): self
     {

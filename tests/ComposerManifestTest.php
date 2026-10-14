@@ -54,4 +54,21 @@ final class ComposerManifestTest extends TestCase
             self::assertStringContainsString("'$prefix'", $bootstrap, "$prefix is autoloaded by composer but not by tests/bootstrap.php");
         }
     }
+
+    /**
+     * `template-parser --version` is a hand-kept constant, and it still said 0.3.0 after the
+     * rename. Released, it is the newest heading; with changes unreleased, it is ahead of it.
+     */
+    public function testTheCliVersionFollowsTheChangelog(): void
+    {
+        $changelog = (string)file_get_contents(dirname(__DIR__) . '/CHANGELOG.md');
+        preg_match('/^## \[(\d+\.\d+\.\d+)\]/m', $changelog, $released);
+        $version = \MageOS\TemplateParser\Console\Application::VERSION;
+
+        if (str_contains($changelog, '## [Unreleased]')) {
+            self::assertTrue(version_compare($version, $released[1], '>'), "$version is not ahead of the released {$released[1]}");
+        } else {
+            self::assertSame($released[1], $version);
+        }
+    }
 }

@@ -496,46 +496,12 @@ final class ConsoleTest extends TestCase
         self::assertNotEmpty($report['findings']);
     }
 
-    /** --mode still works for a release, says it is going, and keeps stdout clean for JSON. */
-    public function testModeIsADeprecatedSpellingOfPosture(): void
+    /** --mode, the 0.2 spelling, was kept for one release with a warning, and is gone. */
+    public function testTheRemovedModeOptionIsRefused(): void
     {
-        $tester = $this->tester('check');
-        $file = $this->writeTemplate('Hi {{var custmer}}');
+        $this->expectException(\Symfony\Component\Console\Exception\InvalidOptionException::class);
 
-        $exit = $tester->execute(
-            ['path' => $file, '--mode' => 'strict', '--fail-on' => 'warning', '--format' => 'json'],
-            ['capture_stderr_separately' => true]
-        );
-
-        self::assertSame(1, $exit, 'strict reports the unknown variable, so --mode was honoured');
-        self::assertStringContainsString('--mode is deprecated; use --posture', $tester->getErrorOutput());
-        json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
-    }
-
-    /** 0.2 accepted --mode=legacy; the deprecated option keeps doing so while it lasts. */
-    public function testTheDeprecatedModeStillReadsLegacyAsCompatible(): void
-    {
-        $tester = $this->tester('check');
-        $file = $this->writeTemplate('Hi {{var custmer}}');
-
-        $exit = $tester->execute(
-            ['path' => $file, '--mode' => 'legacy', '--fail-on' => 'error', '--format' => 'json'],
-            ['capture_stderr_separately' => true]
-        );
-
-        self::assertSame(0, $exit, 'compatible renders an unknown variable empty, as the filter does');
-        self::assertStringContainsString('--mode is deprecated', $tester->getErrorOutput());
-    }
-
-    public function testPostureAndModeThatDisagreeAreRefused(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/disagree; pass only --posture/');
-
-        $this->tester('check')->execute(
-            ['path' => $this->writeTemplate('x'), '--posture' => 'strict', '--mode' => 'compatible'],
-            ['capture_stderr_separately' => true]
-        );
+        $this->tester('check')->execute(['path' => $this->writeTemplate('x'), '--mode' => 'strict']);
     }
 
     /** Parser mode runs the compatible posture, so that is what an unqualified run measures. */
@@ -593,7 +559,7 @@ final class ConsoleTest extends TestCase
 
     public function testReplSwitchesModeAndReportsErrors(): void
     {
-        $display = $this->repl([':mode strict', ':set customer_name=Ada', '{{var custmer_name}}']);
+        $display = $this->repl([':posture strict', ':set customer_name=Ada', '{{var custmer_name}}']);
 
         self::assertStringContainsString('Unknown variable', $display);
         // The engine's did-you-mean only fires when there is something to suggest, which is

@@ -37,8 +37,10 @@ use Psr\Log\LoggerInterface;
  * cron run or queue consumer that lives for hours reports as it goes and holds a bounded
  * buffer.
  *
- * Recording must never cost a render. Every failure is caught; the first is logged as a
- * warning and the rest are not, so a missing table does not write a line per page view. A
+ * Recording must never cost a render. Every failure is caught; the first in each PHP process
+ * is logged as a warning and the rest are not, so a missing table does not write a line per
+ * page view. Per process rather than per instance: a DI-shared instance lives for one request,
+ * so "once" per instance was once per page view after all. A
  * batch that fails to write is dropped rather than retried: holding it would grow without
  * bound against a database that is not coming back.
  */
@@ -67,7 +69,8 @@ class ShadowRecorder
 
     private bool $shutdownRegistered = false;
 
-    private bool $warned = false;
+    /** Per process - see the class docblock. */
+    private static bool $warned = false;
 
     /** @var \Closure():int */
     private \Closure $clock;
@@ -266,10 +269,10 @@ class ShadowRecorder
 
     private function warnOnce(\Throwable $e): void
     {
-        if ($this->warned) {
+        if (self::$warned) {
             return;
         }
-        $this->warned = true;
+        self::$warned = true;
 
         try {
             $this->logger->warning('template-parser shadow: could not record comparisons', [

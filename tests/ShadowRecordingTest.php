@@ -421,6 +421,7 @@ final class ShadowRecordingTest extends TestCase
      */
     public function testAFailedWriteIsWarnedAboutOnceAndNeverThrows(): void
     {
+        self::forgetTheWarning();
         $logger = new CollectingLogger();
         $resource = new class extends ResourceConnection {
             public int $attempts = 0;
@@ -442,6 +443,18 @@ final class ShadowRecordingTest extends TestCase
         self::assertCount(1, $logger->records);
         self::assertSame('warning', $logger->records[0][0]);
         self::assertStringContainsString("doesn't exist", $logger->records[0][2]['error']);
+
+        // A DI-shared recorder lives for one request: the next request's is a new instance,
+        // and "once" has to hold across them, or it is a warning per page view.
+        $next = new ShadowRecorder($resource, $this->stores(), $logger, false);
+        $next->record(1, 'email:1', ShadowOutcome::agreed());
+        $next->flush();
+        self::assertCount(1, $logger->records, 'warned again by the next request\'s recorder');
+    }
+
+    private static function forgetTheWarning(): void
+    {
+        (new \ReflectionProperty(ShadowRecorder::class, 'warned'))->setValue(null, false);
     }
 
     /** "The current store" is resolved when the render happens, and a failure is store 0. */
@@ -542,6 +555,10 @@ final class ShadowRecordingTest extends TestCase
 
         $template = $table[0]->xpath('column[@name="template"]')[0];
         self::assertSame('255', (string)$template['length']);
+
+        // Every upsert reserves an id whether it inserts or not; an int ran out.
+        $id = $table[0]->xpath('column[@name="entity_id"]')[0];
+        self::assertSame('bigint', (string)($id->attributes('xsi', true)['type'] ?? $id->attributes('http://www.w3.org/2001/XMLSchema-instance')['type']));
 
         $whitelist = json_decode((string)file_get_contents(__DIR__ . '/../etc/db_schema_whitelist.json'), true);
         self::assertSame($columns, array_keys($whitelist[ShadowRecorder::TABLE]['column']));

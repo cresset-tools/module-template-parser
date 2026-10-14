@@ -853,8 +853,7 @@ The exit code is what makes it useful in CI: non-zero at or above `--fail-on`, w
 to `error` so a first run over a decade of templates is not a wall of red.
 
 `--posture` picks how strictly the engine reads (see [Modes](#modes)); it defaults to
-compatible, the posture Parser mode runs. `--mode` is the old spelling and still works for one
-release, with a warning on stderr.
+compatible, the posture Parser mode runs. (`--mode`, its 0.2 spelling, is gone.)
 
 ### Diffing against the filter you run today
 
