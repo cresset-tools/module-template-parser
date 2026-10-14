@@ -426,7 +426,7 @@ class TemplateFilterPlugin
      */
     private function unmodelledDirective(LegacyTemplate $subject, string $value): ?ShadowOutcome
     {
-        $name = HostOnlyDirectives::firstIn($this->hostOnly($subject), $value);
+        $name = HostOnlyDirectives::firstIn([...$this->hostOnly($subject), ...self::processorless($subject)], $value);
         if ($name === null) {
             return null;
         }
@@ -436,6 +436,23 @@ class TemplateFilterPlugin
             $name,
             self::originalClass($subject::class)
         )]);
+    }
+
+    /**
+     * `{{template}}` on a filter no template model is driving.
+     *
+     * Only `AbstractTemplate::getProcessedTemplate()` gives a filter a template processor, so
+     * the CMS, Widget and catalog filters never have one, and legacy's TemplateDirective prints
+     * `{Error in template processing}` there. Per instance, not per class: the Email filter has
+     * one while an email renders through it, and not otherwise.
+     *
+     * @return list<string>
+     */
+    private static function processorless(LegacyTemplate $subject): array
+    {
+        return method_exists($subject, 'getTemplateProcessor') && $subject->getTemplateProcessor() === null
+            ? ['template']
+            : [];
     }
 
     /** @return list<string> */
@@ -490,10 +507,14 @@ class TemplateFilterPlugin
             $names[] = 'media';
         }
 
-        // The newsletter filter renders each widget inside a frontend area emulation; this
+        // Only the Widget filter has a widgetDirective(); on any other - the transactional
+        // Email filter, the CMS one, the plain one - legacy prints `{{widget ...}}` as text.
+        // And the newsletter filter renders each widget inside a frontend area emulation; this
         // engine renders it in whatever area is current, which in a newsletter send is not
         // frontend. Emulating around the whole render would move every OTHER directive too.
-        if (is_a($subject, 'Magento\\Widget\\Model\\Template\\FilterEmulate')) {
+        if (!is_a($subject, 'Magento\\Widget\\Model\\Template\\Filter')
+            || is_a($subject, 'Magento\\Widget\\Model\\Template\\FilterEmulate')
+        ) {
             $names[] = 'widget';
         }
 

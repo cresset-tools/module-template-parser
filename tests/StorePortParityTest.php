@@ -154,7 +154,7 @@ final class StorePortParityTest extends TestCase
         ));
 
         self::assertSame(
-            193,
+            197,
             $agreed,
             sprintf(
                 'the number of store cases agreeing with the legacy filter changed (%d of %d '

@@ -501,8 +501,11 @@ final class Evaluator
                 return '';
             }
 
-            $params = $this->parameters->parse($n->params());
-            $file = $params['file'] ?? '';
+            // Through params(), as every other directive: `{{inlinecss file=$path}}` names the
+            // file a variable holds. Parsed raw, the literal `$path` was guarded and dropped,
+            // and the email went out without its inline styles.
+            $file = $this->params($n, $c)['file'] ?? '';
+            $file = is_scalar($file) ? (string)$file : '';
             // Guarded like {{css file=}} is. Deferring is still handing a path to the host,
             // and PathGuard's own contract is that the handlers apply it "so a host cannot
             // forget it" - this was the one handler that passed a path outward without it.

@@ -69,6 +69,34 @@ lab's naming, and the fixes from a whole-project review before the donation.
   `ReflectionClass::getMethod()->invokeArgs()`, which reaches all of them; the plugin and
   `template:check` only looked at public ones. `template:check` also now recognises
   `{{coupon2}}` and `{{coupon_x}}` as `{{coupon}}`, as the store does.
+- **Parser mode no longer serves output the store would not render.**
+  - `{{customvar}}` reads the rendering filter's store, or the current one, where it read the
+    default-scope value for every store view.
+  - A `{{template}}` include in a plain-text email has its tags stripped and is trimmed, as
+    `AbstractTemplate::getTemplateContent()` does; the text/plain body carried the header's
+    `<!DOCTYPE html>` and tables.
+  - `{{template}}` on a filter no template model drives - CMS, Widget, catalog - is left to the
+    filter, which prints `{Error in template processing}`; it was served the email footer.
+  - `{{widget}}` is left to the filter everywhere but the Widget filter, which is the only one
+    with a `widgetDirective()`; on the transactional Email filter legacy prints it as text.
+  - A widget type no `widget.xml` declares renders nothing, as `generateWidget` does.
+  - `{{media}}` entity-decodes its parameters like every legacy `mediaDirective`, so images
+    the WYSIWYG editor saved as `{{media url=&quot;...&quot;}}` render instead of being
+    refused.
+  - `{{inlinecss file=$var}}` resolves the variable.
+  - `{{store _query="..."}}` keeps the written query string.
+  - `{{trans}}` translates with Translate Inline suspended, as `transDirective` does, so no
+    `{{{...}}}` editing markers reach a page or an email.
+  - A custom directive's modifiers count only right against its `}}`, as `SimpleDirective`
+    reads them, and a ProcessorPool entry named like a stock directive no longer replaces it.
+  - The custom-directive `FilterPool` is wired, so a custom directive with modifiers or
+    default filters renders on a store instead of being refused.
+- **A port's refusal is a declined directive, never an error.** `{{store}}` through the
+  backend URL model, and the same from `{{media}}`, `{{view}}`, `{{customvar}}` and
+  `{{protocol}}`, escaped the render and became "Error filtering template".
+- **A numeric parameter name (`1="x"`) is no longer a TypeError.**
+- **`{{widget}}` never forwards a non-frontend `area`**, which let template text render an
+  admin `.phtml` through a widget's `template`, as `{{block}}` already prevented.
 
 ### Upgrading from cresset/module-template-parser 0.3.0
 

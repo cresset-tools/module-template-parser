@@ -84,6 +84,25 @@ final class SecurityRegressionTest extends TestCase
         );
     }
 
+    /**
+     * transDirective turns Translate Inline off around its `__()`. Left on, a phrase came back
+     * wrapped in `{{{...}}}` editing markers, visible in the page or the email.
+     */
+    public function testPhraseTranslatorTranslatesWithInlineTranslationSuspended(): void
+    {
+        $state = new class implements \Magento\Framework\Translate\Inline\StateInterface {
+            public array $log = [];
+            public function disable() { $this->log[] = 'disable'; }
+            public function enable() { $this->log[] = 'enable'; }
+            public function isEnabled() { return true; }
+            public function suspend($status = false) { $this->log[] = 'suspend'; }
+            public function resume($status = true) { $this->log[] = 'resume'; }
+        };
+        (new PhraseTranslator($state))->translate('Contact us', []);
+
+        self::assertSame(['suspend', 'resume'], $state->log);
+    }
+
     // ---------------------------------------------------------------- resource bounds
 
     /**

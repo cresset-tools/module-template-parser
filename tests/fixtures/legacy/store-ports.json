@@ -339,10 +339,19 @@
                 "locale": "en_US"
             },
             "outcome": "ok",
-            "expected": "",
-            "tape": [],
+            "expected": "http://template-parser-sales.bougie.run:7080/media/x",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        "x"
+                    ],
+                    "returned": "http://template-parser-sales.bougie.run:7080/media/x"
+                }
+            ],
             "legacy": "http://template-parser-sales.bougie.run:7080/media/x",
-            "agreed": false
+            "agreed": true
         },
         {
             "id": "media_markup/empty/plain",
@@ -352,8 +361,17 @@
             "surface": "email",
             "design_params": [],
             "outcome": "ok",
-            "expected": "",
-            "tape": [],
+            "expected": "http://template-parser-sales.bougie.run:7080/media/x",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        "x"
+                    ],
+                    "returned": "http://template-parser-sales.bougie.run:7080/media/x"
+                }
+            ],
             "legacy": null,
             "agreed": false
         },
@@ -4450,10 +4468,19 @@
                 "locale": "en_US"
             },
             "outcome": "ok",
-            "expected": "",
-            "tape": [],
+            "expected": "http://template-parser-sales.bougie.run:7080/media/x",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        "x"
+                    ],
+                    "returned": "http://template-parser-sales.bougie.run:7080/media/x"
+                }
+            ],
             "legacy": "http://template-parser-sales.bougie.run:7080/media/x",
-            "agreed": false
+            "agreed": true
         },
         {
             "id": "media_markup/values/plain",
@@ -4467,8 +4494,17 @@
             "surface": "email",
             "design_params": [],
             "outcome": "ok",
-            "expected": "",
-            "tape": [],
+            "expected": "http://template-parser-sales.bougie.run:7080/media/x",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        "x"
+                    ],
+                    "returned": "http://template-parser-sales.bougie.run:7080/media/x"
+                }
+            ],
             "legacy": null,
             "agreed": false
         },
@@ -9036,10 +9072,19 @@
                 "locale": "en_US"
             },
             "outcome": "ok",
-            "expected": "",
-            "tape": [],
+            "expected": "http://template-parser-sales.bougie.run:7080/media/x",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        "x"
+                    ],
+                    "returned": "http://template-parser-sales.bougie.run:7080/media/x"
+                }
+            ],
             "legacy": "http://template-parser-sales.bougie.run:7080/media/x",
-            "agreed": false
+            "agreed": true
         },
         {
             "id": "media_markup/hostile/plain",
@@ -9053,8 +9098,17 @@
             "surface": "email",
             "design_params": [],
             "outcome": "ok",
-            "expected": "",
-            "tape": [],
+            "expected": "http://template-parser-sales.bougie.run:7080/media/x",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        "x"
+                    ],
+                    "returned": "http://template-parser-sales.bougie.run:7080/media/x"
+                }
+            ],
             "legacy": null,
             "agreed": false
         },
@@ -13349,10 +13403,19 @@
             "surface": "cms",
             "design_params": [],
             "outcome": "ok",
-            "expected": "",
-            "tape": [],
+            "expected": "http://template-parser-sales.bougie.run:7080/media/x",
+            "tape": [
+                {
+                    "port": "urls",
+                    "method": "mediaUrl",
+                    "args": [
+                        "x"
+                    ],
+                    "returned": "http://template-parser-sales.bougie.run:7080/media/x"
+                }
+            ],
             "legacy": "http://template-parser-sales.bougie.run:7080/media/x",
-            "agreed": false
+            "agreed": true
         },
         {
             "id": "media_var/cms",

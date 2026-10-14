@@ -5,6 +5,7 @@ namespace MageOS\TemplateParser\Magento;
 
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Widget\Block\BlockInterface as WidgetBlockInterface;
+use Magento\Widget\Model\Widget;
 use MageOS\TemplateParser\Port\WidgetRenderer;
 use MageOS\TemplateParser\Port\RefusedByPort;
 
@@ -20,12 +21,17 @@ use MageOS\TemplateParser\Port\RefusedByPort;
  */
 class TypeCheckedWidgetRenderer implements WidgetRenderer
 {
-    /** @param string[]|null $allowedTypes */
+    /**
+     * @param string[]|null $allowedTypes
+     * @param ?Widget $widgets the store's widget.xml declarations; generateWidget renders only
+     *        a type one of them declares
+     */
     public function __construct(
         private readonly \Magento\Framework\View\LayoutInterface $layout,
         private readonly ConfigInterface $objectManagerConfig,
         private readonly ?array $allowedTypes = null,
-        private readonly ?RenderScope $scope = null
+        private readonly ?RenderScope $scope = null,
+        private readonly ?Widget $widgets = null
     ) {
     }
 
@@ -41,9 +47,22 @@ class TypeCheckedWidgetRenderer implements WidgetRenderer
             throw new RefusedByPort('widget type', $type);
         }
 
-        // generateWidget renders nothing for a type it cannot build as a widget either.
+        // generateWidget renders nothing for a type no widget.xml declares - looked up as
+        // written, as it does - nor for one it cannot build as a widget.
+        if ($this->widgets !== null && $this->widgets->getWidgetByClassType($written) === null) {
+            return '';
+        }
         if (!$this->isWidgetType($type)) {
             return '';
+        }
+
+        // Only `frontend`, as {{block}} allows. generateWidget forwards any area, which made the
+        // block resolve its template out of the adminhtml theme: `{{widget ... area="adminhtml"
+        // template="Magento_Backend::..."}}` rendered an admin .phtml.
+        foreach (array_keys($parameters) as $key) {
+            if (DataKey::is($key, 'area') && strcasecmp(trim((string)$parameters[$key]), 'frontend') !== 0) {
+                unset($parameters[$key]);
+            }
         }
 
         // generateWidget's data, exactly: the parameters as written, `type` included; the

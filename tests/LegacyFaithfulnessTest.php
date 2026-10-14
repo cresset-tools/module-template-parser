@@ -17,6 +17,7 @@ use MageOS\TemplateParser\Magento\StoreUrlBuilder;
 use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
 use MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer;
 use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Port\TemplateLoader;
 use MageOS\TemplateParser\Port\UrlBuilder;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\ObjectManager\ConfigInterface;
@@ -65,6 +66,45 @@ final class LegacyFaithfulnessTest extends TestCase
             ],
             $created
         );
+    }
+
+    /**
+     * Only `frontend`, as {{block}}. Forwarded, `area="adminhtml"` made the widget resolve its
+     * `template` out of the adminhtml theme, so template text could render an admin .phtml.
+     */
+    public function testAWidgetIsNeverGivenANonFrontendArea(): void
+    {
+        $created = [];
+        $renderer = new TypeCheckedWidgetRenderer($this->layout($created), $this->widgetTypes());
+        $type = $this->widgetClass();
+        $admin = ['template' => 'Magento_Backend::page/js/require_js.phtml'];
+
+        foreach (['area', 'Area', 'AREA', 'ar_ea'] as $key) {
+            $renderer->render($type, [$key => 'adminhtml'] + $admin);
+        }
+        $renderer->render($type, ['area' => ' Frontend '] + $admin);
+
+        self::assertSame(
+            array_fill(0, 4, ['type' => $type] + $admin),
+            array_map(static fn (array $c): array => $c[1], array_slice($created, 0, 4))
+        );
+        self::assertSame(' Frontend ', $created[4][1]['area'], 'frontend is passed on as written');
+    }
+
+    /** generateWidget renders nothing for a type no widget.xml declares, as written. */
+    public function testAWidgetTypeNoWidgetXmlDeclaresRendersNothing(): void
+    {
+        $created = [];
+        $type = $this->widgetClass();
+        $renderer = new TypeCheckedWidgetRenderer(
+            $this->layout($created),
+            $this->widgetTypes(),
+            widgets: new \Magento\Widget\Model\Widget([$type])
+        );
+
+        self::assertSame('W', $renderer->render($type, []));
+        self::assertSame('', $renderer->render('\\' . $type, []), 'legacy looks the type up as written');
+        self::assertCount(1, $created, 'an undeclared type is never built');
     }
 
     /**
@@ -320,7 +360,8 @@ final class LegacyFaithfulnessTest extends TestCase
         );
         $records = [];
         $plugin = $this->plugin(new HostServices(templates: $loader), $scope, $records);
-        $subject = new \Acme\Promo\Filter();
+        // An email render: the template model has given its filter a processor.
+        $subject = (new \Acme\Promo\Filter())->setTemplateProcessor(static fn () => '');
         $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
 
         $result = $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{template config_path="design/email/header_template"}}Hi {{var name}}');
@@ -330,9 +371,28 @@ final class LegacyFaithfulnessTest extends TestCase
 
         // The control: the same include on the stock filter, where {{coupon}} is nobody's.
         $records = [];
-        $stock = new \Magento\Widget\Model\Template\Filter();
+        $stock = (new \Magento\Widget\Model\Template\Filter())->setTemplateProcessor(static fn () => '');
         $plugin->beforeSetVariables($stock, ['name' => 'Ada']);
         self::assertStringContainsString('Hi Ada', $plugin->aroundFilter($stock, static fn () => 'LEGACY', '{{template config_path="design/email/header_template"}}Hi {{var name}}'));
+    }
+
+    /**
+     * Only a template model gives its filter a processor, so on a CMS or catalog filter legacy
+     * prints `{Error in template processing}` for any {{template}}. Served, the page got the
+     * email footer instead.
+     */
+    public function testAnIncludeOnAFilterWithNoTemplateModelFallsBack(): void
+    {
+        $records = [];
+        $plugin = $this->plugin(new HostServices(templates: new class implements TemplateLoader {
+            public function load(string $configPath): ?string { return 'FOOTER'; }
+        }), new RenderScope(), $records);
+        $cms = new \Magento\Email\Model\Template\Filter();
+
+        $result = $plugin->aroundFilter($cms, static fn () => '{Error in template processing}', '{{template config_path="design/email/footer_template"}}');
+
+        self::assertSame('{Error in template processing}', $result);
+        self::assertSame([ShadowOutcome::REFUSED], $records);
     }
 
     // ---------------------------------------------------------------- helpers

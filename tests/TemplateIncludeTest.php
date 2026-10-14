@@ -61,6 +61,32 @@ final class TemplateIncludeTest extends TestCase
     // ---------------------------------------------------------------- scope
 
     /**
+     * AbstractTemplate::getTemplateContent(): in a plain-text parent the include has its tags
+     * stripped and is trimmed, before and after rendering. Without it a stock order email
+     * converted to plain text was sent with the header's <!DOCTYPE html> and tables in its
+     * text/plain body.
+     */
+    public function testAnIncludeInAPlainTextParentIsStrippedAndTrimmed(): void
+    {
+        $engine = $this->engine([
+            'design/email/header_template' => "\n<!DOCTYPE html><html><body><table class=\"wrapper\"><tr><td>\n",
+            'design/email/footer_template' => "</td></tr><tr><td><p>Thank you, {{var store_name}}!</p></td></tr></table></body></html>\n",
+        ], Options::compatible());
+        $template = '{{template config_path="design/email/header_template"}}Order 1{{template config_path="design/email/footer_template"}}';
+
+        self::assertSame(
+            'Order 1Thank you, Acme!',
+            $engine->render($template, context: new Context(['store_name' => 'Acme'], RenderPolicy::unrestricted(), plainText: true))
+        );
+        self::assertStringContainsString(
+            '<!DOCTYPE html>',
+            $engine->render($template, context: $this->context(['store_name' => 'Acme'])),
+            'an HTML parent keeps the markup'
+        );
+    }
+
+
+    /**
      * A directive's own parameters become variables inside the include.
      *
      * Legacy hands the processor array_merge_recursive($parameters, $templateVariables), so

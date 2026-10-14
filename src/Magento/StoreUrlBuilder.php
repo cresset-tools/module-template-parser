@@ -27,14 +27,19 @@ class StoreUrlBuilder implements StoreAwareUrlBuilder
     /** @param array<string,string|null> $parameters */
     public function storeUrl(string $path, array $parameters): string
     {
-        $query = [];
+        // storeDirective starts `_query` as [] only when the template gave none, so a written
+        // `_query="utm_source=x"` is the query string. Given one AND `_query_*` keys, it
+        // writes those into the string and raises - that render is the filter's to fail.
+        $parameters['_query'] ??= [];
         foreach ($parameters as $key => $value) {
-            if (str_starts_with($key, '_query_')) {
-                $query[substr($key, 7)] = $value;
+            if (str_starts_with((string)$key, '_query_')) {
+                if (!is_array($parameters['_query'])) {
+                    throw new RefusedByPort('store url query string and _query_ parameters together', $path);
+                }
+                $parameters['_query'][substr((string)$key, 7)] = $value;
                 unset($parameters[$key]);
             }
         }
-        $parameters['_query'] = $query;
         $parameters['_nosid'] = true;
         // storeDirective OVERWRITES this with the store code rather than reading it, and the
         // difference matters: Url escapes route parameters only while it is truthy, so a

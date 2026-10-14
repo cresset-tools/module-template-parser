@@ -127,6 +127,28 @@
         </arguments>
     </type>
 
+    <!-- {{customvar}} reads the rendering filter's store, or the current one, as the filter does. -->
+    <!-- {{trans}} with Translate Inline off for the call, as transDirective does. -->
+    <type name="MageOS\TemplateParser\Magento\PhraseTranslator">
+        <arguments>
+            <argument name="inlineTranslation" xsi:type="object">Magento\Framework\Translate\Inline\StateInterface</argument>
+        </arguments>
+    </type>
+
+    <!-- A custom directive's modifiers and default filters, applied as SimpleDirective does. -->
+    <type name="MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer">
+        <arguments>
+            <argument name="filters" xsi:type="object">Magento\Framework\Filter\DirectiveProcessor\Filter\FilterPool</argument>
+        </arguments>
+    </type>
+
+    <type name="MageOS\TemplateParser\Magento\VariableCustomVariableReader">
+        <arguments>
+            <argument name="scope" xsi:type="object">MageOS\TemplateParser\Magento\RenderScope</argument>
+            <argument name="stores" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
+        </arguments>
+    </type>
+
     <type name="MageOS\TemplateParser\Magento\AllowlistedConfigReader">
         <arguments>
             <argument name="storeInformation" xsi:type="object">Magento\Store\Model\Information</argument>
@@ -227,6 +249,8 @@
     <type name="MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer">
         <arguments>
             <argument name="scope" xsi:type="object">MageOS\TemplateParser\Magento\RenderScope</argument>
+            <!-- The widget.xml declarations; a type none declares renders nothing, as in the filter. -->
+            <argument name="widgets" xsi:type="object">Magento\Widget\Model\Widget</argument>
         </arguments>
     </type>
 

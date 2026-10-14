@@ -176,4 +176,44 @@ final class CustomDirectiveTest extends TestCase
             $this->render('{{mydir "a"}}{{other "b"}}{{/mydir}}')
         );
     }
+
+    /**
+     * SimpleDirective takes modifiers only right against the `}}`. With whitespace before it
+     * the filter sees none, so the processor's default filters apply - and splitting anyway
+     * cut the wrong bytes, leaving `p=x|`.
+     */
+    public function testModifiersOnlyCountRightBeforeTheClose(): void
+    {
+        $this->render('{{mydir p=x|raw}}');
+        $this->render('{{mydir p=x|raw }}');
+
+        self::assertSame([['p' => 'x'], ['raw']], [$this->calls[0][2], $this->calls[0][4]]);
+        self::assertSame([['p' => 'x|raw'], []], [$this->calls[1][2], $this->calls[1][4]]);
+    }
+
+    /**
+     * The filter tries its own directives before the pool, so a pool entry named `var` or
+     * `block` never runs there. Registered here it replaced them - {{var}} unescaped, {{block}}
+     * past every guard - and made `{{var}}...{{/var}}` a paired block.
+     */
+    public function testAPoolEntryNamedLikeAStockDirectiveDoesNotReplaceIt(): void
+    {
+        $calls = [];
+        $renderer = new class ($calls) implements CustomDirectiveRenderer {
+            public function __construct(private array &$calls) {}
+            public function names(): array { return ['var', 'block', 'mydir']; }
+            public function render(string $name, ?string $value, array $parameters, ?string $body, array $modifiers): ?string
+            {
+                $this->calls[] = $name;
+                return 'POOL';
+            }
+        };
+        $engine = TemplateEngine::forHost(new HostServices(customDirectives: $renderer), Options::compatible());
+
+        $out = $engine->render('{{var x}}|{{mydir}}', context: new Context(['x' => '<b>'], RenderPolicy::unrestricted()));
+
+        self::assertSame('&lt;b&gt;|POOL', $out);
+        self::assertSame(['mydir'], $calls);
+        self::assertFalse((new DirectiveSpec([], [], ['var']))->isOptionalBlock('var'));
+    }
 }

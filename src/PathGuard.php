@@ -239,6 +239,8 @@ final class PathGuard
             // `_query` and the URL model escapes it - so it never reaches the path, and
             // holding it to a path guard would refuse an ordinary customer name with an
             // apostrophe in it. The rest of this list is flags and scopes.
+            // (string): a numeric parameter name is an int key by the time it gets here.
+            $key = (string)$key;
             if (str_starts_with($key, '_query_') || in_array($key, self::NON_PATH_PARAMETERS, true)) {
                 continue;
             }

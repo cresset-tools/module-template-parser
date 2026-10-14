@@ -203,6 +203,8 @@ final class SilentDegradationTest extends TestCase
             "a module's protected directive" => [\Acme\Promo\HiddenFilter::class, 'Use {{coupon}} today', 'coupon'],
             "a module's private directive" => [\Acme\Promo\HiddenFilter::class, 'A {{gift}}', 'gift'],
             "a module's static directive" => [\Acme\Promo\HiddenFilter::class, 'A {{promo}}', 'promo'],
+            // No widgetDirective() on the transactional Email filter: legacy prints the text.
+            '{{widget}} on the Email filter' => [\Magento\Email\Model\Template\Filter::class, '{{widget type="Magento\\CatalogWidget\\Block\\Product\\ProductsList"}}', 'widget'],
             'a name the store reads as a shorter one' => [\Acme\Promo\Filter::class, 'Use {{coupon2 code="x"}}', 'coupon'],
         ];
     }

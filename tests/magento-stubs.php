@@ -42,6 +42,17 @@ namespace Magento\Widget\Block {
         interface BlockInterface { public function toHtml(); }
     }
 }
+namespace Magento\Widget\Model {
+    if (!class_exists(Widget::class)) {
+        /** The widget.xml declarations; generateWidget renders only a declared type. */
+        class Widget
+        {
+            /** @param list<string> $declared */
+            public function __construct(private array $declared = []) {}
+            public function getWidgetByClassType($type) { return in_array($type, $this->declared, true) ? ['@' => ['type' => $type]] : null; }
+        }
+    }
+}
 namespace Magento\Store\Model {
     if (!interface_exists(ScopeInterface::class)) {
         interface ScopeInterface { public const SCOPE_STORE = 'store'; }
@@ -260,8 +271,12 @@ namespace Magento\Framework\Filter {
     if (!class_exists(Template::class)) {
         class Template {
             protected $templateVars = [];
+            /** Set by AbstractTemplate::getProcessedTemplate(); without it {{template}} is an error. */
+            protected $templateProcessor = null;
             public function setVariables(array $variables) { $this->templateVars = $variables; return $this; }
             public function filter($value) { return $value; }
+            public function setTemplateProcessor(callable $callback) { $this->templateProcessor = $callback; return $this; }
+            public function getTemplateProcessor() { return $this->templateProcessor; }
         }
     }
 }
@@ -338,6 +353,17 @@ namespace Magento\Framework\App {
         class ResourceConnection {
             public function getConnection($resourceName = 'default') { return null; }
             public function getTableName($modelEntity, $connectionName = 'default') { return $modelEntity; }
+        }
+    }
+}
+namespace Magento\Framework\Translate\Inline {
+    if (!interface_exists(StateInterface::class)) {
+        interface StateInterface {
+            public function disable();
+            public function enable();
+            public function isEnabled();
+            public function suspend($status = false);
+            public function resume($status = true);
         }
     }
 }

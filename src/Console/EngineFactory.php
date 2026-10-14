@@ -80,7 +80,9 @@ class EngineFactory
                             : null,
                     )
                     : null),
-            translator: $this->build(static fn (MagentoContext $m): ?object => new PhraseTranslator()),
+            translator: $this->build(static fn (MagentoContext $m): ?object => new PhraseTranslator(
+                $m->get(\Magento\Framework\Translate\Inline\StateInterface::class)
+            )),
             templates: $this->build(fn (MagentoContext $m): ?object
                 => ($scope = $m->get(\Magento\Framework\App\Config\ScopeConfigInterface::class))
                     ? new ConfigTemplateLoader(

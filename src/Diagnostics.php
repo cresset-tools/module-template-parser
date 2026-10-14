@@ -118,7 +118,7 @@ final class Diagnostics
     /**
      * Closest match from a candidate list, for "did you mean" hints.
      *
-     * @param string[] $candidates
+     * @param array<string|int> $candidates variable names - an int where a name is numeric
      */
     public static function suggest(string $needle, array $candidates): ?string
     {
@@ -127,6 +127,7 @@ final class Diagnostics
         $limit = max(2, (int)floor(strlen($needle) / 2));
 
         foreach ($candidates as $candidate) {
+            $candidate = (string)$candidate;
             $distance = levenshtein(strtolower($needle), strtolower($candidate));
             if ($distance < $bestDistance && $distance <= $limit) {
                 $best = $candidate;

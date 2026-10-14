@@ -9,6 +9,7 @@ use MageOS\TemplateParser\HostServices;
 use MageOS\TemplateParser\Magento\TemplateModelUrlBuilder;
 use MageOS\TemplateParser\Options;
 use MageOS\TemplateParser\PathGuard;
+use MageOS\TemplateParser\Port\RefusedByPort;
 use MageOS\TemplateParser\Port\TemplateUrlBuilder;
 use MageOS\TemplateParser\Port\UrlBuilder;
 use MageOS\TemplateParser\RenderPolicy;
@@ -386,6 +387,73 @@ final class UrlGuardRegressionTest extends TestCase
                 context: new Context(['p' => 'logo&amp;x.png'], RenderPolicy::restricted())
             )
         );
+    }
+
+    /**
+     * `1="x"` is an int key once parsed, and strict_types made every string-typed check on
+     * it a TypeError that escaped the render.
+     */
+    public function testANumericParameterNameIsNotATypeError(): void
+    {
+        $context = new Context([], RenderPolicy::restricted());
+        self::assertSame('https://shop.example/static/images/logo.png', $this->engine()->render('{{view url="images/logo.png" 1="x"}}', context: $context));
+
+        // The filter's own {{store}} raises on one, so that is left to it.
+        $context = new Context([], RenderPolicy::restricted());
+        self::assertSame('', $this->engine()->render('{{store url="customer/account" 1="x"}}', context: $context));
+        self::assertCount(1, $context->violations());
+    }
+
+    /**
+     * A port that refuses - StoreUrlBuilder does for the backend URL model - declines the
+     * directive like any guard. Uncaught, it escaped the render, and the whole template became
+     * "Error filtering template".
+     */
+    #[DataProvider('portBackedUrlDirectives')]
+    public function testAPortRefusalIsADeclinedDirectiveNotAnError(string $template): void
+    {
+        $engine = TemplateEngine::withOptions(Options::compatible());
+        $refusing = new class implements UrlBuilder {
+            public function storeUrl(string $path, array $parameters): string { throw new RefusedByPort('store url through the backend URL model', $path); }
+            public function mediaUrl(string $path): string { throw new RefusedByPort('media url', $path); }
+            public function viewUrl(string $path, array $parameters): string { throw new RefusedByPort('view url', $path); }
+            public function isSecure(): bool { throw new RefusedByPort('protocol', 'current store'); }
+        };
+        HostDirectives::register($engine->evaluator(), new HostServices(urls: $refusing));
+        $context = new Context([], RenderPolicy::restricted());
+
+        self::assertSame('a  b', $engine->render("a $template b", context: $context));
+        self::assertCount(1, $context->violations());
+    }
+
+    /** @return array<string,array{string}> */
+    public static function portBackedUrlDirectives(): array
+    {
+        return [
+            'store' => ['{{store url="customer/account"}}'],
+            'media' => ['{{media url="a.png"}}'],
+            'media root' => ['{{media}}'],
+            'view' => ['{{view url="a.png"}}'],
+            'protocol' => ['{{protocol}}'],
+        ];
+    }
+
+    /**
+     * The WYSIWYG editor saves an image as `{{media url=&quot;...&quot;}}`, and every legacy
+     * mediaDirective entity-decodes its parameter text first - Magento's own
+     * testMediaDirectiveWithEncodedQuotes pins it. Read raw, every editor image was refused.
+     */
+    public function testEntityEncodedMediaParametersAreDecodedAsTheFilterDoes(): void
+    {
+        $render = fn (string $t): string => $this->engine()->render($t, context: new Context([], RenderPolicy::restricted()));
+
+        self::assertSame('<img src="https://shop.example/media/wysiwyg/banana.jpg">', $render('<img src="{{media url=&quot;wysiwyg/banana.jpg&quot;}}">'));
+        self::assertSame('https://shop.example/media/a&b.jpg', $render('{{media url="a&amp;b.jpg"}}'));
+
+        // Decoded first, so an encoded traversal is still a traversal.
+        $context = new Context([], RenderPolicy::restricted());
+        self::assertSame('', $this->engine()->render('{{media url=&quot;&#46;&#46;/&#46;&#46;/app/etc/env.php&quot;}}', context: $context));
+        self::assertNotSame([], $context->violations());
     }
 
     /**

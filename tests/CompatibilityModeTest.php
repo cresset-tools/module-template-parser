@@ -306,6 +306,15 @@ final class CompatibilityModeTest extends TestCase
         self::assertSame([['kind' => 'inlinecss', 'payload' => ['file' => 'e.css']]], $context->deferred());
     }
 
+    /** `{{inlinecss file=$f}}` names the file the variable holds, as every directive's parameters do. */
+    public function testInlineCssResolvesAVariableFile(): void
+    {
+        $context = new Context(['f' => 'email-inline.css']);
+        $this->engine->render('{{inlinecss file=$f}}', [], $context);
+
+        self::assertSame([['kind' => 'inlinecss', 'payload' => ['file' => 'email-inline.css']]], $context->deferred());
+    }
+
     public function testCompatibleIsLenientPlusQuirks(): void
     {
         $o = Options::compatible();
