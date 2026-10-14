@@ -62,6 +62,13 @@ lab's naming, and the fixes from a whole-project review before the donation.
   render with a directive in it was declined: Shadow recorded refusals, which count as clean,
   so `template:shadow:report` said "No divergences" over zero comparisons. The plugin now asks
   the plugin list whether a directive method really has a plugin.
+- **A directive only the store's filter renders is declined inside `{{template}}` includes
+  too.** A module's `{{coupon}}`, or a plugged stock directive, was handed to the filter at the
+  top level but served as escaped text when it appeared in an included header or footer.
+- **Protected, private and static `*Directive()` methods count.** Legacy dispatches through
+  `ReflectionClass::getMethod()->invokeArgs()`, which reaches all of them; the plugin and
+  `template:check` only looked at public ones. `template:check` also now recognises
+  `{{coupon2}}` and `{{coupon_x}}` as `{{coupon}}`, as the store does.
 
 ### Upgrading from cresset/module-template-parser 0.3.0
 

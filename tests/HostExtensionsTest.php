@@ -196,11 +196,25 @@ final class HostExtensionsTest extends TestCase
     public function testDirectiveMethodsAModuleAddedToTheFilterAreFound(): void
     {
         self::assertSame(
-            // An added directive and an override of a stock one. Not: the core base's own
-            // methods, a name longer than legacy's ten-letter capture, a static, a protected.
-            ['coupon' => \Acme\Coupons\Filter::class, 'var' => \Acme\Coupons\Filter::class],
+            // An added directive, an override of a stock one, and a static and a protected
+            // one - legacy reaches those through getMethod()->invokeArgs() too. Not: the core
+            // base's own methods, or a name longer than legacy's ten-letter capture.
+            [
+                'coupon' => \Acme\Coupons\Filter::class,
+                'hidden' => \Acme\Coupons\Filter::class,
+                'static' => \Acme\Coupons\Filter::class,
+                'var' => \Acme\Coupons\Filter::class,
+            ],
             $this->withVendorFilter()->methodDirectives()
         );
+    }
+
+    /** The store's name capture is greedy over letters only: `{{coupon2}}` dispatches couponDirective. */
+    public function testANameFollowedByADigitOrUnderscoreIsStillThatDirective(): void
+    {
+        self::assertTrue(HostExtensions::mentions('{{coupon2 code="x"}}', 'coupon'));
+        self::assertTrue(HostExtensions::mentions('{{coupon_x}}', 'coupon'));
+        self::assertFalse(HostExtensions::mentions('{{coupons}}', 'coupon'));
     }
 
     public function testATemplateUsingOneIsToldWhoseItIs(): void

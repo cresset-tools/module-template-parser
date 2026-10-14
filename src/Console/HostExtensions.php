@@ -100,8 +100,10 @@ class HostExtensions
                 continue;
             }
 
-            foreach ((new \ReflectionClass($class))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-                if ($method->isStatic() || preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m) !== 1) {
+            // Any visibility, static too: legacy dispatches through ReflectionClass::getMethod()
+            // ->invokeArgs(), which reaches them all.
+            foreach ((new \ReflectionClass($class))->getMethods() as $method) {
+                if (preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m) !== 1) {
                     continue;
                 }
                 $declaring = $method->getDeclaringClass()->getName();
@@ -154,7 +156,8 @@ class HostExtensions
      * Whether this text spells `{{name}}` - the way the store matches it.
      *
      * A registered name immediately after `{{`, and not a longer name that merely starts with
-     * it: the store's `[a-z]{0,10}` is greedy, so `{{mydir}}` is not `my`. Deliberately not
+     * it: the store's `[a-z]{0,10}` is greedy, so `{{mydir}}` is not `my` - but it is greedy
+     * over LETTERS, so `{{my2}}` and `{{my_x}}` are both `my`. Deliberately not
      * clever - a false positive costs a note nobody needed, and a false negative costs the
      * silence this exists to end.
      *
@@ -163,7 +166,7 @@ class HostExtensions
      */
     public static function mentions(string $text, string $name): bool
     {
-        return preg_match('/\{\{' . preg_quote($name, '/') . '(?![a-z0-9_])/i', $text) === 1;
+        return preg_match('/\{\{' . preg_quote($name, '/') . '(?![a-z])/i', $text) === 1;
     }
 
     /**

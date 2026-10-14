@@ -126,3 +126,15 @@ namespace Acme\Promo\Filter {
         }
     }
 }
+
+namespace Acme\Promo {
+    if (!class_exists(HiddenFilter::class)) {
+        /** Directives legacy still reaches: it dispatches through getMethod()->invokeArgs(). */
+        class HiddenFilter extends \Magento\Widget\Model\Template\Filter
+        {
+            protected function couponDirective($construction) { return 'SAVE10'; }
+            private function giftDirective($construction) { return 'GIFT'; }
+            public static function promoDirective($construction) { return 'PROMO'; }
+        }
+    }
+}

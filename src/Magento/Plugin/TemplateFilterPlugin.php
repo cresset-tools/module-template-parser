@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MageOS\TemplateParser\Magento\Plugin;
 
 use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\HostOnlyDirectives;
 use MageOS\TemplateParser\Magento\RenderScope;
 use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
 use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
@@ -340,7 +341,7 @@ class TemplateFilterPlugin
             })->call($subject)
             : null;
 
-        $this->scope->push($storeId, is_object($urlModel) ? $urlModel : null);
+        $this->scope->push($storeId, is_object($urlModel) ? $urlModel : null, $this->hostOnly($subject));
         try {
             return $render();
         } finally {
@@ -425,16 +426,22 @@ class TemplateFilterPlugin
      */
     private function unmodelledDirective(LegacyTemplate $subject, string $value): ?ShadowOutcome
     {
-        $names = $this->legacyOnly[$subject::class] ??= $this->legacyOnlyDirectives($subject);
-        if ($names === [] || !preg_match('/\{\{(' . implode('|', $names) . ')(?![a-z])/i', $value, $m)) {
+        $name = HostOnlyDirectives::firstIn($this->hostOnly($subject), $value);
+        if ($name === null) {
             return null;
         }
 
         return ShadowOutcome::policyRefused([sprintf(
             'directive "%s" is rendered by %s itself, which this engine does not model',
-            strtolower($m[1]),
+            $name,
             self::originalClass($subject::class)
         )]);
+    }
+
+    /** @return list<string> */
+    private function hostOnly(LegacyTemplate $subject): array
+    {
+        return $this->legacyOnly[$subject::class] ??= $this->legacyOnlyDirectives($subject);
     }
 
     /**
@@ -454,8 +461,11 @@ class TemplateFilterPlugin
     {
         $names = [];
         $original = self::originalClass($subject::class);
-        foreach ((new \ReflectionClass($subject))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-            if ($method->isStatic() || !preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m)) {
+        // Every method, whatever its visibility: legacy dispatches through
+        // ReflectionClass::getMethod()->invokeArgs(), which reaches protected, private and
+        // static ones too.
+        foreach ((new \ReflectionClass($subject))->getMethods() as $method) {
+            if (!preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m)) {
                 continue;
             }
             $declaring = $method->getDeclaringClass()->getName();

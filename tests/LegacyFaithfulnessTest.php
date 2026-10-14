@@ -294,6 +294,47 @@ final class LegacyFaithfulnessTest extends TestCase
         self::assertRefused(fn () => $loader->load('design/email/header_template'), 'template include the filter reads differently');
     }
 
+    /**
+     * The top level declines a directive only the filter renders - a module's `{{coupon}}`.
+     * An include is loaded and rendered by this engine, so the same directive in the header
+     * template was served as escaped text where the store prints the coupon.
+     */
+    public function testAnIncludeUsingADirectiveOnlyTheFilterRendersFallsBack(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $template = new class extends \Magento\Email\Model\Template {
+            public function getTemplateText() { return '<p>Use {{coupon}} today</p>'; }
+        };
+        $scope = new RenderScope();
+        $loader = new ConfigTemplateLoader(
+            new class implements ScopeConfigInterface {
+                public function getValue($path, $scope = 'default', $scopeCode = null) { return 'design_email_header'; }
+                public function isSetFlag($path, $scope = 'default', $scopeCode = null) { return false; }
+            },
+            ['design/email/'],
+            new class ($template) extends \Magento\Email\Model\TemplateFactory {
+                public function __construct(private object $template) {}
+                public function create(array $data = []) { return $this->template; }
+            },
+            scope: $scope
+        );
+        $records = [];
+        $plugin = $this->plugin(new HostServices(templates: $loader), $scope, $records);
+        $subject = new \Acme\Promo\Filter();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{template config_path="design/email/header_template"}}Hi {{var name}}');
+
+        self::assertSame('LEGACY', $result);
+        self::assertSame([ShadowOutcome::REFUSED], $records);
+
+        // The control: the same include on the stock filter, where {{coupon}} is nobody's.
+        $records = [];
+        $stock = new \Magento\Widget\Model\Template\Filter();
+        $plugin->beforeSetVariables($stock, ['name' => 'Ada']);
+        self::assertStringContainsString('Hi Ada', $plugin->aroundFilter($stock, static fn () => 'LEGACY', '{{template config_path="design/email/header_template"}}Hi {{var name}}'));
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private function widgetClass(): string

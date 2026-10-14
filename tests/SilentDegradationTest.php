@@ -200,6 +200,10 @@ final class SilentDegradationTest extends TestCase
             "a module's own directive" => [\Acme\Promo\Filter::class, 'Use {{COUPON}} today', 'coupon'],
             'a plugged stock directive' => [\Magento\Widget\Model\Template\Filter\Interceptor::class, 'Dear {{var name}}', 'var'],
             "the CMS filter's filesystem {{media}}" => [\Magento\Cms\Model\Template\Filter::class, '{{media url="wysiwyg/a.png"}}', 'media'],
+            "a module's protected directive" => [\Acme\Promo\HiddenFilter::class, 'Use {{coupon}} today', 'coupon'],
+            "a module's private directive" => [\Acme\Promo\HiddenFilter::class, 'A {{gift}}', 'gift'],
+            "a module's static directive" => [\Acme\Promo\HiddenFilter::class, 'A {{promo}}', 'promo'],
+            'a name the store reads as a shorter one' => [\Acme\Promo\Filter::class, 'Use {{coupon2 code="x"}}', 'coupon'],
         ];
     }
 

@@ -122,6 +122,8 @@
     <type name="MageOS\TemplateParser\Magento\ConfigTemplateLoader">
         <arguments>
             <argument name="templateFactory" xsi:type="object">Magento\Email\Model\TemplateFactory</argument>
+            <!-- Which directives the rendering filter keeps to itself, checked in each include. -->
+            <argument name="scope" xsi:type="object">MageOS\TemplateParser\Magento\RenderScope</argument>
         </arguments>
     </type>
 

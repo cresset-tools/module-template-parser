@@ -30,6 +30,7 @@ class ConfigTemplateLoader implements TemplateLoader
         private readonly array $allowedPathPrefixes = ['design/email/'],
         private readonly ?TemplateFactory $templateFactory = null,
         private readonly ?int $storeId = null,
+        private readonly ?RenderScope $scope = null,
     ) {
     }
 
@@ -80,6 +81,12 @@ class ConfigTemplateLoader implements TemplateLoader
         // filter reads differently declines the parent - as it would at the top level.
         if (LegacyReading::firstDifference($text) !== null) {
             throw new RefusedByPort('template include the filter reads differently', $configPath);
+        }
+        // And one using a directive only the rendering filter renders - a module's own, or a
+        // plugged stock one - which the top level would have handed to the filter.
+        $hostOnly = HostOnlyDirectives::firstIn($this->scope?->hostOnlyDirectives() ?? [], $text);
+        if ($hostOnly !== null) {
+            throw new RefusedByPort('template include using a directive only the filter renders', '{{' . $hostOnly . '}} in ' . $configPath);
         }
 
         return $text;
