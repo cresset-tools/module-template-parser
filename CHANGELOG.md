@@ -163,6 +163,10 @@ lab's naming, and the fixes from a whole-project review before the donation.
   template. Taken as a render, a template neither engine could render - a theme `.phtml` the
   CLI cannot find, a warning under the store's error handler - was reported as "renders
   today, refused here"; it is now agreement, as both failing always was.
+- **A CMS Page Link widget no longer counts as a divergence.** Without a template it renders
+  through `Html\Link::_toHtml()`, which gives the link a random `id="idXXXXXXXX"` per render,
+  so Shadow and `template:diff` counted every page with one. The comparisons look past that
+  one id; what is served is unchanged.
 - **`diff --format=json` no longer prints an empty line** when an excerpt cut a multibyte
   character; every console JSON output substitutes invalid UTF-8 and fails loudly otherwise.
 - **`template:check` exits 2 when there was nothing to check**, and the codebase source judges

@@ -222,7 +222,8 @@ class Auditor
                         'the legacy filter cannot render this, but this engine does');
                 }
 
-                if ($legacyOutput === $ours) {
+                // Including a link id Magento draws at random per render - see RandomMarkup.
+                if (\MageOS\TemplateParser\Magento\RandomMarkup::sameRender($legacyOutput, $ours)) {
                     return null;
                 }
 

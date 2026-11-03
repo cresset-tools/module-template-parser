@@ -110,7 +110,8 @@ class ShadowComparator
      */
     public function judge(string $candidate, string $legacyResult): ShadowOutcome
     {
-        if ($candidate === $legacyResult) {
+        // Nor is a link id Magento draws at random per render a disagreement - see RandomMarkup.
+        if (RandomMarkup::sameRender($candidate, $legacyResult)) {
             return ShadowOutcome::agreed();
         }
 
