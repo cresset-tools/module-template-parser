@@ -104,7 +104,6 @@ final class Evaluator
         }
     }
 
-    /** @param Node[] $nodes */
     /**
      * Renders an {{if}}, {{else}} or {{depend}} body, which the legacy filter renders with a
      * filter() call of its own - see Context::topLevelBodyDepth().
@@ -121,6 +120,7 @@ final class Evaluator
         }
     }
 
+    /** @param Node[] $nodes */
     public function renderNodes(array $nodes, Context $context): string
     {
         $out = '';
