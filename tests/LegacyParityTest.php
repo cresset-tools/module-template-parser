@@ -17,10 +17,45 @@ use PHPUnit\Framework\TestCase;
  * produced. This replays those recordings, so the comparison runs anywhere - no Magento
  * installation needed - and any drift in compatible mode shows up as a failing case rather
  * than as a surprise in production.
+ *
+ * Once per target: the corpus is recorded against each Mage-OS release compatible mode
+ * claims to match, and every case is replayed with the options the Magento layer would set
+ * on a store running that release - see optionsFor().
  */
 final class LegacyParityTest extends TestCase
 {
-    private const FIXTURE = __DIR__ . '/fixtures/legacy/cases.json';
+    /** Each Mage-OS release the corpus is recorded against, and its recording. */
+    public const TARGETS = [
+        '3.5.0' => __DIR__ . '/fixtures/legacy/cases-3.5.0.json',
+        '3.6.0' => __DIR__ . '/fixtures/legacy/cases-3.6.0.json',
+    ];
+
+    /** The release current Mage-OS matches, which parity-drift.yml re-records. */
+    public const CURRENT = '3.6.0';
+
+    /**
+     * Construct names whose recordings differ between the targets, sorted.
+     *
+     * Every one is an include deferring {{inlinecss}} from inside an {{if}}, {{else}} or
+     * {{depend}} body of the root template: 3.5.0 inlined the stylesheet over that body,
+     * 3.6.0 over the whole document. That is the whole of what 3.6.0 changed in rendering,
+     * and this list is asserted to be exactly the observed set - see
+     * testTheTargetsDifferOnlyWhereDeferralMoved.
+     */
+    public const DEFERRAL_MOVED = [
+        'defer_inc_if_and_top', 'defer_inc_in_dep', 'defer_inc_in_else', 'defer_inc_in_if', 'defer_inc_in_two',
+    ];
+
+    /** Compatible mode as the Magento layer configures it on a store running `$target`. */
+    public static function optionsFor(string $target): Options
+    {
+        return Options::compatible()->withDeferralResolvedAtRoot(version_compare($target, '3.6.0', '>='));
+    }
+
+    private static function engineFor(array $case): TemplateEngine
+    {
+        return TemplateEngine::withOptions(self::optionsFor($case['target']));
+    }
 
     /** @return array<string,mixed> */
     private static function variablesFor(array $case): array
@@ -33,13 +68,23 @@ final class LegacyParityTest extends TestCase
         return $variables;
     }
 
-    /** @return array<string,array{0:array}> */
-    public static function recordedCases(): array
+    /**
+     * Every recorded case, keyed "<target> <id>", each carrying its `target`.
+     *
+     * @return array<string,array{0:array}>
+     */
+    public static function recordedCases(?string $target = null): array
     {
-        $cases = json_decode((string)file_get_contents(self::FIXTURE), true, 512, JSON_THROW_ON_ERROR);
         $out = [];
-        foreach ($cases as $case) {
-            $out[$case['id']] = [$case];
+        foreach (self::TARGETS as $release => $file) {
+            if ($target !== null && $target !== $release) {
+                continue;
+            }
+            $cases = json_decode((string)file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
+            foreach ($cases as $case) {
+                $case['target'] = $release;
+                $out[$release . ' ' . $case['id']] = [$case];
+            }
         }
         return $out;
     }
@@ -114,7 +159,7 @@ final class LegacyParityTest extends TestCase
     #[DataProvider('preHardeningCases')]
     public function testPreHardeningRenderingIsReproducibleOnRequest(array $case): void
     {
-        $engine = TemplateEngine::withOptions(Options::compatible()->withOutputNeutralizer(false));
+        $engine = TemplateEngine::withOptions(self::optionsFor($case['target'])->withOutputNeutralizer(false));
         $expected = $case['pre_hardening'];
 
         if ($expected['outcome'] !== 'ok') {
@@ -136,7 +181,7 @@ final class LegacyParityTest extends TestCase
         $cases = self::preHardeningCases();
         self::assertGreaterThan(40, count($cases), 'the corpus should exercise the neutralizer widely');
 
-        $case = $cases['var/directive'][0] ?? array_values($cases)[0][0];
+        $case = $cases[self::CURRENT . ' var/directive'][0] ?? array_values($cases)[0][0];
         self::assertNotSame(
             $case['expected'],
             $case['pre_hardening']['expected'],
@@ -146,9 +191,57 @@ final class LegacyParityTest extends TestCase
 
     public function testTheCorpusIsSubstantial(): void
     {
-        $cases = self::recordedCases();
-        self::assertGreaterThan(500, count($cases), 'recorded corpus should be large');
-        self::assertGreaterThan(40, count(self::legacyFatalCases()), 'corpus should exercise legacy failure modes');
+        foreach (array_keys(self::TARGETS) as $target) {
+            $cases = self::recordedCases($target);
+            self::assertGreaterThan(500, count($cases), "the $target corpus should be large");
+            self::assertGreaterThan(
+                40,
+                count(array_filter($cases, static fn ($c) => in_array($c[0]['outcome'], ['throw', 'error'], true))),
+                "the $target corpus should exercise legacy failure modes"
+            );
+        }
+    }
+
+    /**
+     * Every target records the same cases in the same order, so a difference between two
+     * recordings is a difference between two filters rather than between two corpora.
+     */
+    public function testEveryTargetRecordsTheSameCases(): void
+    {
+        $ids = [];
+        foreach (array_keys(self::TARGETS) as $target) {
+            $ids[$target] = array_map(static fn ($c) => $c[0]['id'], array_values(self::recordedCases($target)));
+        }
+
+        foreach ($ids as $target => $list) {
+            self::assertSame($ids[self::CURRENT], $list, "the $target corpus holds different cases");
+        }
+    }
+
+    /**
+     * What 3.6.0 changed in rendering, measured: the two recordings agree on every case but
+     * the includes listed in DEFERRAL_MOVED.
+     *
+     * A new entry means upstream changed the filter somewhere else too, which is a finding to
+     * read and explain, not a list to extend.
+     */
+    public function testTheTargetsDifferOnlyWhereDeferralMoved(): void
+    {
+        $older = self::recordedCases('3.5.0');
+        $moved = [];
+
+        foreach (self::recordedCases('3.6.0') as [$case]) {
+            $before = $older['3.5.0 ' . $case['id']][0];
+            unset($before['target'], $case['target']);
+            if ($before !== $case) {
+                $moved[explode('/', $case['id'])[0]] = true;
+            }
+        }
+
+        $found = array_keys($moved);
+        sort($found);
+
+        self::assertSame(self::DEFERRAL_MOVED, $found);
     }
 
     /**
@@ -164,7 +257,10 @@ final class LegacyParityTest extends TestCase
      */
     public function testTheProseMatchesTheCorpus(): void
     {
-        $cases = self::recordedCases();
+        // Every target records the same cases - see testEveryTargetRecordsTheSameCases - and
+        // those differing do so only in where a stylesheet lands, which none of these counts
+        // depends on. The current one stands for both.
+        $cases = self::recordedCases(self::CURRENT);
         $fatal = 0;
         $incomparable = 0;
         $overRefused = 0;
@@ -286,12 +382,12 @@ final class LegacyParityTest extends TestCase
             self::markTestSkipped('deliberate over-refusal: ' . $case['id']);
         }
 
-        $actual = TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
+        $actual = self::engineFor($case)->render($case['template'], self::variablesFor($case));
 
         self::assertSame(
             $case['expected'],
             $actual,
-            sprintf("compatible mode diverged for %s\n  template: %s", $case['id'], $case['template'])
+            sprintf("compatible mode diverged from %s for %s\n  template: %s", $case['target'], $case['id'], $case['template'])
         );
     }
 
@@ -315,7 +411,7 @@ final class LegacyParityTest extends TestCase
     public function testNoRefusalClaimsACrashTheFilterDoesNotHave(array $case): void
     {
         try {
-            TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
+            self::engineFor($case)->render($case['template'], self::variablesFor($case));
             $this->addToAssertionCount(1);
 
             return;
@@ -343,7 +439,7 @@ final class LegacyParityTest extends TestCase
     #[DataProvider('surfaceDivergentCases')]
     public function testSurfaceDivergentCasesStillRenderSafely(array $case): void
     {
-        $engine = TemplateEngine::compatible();
+        $engine = self::engineFor($case);
         // A refusal emits nothing, so there is nothing unsafe in it to check - but it still
         // has to be the same outcome twice, which is what the comparison below is for.
         $render = static function () use ($engine, $case): ?string {
@@ -408,7 +504,7 @@ final class LegacyParityTest extends TestCase
     public function testCompatibleModeRefusesWhatLegacyCannotRender(array $case): void
     {
         $this->expectException(LegacyIncompatibleError::class);
-        TemplateEngine::compatible()->render($case['template'], self::variablesFor($case));
+        self::engineFor($case)->render($case['template'], self::variablesFor($case));
     }
 
     /**
@@ -419,7 +515,7 @@ final class LegacyParityTest extends TestCase
     public function testPermissiveModeRendersWhereLegacyFataled(array $case): void
     {
         $engine = TemplateEngine::withOptions(
-            Options::compatible()->withRefuseLegacyIncompatible(false)
+            self::optionsFor($case['target'])->withRefuseLegacyIncompatible(false)
         );
 
         $actual = $engine->render($case['template'], self::variablesFor($case));
@@ -445,12 +541,11 @@ final class LegacyParityTest extends TestCase
      */
     public function testEveryLegacyFatalIsRefused(): void
     {
-        $engine = TemplateEngine::compatible();
         $rendered = [];
 
         foreach (self::legacyFatalCases() as $id => [$case]) {
             try {
-                $engine->render($case['template'], self::variablesFor($case));
+                self::engineFor($case)->render($case['template'], self::variablesFor($case));
                 $rendered[] = $id;
             } catch (LegacyIncompatibleError) {
                 // refused, as required
@@ -477,18 +572,18 @@ final class LegacyParityTest extends TestCase
         $cases = self::recordedCases();
         $checked = 0;
 
-        foreach ([
+        foreach (array_keys(self::TARGETS) as $target) foreach ([
             'if/emptystr' => '',
             'if/zero' => 0,
             'if/strzero' => '0',
             'if/emptyarr' => [],
             'if/word' => 'x',
         ] as $id => $value) {
-            if (!isset($cases[$id])) {
+            if (!isset($cases[$target . ' ' . $id])) {
                 continue;
             }
 
-            $case = $cases[$id][0];
+            $case = $cases[$target . ' ' . $id][0];
             $expected = ($value == '') ? '[]' : '[Y]';
 
             self::assertSame(
@@ -508,7 +603,7 @@ final class LegacyParityTest extends TestCase
             $checked++;
         }
 
-        self::assertGreaterThanOrEqual(4, $checked, 'the truthiness cases left the corpus');
+        self::assertGreaterThanOrEqual(4 * count(self::TARGETS), $checked, 'the truthiness cases left the corpus');
     }
 
     /**
@@ -541,19 +636,18 @@ final class LegacyParityTest extends TestCase
     {
         $expected = self::DELIBERATE_OVER_REFUSALS;   // see the constant for what each is
 
-        $engine = TemplateEngine::compatible();
         $shapes = [];
 
-        foreach (self::recordedCases() as $id => [$case]) {
+        foreach (self::recordedCases() as [$case]) {
             if ($case['outcome'] !== 'ok') {
                 continue;                     // legacy fatals are the other test
             }
             try {
-                $engine->render($case['template'], self::variablesFor($case));
+                self::engineFor($case)->render($case['template'], self::variablesFor($case));
             } catch (LegacyIncompatibleError) {
-                $shapes[explode('/', $id)[0]] = true;
+                $shapes[explode('/', $case['id'])[0]] = true;
             } catch (\Throwable) {
-                $shapes[explode('/', $id)[0]] = true;
+                $shapes[explode('/', $case['id'])[0]] = true;
             }
         }
 
@@ -571,7 +665,6 @@ final class LegacyParityTest extends TestCase
      */
     public function testNoRenderedCaseDiverges(): void
     {
-        $engine = TemplateEngine::compatible();
         $diverged = [];
 
         foreach (self::recordedCases() as $id => [$case]) {
@@ -579,7 +672,7 @@ final class LegacyParityTest extends TestCase
                 continue;                     // surface-divergent directives are not compared
             }
             try {
-                $actual = $engine->render($case['template'], self::variablesFor($case));
+                $actual = self::engineFor($case)->render($case['template'], self::variablesFor($case));
             } catch (\Throwable) {
                 continue;                     // a refusal is covered above
             }

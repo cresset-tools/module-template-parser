@@ -23,8 +23,11 @@ final class ParitySensitivityTest extends TestCase
     /** @return array<int,array{template:string,variables:array,expected:string}> */
     private static function parityCases(): array
     {
+        // The current target's recording. The others agree with it on every parity case -
+        // LegacyParityTest::testTheTargetsDifferOnlyWhereDeferralMoved - so measuring
+        // sensitivity again on each would count the same evidence twice.
         $cases = json_decode(
-            (string)file_get_contents(__DIR__ . '/fixtures/legacy/cases.json'),
+            (string)file_get_contents(LegacyParityTest::TARGETS[LegacyParityTest::CURRENT]),
             true,
             512,
             JSON_THROW_ON_ERROR

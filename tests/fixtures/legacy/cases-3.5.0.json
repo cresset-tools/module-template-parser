@@ -55526,5 +55526,2177 @@
             "outcome": "ok",
             "expected": "<!--\n/**\n * Copyright 2015 Adobe\n * All Rights Reserved.\n */\n-->\n<!--@subject Take a look at &#039;s Wish List @-->\n<!--@vars {\n\"var store.frontend_name\":\"Store Name\",\n\"var customerName\":\"Customer Name\",\n\"var viewOnSiteLink\":\"View Wish List URL\",\n\"var items|raw\":\"Wish List Items\",\n\"var message|raw\":\"Wish List Message\"\n} @-->\n\n{Error in template processing}\n\n<p> wants to share this Wish List from  with you:</p>\n\n\n\n\n<br/>\n\n<p><a href=\"\">View all Wish List items</a></p>\n\n{Error in template processing}\n"
         }
+    },
+    {
+        "id": "defer_inc_plain/word",
+        "template": "[{{template config_path=\"test/plain\"}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<p>x</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_plain/html",
+        "template": "[{{template config_path=\"test/plain\"}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_plain/zero",
+        "template": "[{{template config_path=\"test/plain\"}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<p>0</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_plain/emptystr",
+        "template": "[{{template config_path=\"test/plain\"}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<p></p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_plain/false",
+        "template": "[{{template config_path=\"test/plain\"}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<p></p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_plain/novars",
+        "template": "[{{template config_path=\"test/plain\"}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<p>&#123;&#123;var a}}</p>]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "[<p>{{var a}}</p>]"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_styled/word",
+        "template": "<html>{{template config_path=\"test/styled\"}}</html>",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><html><p>x</p></html>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_styled/html",
+        "template": "<html>{{template config_path=\"test/styled\"}}</html>",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><html><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p></html>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_styled/zero",
+        "template": "<html>{{template config_path=\"test/styled\"}}</html>",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><html><p>0</p></html>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_styled/emptystr",
+        "template": "<html>{{template config_path=\"test/styled\"}}</html>",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><html><p></p></html>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_styled/false",
+        "template": "<html>{{template config_path=\"test/styled\"}}</html>",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><html><p></p></html>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_styled/novars",
+        "template": "<html>{{template config_path=\"test/styled\"}}</html>",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><html><p>&#123;&#123;var a}}</p></html>",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css--><html><p>{{var a}}</p></html>"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_two/word",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p>x</p>|<p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_two/html",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>|<p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_two/zero",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p>0</p>|<p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_two/emptystr",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p></p>|<p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_two/false",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p></p>|<p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_two/novars",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled_b\"}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p>&#123;&#123;var a}}</p>|<p>B</p>",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css,css/b.css--><p>{{var a}}</p>|<p>B</p>"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_twice/word",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled\"}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p>x</p>|<p>x</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_twice/html",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled\"}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>|<p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_twice/zero",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled\"}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p>0</p>|<p>0</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_twice/emptystr",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled\"}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p></p>|<p></p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_twice/false",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled\"}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p></p>|<p></p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_twice/novars",
+        "template": "{{template config_path=\"test/styled\"}}|{{template config_path=\"test/styled\"}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p>&#123;&#123;var a}}</p>|<p>&#123;&#123;var a}}</p>",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css--><p>{{var a}}</p>|<p>{{var a}}</p>"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_cond/word",
+        "template": "{{template config_path=\"test/cond\"}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p>x</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_cond/html",
+        "template": "{{template config_path=\"test/cond\"}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_cond/zero",
+        "template": "{{template config_path=\"test/cond\"}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><p>0</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_cond/emptystr",
+        "template": "{{template config_path=\"test/cond\"}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<p></p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_cond/false",
+        "template": "{{template config_path=\"test/cond\"}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<p></p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_cond/novars",
+        "template": "{{template config_path=\"test/cond\"}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "&#123;&#123;if a}}&#123;&#123;inlinecss file=\"css/a.css\"}}&#123;&#123;/if}}<p>&#123;&#123;var a}}</p>",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nested/word",
+        "template": "{{template config_path=\"test/nested\"}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p>x</p></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nested/html",
+        "template": "{{template config_path=\"test/nested\"}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nested/zero",
+        "template": "{{template config_path=\"test/nested\"}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p>0</p></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nested/emptystr",
+        "template": "{{template config_path=\"test/nested\"}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p></p></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nested/false",
+        "template": "{{template config_path=\"test/nested\"}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p></p></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nested/novars",
+        "template": "{{template config_path=\"test/nested\"}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p>&#123;&#123;var a}}</p></div>",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css--><div><p>{{var a}}</p></div>"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_if/word",
+        "template": "[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>x</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_if/html",
+        "template": "[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_if/zero",
+        "template": "[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>0</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_if/emptystr",
+        "template": "[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_if/false",
+        "template": "[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_if/novars",
+        "template": "[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css-->[{{if a}}<p>&#123;&#123;var a}}</p>{{/if}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css-->[{{if a}}<p>{{var a}}</p>{{/if}}]"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_dep/word",
+        "template": "[{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>x</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_dep/html",
+        "template": "[{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_dep/zero",
+        "template": "[{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>0</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_dep/emptystr",
+        "template": "[{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_dep/false",
+        "template": "[{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_dep/novars",
+        "template": "[{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css-->[{{depend a}}<p>&#123;&#123;var a}}</p>{{/depend}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css-->[{{depend a}}<p>{{var a}}</p>{{/depend}}]"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_two/word",
+        "template": "[{{if a}}{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>x</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_two/html",
+        "template": "[{{if a}}{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}{{/if}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_two/zero",
+        "template": "[{{if a}}{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p>0</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_two/emptystr",
+        "template": "[{{if a}}{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_two/false",
+        "template": "[{{if a}}{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_two/novars",
+        "template": "[{{if a}}{{depend a}}{{template config_path=\"test/styled\"}}{{/depend}}{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css-->[{{if a}}{{depend a}}<p>&#123;&#123;var a}}</p>{{/depend}}{{/if}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css-->[{{if a}}{{depend a}}<p>{{var a}}</p>{{/depend}}{{/if}}]"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_else/word",
+        "template": "[{{if a}}A{{else}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_else/html",
+        "template": "[{{if a}}A{{else}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_else/zero",
+        "template": "[{{if a}}A{{else}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[A]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_else/emptystr",
+        "template": "[{{if a}}A{{else}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p></p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_else/false",
+        "template": "[{{if a}}A{{else}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/a.css--><p></p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_else/novars",
+        "template": "[{{if a}}A{{else}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css-->[{{if a}}A{{else}}<p>&#123;&#123;var a}}</p>{{/if}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css-->[{{if a}}A{{else}}<p>{{var a}}</p>{{/if}}]"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_if_and_top/word",
+        "template": "{{template config_path=\"test/styled_b\"}}[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p>B</p>[<!--inlined:css/a.css--><p>x</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_if_and_top/html",
+        "template": "{{template config_path=\"test/styled_b\"}}[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p>B</p>[<!--inlined:css/a.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_if_and_top/zero",
+        "template": "{{template config_path=\"test/styled_b\"}}[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css,css/b.css--><p>B</p>[<!--inlined:css/a.css--><p>0</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_if_and_top/emptystr",
+        "template": "{{template config_path=\"test/styled_b\"}}[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/b.css--><p>B</p>[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_if_and_top/false",
+        "template": "{{template config_path=\"test/styled_b\"}}[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/b.css--><p>B</p>[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_if_and_top/novars",
+        "template": "{{template config_path=\"test/styled_b\"}}[{{if a}}{{template config_path=\"test/styled\"}}{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/b.css,css/a.css--><p>B</p>[{{if a}}<p>&#123;&#123;var a}}</p>{{/if}}]",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/b.css,css/a.css--><p>B</p>[{{if a}}<p>{{var a}}</p>{{/if}}]"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nest_if/word",
+        "template": "{{template config_path=\"test/nested_if\"}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p>x</p></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nest_if/html",
+        "template": "{{template config_path=\"test/nested_if\"}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nest_if/zero",
+        "template": "{{template config_path=\"test/nested_if\"}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div><p>0</p></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nest_if/emptystr",
+        "template": "{{template config_path=\"test/nested_if\"}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<div></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nest_if/false",
+        "template": "{{template config_path=\"test/nested_if\"}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<div></div>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_nest_if/novars",
+        "template": "{{template config_path=\"test/nested_if\"}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/a.css--><div>&#123;&#123;if a}}<p>&#123;&#123;var a}}</p>&#123;&#123;/if}}</div>",
+        "parity": false,
+        "pre_hardening": {
+            "outcome": "ok",
+            "expected": "<!--inlined:css/a.css--><div>{{if a}}<p>{{var a}}</p>{{/if}}</div>"
+        },
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_for/word",
+        "template": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_for/html",
+        "template": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_for/zero",
+        "template": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_for/emptystr",
+        "template": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_for/false",
+        "template": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_inc_in_for/novars",
+        "template": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{for i in a}}{{template config_path=\"test/styled\"}}{{/for}}]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_and_inc/word",
+        "template": "{{inlinecss file=\"css/root.css\"}}{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css,css/b.css--><p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_and_inc/html",
+        "template": "{{inlinecss file=\"css/root.css\"}}{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css,css/b.css--><p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_and_inc/zero",
+        "template": "{{inlinecss file=\"css/root.css\"}}{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css,css/b.css--><p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_and_inc/emptystr",
+        "template": "{{inlinecss file=\"css/root.css\"}}{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css,css/b.css--><p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_and_inc/false",
+        "template": "{{inlinecss file=\"css/root.css\"}}{{template config_path=\"test/styled_b\"}}",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css,css/b.css--><p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_and_inc/novars",
+        "template": "{{inlinecss file=\"css/root.css\"}}{{template config_path=\"test/styled_b\"}}",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css,css/b.css--><p>B</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root/word",
+        "template": "{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css--><p>x</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root/html",
+        "template": "{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root/zero",
+        "template": "{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css--><p>0</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root/emptystr",
+        "template": "{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css--><p></p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root/false",
+        "template": "{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css--><p></p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root/novars",
+        "template": "{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "<!--inlined:css/root.css--><p>{{var a}}</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_if/word",
+        "template": "[{{if a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/if}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/root.css--><p>x</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_if/html",
+        "template": "[{{if a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/if}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/root.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_if/zero",
+        "template": "[{{if a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/if}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/root.css--><p>0</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_if/emptystr",
+        "template": "[{{if a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/if}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_if/false",
+        "template": "[{{if a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/if}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_if/novars",
+        "template": "[{{if a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/if}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{if a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/if}}]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_dep/word",
+        "template": "[{{depend a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/depend}}]",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/root.css--><p>x</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_dep/html",
+        "template": "[{{depend a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/depend}}]",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/root.css--><p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_dep/zero",
+        "template": "[{{depend a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/depend}}]",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[<!--inlined:css/root.css--><p>0</p>]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_dep/emptystr",
+        "template": "[{{depend a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/depend}}]",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_dep/false",
+        "template": "[{{depend a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/depend}}]",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "[]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_root_in_dep/novars",
+        "template": "[{{depend a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/depend}}]",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "[{{depend a}}{{inlinecss file=\"css/root.css\"}}<p>{{var a}}</p>{{/depend}}]",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": false
+    },
+    {
+        "id": "defer_child_top/word",
+        "template": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": "x"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{inlinecss file=\"css/a.css\"}}<p>x</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": true
+    },
+    {
+        "id": "defer_child_top/html",
+        "template": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": "<b>&\"x\"</b>"
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{inlinecss file=\"css/a.css\"}}<p>&lt;b&gt;&amp;&quot;x&quot;&lt;/b&gt;</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": true
+    },
+    {
+        "id": "defer_child_top/zero",
+        "template": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": 0
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{inlinecss file=\"css/a.css\"}}<p>0</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": true
+    },
+    {
+        "id": "defer_child_top/emptystr",
+        "template": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": ""
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{inlinecss file=\"css/a.css\"}}<p></p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": true
+    },
+    {
+        "id": "defer_child_top/false",
+        "template": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+        "variables": {
+            "a": false
+        },
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{inlinecss file=\"css/a.css\"}}<p></p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": true
+    },
+    {
+        "id": "defer_child_top/novars",
+        "template": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+        "variables": [],
+        "object": null,
+        "outcome": "ok",
+        "expected": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+        "parity": false,
+        "includes": {
+            "test/plain": "<p>{{var a}}</p>",
+            "test/styled": "{{inlinecss file=\"css/a.css\"}}<p>{{var a}}</p>",
+            "test/styled_b": "{{inlinecss file=\"css/b.css\"}}<p>B</p>",
+            "test/cond": "{{if a}}{{inlinecss file=\"css/a.css\"}}{{/if}}<p>{{var a}}</p>",
+            "test/nested": "<div>{{template config_path=\"test/styled\"}}</div>",
+            "test/nested_if": "<div>{{if a}}{{template config_path=\"test/styled\"}}{{/if}}</div>"
+        },
+        "root_is_child": true
     }
 ]

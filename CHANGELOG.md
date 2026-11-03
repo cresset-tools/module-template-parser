@@ -12,7 +12,26 @@ Entries say what changed and why it mattered. A line that only names a file has 
 ## [Unreleased]
 
 The move to [Mage-OS Lab](https://github.com/mage-os-lab/module-template-parser), under the
-lab's naming, and the fixes from a whole-project review before the donation.
+lab's naming, the fixes from a whole-project review before the donation, and Mage-OS 3.6.0.
+
+### Added
+
+- **Mage-OS 3.6.0.** Compatible mode matches 3.6.0's deferral and neutralizer behaviour as well
+  as 3.5.0's. 3.6.0 resolves a directive an included template defers - `{{inlinecss}}` - at the
+  root template through `Template\DeferredDirectiveRegistry`, where 3.5.0 resolved it in the
+  innermost `{{if}}`, `{{else}}` or `{{depend}}` body of the root around the include and so
+  inlined the stylesheet over that body alone. The neutralizer now always encodes, which this
+  engine's always did. Recorded against both releases, the corpus differs only in that
+  placement. The Magento layer reads which the store runs - `HostDeferral` looks for the
+  registry among the framework filter's constructor arguments - and on 3.5.0 declines a render
+  whose include asks for a stylesheet from inside a body, so Parser mode hands it to the
+  filter. Outside a store, `Options::withDeferralResolvedAtRoot(false)` targets 3.5.0.
+- **A parity corpus per target release**: `tests/fixtures/legacy/cases-3.5.0.json` (was
+  `cases.json`) and `cases-3.6.0.json`, each replayed with the options a store on that release
+  gets. A deferral pass renders `{{inlinecss}}` through included child templates, which the
+  corpus never reached before, and `DeferralParityTest` replays those cases with their
+  includes. The recorder reads the target off the tree, and the "Fixtures vs current Mage-OS"
+  job re-records the 3.6.0 file only.
 
 ### Changed
 
@@ -210,6 +229,17 @@ lab's naming, and the fixes from a whole-project review before the donation.
   `.phtml` for every block in an allowed handle.
 - **`{{widget}}` never forwards a non-frontend `area`**, which let template text render an
   admin `.phtml` through a widget's `template`, as `{{block}}` already prevented.
+- **An `{{inlinecss}}` inside an `{{if}}`, `{{else}}` or `{{depend}}` is declined in
+  compatible mode.** The filter inlines that stylesheet over the body it sits in, on every
+  version; this engine handed it to the host for the whole email, so Parser mode served
+  different markup without saying so. It is now a policy violation, and Parser mode hands the
+  render to the filter. The stock templates name their one stylesheet in the header include,
+  at the top level, and are unaffected.
+- **The recording tools work against Mage-OS 3.6.0.** Its filter resolves
+  `DeferredDirectiveRegistry` through the global ObjectManager, which the tools' harness could
+  not serve, so every case recorded as a legacy fatal - the 23k-line drift the "Fixtures vs
+  current Mage-OS" job reported. With the registry handed in, 3.6.0 records the old corpus
+  byte for byte as 3.5.0 did.
 
 ### Upgrading from cresset/module-template-parser 0.3.0
 

@@ -3,11 +3,19 @@
  * Records what the LEGACY Magento filter does for a corpus of templates, as golden
  * fixtures the test suite can replay without a Magento installation.
  *
- * Writes tests/fixtures/legacy/cases.json. Regenerate whenever the corpus changes:
+ * Writes tests/fixtures/legacy/cases-<target>.json, one recording per Mage-OS release the
+ * corpus targets. Regenerate both whenever the corpus changes:
  *
- *   MAGENTO_ROOT=/path/to/magento php tools/record-legacy.php
+ *   MAGENTO_ROOT=/path/to/mageos-3.5.0 php tools/record-legacy.php    -> cases-3.5.0.json
+ *   MAGENTO_ROOT=/path/to/mageos-3.6.0 php tools/record-legacy.php    -> cases-3.6.0.json
  *
- * Use a PRISTINE Magento checkout - see tools/harness.php.
+ * The target is read off the tree rather than passed, so a recording cannot land in the
+ * other release's file: a filter that defers through Template\DeferredDirectiveRegistry is
+ * 3.6.0, one with Template\DirectiveOutputNeutralizer and no registry is 3.5.0, and a tree
+ * with neither predates every target and is refused.
+ *
+ * Use a PRISTINE checkout of the released tag - see tools/harness.php. `git archive <tag>`
+ * into an empty directory is the simplest way to be sure nothing local is in it.
  */
 declare(strict_types=1);
 // Inert unless invoked directly - see tools/harness.php.
@@ -20,6 +28,20 @@ $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
 require MROOT . '/lib/internal/Magento/Framework/DataObject.php';
 require MROOT . '/lib/internal/Magento/Framework/Escaper.php';
+/*
+ * Which recording this tree produces - see the docblock. Decided before anything renders, so
+ * a tree no target matches is refused before it can overwrite anything.
+ */
+const TARGETS = ['registry' => '3.6.0', 'signature' => '3.5.0'];
+$target = TARGETS[\Harness\deferralModel()];
+if ($target === '3.5.0'
+    && !is_file(MROOT . '/lib/internal/Magento/Framework/Filter/Template/DirectiveOutputNeutralizer.php')
+) {
+    fwrite(STDERR, "MAGENTO_ROOT predates Mage-OS 3.5.0 (no DirectiveOutputNeutralizer), which no corpus targets\n");
+    exit(1);
+}
+$fixture = 'tests/fixtures/legacy/cases-' . $target . '.json';
+
 foreach (['/DirectiveProcessorInterface.php','/VariableResolverInterface.php','/Template/FilteringDepthMeter.php',
  '/Template/SignatureProvider.php','/Template/Tokenizer/AbstractTokenizer.php','/Template/Tokenizer/Parameter.php',
  '/Template/Tokenizer/Variable.php','/VariableResolver/StrictResolver.php','/DirectiveProcessor/Filter/FilterApplier.php',
@@ -132,8 +154,9 @@ function parityEligible(string $tpl, string $id = ''): bool {
  *
  * @return array{0:string,1:?string} [outcome, value]
  */
-function record(string $tpl, array $vars, bool $neutralize = true): array {
-    try { return ['ok', \MageOS\TemplateParser\Console\StoreErrorHandler::run(static fn () => legacy($vars, $neutralize)->filter($tpl))]; }
+function record(string $tpl, array $vars, bool $neutralize = true, ?callable $build = null): array {
+    $build ??= 'legacy';
+    try { return ['ok', \MageOS\TemplateParser\Console\StoreErrorHandler::run(static fn () => $build($vars, $neutralize)->filter($tpl))]; }
     catch (\MageOS\TemplateParser\Console\StoreError $e) { return ['error', $e->described()]; }
     catch (\Throwable $e) { return ['throw', get_class($e)]; }
 }
@@ -148,9 +171,9 @@ function record(string $tpl, array $vars, bool $neutralize = true): array {
  *
  * @param array<string,mixed> $vars
  */
-function recordBoth(string $id, string $tpl, array $vars, ?string $object, bool $parity): array {
-    [$outcome, $value] = record($tpl, $vars, true);
-    [$plainOutcome, $plainValue] = record($tpl, $vars, false);
+function recordBoth(string $id, string $tpl, array $vars, ?string $object, bool $parity, ?callable $build = null): array {
+    [$outcome, $value] = record($tpl, $vars, true, $build);
+    [$plainOutcome, $plainValue] = record($tpl, $vars, false, $build);
 
     $case = [
         'id' => $id, 'template' => $tpl,
@@ -464,16 +487,111 @@ foreach (glob(PKGROOT . '/tests/fixtures/corpus/*.html') ?: [] as $file) {
     $cases[] = recordBoth('real/' . basename($file), $src, $realVars, null, parityEligible($src));
 }
 
+/*
+ * Deferral: {{inlinecss}} in an included child template, which the filter hands up for the
+ * root to resolve so the stylesheet is inlined over the whole document.
+ *
+ * This is the one part of the filter Mage-OS 3.6.0 changed - signature-based deferral became
+ * Template\DeferredDirectiveRegistry - and none of the cases above reaches it: deferral
+ * needs a child template, and a child needs an include. Recorded so the two generations are
+ * compared on what actually changed between them, rather than on everything that did not.
+ *
+ * The values are deliberately the plain ones. What is measured is where a template's own
+ * deferred directive ends up, not what a variable carrying directive text does - the value
+ * matrix above already pins that for every construct.
+ */
+require __DIR__ . '/stubs/RecorderDeferral.php.stub';
+
+/**
+ * A root filter whose includes render through child filters sharing its request-wide
+ * services, as AbstractTemplate::getTemplateContent() builds them on a store.
+ */
+function legacyFamily(bool $rootIsChild): callable {
+    return static function (array $vars, bool $neutralize) use ($rootIsChild): LegacyTemplate {
+        $r = new StrictResolver(new VariableFactory());
+        \Magento\Framework\App\ObjectManager::$registry[VarDirective::class] = new VarDirective($r, new FilterApplier(new FilterPool()));
+        \Magento\Framework\App\ObjectManager::$registry[ForDirective::class] = new ForDirective($r);
+        $sig = new SignatureProvider(new Random());
+        $depth = new FilteringDepthMeter();
+        $neutralizer = \Harness\neutralizerFor($sig, $neutralize);
+        $registry = \Harness\registryFor();
+
+        $make = static function (array $vars, bool $child) use (&$make, $r, $sig, $depth, $neutralizer, $registry): LegacyTemplate {
+            $s = new SimpleDirective(new ProcessorPool(), new ParameterFactory(), $r, new FilterApplier(new FilterPool()));
+            $t = new DeferringEmailLikeLegacy(new StringUtils(), [], ['depend'=>new DependDirective($r),'if'=>new IfDirective($r),
+                'template'=>new TemplateDirective($r,new ParameterFactory()),'legacy'=>new LegacyDirective($s)],
+                $r, $sig, $depth, $neutralizer, $registry);
+            $t->setIsChildTemplate($child);
+            $t->setTemplateProcessor(static function ($configPath, array $variables) use (&$make): string {
+                $source = DeferringEmailLikeLegacy::$includes[$configPath] ?? null;
+                if ($source === null) {
+                    throw new \RuntimeException("no include recorded for $configPath");
+                }
+                return $make($variables, true)->filter($source);
+            });
+            $t->setVariables($vars);
+            return $t;
+        };
+
+        return $make($vars, $rootIsChild);
+    };
+}
+
+DeferringEmailLikeLegacy::$includes = [
+    'test/plain'    => '<p>{{var a}}</p>',
+    'test/styled'   => '{{inlinecss file="css/a.css"}}<p>{{var a}}</p>',
+    'test/styled_b' => '{{inlinecss file="css/b.css"}}<p>B</p>',
+    'test/cond'     => '{{if a}}{{inlinecss file="css/a.css"}}{{/if}}<p>{{var a}}</p>',
+    'test/nested'   => '<div>{{template config_path="test/styled"}}</div>',
+    'test/nested_if'=> '<div>{{if a}}{{template config_path="test/styled"}}{{/if}}</div>',
+];
+// [is the root itself a child template, source]
+$deferralConstructs = [
+    'defer_inc_plain'   => [false, '[{{template config_path="test/plain"}}]'],
+    'defer_inc_styled'  => [false, '<html>{{template config_path="test/styled"}}</html>'],
+    'defer_inc_two'     => [false, '{{template config_path="test/styled"}}|{{template config_path="test/styled_b"}}'],
+    'defer_inc_twice'   => [false, '{{template config_path="test/styled"}}|{{template config_path="test/styled"}}'],
+    'defer_inc_cond'    => [false, '{{template config_path="test/cond"}}'],
+    'defer_inc_nested'  => [false, '{{template config_path="test/nested"}}'],
+    'defer_inc_in_if'   => [false, '[{{if a}}{{template config_path="test/styled"}}{{/if}}]'],
+    'defer_inc_in_dep'  => [false, '[{{depend a}}{{template config_path="test/styled"}}{{/depend}}]'],
+    'defer_inc_in_two'  => [false, '[{{if a}}{{depend a}}{{template config_path="test/styled"}}{{/depend}}{{/if}}]'],
+    'defer_inc_in_else' => [false, '[{{if a}}A{{else}}{{template config_path="test/styled"}}{{/if}}]'],
+    'defer_inc_if_and_top' => [false, '{{template config_path="test/styled_b"}}[{{if a}}{{template config_path="test/styled"}}{{/if}}]'],
+    'defer_inc_nest_if' => [false, '{{template config_path="test/nested_if"}}'],
+    'defer_inc_in_for'  => [false, '[{{for i in a}}{{template config_path="test/styled"}}{{/for}}]'],
+    'defer_root_and_inc'=> [false, '{{inlinecss file="css/root.css"}}{{template config_path="test/styled_b"}}'],
+    'defer_root'        => [false, '{{inlinecss file="css/root.css"}}<p>{{var a}}</p>'],
+    'defer_root_in_if'  => [false, '[{{if a}}{{inlinecss file="css/root.css"}}<p>{{var a}}</p>{{/if}}]'],
+    'defer_root_in_dep' => [false, '[{{depend a}}{{inlinecss file="css/root.css"}}<p>{{var a}}</p>{{/depend}}]'],
+    // A filter in child mode at the top: nothing above it resolves the deferral, and the
+    // directive comes back as its own text - in 3.6.0 only since df293bf2, before which the
+    // registry's placeholder leaked into the output.
+    'defer_child_top'   => [true,  '{{inlinecss file="css/a.css"}}<p>{{var a}}</p>'],
+];
+$deferralValues = ['word' => 'x', 'html' => '<b>&"x"</b>', 'zero' => 0, 'emptystr' => '', 'false' => false];
+foreach ($deferralConstructs as $clabel => [$rootIsChild, $tpl]) {
+    foreach ([...$deferralValues, 'novars' => null] as $vlabel => $v) {
+        $vars = $vlabel === 'novars' ? [] : ['a' => $v];
+        $case = recordBoth("$clabel/$vlabel", $tpl, $vars, null, parityEligible($tpl, $clabel), legacyFamily($rootIsChild));
+        // What the includes held and how the root was built, so the suite can replay the case
+        // through the engine with a template loader serving the same sources.
+        $case['includes'] = DeferringEmailLikeLegacy::$includes;
+        $case['root_is_child'] = $rootIsChild;
+        $cases[] = $case;
+    }
+}
+
 $json = json_encode($cases, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 if ($json === false) {
     // Silently writing an empty fixture would make the parity suite pass vacuously.
     fwrite(STDERR, 'FATAL: json_encode failed: ' . json_last_error_msg() . PHP_EOL);
     exit(1);
 }
-file_put_contents(PKGROOT . '/tests/fixtures/legacy/cases.json', $json);
+file_put_contents(PKGROOT . '/' . $fixture, $json);
 
 $throws = count(array_filter($cases, static fn ($c) => $c['outcome'] === 'throw'));
 $errors = count(array_filter($cases, static fn ($c) => $c['outcome'] === 'error'));
 $parity = count(array_filter($cases, static fn ($c) => $c['parity']));
-printf("recorded %d cases: %d render, %d legacy fatals, %d store errors, %d parity-eligible -> tests/fixtures/legacy/cases.json\n",
-    count($cases), count($cases) - $throws - $errors, $throws, $errors, $parity);
+printf("recorded %d cases: %d render, %d legacy fatals, %d store errors, %d parity-eligible -> %s\n",
+    count($cases), count($cases) - $throws - $errors, $throws, $errors, $parity, $fixture);
