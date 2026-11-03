@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MageOS\TemplateParser\Test;
 
 use MageOS\TemplateParser\HostServices;
+use Magento\Framework\Interception\DefinitionInterface;
 use MageOS\TemplateParser\Magento\Config\EngineMode;
 use MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
 use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
@@ -364,7 +365,7 @@ final class SilentDegradationTest extends TestCase
     public function testPluginsInsideThisOneRunOnAParserRender(): void
     {
         [$subject, $wire] = $this->chained(
-            ['__self' => ['around' => 'mageos_template_parser'], 'mageos_template_parser' => ['before' => ['b'], 'after' => ['pb']]],
+            ['__self' => [DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser'], 'mageos_template_parser' => [DefinitionInterface::LISTENER_BEFORE => ['b'], DefinitionInterface::LISTENER_AFTER => ['pb']]],
             ['b' => self::beforePlugin(), 'pb' => self::afterPlugin()]
         );
         $records = [];
@@ -379,7 +380,7 @@ final class SilentDegradationTest extends TestCase
     public function testShadowComparesAfterThePluginsInsideThisOne(): void
     {
         [$subject, $wire] = $this->chained(
-            ['__self' => ['around' => 'mageos_template_parser'], 'mageos_template_parser' => ['before' => ['b'], 'after' => ['pb']]],
+            ['__self' => [DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser'], 'mageos_template_parser' => [DefinitionInterface::LISTENER_BEFORE => ['b'], DefinitionInterface::LISTENER_AFTER => ['pb']]],
             ['b' => self::beforePlugin(), 'pb' => self::afterPlugin()]
         );
         $records = [];
@@ -394,7 +395,7 @@ final class SilentDegradationTest extends TestCase
     public function testPluginsOutsideThisOneAreLeftToTheInterceptor(): void
     {
         [$subject, $wire] = $this->chained(
-            ['__self' => ['after' => ['pb'], 'around' => 'mageos_template_parser']],
+            ['__self' => [DefinitionInterface::LISTENER_AFTER => ['pb'], DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser']],
             ['pb' => self::afterPlugin()]
         );
         $records = [];
@@ -408,7 +409,7 @@ final class SilentDegradationTest extends TestCase
     public function testAnAroundPluginInsideThisOneLeavesTheRenderToTheFilter(): void
     {
         [$subject, $wire] = $this->chained(
-            ['__self' => ['around' => 'mageos_template_parser'], 'mageos_template_parser' => ['around' => 'wrapper']],
+            ['__self' => [DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser'], 'mageos_template_parser' => [DefinitionInterface::LISTENER_AROUND => 'wrapper']],
             []
         );
         $records = [];
@@ -426,7 +427,7 @@ final class SilentDegradationTest extends TestCase
     public function testTheConsolesCandidateIsServedThroughThePluginsInsideThisOne(): void
     {
         [$subject, $wire] = $this->chained(
-            ['__self' => ['around' => 'mageos_template_parser'], 'mageos_template_parser' => ['after' => ['pb']]],
+            ['__self' => [DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser'], 'mageos_template_parser' => [DefinitionInterface::LISTENER_AFTER => ['pb']]],
             ['pb' => self::afterPlugin()]
         );
         $records = [];

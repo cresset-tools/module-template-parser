@@ -14,6 +14,7 @@ use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
 use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
 use MageOS\TemplateParser\Magento\ShadowComparator;
 use Magento\Framework\Filter\Template as LegacyTemplate;
+use Magento\Framework\Interception\DefinitionInterface;
 use Magento\Framework\Interception\PluginListInterface;
 
 /**
@@ -489,7 +490,8 @@ class TemplateFilterPlugin
             $seen = [];
             while (!isset($seen[$code]) && is_array($info = $list->getNext($type, 'filter', $code))) {
                 $seen[$code] = true;
-                $around = $info['around'] ?? null;
+                // Keyed as PluginListGenerator::inheritPlugins() builds it - see DirectiveMethods.
+                $around = $info[DefinitionInterface::LISTENER_AROUND] ?? null;
                 if (!is_string($around)) {
                     return null;
                 }
@@ -506,9 +508,11 @@ class TemplateFilterPlugin
                 return [
                     'list' => $list,
                     'type' => $type,
-                    'before' => array_values(array_map('strval', (array)($inner['before'] ?? []))),
-                    'after' => array_values(array_map('strval', (array)($inner['after'] ?? []))),
-                    'around' => isset($inner['around']) ? (string)$inner['around'] : null,
+                    'before' => array_values(array_map('strval', (array)($inner[DefinitionInterface::LISTENER_BEFORE] ?? []))),
+                    'after' => array_values(array_map('strval', (array)($inner[DefinitionInterface::LISTENER_AFTER] ?? []))),
+                    'around' => isset($inner[DefinitionInterface::LISTENER_AROUND])
+                        ? (string)$inner[DefinitionInterface::LISTENER_AROUND]
+                        : null,
                 ];
             }
         } catch (\Throwable) {

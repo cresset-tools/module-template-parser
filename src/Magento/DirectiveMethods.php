@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MageOS\TemplateParser\Magento;
 
+use Magento\Framework\Interception\DefinitionInterface;
 use Magento\Framework\Interception\PluginListInterface;
 
 /**
@@ -129,7 +130,10 @@ final class DirectiveMethods
      * output without a plugin's change.
      *
      * Every plugin on the method, not only the first stretch of the chain: `getNext()` stops
-     * at each around plugin, and is asked again from there, as `___callPlugins()` does.
+     * at each around plugin, and is asked again from there, as `___callPlugins()` does. Its
+     * answer is keyed by {@see DefinitionInterface}'s LISTENER_* integers, as
+     * `PluginListGenerator::inheritPlugins()` builds it: a list of codes under BEFORE and
+     * AFTER, one code under AROUND.
      *
      * @return ?list<string>
      */
@@ -145,15 +149,15 @@ final class DirectiveMethods
             $seen = [];
             while (($info = $list->getNext($type, $method, $code)) !== null && !isset($seen[$code])) {
                 $seen[$code] = true;
-                foreach (['before', 'after'] as $kind) {
+                foreach ([DefinitionInterface::LISTENER_BEFORE, DefinitionInterface::LISTENER_AFTER] as $kind) {
                     foreach ((array)($info[$kind] ?? []) as $name) {
                         $names[] = (string)$name;
                     }
                 }
-                if (!isset($info['around'])) {
+                if (!isset($info[DefinitionInterface::LISTENER_AROUND])) {
                     break;
                 }
-                $code = (string)$info['around'];
+                $code = (string)$info[DefinitionInterface::LISTENER_AROUND];
                 $names[] = $code;
             }
         } catch (\Throwable) {

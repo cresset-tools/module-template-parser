@@ -98,6 +98,16 @@ lab's naming, the fixes from a whole-project review before the donation, and Mag
   load order. The `before` and `after` plugins inside this one now run on this engine's
   render as the Interceptor runs them on the filter's; a filter with an `around` plugin
   inside is left to the filter.
+- **The plugin chain is read the way Magento's `PluginList` returns it.** `getNext()` keys its
+  answer by `DefinitionInterface::LISTENER_BEFORE`, `LISTENER_AROUND` and `LISTENER_AFTER`
+  (1, 2 and 4), and the two entries above read `'before'`, `'around'` and `'after'` - the
+  keys of the test suite's fake plugin lists. On a store, then, no plugin inside this one
+  ran on a Parser render, an `around` plugin inside was not detected and so not left to the
+  filter, `template:diff`'s candidate got only the plugins outside this one, and
+  `template:check` named no plugin on a plugged directive (it still found the directive).
+  Every fake list now uses the constants, and `RealPluginListTest` checks the reading against
+  Magento's own `PluginListGenerator` and Interceptor trait when `MAGENTO_ROOT` names an
+  install.
 - **A directive only the store's filter renders is declined inside `{{template}}` includes
   too.** A module's `{{coupon}}`, or a plugged stock directive, was handed to the filter at the
   top level but served as escaped text when it appeared in an included header or footer.

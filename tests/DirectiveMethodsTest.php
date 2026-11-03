@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MageOS\TemplateParser\Test;
 
 use MageOS\TemplateParser\Magento\DirectiveMethods;
+use Magento\Framework\Interception\DefinitionInterface;
 use Magento\Framework\Interception\PluginListInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -63,7 +64,7 @@ final class DirectiveMethodsTest extends TestCase
     public function testTheGivenPluginListIsAskedForTheInterceptedClass(): void
     {
         $type = \Magento\Email\Model\Template\Filter::class;
-        $list = self::listAnswering([$type . '::customvarDirective:__self' => ['after' => ['pagebuilder_customvar']]]);
+        $list = self::listAnswering([$type . '::customvarDirective:__self' => [DefinitionInterface::LISTENER_AFTER => ['pagebuilder_customvar']]]);
 
         self::assertSame(
             ['customvar'],
@@ -76,8 +77,8 @@ final class DirectiveMethodsTest extends TestCase
     {
         $type = \Magento\Email\Model\Template\Filter::class;
         $list = self::listAnswering([
-            $type . '::varDirective:__self' => ['before' => ['a_before'], 'around' => 'b_around'],
-            $type . '::varDirective:b_around' => ['after' => ['c_after']],
+            $type . '::varDirective:__self' => [DefinitionInterface::LISTENER_BEFORE => ['a_before'], DefinitionInterface::LISTENER_AROUND => 'b_around'],
+            $type . '::varDirective:b_around' => [DefinitionInterface::LISTENER_AFTER => ['c_after']],
         ]);
 
         self::assertSame(

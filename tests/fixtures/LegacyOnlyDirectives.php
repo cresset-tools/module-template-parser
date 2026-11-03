@@ -82,7 +82,7 @@ namespace Magento\Email\Model\Template\Filter {
                     public function getNext($type, $method, $code = '__self')
                     {
                         return $type === \Magento\Email\Model\Template\Filter::class && in_array($method, $this->plugged, true)
-                            ? ['after' => ['some_module_plugin']]
+                            ? [\Magento\Framework\Interception\DefinitionInterface::LISTENER_AFTER => ['some_module_plugin']]
                             : null;
                     }
                 };

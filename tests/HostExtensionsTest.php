@@ -265,7 +265,7 @@ final class HostExtensionsTest extends TestCase
                         public function getNext($type, $method, $code = '__self')
                         {
                             return $method === 'customvarDirective' && $code === '__self'
-                                ? ['after' => ['pagebuilder_customvar']]
+                                ? [\Magento\Framework\Interception\DefinitionInterface::LISTENER_AFTER => ['pagebuilder_customvar']]
                                 : null;
                         }
                     },

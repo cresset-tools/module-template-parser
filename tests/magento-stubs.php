@@ -374,6 +374,16 @@ namespace Magento\Framework\Interception {
             public function getNext($type, $method, $code = '__self');
         }
     }
+    // The keys getNext() answers with - Magento's values, which RealPluginListTest checks
+    // against the real interface when MAGENTO_ROOT is set.
+    if (!interface_exists(DefinitionInterface::class)) {
+        interface DefinitionInterface {
+            const LISTENER_BEFORE = 1;
+            const LISTENER_AROUND = 2;
+            const LISTENER_AFTER = 4;
+            public function getMethodList($type);
+        }
+    }
 }
 namespace Magento\Framework {
     if (!interface_exists(ObjectManagerInterface::class)) {
