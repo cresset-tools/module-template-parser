@@ -332,6 +332,39 @@ final class LegacyRendererTest extends TestCase
     }
 
     /**
+     * The CMS page filter is one shared instance, and getStoreId() keeps the first store it
+     * fills in - so every store view after the first rendered the first one's phone number.
+     */
+    public function testEachCmsRenderIsGivenItsOwnStore(): void
+    {
+        $filter = new class {
+            public array $stores = [];
+            public function setStoreId($id) { $this->stores[] = $id; return $this; }
+            public function filter($value) { return (string)$value; }
+        };
+        $context = MagentoContext::fromObjectManager(new class ($filter) {
+            public function __construct(private object $filter) {}
+            public function get(string $class): ?object
+            {
+                return match ($class) {
+                    \Magento\Email\Model\TemplateFactory::class => new \stdClass(),
+                    \Magento\Cms\Model\Template\FilterProvider::class => new class ($this->filter) {
+                        public function __construct(private object $filter) {}
+                        public function getPageFilter() { return $this->filter; }
+                    },
+                    default => null,
+                };
+            }
+        });
+        $renderer = new LegacyRenderer($context);
+
+        $renderer->render('X', [], 2, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS);
+        $renderer->render('X', [], 3, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS);
+
+        self::assertSame([2, 3], $filter->stores);
+    }
+
+    /**
      * The candidate is handed back into the same filter, where the plugin serves it - so the
      * plugins on filter() treat it as they treated legacy's. Where the plugin is not on the
      * filter, the bare candidate stands.

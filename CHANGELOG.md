@@ -153,6 +153,10 @@ lab's naming, and the fixes from a whole-project review before the donation.
   output: 427 of 578 CMS items on one store differed for that alone. The candidate is now
   handed back into the same filter and served where a Parser render is, so it gets exactly
   the plugins a Parser render gets. Emails included.
+- **`template:diff` renders each CMS item for its own store view.** The CMS page filter is
+  one shared instance that remembers the first store it was asked about, so in a run over
+  several store views every view after the first rendered `{{config}}` and `{{customvar}}`
+  for the first - false phone number and address differences.
 - **`diff --format=json` no longer prints an empty line** when an excerpt cut a multibyte
   character; every console JSON output substitutes invalid UTF-8 and fails loudly otherwise.
 - **`template:check` exits 2 when there was nothing to check**, and the codebase source judges

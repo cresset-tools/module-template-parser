@@ -56,7 +56,7 @@ class LegacyRenderer
         // And as the filter's own: the store's filter carries this module's plugin, which on a
         // store view in Parser would make "today" this engine. See LegacyOnlyRenders.
         $render = fn (): ?LegacyRender => StoreErrorHandler::run(fn (): ?LegacyRender => $kind === TemplateSubject::KIND_CMS
-            ? $this->renderCms($template)
+            ? $this->renderCms($template, $storeId)
             : $this->renderEmail($template, $variables, $storeId, $kind));
         $legacyOnly = $this->magento->get(\MageOS\TemplateParser\Magento\LegacyOnlyRenders::class);
 
@@ -208,14 +208,26 @@ class LegacyRenderer
      * FilterProvider::getPageFilter() is what Cms\Block\Page and the widget renderers use.
      * It takes no variables - a CMS page has none - so there is nothing to read back.
      */
-    private function renderCms(string $template): ?LegacyRender
+    private function renderCms(string $template, ?int $storeId): ?LegacyRender
     {
         $provider = $this->magento->get(\Magento\Cms\Model\Template\FilterProvider::class);
         if ($provider === null) {
             return null;
         }
 
-        return $this->rendered($provider->getPageFilter(), $template, [], null, []);
+        // The provider hands out ONE shared filter per class, and the filter's getStoreId()
+        // fills in the current store the first time it is asked and keeps it. A page renders
+        // once per request, so on a store that is right; in one run over several store views
+        // every view after the first rendered {{config}} and {{customvar}} for the first -
+        // its phone number and address. So the store is set on every render, as
+        // Cms\Block\Block does for a block.
+        $filter = $provider->getPageFilter();
+        $storeId ??= ($this->stores ?? new StoreEmulator($this->magento))->currentStoreId();
+        if ($storeId !== null && method_exists($filter, 'setStoreId')) {
+            $filter->setStoreId($storeId);
+        }
+
+        return $this->rendered($filter, $template, [], null, []);
     }
 
     /**
