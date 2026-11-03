@@ -420,6 +420,44 @@ final class SilentDegradationTest extends TestCase
     }
 
     /**
+     * template:diff's candidate is served where a Parser render would be, so it gets the
+     * same plugins - once, and on that filter only: a render nested inside is legacy's.
+     */
+    public function testTheConsolesCandidateIsServedThroughThePluginsInsideThisOne(): void
+    {
+        [$subject, $wire] = $this->chained(
+            ['__self' => ['around' => 'mageos_template_parser'], 'mageos_template_parser' => ['after' => ['pb']]],
+            ['pb' => self::afterPlugin()]
+        );
+        $records = [];
+        $candidates = new \MageOS\TemplateParser\Magento\CandidateRenders();
+        $wire($plugin = $this->plugin($records, EngineMode::LEGACY, null, $candidates));
+
+        $nested = null;
+        [$result, $used] = $candidates->run(
+            $subject,
+            function (string $value) use ($plugin, $subject, &$nested): string {
+                $nested = $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'inner');
+                return 'OURS:' . $value;
+            },
+            static fn () => $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'X')
+        );
+
+        self::assertSame(['DECODED(OURS:X)', true], [$result, $used]);
+        self::assertSame('LEGACY', $nested);
+        self::assertSame([], $records);
+        self::assertNull($candidates->take($subject));
+    }
+
+    public function testTheConsoleIsToldWhenThePluginNeverSawItsCandidate(): void
+    {
+        $candidates = new \MageOS\TemplateParser\Magento\CandidateRenders();
+        $subject = new \Magento\Email\Model\Template\Filter();
+
+        self::assertSame(['LEGACY', false], $candidates->run($subject, static fn (string $v): string => 'OURS', static fn () => 'LEGACY'));
+    }
+
+    /**
      * template:diff renders "today" through the store's filter, which carries this plugin: on
      * a Parser store view "today" was this engine, compared with itself, and in Shadow every
      * CLI render went into the live table. Inside LegacyOnlyRenders the plugin stands aside.
@@ -527,7 +565,8 @@ final class SilentDegradationTest extends TestCase
     private function plugin(
         array &$records,
         string $stage,
-        ?\MageOS\TemplateParser\Magento\LegacyOnlyRenders $legacyOnly = null
+        ?\MageOS\TemplateParser\Magento\LegacyOnlyRenders $legacyOnly = null,
+        ?\MageOS\TemplateParser\Magento\CandidateRenders $candidates = null
     ): TemplateFilterPlugin {
         $recorder = new class ($records) extends ShadowRecorder {
             public function __construct(private array &$records) {}
@@ -550,7 +589,8 @@ final class SilentDegradationTest extends TestCase
             $mode,
             new TemplateIdentity(),
             $recorder,
-            legacyOnlyRenders: $legacyOnly
+            legacyOnlyRenders: $legacyOnly,
+            candidateRenders: $candidates
         );
     }
 }

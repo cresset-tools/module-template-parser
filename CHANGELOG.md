@@ -147,6 +147,12 @@ lab's naming, and the fixes from a whole-project review before the donation.
   view in Parser it was this engine, compared with itself, and in Shadow every CLI render was
   recorded into the live table. And `getProcessedTemplate()` stopped the store emulation
   before the comparison ran, so `--store=2` compared the CLI's own store.
+- **`template:diff`'s candidate gets the store's other plugins on `filter()`.** The "today"
+  side went through the filter, so every module's `afterFilter` ran on it - Page Builder's,
+  which decodes its HTML Code elements, among them - and the candidate was this engine's bare
+  output: 427 of 578 CMS items on one store differed for that alone. The candidate is now
+  handed back into the same filter and served where a Parser render is, so it gets exactly
+  the plugins a Parser render gets. Emails included.
 - **`diff --format=json` no longer prints an empty line** when an excerpt cut a multibyte
   character; every console JSON output substitutes invalid UTF-8 and fails loudly otherwise.
 - **`template:check` exits 2 when there was nothing to check**, and the codebase source judges

@@ -92,6 +92,27 @@ final class ConsoleTest extends TestCase
     }
 
     /**
+     * The candidate goes through the filter's plugin chain when the legacy side offers it, as
+     * a Parser render does - Page Builder's afterFilter made most CMS content differ.
+     */
+    public function testTheCandidateGoesThroughTheFiltersPluginsToo(): void
+    {
+        $subject = new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: 'a{{var x}}b');
+
+        $divergences = $this->auditor()->diff(
+            [$subject],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender(
+                'DECODED(a1b)',
+                ['x' => 1],
+                through: static fn (callable $render): string => 'DECODED(' . $render($subject->content) . ')'
+            )
+        );
+
+        self::assertSame([], $divergences);
+    }
+
+    /**
      * The mirror image: the FILTER has no processor, and this engine does.
      *
      * `Email\Model\Template\Filter` extends `Framework\Filter\Template`, which has no

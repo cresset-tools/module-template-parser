@@ -173,18 +173,28 @@ class Auditor
                     // so anything this one refused on policy would be reported as a divergence
                     // in the engine rather than as the posture it is. The policy that matters
                     // is the one the host sets at render time; this is a measurement.
-                    $ours = $engine->render($subject->content, context: new Context(
-                        $variables,
-                        RenderPolicy::unrestricted(),
-                        false,
-                        // The design the filter resolved its stylesheets against. Looking it
-                        // up here gives a different theme - see Port\StylesheetLoader::load().
-                        $legacyRender?->designParams ?? []
-                    ));
-                    // Whatever the host does to a finished render, it does to both.
-                    if ($legacyRender?->finish !== null) {
-                        $ours = ($legacyRender->finish)($ours);
-                    }
+                    $render = static function (string $content) use ($engine, $variables, $legacyRender): string {
+                        $ours = $engine->render($content, context: new Context(
+                            $variables,
+                            RenderPolicy::unrestricted(),
+                            false,
+                            // The design the filter resolved its stylesheets against. Looking it
+                            // up here gives a different theme - see Port\StylesheetLoader::load().
+                            $legacyRender?->designParams ?? []
+                        ));
+                        // Whatever the host does to a finished render, it does to both.
+                        if ($legacyRender?->finish !== null) {
+                            $ours = ($legacyRender->finish)($ours);
+                        }
+
+                        return $ours;
+                    };
+                    // And whatever other modules' plugins on filter() do to it: through the
+                    // same filter, served where a Parser render would be. Page Builder's
+                    // afterFilter alone made most CMS content differ.
+                    $ours = $legacyRender?->through !== null
+                        ? ($legacyRender->through)($render)
+                        : $render($subject->content);
                 } catch (\Throwable $e) {
                     $ourFailure = (new \ReflectionClass($e))->getShortName() . ': ' . $this->firstLine($e->getMessage());
                 }

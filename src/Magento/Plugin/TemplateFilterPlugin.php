@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MageOS\TemplateParser\Magento\Plugin;
 
+use MageOS\TemplateParser\Magento\CandidateRenders;
 use MageOS\TemplateParser\Magento\Config\EngineMode;
 use MageOS\TemplateParser\Magento\DirectiveMethods;
 use MageOS\TemplateParser\Magento\HostOnlyDirectives;
@@ -110,7 +111,8 @@ class TemplateFilterPlugin
         private readonly ?RenderScope $scope = null,
         private readonly ?ShadowComparator $plainComparator = null,
         private readonly ?PluginListInterface $pluginList = null,
-        private readonly ?LegacyOnlyRenders $legacyOnlyRenders = null
+        private readonly ?LegacyOnlyRenders $legacyOnlyRenders = null,
+        private readonly ?CandidateRenders $candidateRenders = null
     ) {
         $this->state = new \WeakMap();
         $this->legacyRunning = new \WeakMap();
@@ -176,6 +178,13 @@ class TemplateFilterPlugin
      */
     public function aroundFilter(LegacyTemplate $subject, callable $proceed, $value)
     {
+        // The console's candidate, served where this engine would serve it - see
+        // CandidateRenders. Before anything else: the console asked for exactly this call.
+        $candidate = is_string($value) ? $this->candidateRenders?->take($subject) : null;
+        if ($candidate !== null) {
+            return $this->servedThroughInnerChain($subject, $value, $candidate);
+        }
+
         // A CHILD render belongs to legacy whatever the stage. The filter renders a child
         // only while rendering its parent - this engine loads {{template}} includes itself,
         // so a parent it serves never reaches one - and a child's output is not a document:
@@ -570,6 +579,26 @@ class TemplateFilterPlugin
         }
 
         return $result;
+    }
+
+    /**
+     * The console's candidate, run as a Parser render would be - see CandidateRenders.
+     *
+     * Raises what Parser would decline on, so the console reports it as refused here.
+     *
+     * @param callable(string):mixed $render
+     */
+    private function servedThroughInnerChain(LegacyTemplate $subject, string $value, callable $render): mixed
+    {
+        $chain = $this->innerChain($subject);
+        $refusal = self::unmodelledChain($chain);
+        if ($refusal !== null) {
+            throw new \RuntimeException((string)$refusal->detail['problem']);
+        }
+
+        // Unwrapped: the console's own render raises its own errors, and a plugin's are the
+        // plugin's.
+        return $this->runInnerChain($subject, $chain, $value, $render);
     }
 
     /**

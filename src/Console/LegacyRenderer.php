@@ -166,13 +166,41 @@ class LegacyRenderer
             }
         };
 
-        return new LegacyRender(
-            (string)$filter->filter($template),
+        return $this->rendered(
+            $filter,
+            $template,
             $this->variablesUsedBy($model, $variables),
             method_exists($filter, 'applyInlineCss') ? $finish : null,
             $this->designParamsOf($filter)
         );
     }
+
+    /**
+     * The filter's render of `$template`, and the way back into the same filter for the
+     * candidate - see LegacyRender::$through.
+     *
+     * @param array<string,mixed> $variables
+     * @param array<string,mixed> $designParams
+     */
+    private function rendered(object $filter, string $template, array $variables, ?\Closure $finish, array $designParams): LegacyRender
+    {
+        $output = (string)$filter->filter($template);
+
+        $candidates = $this->magento->get(\MageOS\TemplateParser\Magento\CandidateRenders::class);
+        $through = $candidates instanceof \MageOS\TemplateParser\Magento\CandidateRenders
+            ? static function (callable $render) use ($candidates, $filter, $template): string {
+                [$result, $used] = $candidates->run($filter, $render, static fn () => $filter->filter($template));
+
+                // Not used: this module's plugin is not on the filter - disabled, or a store
+                // that never had it - so there is no Parser render to imitate, and what came
+                // back is the filter's own. The bare render is the honest candidate then.
+                return (string)($used ? $result : $render($template));
+            }
+            : null;
+
+        return new LegacyRender($output, $variables, $finish, $designParams, $through);
+    }
+
 
     /**
      * CMS content, through the filter CMS content is rendered with.
@@ -187,7 +215,7 @@ class LegacyRenderer
             return null;
         }
 
-        return new LegacyRender((string)$provider->getPageFilter()->filter($template), []);
+        return $this->rendered($provider->getPageFilter(), $template, [], null, []);
     }
 
     /**

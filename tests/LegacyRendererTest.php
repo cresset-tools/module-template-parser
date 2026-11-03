@@ -330,4 +330,45 @@ final class LegacyRendererTest extends TestCase
         self::assertNotNull($render);
         self::assertSame('LEGACY:X', $render->output);
     }
+
+    /**
+     * The candidate is handed back into the same filter, where the plugin serves it - so the
+     * plugins on filter() treat it as they treated legacy's. Where the plugin is not on the
+     * filter, the bare candidate stands.
+     */
+    public function testTheCandidateIsServedThroughTheSameFilter(): void
+    {
+        $candidates = new \MageOS\TemplateParser\Magento\CandidateRenders();
+        $filter = new class ($candidates) {
+            public bool $plugged = true;
+            public function __construct(private \MageOS\TemplateParser\Magento\CandidateRenders $candidates) {}
+            public function filter($value)
+            {
+                $ours = $this->plugged ? $this->candidates->take($this) : null;
+                return 'DECODED(' . ($ours !== null ? $ours($value) : 'LEGACY:' . $value) . ')';
+            }
+        };
+        $context = MagentoContext::fromObjectManager(new class ($filter, $candidates) {
+            public function __construct(private object $filter, private object $candidates) {}
+            public function get(string $class): ?object
+            {
+                return match ($class) {
+                    \Magento\Email\Model\TemplateFactory::class => new \stdClass(),
+                    \MageOS\TemplateParser\Magento\CandidateRenders::class => $this->candidates,
+                    \Magento\Cms\Model\Template\FilterProvider::class => new class ($this->filter) {
+                        public function __construct(private object $filter) {}
+                        public function getPageFilter() { return $this->filter; }
+                    },
+                    default => null,
+                };
+            }
+        });
+
+        $render = (new LegacyRenderer($context))->render('X', [], 1, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS);
+
+        self::assertSame('DECODED(LEGACY:X)', $render?->output);
+        self::assertSame('DECODED(OURS:X)', ($render->through)(static fn (string $v): string => 'OURS:' . $v));
+        $filter->plugged = false;
+        self::assertSame('OURS:X', ($render->through)(static fn (string $v): string => 'OURS:' . $v));
+    }
 }

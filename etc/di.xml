@@ -207,6 +207,8 @@
             <argument name="pluginList" xsi:type="object">Magento\Framework\Interception\PluginListInterface</argument>
             <!-- What template:diff renders as "today" must be the filter's own; see LegacyOnlyRenders. -->
             <argument name="legacyOnlyRenders" xsi:type="object">MageOS\TemplateParser\Magento\LegacyOnlyRenders</argument>
+            <!-- And its candidate must get the plugins a Parser render gets; see CandidateRenders. -->
+            <argument name="candidateRenders" xsi:type="object">MageOS\TemplateParser\Magento\CandidateRenders</argument>
         </arguments>
     </type>
 

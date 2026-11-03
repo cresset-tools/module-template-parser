@@ -21,12 +21,17 @@ class LegacyRender
      *        {{css}} against. Travels back for the same reason the variables do: nothing
      *        downstream can look them up for itself afterwards - see
      *        Port\StylesheetLoader::load().
+     * @param ?\Closure(callable(string):string):string $through runs a candidate render through
+     *        the same filter's plugin chain, where a Parser render would run - so the plugins
+     *        on filter() that changed `$output` change the candidate too. Given the render,
+     *        called with the template as the plugins before this module's left it.
      */
     public function __construct(
         public readonly string $output,
         public readonly array $variables,
         public readonly ?\Closure $finish = null,
         public readonly array $designParams = [],
+        public readonly ?\Closure $through = null,
     ) {
     }
 }
