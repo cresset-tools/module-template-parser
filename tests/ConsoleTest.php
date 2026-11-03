@@ -113,6 +113,29 @@ final class ConsoleTest extends TestCase
     }
 
     /**
+     * The Email filter's error message in place of the template is legacy failing, not a
+     * render: with this engine refusing too - a theme `.phtml` the CLI cannot find fails both
+     * - nobody has ever received it, and it was reported as "renders today, refused here".
+     */
+    public function testTheFiltersErrorMessageIsALegacyFailure(): void
+    {
+        $refused = new TemplateSubject(id: 'a', label: 'a', origin: 'test', content: '{{if a}}unclosed');
+        $rendered = new TemplateSubject(id: 'b', label: 'b', origin: 'test', content: 'fine');
+        $message = "Error filtering template: Invalid template file: 'Vendor_Theme::x.phtml'";
+
+        $divergences = $this->auditor()->diff(
+            [$refused, $rendered],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender($message, [], failure: $message)
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertSame('b', $divergences[0]->subject->id);
+        self::assertNull($divergences[0]->legacy);
+        self::assertStringContainsString('the legacy filter cannot render this', (string)$divergences[0]->note);
+    }
+
+    /**
      * The mirror image: the FILTER has no processor, and this engine does.
      *
      * `Email\Model\Template\Filter` extends `Framework\Filter\Template`, which has no

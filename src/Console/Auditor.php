@@ -159,7 +159,8 @@ class Auditor
                     $legacyRender = null;
                 }
 
-                $legacyOutput = $legacyRender?->output;
+                // The filter's error message in place of the template is no render of it.
+                $legacyOutput = $legacyRender?->failure === null ? $legacyRender?->output : null;
                 // The variables Magento built for the legacy render, not the ones this tool
                 // was handed - rendering our side without them compares two different inputs.
                 // See LegacyRender for what the model adds.

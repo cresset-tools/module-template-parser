@@ -198,9 +198,43 @@ class LegacyRenderer
             }
             : null;
 
-        return new LegacyRender($output, $variables, $finish, $designParams, $through);
+        return new LegacyRender($output, $variables, $finish, $designParams, $through, self::failureIn($output));
     }
 
+    /**
+     * The Email filter's error message, when that is what it rendered.
+     *
+     * `Email\Model\Template\Filter::filter()` catches whatever the render raised and returns
+     * a message in place of the template: `Error filtering template: <message>` in developer
+     * mode, and a fixed apology otherwise. That is not a render of the template. Taken as
+     * one, a template neither engine can render - a theme `.phtml` the CLI cannot find, a
+     * warning under the store's error handler - read as "renders today, refused here".
+     * Matched in English and in the locale the render ran in, as the filter translates both.
+     */
+    public static function failureIn(string $output): ?string
+    {
+        $prefixes = ['Error filtering template: '];
+        $messages = ["We're sorry, an error has occurred while generating this content."];
+        if (function_exists('__')) {
+            try {
+                $translated = (string)__('Error filtering template: %s');
+                $prefix = strstr($translated, '%s', true);
+                if (is_string($prefix) && trim($prefix) !== '') {
+                    $prefixes[] = $prefix;
+                }
+                $messages[] = (string)__("We're sorry, an error has occurred while generating this content.");
+            } catch (\Throwable) {
+            }
+        }
+
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($output, $prefix)) {
+                return $output;
+            }
+        }
+
+        return in_array(trim($output), $messages, true) ? $output : null;
+    }
 
     /**
      * CMS content, through the filter CMS content is rendered with.

@@ -331,6 +331,28 @@ final class LegacyRendererTest extends TestCase
         self::assertSame('LEGACY:X', $render->output);
     }
 
+    /** What `Email\Model\Template\Filter::filter()` prints in place of a template it raised on. */
+    public function testTheFiltersErrorMessagesAreRecognised(): void
+    {
+        self::assertNotNull(LegacyRenderer::failureIn("Error filtering template: Invalid template file: 'x.phtml'"));
+        self::assertNotNull(LegacyRenderer::failureIn("We're sorry, an error has occurred while generating this content."));
+        self::assertNull(LegacyRenderer::failureIn('<p>Error filtering template: is what we print</p>'));
+        self::assertNull(LegacyRenderer::failureIn('Dear Ada'));
+    }
+
+    public function testAnEmailRenderedAsTheErrorMessageIsAFailure(): void
+    {
+        $model = $this->model();
+        $model->filter = new class extends \Magento\Framework\Filter\Template {
+            public function __construct() {}
+            public function filter($value) { return 'Error filtering template: Warning: Array to string conversion'; }
+        };
+
+        $render = (new LegacyRenderer($this->context($model)))->render('X', []);
+
+        self::assertNotNull($render?->failure);
+    }
+
     /**
      * The CMS page filter is one shared instance, and getStoreId() keeps the first store it
      * fills in - so every store view after the first rendered the first one's phone number.

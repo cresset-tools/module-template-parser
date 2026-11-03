@@ -25,6 +25,10 @@ class LegacyRender
      *        the same filter's plugin chain, where a Parser render would run - so the plugins
      *        on filter() that changed `$output` change the candidate too. Given the render,
      *        called with the template as the plugins before this module's left it.
+     * @param ?string $failure set when `$output` is the filter's error message in place of
+     *        the template - the Email filter catches what the render raised and prints
+     *        "Error filtering template: ..." (developer mode) or "We're sorry, an error has
+     *        occurred while generating this content." - so legacy did not render this
      */
     public function __construct(
         public readonly string $output,
@@ -32,6 +36,7 @@ class LegacyRender
         public readonly ?\Closure $finish = null,
         public readonly array $designParams = [],
         public readonly ?\Closure $through = null,
+        public readonly ?string $failure = null,
     ) {
     }
 }

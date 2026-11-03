@@ -157,6 +157,12 @@ lab's naming, and the fixes from a whole-project review before the donation.
   one shared instance that remembers the first store it was asked about, so in a run over
   several store views every view after the first rendered `{{config}}` and `{{customvar}}`
   for the first - false phone number and address differences.
+- **`template:diff` counts the filter's error message as legacy failing.** The Email filter
+  catches what a render raised and prints `Error filtering template: ...` (developer mode)
+  or "We're sorry, an error has occurred while generating this content." in place of the
+  template. Taken as a render, a template neither engine could render - a theme `.phtml` the
+  CLI cannot find, a warning under the store's error handler - was reported as "renders
+  today, refused here"; it is now agreement, as both failing always was.
 - **`diff --format=json` no longer prints an empty line** when an excerpt cut a multibyte
   character; every console JSON output substitutes invalid UTF-8 and fails loudly otherwise.
 - **`template:check` exits 2 when there was nothing to check**, and the codebase source judges
