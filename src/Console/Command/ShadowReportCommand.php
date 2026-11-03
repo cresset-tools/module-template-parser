@@ -232,6 +232,12 @@ HELP);
                     $kind,
                     $name
                 ),
+                // Nothing to allow: the filter applies this stylesheet to part of the email,
+                // which the host's inlining step cannot be asked to do for this engine.
+                $kind === 'stylesheet the filter inlines over part of the document' => sprintf(
+                    'the template asks for stylesheet "%s" inside an {{if}} or {{depend}}, and Magento\'s filter inlines it over that part of the email only. Parser mode falls back for this template, so customers see what they see today; moving the {{inlinecss}} - or the {{template}} include that carries it - out of the {{if}} or {{depend}} lets the new engine render it.',
+                    $name
+                ),
                 // diff, not check: check renders in the engine's own posture and never asks how
                 // the filter would read the template, so it could not show this.
                 $kind === 'construct the filter reads differently' => sprintf(

@@ -188,10 +188,11 @@ class TemplateFilterPlugin
         // A CHILD render belongs to legacy whatever the stage. The filter renders a child
         // only while rendering its parent - this engine loads {{template}} includes itself,
         // so a parent it serves never reaches one - and a child's output is not a document:
-        // the filter defers {{inlinecss}} by emitting a SIGNED placeholder for its parent to
-        // resolve, a contract only the legacy parent can keep. Nor is one worth comparing:
-        // the signature is random per render, so it could never match, and the parent's
-        // comparison covers the same content.
+        // the filter defers {{inlinecss}} by emitting a placeholder for the legacy root to
+        // resolve - a SIGNED copy of the directive up to Mage-OS 3.5.0, a token from the
+        // request's DeferredDirectiveRegistry since 3.6.0 - a contract only the legacy root
+        // can keep. Nor is one worth comparing: either placeholder is random per request, so
+        // it could never match, and the parent's comparison covers the same content.
         if (!is_string($value) || (method_exists($subject, 'isChildTemplate') && $subject->isChildTemplate())) {
             return $proceed($value);
         }

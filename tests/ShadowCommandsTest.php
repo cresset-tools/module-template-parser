@@ -244,6 +244,8 @@ final class ShadowCommandsTest extends TestCase
             'filter reads it differently' => [$policy('policy refused construct the filter reads differently "for loop" (line 1, column 1)'), 'diff --store=1 --source=cms to see both readings'],
             // Nobody can allow a CMS block by id: the engine has no path to one.
             'block id' => [$policy('policy refused block id "footer" (line 1, column 1)'), 'nothing needs changing'],
+            // Nothing to allow either: the filter inlines it over one part of the email.
+            'stylesheet in a body' => [$policy('policy refused stylesheet the filter inlines over part of the document "css/a.css" (line 1, column 9)'), 'out of the {{if}} or {{depend}}'],
             'migrated from 0.3.0' => [['error' => 'MageOS\\TemplateParser\\SyntaxError', 'problem' => 'p'], 'cannot render this template as written'],
             'other port refusal' => [$policy('policy refused config path "web/secure" (line 1, column 1)'), 'config path "web/secure"'],
             'legacy cannot render it' => [['error' => \MageOS\TemplateParser\LegacyIncompatibleError::class, 'problem' => 'p'], 'Magento\'s filter cannot'],

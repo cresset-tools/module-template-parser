@@ -39,6 +39,17 @@ final class Context
     private RenderPolicy $policy;
 
     /**
+     * How many {{if}} or {{depend}} bodies enclose the node being rendered, in this
+     * template - an includer's bodies are not counted. The legacy filter renders each body
+     * with a filter() call of its own, and where a stylesheet is inlined depends on which
+     * call resolves it - see Options::$deferralResolvedAtRoot.
+     */
+    private int $bodyDepth = 0;
+
+    /** In an included template: the top-level template's body depth at the outermost include. */
+    private ?int $includedAtBodyDepth = null;
+
+    /**
      * @param array<string,mixed> $variables
      * @param bool $plainText the template is being rendered as the PLAIN part of an email
      * @param array<string,mixed> $designParams the area, theme and locale {{css}} resolves against
@@ -127,7 +138,49 @@ final class Context
         $clone->includeStack = $this->includeStack;
         $clone->policy = $this->policy;
         $clone->includeBudget = $this->includeBudget;
+        // The same template, in a narrower scope - a loop iteration - so the same position.
+        $clone->bodyDepth = $this->bodyDepth;
+        $clone->includedAtBodyDepth = $this->includedAtBodyDepth;
         return $clone;
+    }
+
+    /**
+     * A scope for an included template: a document of its own, whose bodies are not the
+     * top-level template's, remembering where in the top-level template it was included.
+     *
+     * @param array<string,mixed> $variables
+     */
+    public function forInclude(array $variables): self
+    {
+        $child = $this->withVariables($variables);
+        $child->bodyDepth = 0;
+        $child->includedAtBodyDepth = $this->topLevelBodyDepth();
+        return $child;
+    }
+
+    public function enterBody(): void
+    {
+        $this->bodyDepth++;
+    }
+
+    public function leaveBody(): void
+    {
+        $this->bodyDepth--;
+    }
+
+    /**
+     * How deep in {{if}} or {{depend}} bodies of the TOP-LEVEL template this point is: its
+     * own body depth there, or the depth its outermost include sits at in an include.
+     */
+    public function topLevelBodyDepth(): int
+    {
+        return $this->includedAtBodyDepth ?? $this->bodyDepth;
+    }
+
+    /** Whether this scope renders an included template rather than the top-level one. */
+    public function inInclude(): bool
+    {
+        return $this->includedAtBodyDepth !== null;
     }
 
     /**

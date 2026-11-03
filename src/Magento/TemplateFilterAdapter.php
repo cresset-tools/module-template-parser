@@ -63,12 +63,16 @@ class TemplateFilterAdapter implements TemplateFilterInterface
      * RenderPolicy::restricted() here would refuse {{block}} and {{layout}} - the item table
      * of every stock order, invoice, shipment and creditmemo email - and do it silently.
      * Tightening it is an explicit decision, made in di.xml or per render via setPolicy().
+     * @param bool|null $deferralResolvedAtRoot whether the host's filter resolves an include's
+     *        deferred {{inlinecss}} at the root template; null asks the host - see HostDeferral.
+     *        A fact about the host rather than a choice, so it applies to `$options` too.
      */
     public function __construct(
         ?HostServices $services = null,
         ?Options $options = null,
         ?RenderPolicy $policy = null,
-        bool $plainFilter = false
+        bool $plainFilter = false,
+        ?bool $deferralResolvedAtRoot = null
     ) {
         $services ??= new HostServices();
         $this->plainFilter = $plainFilter;
@@ -80,7 +84,8 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         // renders - an unknown variable raises instead of rendering empty, which is a thing
         // stock templates do constantly. Shadow mode over the 48 stock email templates raised
         // 85 times on that alone before this. Pass Options explicitly to choose otherwise.
-        $this->options = $options ?? Options::compatible();
+        $this->options = ($options ?? Options::compatible())
+            ->withDeferralResolvedAtRoot($deferralResolvedAtRoot ?? HostDeferral::resolvesAtRoot());
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
         $this->engine = TemplateEngine::forHost($services, $this->options);
         $this->context = new Context();

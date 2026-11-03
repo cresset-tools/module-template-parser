@@ -346,7 +346,7 @@ final class HostDirectives
                 try {
                     // Child scope. Its deferred work is handed back up explicitly - no
                     // shared state, and nothing survives in the output stream.
-                    $child = $c->withVariables(self::includeScope($params, $c, $e));
+                    $child = $c->forInclude(self::includeScope($params, $c, $e));
                     $ast = $parser->parse($source, $c->policy()->maxNestingDepth());
                     $child->noteIncompatibilities($ast->incompatibilities());
                     $rendered = $e->evaluate($ast, $child);

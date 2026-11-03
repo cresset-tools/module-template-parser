@@ -105,6 +105,22 @@ final class Evaluator
     }
 
     /** @param Node[] $nodes */
+    /**
+     * Renders an {{if}}, {{else}} or {{depend}} body, which the legacy filter renders with a
+     * filter() call of its own - see Context::topLevelBodyDepth().
+     *
+     * @param Node[] $nodes
+     */
+    public function renderBody(array $nodes, Context $context): string
+    {
+        $context->enterBody();
+        try {
+            return $this->renderNodes($nodes, $context);
+        } finally {
+            $context->leaveBody();
+        }
+    }
+
     public function renderNodes(array $nodes, Context $context): string
     {
         $out = '';
@@ -206,6 +222,29 @@ final class Evaluator
         }
 
         return $output;
+    }
+
+    /**
+     * Whether the legacy filter would inline this stylesheet over one {{if}} or {{depend}}
+     * body rather than over the whole document.
+     *
+     * The filter runs the inlining step at the end of whichever filter() call resolved the
+     * {{inlinecss}}, and renders each body of the root template with a filter() call of its
+     * own. Named in the root template, the directive is resolved where it stands, in every
+     * version. Named in an include, it is deferred: Mage-OS 3.6.0 resolves it at the root,
+     * and before that the innermost body of the root template around the include did.
+     *
+     * This engine hands every stylesheet to the host for the whole document, so it cannot
+     * render the narrower placement - and a stylesheet inlined over different markup is a
+     * different email. Declined instead; Parser mode hands the render to the filter.
+     */
+    private function inlinedOverPartOfTheDocument(Context $context): bool
+    {
+        if ($context->topLevelBodyDepth() === 0) {
+            return false;
+        }
+
+        return !$context->inInclude() || !$this->options->deferralResolvedAtRoot;
     }
 
     /**
@@ -394,13 +433,13 @@ final class Evaluator
 
         $this->handlers['if'] = function (DirectiveNode $n, Context $c, self $e): string {
             if ($this->condition($n, $c, 'if')) {
-                return $e->renderNodes($n->children(), $c);
+                return $e->renderBody($n->children(), $c);
             }
-            return $n->hasAlternate() ? $e->renderNodes($n->alternate(), $c) : '';
+            return $n->hasAlternate() ? $e->renderBody($n->alternate(), $c) : '';
         };
 
         $this->handlers['depend'] = function (DirectiveNode $n, Context $c, self $e): string {
-            return $this->condition($n, $c, 'depend') ? $e->renderNodes($n->children(), $c) : '';
+            return $this->condition($n, $c, 'depend') ? $e->renderBody($n->children(), $c) : '';
         };
 
         $this->handlers['for'] = function (DirectiveNode $n, Context $c, self $e): string {
@@ -513,6 +552,9 @@ final class Evaluator
             // forget it" - this was the one handler that passed a path outward without it.
             if ($file !== '' && PathGuard::isSafeRelativePath($file)) {
                 $c->defer('inlinecss', ['file' => $file]);
+                if ($this->options->legacyQuirks && $this->inlinedOverPartOfTheDocument($c)) {
+                    $this->refusedByPolicy($n, $c, 'stylesheet the filter inlines over part of the document', $file);
+                }
             }
             return '';
         };

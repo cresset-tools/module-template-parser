@@ -10,6 +10,7 @@ use MageOS\TemplateParser\Magento\AssetStylesheetLoader;
 use MageOS\TemplateParser\Magento\TemplateModelUrlBuilder;
 use MageOS\TemplateParser\Magento\ConfigTemplateLoader;
 use MageOS\TemplateParser\Magento\HostBlockClassPolicy;
+use MageOS\TemplateParser\Magento\HostDeferral;
 use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
 use MageOS\TemplateParser\Magento\PhraseTranslator;
 use MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer;
@@ -41,7 +42,14 @@ class EngineFactory
 
     public function create(Mode $mode, ?int $storeId = null): TemplateEngine
     {
-        return TemplateEngine::forHost($this->hostServices($storeId), $mode->options());
+        $options = $mode->options();
+        // Inside a store, compatible mode targets that store's filter - see HostDeferral.
+        // Without one there is no filter to ask, and the default is the current Mage-OS.
+        if ($this->magento->isAvailable()) {
+            $options = $options->withDeferralResolvedAtRoot(HostDeferral::resolvesAtRoot());
+        }
+
+        return TemplateEngine::forHost($this->hostServices($storeId), $options);
     }
 
     /** @return string[] which directives the current host can actually resolve, for reporting */
