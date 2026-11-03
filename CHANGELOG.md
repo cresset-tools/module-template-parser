@@ -70,6 +70,15 @@ lab's naming, and the fixes from a whole-project review before the donation.
   unreported. It now uses the plugin's own rule: a generated Interceptor's method counts as
   the one it stands in for, and a stock directive counts only when the plugin list has a
   plugin on it, named in the warning.
+- **Other modules' plugins on `filter()` apply to a Parser render whichever side of this
+  module's plugin Magento sorts them.** A plugin sorted inside this one ran only inside
+  `$proceed` - on legacy's render, never on this engine's - so Parser served without it and
+  Shadow compared a render with it against one without. Which side Page Builder's
+  `afterFilter` lands on is not up to either module: it has no `sortOrder`, and Magento's sort
+  compares a missing `sortOrder` with an overflowing subtraction, so the order follows module
+  load order. The `before` and `after` plugins inside this one now run on this engine's
+  render as the Interceptor runs them on the filter's; a filter with an `around` plugin
+  inside is left to the filter.
 - **A directive only the store's filter renders is declined inside `{{template}}` includes
   too.** A module's `{{coupon}}`, or a plugged stock directive, was handed to the filter at the
   top level but served as escaped text when it appeared in an included header or footer.

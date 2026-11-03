@@ -68,11 +68,15 @@ namespace Magento\Email\Model\Template\Filter {
             private $pluginList;
             private $subjectType;
 
-            /** @param list<string> $plugged directive methods a plugin is configured on */
-            public function __construct(array $plugged = [])
+            /**
+             * @param list<string> $plugged directive methods a plugin is configured on
+             * @param ?\Magento\Framework\Interception\PluginListInterface $pluginList the whole list
+             *        instead, for a test that needs the chain on filter() too
+             */
+            public function __construct(array $plugged = [], ?\Magento\Framework\Interception\PluginListInterface $pluginList = null)
             {
                 $this->subjectType = get_parent_class($this);
-                $this->pluginList = new class ($plugged) implements \Magento\Framework\Interception\PluginListInterface {
+                $this->pluginList = $pluginList ?? new class ($plugged) implements \Magento\Framework\Interception\PluginListInterface {
                     public function __construct(private array $plugged) {}
                     public function getPlugin($type, $code) { return null; }
                     public function getNext($type, $method, $code = '__self')

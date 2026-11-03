@@ -75,6 +75,12 @@ class TemplateFilterPlugin
     /** @var array<class-string,list<string>> filter class => directives only it can render */
     private array $legacyOnly = [];
 
+    /**
+     * @var array<class-string,?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string}>
+     *      filter class => the plugins on filter() that run inside this one - see innerChain()
+     */
+    private array $innerChains = [];
+
     /** @var array<class-string,?string> filter class => self::EMAIL, self::PLAIN or null */
     private array $profiles = [];
 
@@ -231,7 +237,8 @@ class TemplateFilterPlugin
         $result = $this->legacy($subject, $proceed, $value);
 
         try {
-            $unmodelled = $this->unmodelledDirective($subject, $value);
+            $chain = $this->innerChain($subject);
+            $unmodelled = $this->unmodelledDirective($subject, $value) ?? self::unmodelledChain($chain);
             if ($unmodelled !== null) {
                 $this->recorder->record($storeId, $this->templateOf($subject, $value), $unmodelled);
 
@@ -242,14 +249,18 @@ class TemplateFilterPlugin
             // only has to apply them. Registering them again would be harmless here, but not in
             // general: one this engine accepted and legacy did not would then be inlined into
             // later LEGACY renders on the same instance, which Shadow promises not to change.
-            $outcome = $this->inScopeOf($subject, $storeId, fn () => $this->comparatorFor($subject)->compare(
-                $value,
-                (string)$result,
-                $state['variables'],
-                $state['plain'],
-                $this->finisher($subject, registerStylesheets: false),
-                $state['design']
-            ));
+            $outcome = $this->inScopeOf($subject, $storeId, function () use ($subject, $chain, $value, $result, $state): ShadowOutcome {
+                $comparator = $this->comparatorFor($subject);
+                $candidate = $this->throughInnerChain($subject, $chain, $value, fn (string $input) => $comparator->render(
+                    $input,
+                    $state['variables'],
+                    $state['plain'],
+                    $this->finisher($subject, registerStylesheets: false),
+                    $state['design']
+                ));
+
+                return $candidate instanceof ShadowOutcome ? $candidate : $comparator->judge((string)$candidate, (string)$result);
+            });
             $this->recorder->record($storeId, $this->templateOf($subject, $value), $outcome);
         } catch (\Throwable) {
             // The comparator and the recorder each contain their own failures; this is the
@@ -288,13 +299,20 @@ class TemplateFilterPlugin
         }
 
         try {
+            $chain = $this->innerChain($subject);
             $candidate = $this->unmodelledDirective($subject, $value)
-                ?? $this->inScopeOf($subject, $storeId, fn () => $this->comparatorFor($subject)->render(
+                ?? self::unmodelledChain($chain)
+                ?? $this->inScopeOf($subject, $storeId, fn () => $this->throughInnerChain(
+                    $subject,
+                    $chain,
                     $value,
-                    $state['variables'],
-                    $state['plain'],
-                    $this->finisher($subject, registerStylesheets: true),
-                    $state['design']
+                    fn (string $input) => $this->comparatorFor($subject)->render(
+                        $input,
+                        $state['variables'],
+                        $state['plain'],
+                        $this->finisher($subject, registerStylesheets: true),
+                        $state['design']
+                    )
                 ));
         } catch (\Throwable $e) {
             // render() contains its own failures; this is the backstop.
@@ -312,7 +330,7 @@ class TemplateFilterPlugin
         $outcome = null;
         if ($sampled && !$legacyRaised) {
             try {
-                $outcome = $this->comparatorFor($subject)->judge($candidate, (string)$legacy);
+                $outcome = $this->comparatorFor($subject)->judge((string)$candidate, (string)$legacy);
             } catch (\Throwable) {
                 // Nothing to record but the serve.
             }
@@ -408,6 +426,150 @@ class TemplateFilterPlugin
 
             return (string)$subject->applyInlineCss($html);
         };
+    }
+
+    /**
+     * The plugins on filter() that run INSIDE this one, or null when there are none.
+     *
+     * Whatever this plugin returns, every plugin around it still applies - the generated
+     * Interceptor runs the `after` plugins of its stretch of the chain once the around plugin
+     * returns. But a plugin sorted after this one runs only inside `$proceed`: on legacy's
+     * render, never on this engine's. Magento sorts by `sortOrder` with a comparison that
+     * overflows for a plugin that has none against one that has, so which side of this one
+     * Page Builder's `afterFilter` - no sortOrder, and the stock plugin that decodes its HTML
+     * Code elements - lands on follows module load order, not anything here. Inside, Parser
+     * served the elements undecoded and Shadow compared a render with them against one
+     * without.
+     *
+     * So the plugins inside are run on this engine's render as they would have been on the
+     * filter's: `before` plugins on the value, `after` plugins on the result. An `around`
+     * plugin inside cannot be - only the filter's own body is what it wraps - so a filter with
+     * one is the filter's to render; see unmodelledChain().
+     *
+     * Asked of the plugin list the subject dispatches through, as DirectiveMethods does.
+     * This plugin is found by instance, not by name, so a project di.xml that renamed it is
+     * still found.
+     *
+     * @return ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string}
+     */
+    private function innerChain(LegacyTemplate $subject): ?array
+    {
+        $class = $subject::class;
+        if (!array_key_exists($class, $this->innerChains)) {
+            $this->innerChains[$class] = $this->findInnerChain($subject);
+        }
+
+        return $this->innerChains[$class];
+    }
+
+    /** @return ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string} */
+    private function findInnerChain(LegacyTemplate $subject): ?array
+    {
+        $original = DirectiveMethods::originalClass($subject::class);
+        if ($original === $subject::class) {
+            return null;
+        }
+        [$list, $type] = DirectiveMethods::pluginListOf($subject, $this->pluginList, $original);
+        if ($list === null) {
+            return null;
+        }
+
+        try {
+            $code = '__self';
+            $seen = [];
+            while (!isset($seen[$code]) && is_array($info = $list->getNext($type, 'filter', $code))) {
+                $seen[$code] = true;
+                $around = $info['around'] ?? null;
+                if (!is_string($around)) {
+                    return null;
+                }
+                if ($list->getPlugin($type, $around) !== $this) {
+                    $code = $around;
+                    continue;
+                }
+
+                $inner = $list->getNext($type, 'filter', $around);
+                if (!is_array($inner)) {
+                    return null;
+                }
+
+                return [
+                    'list' => $list,
+                    'type' => $type,
+                    'before' => array_values(array_map('strval', (array)($inner['before'] ?? []))),
+                    'after' => array_values(array_map('strval', (array)($inner['after'] ?? []))),
+                    'around' => isset($inner['around']) ? (string)$inner['around'] : null,
+                ];
+            }
+        } catch (\Throwable) {
+        }
+
+        return null;
+    }
+
+    /**
+     * An around plugin on filter() inside this one: only the filter's own render runs it.
+     *
+     * @param ?array{around:?string} $chain
+     */
+    private static function unmodelledChain(?array $chain): ?ShadowOutcome
+    {
+        return ($chain['around'] ?? null) === null ? null : ShadowOutcome::policyRefused([sprintf(
+            'filter() has the around plugin "%s" inside this engine\'s, which only the filter\'s own render runs',
+            $chain['around']
+        )]);
+    }
+
+    /**
+     * Renders `$value` with `$render`, with the plugins inside this one run around it.
+     *
+     * The same calls the Interceptor makes: each `before` plugin may replace the value, and
+     * each `after` plugin is handed the result and the value. A plugin that raises is a
+     * crash, which in Parser falls back to the filter - where it raises again, as it would
+     * under Legacy.
+     *
+     * @param ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string} $chain
+     * @param callable(string):mixed $render
+     */
+    private function throughInnerChain(LegacyTemplate $subject, ?array $chain, string $value, callable $render): mixed
+    {
+        if ($chain === null || ($chain['before'] === [] && $chain['after'] === [])) {
+            return $render($value);
+        }
+
+        try {
+            return $this->runInnerChain($subject, $chain, $value, $render);
+        } catch (\Throwable $e) {
+            return ShadowOutcome::crashed($e);
+        }
+    }
+
+    /**
+     * @param ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string} $chain
+     * @param callable(string):mixed $render
+     */
+    private function runInnerChain(LegacyTemplate $subject, ?array $chain, string $value, callable $render): mixed
+    {
+        foreach ($chain['before'] ?? [] as $code) {
+            $arguments = $chain['list']->getPlugin($chain['type'], $code)->beforeFilter($subject, $value);
+            if ($arguments !== null) {
+                $value = array_values((array)$arguments)[0] ?? $value;
+                if (!is_string($value)) {
+                    throw new \UnexpectedValueException(sprintf('the plugin "%s" made the template a %s', $code, get_debug_type($value)));
+                }
+            }
+        }
+
+        $result = $render($value);
+        if ($result instanceof ShadowOutcome) {
+            return $result;
+        }
+
+        foreach ($chain['after'] ?? [] as $code) {
+            $result = $chain['list']->getPlugin($chain['type'], $code)->afterFilter($subject, $result, $value);
+        }
+
+        return $result;
     }
 
     /**

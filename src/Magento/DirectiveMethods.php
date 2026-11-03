@@ -47,7 +47,7 @@ final class DirectiveMethods
     {
         $original = self::originalClass($class);
         $intercepted = $original !== $class;
-        [$list, $type] = $intercepted ? self::listOf($instance, $pluginList, $original) : [null, $original];
+        [$list, $type] = $intercepted ? self::pluginListOf($instance, $pluginList, $original) : [null, $original];
 
         $found = [];
         // Every method, whatever its visibility: legacy dispatches through
@@ -101,7 +101,7 @@ final class DirectiveMethods
      *
      * @return array{0:?PluginListInterface,1:string}
      */
-    private static function listOf(?object $instance, ?PluginListInterface $pluginList, string $original): array
+    public static function pluginListOf(?object $instance, ?PluginListInterface $pluginList, string $original): array
     {
         if ($instance !== null) {
             [$own, $type] = (function (): array {
