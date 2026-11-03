@@ -66,7 +66,7 @@ function documentedFilter(array $vars, array $includes = []): LegacyTemplate
     $t = new EmailLikeLegacy(new StringUtils(), [], ['depend' => new DependDirective($r), 'if' => new IfDirective($r),
         'template' => new TemplateDirective($r, new ParameterFactory()), 'legacy' => new LegacyDirective($s)],
         $r, $sig = new SignatureProvider(new Random()), new FilteringDepthMeter(),
-        \Harness\neutralizerFor($sig, true));
+        \Harness\neutralizerFor($sig, true), \Harness\registryFor());
     $t->setVariables($vars);
 
     if ($includes !== []) {

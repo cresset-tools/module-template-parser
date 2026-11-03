@@ -72,6 +72,19 @@ if (is_file($optional)) {
 }
 
 /*
+ * Mage-OS 3.6.0 replaced signature-based deferral with Template\DeferredDirectiveRegistry,
+ * resolved through the global ObjectManager the same way. Without it every render on a 3.6
+ * tree raised the harness's "no binding" RuntimeException, and a re-recording looked like a
+ * corpus where every case is a legacy fatal. registryFor() below returns null on an older
+ * tree, which Template's constructor ignores.
+ *
+ * The registry needs Math\Random, which every tool already loads before the filter itself;
+ * it is required on demand there rather than here, so the require order stays the tool's.
+ */
+define('MAGEOS_DEFERRED_REGISTRY_FILE',
+    MROOT . '/lib/internal/Magento/Framework/Filter/Template/DeferredDirectiveRegistry.php');
+
+/*
  * Phrase and __() come from the tree, not from a stub.
  *
  * {{trans}} renders through Phrase\Renderer\Placeholder, and its keyToPlaceholder() adds

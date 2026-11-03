@@ -58,7 +58,7 @@ function legacy(array $vars, bool $neutralize = true): LegacyTemplate {
     $t = new EmailLikeLegacy(new StringUtils(), [], ['depend'=>new DependDirective($r),'if'=>new IfDirective($r),
         'template'=>new TemplateDirective($r,new ParameterFactory()),'legacy'=>new LegacyDirective($s)],
         $r, $sig = new SignatureProvider(new Random()), new FilteringDepthMeter(),
-        \Harness\neutralizerFor($sig, $neutralize));
+        \Harness\neutralizerFor($sig, $neutralize), \Harness\registryFor());
     $t->setVariables($vars); return $t;
 }
 

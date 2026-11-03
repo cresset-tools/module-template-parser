@@ -98,7 +98,7 @@ $legacy = new BenchmarkEmailLikeLegacy(new StringUtils(), [], [
     'for' => new ForDirective($resolver),
     'legacy' => new LegacyDirective($simple),
 ], $resolver, $sig = new SignatureProvider(new Random()), new FilteringDepthMeter(),
-    \Harness\neutralizerFor($sig));
+    \Harness\neutralizerFor($sig), \Harness\registryFor());
 $legacy->setVariables($VARS);
 
 $engines = [

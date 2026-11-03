@@ -53,7 +53,7 @@ function legacyFilter(array $vars): LegacyTemplate {
         'depend' => new DependDirective($r), 'if' => new IfDirective($r),
         'template' => new TemplateDirective($r, new ParameterFactory()), 'legacy' => new LegacyDirective($simple),
     ], $r, $sig = new SignatureProvider(new Random()), new FilteringDepthMeter(),
-        \Harness\neutralizerFor($sig));
+        \Harness\neutralizerFor($sig), \Harness\registryFor());
     $f->setVariables($vars);
     return $f;
 }
