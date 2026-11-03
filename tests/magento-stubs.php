@@ -280,6 +280,17 @@ namespace Magento\Framework\Filter {
         }
     }
 }
+namespace Magento\Framework\Filter\Template {
+    // Magento's, whole: the shared depth Template::filter() moves with no finally.
+    if (!class_exists(FilteringDepthMeter::class)) {
+        class FilteringDepthMeter {
+            private $depth = 0;
+            public function descend() { $this->depth++; }
+            public function ascend() { $this->depth--; }
+            public function showMark(): int { return $this->depth; }
+        }
+    }
+}
 namespace Magento\Customer\Block\Address\Renderer {
     // What AddressIdentityPlugin wraps: the format type, and the call that renders it.
     if (!class_exists(DefaultRenderer::class)) {

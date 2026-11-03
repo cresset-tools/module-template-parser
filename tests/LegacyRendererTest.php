@@ -426,4 +426,81 @@ final class LegacyRendererTest extends TestCase
         $filter->plugged = false;
         self::assertSame('OURS:X', ($render->through)(static fn (string $v): string => 'OURS:' . $v));
     }
+
+    /**
+     * The filter's nesting depth is the store's one shared meter, and `filter()` steps back
+     * up only when it returns. A legacy render that raised part-way - under the store's error
+     * handler a warning does - left it a level deep, and every later render in the run then
+     * acted as a child: it left its includes' `:deferred:` placeholders unresolved, and the
+     * diff called the engine wrong for 112 templates on one store.
+     */
+    public function testARenderThatRaisesDoesNotLeaveTheNextOneNested(): void
+    {
+        $meter = new \Magento\Framework\Filter\Template\FilteringDepthMeter();
+        $filter = new class ($meter) extends \Magento\Framework\Filter\Template {
+            public array $depths = [];
+            public function __construct(private object $meter) {}
+            public function filter($value)
+            {
+                // Template::filter()'s own shape: descend, render, ascend - no finally.
+                $this->meter->descend();
+                $this->depths[] = $this->meter->showMark();
+                if ($value === 'RAISES') {
+                    throw new \RuntimeException('a warning, under the store\'s handler');
+                }
+                $this->meter->ascend();
+
+                return 'LEGACY:' . $value;
+            }
+        };
+        $context = MagentoContext::fromObjectManager(new class ($filter, $meter) {
+            public function __construct(private object $filter, private object $meter) {}
+            public function get(string $class): ?object
+            {
+                return match ($class) {
+                    \Magento\Email\Model\TemplateFactory::class => new \stdClass(),
+                    \Magento\Framework\Filter\Template\FilteringDepthMeter::class => $this->meter,
+                    \Magento\Cms\Model\Template\FilterProvider::class => new class ($this->filter) {
+                        public function __construct(private object $filter) {}
+                        public function getPageFilter() { return $this->filter; }
+                    },
+                    default => null,
+                };
+            }
+        });
+        $renderer = new LegacyRenderer($context);
+
+        self::assertNull($renderer->render('RAISES', [], 1, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS));
+        self::assertSame(0, $meter->showMark());
+        self::assertSame('LEGACY:X', $renderer->render('X', [], 1, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS)?->output);
+        self::assertSame([1, 1], $filter->depths, 'the second render ran as a child of the first');
+        self::assertSame(0, $meter->showMark());
+    }
+
+    /** Put back to where it was, not to zero: a render inside a render keeps its parent's level. */
+    public function testTheDepthIsRestoredToWhereItWas(): void
+    {
+        $meter = new \Magento\Framework\Filter\Template\FilteringDepthMeter();
+        $meter->descend();
+        $depth = new \MageOS\TemplateParser\Console\FilteringDepth(MagentoContext::fromObjectManager(new class ($meter) {
+            public function __construct(private object $meter) {}
+            public function get(string $class): ?object { return $class === \Magento\Framework\Filter\Template\FilteringDepthMeter::class ? $this->meter : null; }
+        }));
+
+        try {
+            $depth->keep(static function () use ($meter): void {
+                $meter->descend();
+                $meter->descend();
+                throw new \RuntimeException();
+            });
+        } catch (\RuntimeException) {
+        }
+        self::assertSame(1, $meter->showMark());
+
+        self::assertSame('done', $depth->keep(static function () use ($meter): string {
+            $meter->ascend();
+            return 'done';
+        }));
+        self::assertSame(1, $meter->showMark());
+    }
 }

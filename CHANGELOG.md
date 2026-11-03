@@ -192,6 +192,15 @@ lab's naming, the fixes from a whole-project review before the donation, and Mag
   template. Taken as a render, a template neither engine could render - a theme `.phtml` the
   CLI cannot find, a warning under the store's error handler - was reported as "renders
   today, refused here"; it is now agreement, as both failing always was.
+- **`template:diff` no longer corrupts the rest of a run after the first legacy failure.**
+  `Framework\Filter\Template::filter()` steps the shared `FilteringDepthMeter` down on entry
+  and back up only when it returns - no `finally`, on 2.4.x and Mage-OS 3.5.0 and 3.6.0
+  alike - and the filter takes a render to be the root by that depth. A render that raised
+  (the Email filter catches it, and under the store's error handler a warning raises) left
+  the meter a level deep, so every later render acted as a child and left its includes'
+  deferred directives unresolved: 112 templates on one 2.4.5 store differed only for that,
+  with a `:deferred:` placeholder in the "today" output. Each legacy render, and each call
+  back into the filter for the candidate, now restores the meter to the depth it found.
 - **A CMS Page Link widget no longer counts as a divergence.** Without a template it renders
   through `Html\Link::_toHtml()`, which gives the link a random `id="idXXXXXXXX"` per render,
   so Shadow and `template:diff` counted every page with one. The comparisons look past that

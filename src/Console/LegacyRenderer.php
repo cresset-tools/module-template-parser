@@ -25,6 +25,8 @@ namespace MageOS\TemplateParser\Console;
  */
 class LegacyRenderer
 {
+    private ?FilteringDepth $depth = null;
+
     /**
      * @param ?StoreEmulator $stores the ONE emulator in the process - see StoreEmulator::$depth.
      *        A fresh one here would have its own counter and so would not see a caller's
@@ -34,6 +36,11 @@ class LegacyRenderer
         private readonly MagentoContext $magento,
         private readonly ?StoreEmulator $stores = null
     ) {
+    }
+
+    private function depth(): FilteringDepth
+    {
+        return $this->depth ??= new FilteringDepth($this->magento);
     }
 
     public function isAvailable(): bool
@@ -61,7 +68,11 @@ class LegacyRenderer
         $legacyOnly = $this->magento->get(\MageOS\TemplateParser\Magento\LegacyOnlyRenders::class);
 
         try {
-            return $legacyOnly instanceof \MageOS\TemplateParser\Magento\LegacyOnlyRenders ? $legacyOnly->run($render) : $render();
+            // And with the filter's nesting depth put back afterwards, which a render that
+            // raised leaves one level deep for every render after it - see FilteringDepth.
+            return $this->depth()->keep(fn (): ?LegacyRender => $legacyOnly instanceof \MageOS\TemplateParser\Magento\LegacyOnlyRenders
+                ? $legacyOnly->run($render)
+                : $render());
         } catch (\Throwable) {
             return null;
         }
@@ -142,7 +153,8 @@ class LegacyRenderer
         // variables addEmailVariables() adds - and it does all of that inline, with no way to
         // ask for the setup on its own.
         try {
-            $model->getProcessedTemplate($variables);
+            // Kept to its own depth, so a failure here does not make the render below a child.
+            $this->depth()->keep(static fn () => $model->getProcessedTemplate($variables));
         } catch (\Throwable) {
             // A template the pipeline as a whole cannot render still has a filter worth
             // comparing, and the filter is what this tool is about.
@@ -184,12 +196,14 @@ class LegacyRenderer
      */
     private function rendered(object $filter, string $template, array $variables, ?\Closure $finish, array $designParams): LegacyRender
     {
-        $output = (string)$filter->filter($template);
+        $depth = $this->depth();
+        $output = (string)$depth->keep(static fn () => $filter->filter($template));
 
         $candidates = $this->magento->get(\MageOS\TemplateParser\Magento\CandidateRenders::class);
         $through = $candidates instanceof \MageOS\TemplateParser\Magento\CandidateRenders
-            ? static function (callable $render) use ($candidates, $filter, $template): string {
-                [$result, $used] = $candidates->run($filter, $render, static fn () => $filter->filter($template));
+            ? static function (callable $render) use ($candidates, $filter, $template, $depth): string {
+                // filter() again, later, outside render(): the same depth to keep.
+                [$result, $used] = $depth->keep(static fn (): array => $candidates->run($filter, $render, static fn () => $filter->filter($template)));
 
                 // Not used: this module's plugin is not on the filter - disabled, or a store
                 // that never had it - so there is no Parser render to imitate, and what came
