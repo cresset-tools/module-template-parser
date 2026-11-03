@@ -359,6 +359,28 @@ final class ConsoleTest extends TestCase
         }
     }
 
+    /**
+     * Invalid UTF-8 can come from the store too - a template saved with a stray Latin-1 byte
+     * renders one on both sides. The report substitutes it rather than printing nothing.
+     */
+    public function testTheJsonDiffReportSurvivesInvalidUtf8InAnOutput(): void
+    {
+        $divergence = new \MageOS\TemplateParser\Console\Divergence(
+            new TemplateSubject(id: 'x', label: "caf\xE9", origin: 'test', content: ''),
+            legacy: "caf\xE9 LEFT",
+            candidate: "caf\xE9 RIGHT",
+            note: null
+        );
+        $output = new \Symfony\Component\Console\Output\BufferedOutput();
+
+        $exit = (new \ReflectionMethod(\MageOS\TemplateParser\Console\Command\DiffCommand::class, 'reportJson'))
+            ->invoke(new \MageOS\TemplateParser\Console\Command\DiffCommand(), [$divergence], 1, $output, 60, true);
+
+        $report = json_decode($output->fetch(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame(1, $exit);
+        self::assertSame("caf\u{FFFD} LEFT", $report['divergences'][0]['legacy_excerpt']);
+    }
+
     public function testANarrowExcerptStillReachesTheDifference(): void
     {
         $divergence = new \MageOS\TemplateParser\Console\Divergence(
