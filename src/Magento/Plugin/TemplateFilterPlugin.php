@@ -260,7 +260,7 @@ class TemplateFilterPlugin
             // only has to apply them. Registering them again would be harmless here, but not in
             // general: one this engine accepted and legacy did not would then be inlined into
             // later LEGACY renders on the same instance, which Shadow promises not to change.
-            $outcome = $this->inScopeOf($subject, $storeId, function () use ($subject, $chain, $value, $result, $state): ShadowOutcome {
+            $outcome = $this->inScopeOf($subject, $storeId, function () use ($subject, $chain, $value, $result, $state): ?ShadowOutcome {
                 $comparator = $this->comparatorFor($subject);
                 $candidate = $this->throughInnerChain($subject, $chain, $value, fn (string $input) => $comparator->render(
                     $input,
@@ -270,9 +270,19 @@ class TemplateFilterPlugin
                     $state['design']
                 ));
 
-                return $candidate instanceof ShadowOutcome ? $candidate : $comparator->judge((string)$candidate, (string)$result);
+                if ($candidate instanceof ShadowOutcome) {
+                    return $candidate;
+                }
+
+                // Legacy's render left deferrals for a root that never came - nothing to
+                // compare against. See ShadowComparator::legacyLeftDeferrals().
+                return ShadowComparator::legacyLeftDeferrals((string)$candidate, (string)$result)
+                    ? null
+                    : $comparator->judge((string)$candidate, (string)$result);
             });
-            $this->recorder->record($storeId, $this->templateOf($subject, $value), $outcome);
+            if ($outcome !== null) {
+                $this->recorder->record($storeId, $this->templateOf($subject, $value), $outcome);
+            }
         } catch (\Throwable) {
             // The comparator and the recorder each contain their own failures; this is the
             // backstop for the promise that Shadow never changes a render.
@@ -339,7 +349,7 @@ class TemplateFilterPlugin
         }
 
         $outcome = null;
-        if ($sampled && !$legacyRaised) {
+        if ($sampled && !$legacyRaised && !ShadowComparator::legacyLeftDeferrals((string)$candidate, (string)$legacy)) {
             try {
                 $outcome = $this->comparatorFor($subject)->judge((string)$candidate, (string)$legacy);
             } catch (\Throwable) {

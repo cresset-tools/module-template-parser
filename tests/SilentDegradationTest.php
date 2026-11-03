@@ -391,6 +391,39 @@ final class SilentDegradationTest extends TestCase
         self::assertSame(ShadowOutcome::AGREE, $records[0][0]);
     }
 
+    /**
+     * A legacy render that still holds a `:deferred:` placeholder was not resolved as a root.
+     * The shared depth meter leaks a level on every render that raises, so in a long-running
+     * process every later render is taken for a child - Magento's output, not this engine's
+     * difference, and not compared.
+     */
+    public function testShadowDoesNotCompareALegacyRenderThatLeftADeferral(): void
+    {
+        [$subject, $wire] = $this->chained([], []);
+        $records = [];
+        $wire($plugin = $this->plugin($records, EngineMode::SHADOW));
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+        $unresolved = 'Dear Ada :deferred:' . str_repeat('ab', 32) . ':';
+
+        self::assertSame($unresolved, $plugin->aroundFilter($subject, static fn () => $unresolved, 'Dear {{var name}}'));
+        self::assertSame([], $records);
+
+        self::assertSame('Dear Bob', $plugin->aroundFilter($subject, static fn () => 'Dear Bob', 'Dear {{var name}}'));
+        self::assertSame(ShadowOutcome::DIVERGE, $records[0][0]);
+    }
+
+    public function testASampledParserRenderDoesNotCompareALegacyRenderThatLeftADeferral(): void
+    {
+        [$subject, $wire] = $this->chained([], []);
+        $records = [];
+        $wire($plugin = $this->plugin($records, EngineMode::PARSER, shadowRate: '100'));
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+        $unresolved = 'Dear Ada :deferred:' . str_repeat('ab', 32) . ':';
+
+        self::assertSame('Dear Ada', $plugin->aroundFilter($subject, static fn () => $unresolved, 'Dear {{var name}}'));
+        self::assertSame([[null, null, true, false]], $records);
+    }
+
     /** One outside this plugin is the Interceptor's to run, on whatever this returns: not run twice. */
     public function testPluginsOutsideThisOneAreLeftToTheInterceptor(): void
     {
@@ -567,7 +600,8 @@ final class SilentDegradationTest extends TestCase
         array &$records,
         string $stage,
         ?\MageOS\TemplateParser\Magento\LegacyOnlyRenders $legacyOnly = null,
-        ?\MageOS\TemplateParser\Magento\CandidateRenders $candidates = null
+        ?\MageOS\TemplateParser\Magento\CandidateRenders $candidates = null,
+        string $shadowRate = '0'
     ): TemplateFilterPlugin {
         $recorder = new class ($records) extends ShadowRecorder {
             public function __construct(private array &$records) {}
@@ -576,11 +610,15 @@ final class SilentDegradationTest extends TestCase
                 $this->records[] = [$outcome?->outcome, $outcome?->detail, $served, $fellBack];
             }
         };
-        $mode = new EngineMode(new class ($stage) implements ScopeConfigInterface {
-            public function __construct(private string $stage) {}
+        $mode = new EngineMode(new class ($stage, $shadowRate) implements ScopeConfigInterface {
+            public function __construct(private string $stage, private string $rate) {}
             public function getValue($path, $scope = 'default', $scopeCode = null)
             {
-                return $path === EngineMode::XML_PATH ? $this->stage : '0';
+                return match ($path) {
+                    EngineMode::XML_PATH => $this->stage,
+                    EngineMode::XML_PATH_PARSER_SHADOW_RATE => $this->rate,
+                    default => '0',
+                };
             }
             public function isSetFlag($path, $scope = 'default', $scopeCode = null) { return false; }
         });

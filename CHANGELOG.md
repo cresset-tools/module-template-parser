@@ -98,6 +98,14 @@ lab's naming, the fixes from a whole-project review before the donation, and Mag
   load order. The `before` and `after` plugins inside this one now run on this engine's
   render as the Interceptor runs them on the filter's; a filter with an `around` plugin
   inside is left to the filter.
+- **Shadow does not compare a legacy render that left a `:deferred:` placeholder.** The
+  filter's depth meter stays a level deep after any render that raised (see the
+  `template:diff` entry below), and on a store that holds for the rest of the PHP process -
+  a cron or queue consumer sending many emails - so each later email whose include defers
+  `{{inlinecss}}` is rendered as a child and keeps the placeholder. That is what the store
+  sends, under Legacy too, but compared it was recorded as this engine diverging. Such a
+  render is now not recorded in Shadow, and not compared in a sampled Parser render. Parser
+  itself does not use the meter, and serves those emails resolved.
 - **The plugin chain is read the way Magento's `PluginList` returns it.** `getNext()` keys its
   answer by `DefinitionInterface::LISTENER_BEFORE`, `LISTENER_AROUND` and `LISTENER_AFTER`
   (1, 2 and 4), and the two entries above read `'before'`, `'around'` and `'after'` - the

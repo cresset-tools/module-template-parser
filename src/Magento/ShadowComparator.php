@@ -103,6 +103,26 @@ class ShadowComparator
     }
 
     /**
+     * Whether legacy's render is not a finished one: it still holds a `:deferred:` placeholder
+     * - `DeferredDirectiveRegistry`'s, from Mage-OS 3.6.0 and the security patch it ports -
+     * that the candidate does not.
+     *
+     * Only the root render resolves them, and the filter takes a render to be the root by a
+     * depth meter shared by the whole process, which `Template::filter()` steps back up only
+     * when it returns. One render that raised, in a cron or a queue consumer sending many
+     * emails, leaves every later render in that process a level deep and its includes'
+     * deferrals unresolved. That is legacy's output to the customer, as it is under Legacy -
+     * but compared, it reads as this engine diverging, so it is not compared.
+     */
+    public static function legacyLeftDeferrals(string $candidate, string $legacyResult): bool
+    {
+        // 3.6.0's is `:deferred:<sha256 hex>:`; the patch's port to older lines need not be.
+        $placeholder = '/:deferred:[0-9A-Za-z]{32,}/';
+
+        return preg_match($placeholder, $legacyResult) === 1 && preg_match($placeholder, $candidate) !== 1;
+    }
+
+    /**
      * Whether a candidate from render() agrees with legacy, and why not when it does not.
      *
      * Reads the causes off the adapter, so call it straight after the render() that
