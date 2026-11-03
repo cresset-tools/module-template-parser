@@ -62,6 +62,14 @@ lab's naming, and the fixes from a whole-project review before the donation.
   render with a directive in it was declined: Shadow recorded refusals, which count as clean,
   so `template:shadow:report` said "No divergences" over zero comparisons. The plugin now asks
   the plugin list whether a directive method really has a plugin.
+- **`template:check` reports a plugged directive as a plugin, and stops reporting stock
+  ones.** It read a directive method as a module's whenever a non-Magento class declared it,
+  so over a module's preference subclass - whose generated `Vendor\...\Interceptor`
+  redeclares every inherited method - each stock directive was a warning (about 1,300 on one
+  store), while a real plugin such as Page Builder's `afterCustomvarDirective` went
+  unreported. It now uses the plugin's own rule: a generated Interceptor's method counts as
+  the one it stands in for, and a stock directive counts only when the plugin list has a
+  plugin on it, named in the warning.
 - **A directive only the store's filter renders is declined inside `{{template}}` includes
   too.** A module's `{{coupon}}`, or a plugged stock directive, was handed to the filter at the
   top level but served as escaped text when it appeared in an included header or footer.

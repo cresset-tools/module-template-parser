@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MageOS\TemplateParser\Magento\Plugin;
 
 use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\DirectiveMethods;
 use MageOS\TemplateParser\Magento\HostOnlyDirectives;
 use MageOS\TemplateParser\Magento\LegacyOnlyRenders;
 use MageOS\TemplateParser\Magento\RenderScope;
@@ -465,44 +466,14 @@ class TemplateFilterPlugin
     }
 
     /**
-     * A directive method declared outside Magento is a module's own; one a generated
-     * Interceptor declares is plugged - but only if a plugin is actually configured on it.
-     *
-     * The two Interceptor generators differ. `setup:di:compile` redeclares only the methods
-     * that have plugins; the on-demand generator - developer mode, or default mode without a
-     * compile - redeclares EVERY public method. Reading the declaration alone classed all
-     * sixteen stock directives as legacy-only on such a store, so every render with a
-     * directive in it was declined: Shadow recorded refusals, which count as clean, and the
-     * report said "No divergences" over zero comparisons.
+     * A directive method a module added or overrode, or a stock one a module has plugged -
+     * see DirectiveMethods - and the directives this engine leaves to particular filters.
      *
      * @return list<string>
      */
     private function legacyOnlyDirectives(LegacyTemplate $subject): array
     {
-        $names = [];
-        $original = self::originalClass($subject::class);
-        // Every method, whatever its visibility: legacy dispatches through
-        // ReflectionClass::getMethod()->invokeArgs(), which reaches protected, private and
-        // static ones too.
-        foreach ((new \ReflectionClass($subject))->getMethods() as $method) {
-            if (!preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m)) {
-                continue;
-            }
-            $declaring = $method->getDeclaringClass()->getName();
-            if (str_ends_with($declaring, '\\Interceptor')) {
-                if ($this->isPlugged($subject, $original, $method->getName())) {
-                    $names[] = strtolower($m[1]);
-                    continue;
-                }
-                if (!method_exists($original, $method->getName())) {
-                    continue;
-                }
-                $declaring = (new \ReflectionMethod($original, $method->getName()))->getDeclaringClass()->getName();
-            }
-            if (!str_starts_with($declaring, 'Magento\\')) {
-                $names[] = strtolower($m[1]);
-            }
-        }
+        $names = array_keys(DirectiveMethods::of($subject::class, $this->pluginList, $subject));
 
         if (is_a($subject, 'Magento\\Cms\\Model\\Template\\Filter')
             && !is_a($subject, 'Magento\\Widget\\Model\\Template\\Filter')
@@ -524,39 +495,10 @@ class TemplateFilterPlugin
         return array_values(array_unique($names));
     }
 
-    /**
-     * Whether a plugin is configured on this method of a generated Interceptor.
-     *
-     * Asked of the plugin list the Interceptor itself dispatches through - its private
-     * `pluginList` and `subjectType`, which `___init()` sets - and failing that of the one
-     * injected here. With neither, an Interceptor-declared method is taken as plugged, which is
-     * what the compiled generator's output means.
-     */
-    private function isPlugged(LegacyTemplate $subject, string $original, string $method): bool
-    {
-        [$list, $type] = (function (): array {
-            return [
-                property_exists($this, 'pluginList') ? $this->pluginList : null,
-                property_exists($this, 'subjectType') ? $this->subjectType : null,
-            ];
-        })->call($subject);
-
-        $list = $list instanceof PluginListInterface ? $list : $this->pluginList;
-        if ($list === null) {
-            return true;
-        }
-
-        try {
-            return $list->getNext(is_string($type) && $type !== '' ? $type : $original, $method) !== null;
-        } catch (\Throwable) {
-            return true;
-        }
-    }
-
     /** The class a generated Interceptor stands in for, for a message a person reads. */
     private static function originalClass(string $class): string
     {
-        return str_ends_with($class, '\\Interceptor') ? (string)get_parent_class($class) : $class;
+        return DirectiveMethods::originalClass($class);
     }
 
     private function templateOf(LegacyTemplate $subject, string $value): string
