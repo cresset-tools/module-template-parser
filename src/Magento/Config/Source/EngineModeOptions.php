@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento\Config\Source;
+namespace MageOS\TemplateParser\Magento\Config\Source;
 
-use Cresset\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
 use Magento\Framework\Data\OptionSourceInterface;
 
 /**

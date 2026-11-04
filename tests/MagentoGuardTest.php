@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\State;
@@ -11,19 +11,20 @@ use Magento\Framework\View\LayoutFactory;
 use Magento\Framework\View\LayoutInterface;
 use Magento\Variable\Model\Source\Variables;
 use Magento\Widget\Block\BlockInterface as WidgetBlockInterface;
-use Cresset\TemplateParser\Diagnostics;
-use Cresset\TemplateParser\Magento\AllowlistedConfigReader;
-use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
-use Cresset\TemplateParser\PathGuard;
+use MageOS\TemplateParser\Diagnostics;
+use MageOS\TemplateParser\Magento\AllowlistedConfigReader;
+use MageOS\TemplateParser\Magento\VariableCustomVariableReader;
+use MageOS\TemplateParser\PathGuard;
 use Magento\Variable\Model\VariableFactory;
-use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
-use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
-use Cresset\TemplateParser\ParameterParser;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Options;
+use MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer;
+use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer;
+use MageOS\TemplateParser\ParameterParser;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Options;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -557,6 +558,31 @@ final class MagentoGuardTest extends TestCase
     }
 
     /**
+     * setDataUsingMethod() builds its method name case-insensitively and without underscores,
+     * so `Template=` is setTemplate() as surely as `template=` is - and `Area=` sets the area
+     * every block resolves its template from. Dropping only the lowercase key dropped nothing.
+     */
+    #[DataProvider('capabilitySpellings')]
+    public function testACapabilityParameterIsDroppedHoweverItIsSpelled(string $key): void
+    {
+        $loaded = [];
+        $renderer = new AllowlistedLayoutRenderer($this->layoutFactory($loaded, $layout), new State(), ['ok_handle']);
+
+        $renderer->render('ok_handle', 'frontend', [$key => 'adminhtml-or-admin.phtml', 'order_id' => '42']);
+
+        self::assertSame(['order_id' => '42'], $layout->blockData['root']);
+    }
+
+    /** @return array<string,array{string}> */
+    public static function capabilitySpellings(): array
+    {
+        return array_combine(
+            $keys = ['Template', 'TEMPLATE', 'tem_plate', 'moduleName', 'Module_Name', 'modulename', 'Area', 'AREA', 'ar_ea'],
+            array_map(static fn (string $k): array => [$k], $keys)
+        );
+    }
+
+    /**
      * getOutput() returns '' for any handle whose XML lacks output="1" unless the root block
      * is registered, so without this the directive rendered nothing and looked like it worked.
      */
@@ -681,7 +707,7 @@ final class MagentoGuardTest extends TestCase
         });
 
         $built = [];
-        $policy = new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$class]);
+        $policy = HostBlockClassPolicyTest::around(new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$class]));
         $renderer = new LayoutBlockRenderer($this->layout($built), $this->omConfig(), ['toHtml'], null, $policy);
 
         self::assertSame('', $renderer->render($class, [], 'toHtml'));
@@ -721,7 +747,7 @@ final class MagentoGuardTest extends TestCase
                 return $this->block;      // a preference resolving somewhere else entirely
             }
         };
-        $policy = new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$denied::class]);
+        $policy = HostBlockClassPolicyTest::around(new \Magento\Email\Model\Template\Filter\BlockDirectivePolicy([$denied::class]));
         $renderer = new LayoutBlockRenderer($layout, $this->omConfig(), ['toHtml'], null, $policy);
 
         self::assertSame('', $renderer->render(\Magento\Framework\View\Element\BlockInterface::class, [], 'toHtml'));

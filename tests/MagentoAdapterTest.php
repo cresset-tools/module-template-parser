@@ -1,23 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\LayoutInterface;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\CustomDirectiveRenderer;
-use Cresset\TemplateParser\Port\CustomVariableReader;
-use Cresset\TemplateParser\Port\StylesheetLoader;
-use Cresset\TemplateParser\Port\TemplateLoader;
-use Cresset\TemplateParser\TemplateError;
-use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
-use Cresset\TemplateParser\Magento\ShadowComparator;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Options;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\CustomDirectiveRenderer;
+use MageOS\TemplateParser\Port\CustomVariableReader;
+use MageOS\TemplateParser\Port\StylesheetLoader;
+use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
+use MageOS\TemplateParser\Magento\ShadowComparator;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Options;
 use PHPUnit\Framework\TestCase;
 
 final class MagentoAdapterTest extends TestCase

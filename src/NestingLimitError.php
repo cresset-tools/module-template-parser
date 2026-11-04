@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
 /**
  * A template nested deeper than a limit allows: block directives past

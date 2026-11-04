@@ -16,7 +16,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }
-define('CRESSET_TEMPLATE_PARSER_TOOL', true);
+define('MAGEOS_TEMPLATE_PARSER_TOOL', true);
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';

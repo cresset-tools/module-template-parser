@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento\Shadow;
+namespace MageOS\TemplateParser\Magento\Shadow;
 
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\TemplateError;
 
 /**
  * What one Shadow comparison found.

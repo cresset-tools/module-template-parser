@@ -1,23 +1,24 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\LegacyReading;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
-use Cresset\TemplateParser\Magento\ConfigTemplateLoader;
-use Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
-use Cresset\TemplateParser\Magento\RenderScope;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
-use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
-use Cresset\TemplateParser\Magento\ShadowComparator;
-use Cresset\TemplateParser\Magento\StoreUrlBuilder;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Port\UrlBuilder;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\LegacyReading;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\ConfigTemplateLoader;
+use MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
+use MageOS\TemplateParser\Magento\RenderScope;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
+use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
+use MageOS\TemplateParser\Magento\ShadowComparator;
+use MageOS\TemplateParser\Magento\StoreUrlBuilder;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\Port\UrlBuilder;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\ObjectManager\ConfigInterface;
 use Magento\Framework\UrlInterface;
@@ -65,6 +66,45 @@ final class LegacyFaithfulnessTest extends TestCase
             ],
             $created
         );
+    }
+
+    /**
+     * Only `frontend`, as {{block}}. Forwarded, `area="adminhtml"` made the widget resolve its
+     * `template` out of the adminhtml theme, so template text could render an admin .phtml.
+     */
+    public function testAWidgetIsNeverGivenANonFrontendArea(): void
+    {
+        $created = [];
+        $renderer = new TypeCheckedWidgetRenderer($this->layout($created), $this->widgetTypes());
+        $type = $this->widgetClass();
+        $admin = ['template' => 'Magento_Backend::page/js/require_js.phtml'];
+
+        foreach (['area', 'Area', 'AREA', 'ar_ea'] as $key) {
+            $renderer->render($type, [$key => 'adminhtml'] + $admin);
+        }
+        $renderer->render($type, ['area' => ' Frontend '] + $admin);
+
+        self::assertSame(
+            array_fill(0, 4, ['type' => $type] + $admin),
+            array_map(static fn (array $c): array => $c[1], array_slice($created, 0, 4))
+        );
+        self::assertSame(' Frontend ', $created[4][1]['area'], 'frontend is passed on as written');
+    }
+
+    /** generateWidget renders nothing for a type no widget.xml declares, as written. */
+    public function testAWidgetTypeNoWidgetXmlDeclaresRendersNothing(): void
+    {
+        $created = [];
+        $type = $this->widgetClass();
+        $renderer = new TypeCheckedWidgetRenderer(
+            $this->layout($created),
+            $this->widgetTypes(),
+            widgets: new \Magento\Widget\Model\Widget([$type])
+        );
+
+        self::assertSame('W', $renderer->render($type, []));
+        self::assertSame('', $renderer->render('\\' . $type, []), 'legacy looks the type up as written');
+        self::assertCount(1, $created, 'an undeclared type is never built');
     }
 
     /**
@@ -227,7 +267,6 @@ final class LegacyFaithfulnessTest extends TestCase
             'one missing brace' => ['Hi {{var a}, bye {{var a}}', 'a construct the filter reads to the first }}'],
             'a quoted opener' => ['{{trans "a {{b}}"}}', 'a construct the filter reads to the first }}'],
             'a quoted closer' => ['{{trans "a }}b"}}', 'a quoted }} the filter ends the directive at'],
-            'an apostrophe in a single-quoted string' => ["{{trans 'you'd like'}}", 'a quoted }} the filter ends the directive at'],
             'a name the filter reads as {{if}}' => ['{{iframe}}x{{if a}}y{{/if}}', 'a name the filter reads as {{if}}'],
         ];
     }
@@ -252,6 +291,11 @@ final class LegacyFaithfulnessTest extends TestCase
         return [
             'prose that starts like a loop' => ['{{Forgot Your Password?}}'],
             'a quoted apostrophe' => ['{{trans "it\'s here"}}'],
+            // An apostrophe ends no quote, here or in the filter's trans pattern, which takes a
+            // closing quote only before whitespace or the end - so both read one string. This
+            // was flagged while the lexer read `'d` as the quote's end.
+            'an apostrophe in a single-quoted string' => ["{{trans 'you'd like'}}"],
+            'the stock cancellation email' => ["{{trans 'It seems that you'd like to cancel your order'}}\n<p>{{var x}}</p>"],
             'an ordinary template' => ['Dear {{var name}}, {{if a}}{{trans "Hi"}}{{else}}x{{/if}} {{depend b}}y{{/depend}}'],
             'a directive name merely starting with if' => ['{{iframe}} with no closer'],
             'no directives at all' => ['plain text { } }}'],
@@ -262,6 +306,35 @@ final class LegacyFaithfulnessTest extends TestCase
     public function testAReadingTheFilterSharesIsNotFlagged(string $template): void
     {
         self::assertNull(LegacyReading::firstDifference($template));
+    }
+
+    /**
+     * LegacyReading and the lexer decide "a quote is open at the first `}}`" with one rule.
+     * They had two - the lexer honoured backslashes and LegacyReading did not - so a template
+     * the lexer read past its first `}}` could pass as one the filter reads the same way, and
+     * Parser served the swallowed reading.
+     */
+    #[DataProvider('quoteShapes')]
+    public function testLegacyReadingFlagsExactlyWhatTheLexerReadsPastTheFirstCloser(string $template): void
+    {
+        $first = (new \MageOS\TemplateParser\Lexer\Lexer())->tokenize($template)[0];
+        $readsPast = $first->type !== \MageOS\TemplateParser\Lexer\TokenType::Text
+            && strlen($first->raw) !== strpos($template, '}}') + 2;
+
+        self::assertSame($readsPast, LegacyReading::firstDifference($template) !== null, $template);
+    }
+
+    /** @return array<string,array{string}> */
+    public static function quoteShapes(): array
+    {
+        return [
+            'quoted closer' => ['{{trans "a }}b"}} tail'],
+            'escaped quote' => ['{{trans "a\\"b}}c"}} tail'],
+            'backslash then apostrophe' => ['{{trans "Save it in John\'s folder C:\\docs\\"}} He said "hi {{var name}}" ok}}'],
+            'apostrophe in single quotes' => ["{{trans 'Don't forget'}}</p><p>{{var total}}</p><p>We're here}}"],
+            'quote mid-value' => ['{{var a.getUrl(\'x}}y\')}} tail'],
+            'value after =' => ['{{mydir p="a }}b"}} tail'],
+        ];
     }
 
     /** Only the compatible posture claims to render as the filter does. */
@@ -292,6 +365,67 @@ final class LegacyFaithfulnessTest extends TestCase
         );
 
         self::assertRefused(fn () => $loader->load('design/email/header_template'), 'template include the filter reads differently');
+    }
+
+    /**
+     * The top level declines a directive only the filter renders - a module's `{{coupon}}`.
+     * An include is loaded and rendered by this engine, so the same directive in the header
+     * template was served as escaped text where the store prints the coupon.
+     */
+    public function testAnIncludeUsingADirectiveOnlyTheFilterRendersFallsBack(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $template = new class extends \Magento\Email\Model\Template {
+            public function getTemplateText() { return '<p>Use {{coupon}} today</p>'; }
+        };
+        $scope = new RenderScope();
+        $loader = new ConfigTemplateLoader(
+            new class implements ScopeConfigInterface {
+                public function getValue($path, $scope = 'default', $scopeCode = null) { return 'design_email_header'; }
+                public function isSetFlag($path, $scope = 'default', $scopeCode = null) { return false; }
+            },
+            ['design/email/'],
+            new class ($template) extends \Magento\Email\Model\TemplateFactory {
+                public function __construct(private object $template) {}
+                public function create(array $data = []) { return $this->template; }
+            },
+            scope: $scope
+        );
+        $records = [];
+        $plugin = $this->plugin(new HostServices(templates: $loader), $scope, $records);
+        // An email render: the template model has given its filter a processor.
+        $subject = (new \Acme\Promo\Filter())->setTemplateProcessor(static fn () => '');
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{template config_path="design/email/header_template"}}Hi {{var name}}');
+
+        self::assertSame('LEGACY', $result);
+        self::assertSame([ShadowOutcome::REFUSED], $records);
+
+        // The control: the same include on the stock filter, where {{coupon}} is nobody's.
+        $records = [];
+        $stock = (new \Magento\Widget\Model\Template\Filter())->setTemplateProcessor(static fn () => '');
+        $plugin->beforeSetVariables($stock, ['name' => 'Ada']);
+        self::assertStringContainsString('Hi Ada', $plugin->aroundFilter($stock, static fn () => 'LEGACY', '{{template config_path="design/email/header_template"}}Hi {{var name}}'));
+    }
+
+    /**
+     * Only a template model gives its filter a processor, so on a CMS or catalog filter legacy
+     * prints `{Error in template processing}` for any {{template}}. Served, the page got the
+     * email footer instead.
+     */
+    public function testAnIncludeOnAFilterWithNoTemplateModelFallsBack(): void
+    {
+        $records = [];
+        $plugin = $this->plugin(new HostServices(templates: new class implements TemplateLoader {
+            public function load(string $configPath): ?string { return 'FOOTER'; }
+        }), new RenderScope(), $records);
+        $cms = new \Magento\Email\Model\Template\Filter();
+
+        $result = $plugin->aroundFilter($cms, static fn () => '{Error in template processing}', '{{template config_path="design/email/footer_template"}}');
+
+        self::assertSame('{Error in template processing}', $result);
+        self::assertSame([ShadowOutcome::REFUSED], $records);
     }
 
     // ---------------------------------------------------------------- helpers

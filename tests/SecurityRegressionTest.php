@@ -1,21 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\Diagnostics;
-use Cresset\TemplateParser\HostDirectives;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Lexer\Lexer;
-use Cresset\TemplateParser\Magento\PhraseTranslator;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\PathGuard;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\UrlBuilder;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\Diagnostics;
+use MageOS\TemplateParser\HostDirectives;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Lexer\Lexer;
+use MageOS\TemplateParser\Magento\PhraseTranslator;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\PathGuard;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\UrlBuilder;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -82,6 +82,25 @@ final class SecurityRegressionTest extends TestCase
             'N NL',
             $translator->translate('%name %name_long', ['%name' => 'N', '%name_long' => 'NL'])
         );
+    }
+
+    /**
+     * transDirective turns Translate Inline off around its `__()`. Left on, a phrase came back
+     * wrapped in `{{{...}}}` editing markers, visible in the page or the email.
+     */
+    public function testPhraseTranslatorTranslatesWithInlineTranslationSuspended(): void
+    {
+        $state = new class implements \Magento\Framework\Translate\Inline\StateInterface {
+            public array $log = [];
+            public function disable() { $this->log[] = 'disable'; }
+            public function enable() { $this->log[] = 'enable'; }
+            public function isEnabled() { return true; }
+            public function suspend($status = false) { $this->log[] = 'suspend'; }
+            public function resume($status = true) { $this->log[] = 'resume'; }
+        };
+        (new PhraseTranslator($state))->translate('Contact us', []);
+
+        self::assertSame(['suspend', 'resume'], $state->log);
     }
 
     // ---------------------------------------------------------------- resource bounds

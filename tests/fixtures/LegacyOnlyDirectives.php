@@ -54,3 +54,91 @@ namespace Magento\Widget\Model\Template {
         }
     }
 }
+
+namespace Magento\Email\Model\Template\Filter {
+    if (!class_exists(Interceptor::class)) {
+        /**
+         * What the ON-DEMAND generator writes - developer mode, or default mode without
+         * setup:di:compile: every public method redeclared, plugged or not, dispatching through
+         * the plugin list `___init()` stores in private properties. Only the plugin list says
+         * which methods are really plugged.
+         */
+        class Interceptor extends \Magento\Email\Model\Template\Filter
+        {
+            private $pluginList;
+            private $subjectType;
+
+            /**
+             * @param list<string> $plugged directive methods a plugin is configured on
+             * @param ?\Magento\Framework\Interception\PluginListInterface $pluginList the whole list
+             *        instead, for a test that needs the chain on filter() too
+             */
+            public function __construct(array $plugged = [], ?\Magento\Framework\Interception\PluginListInterface $pluginList = null)
+            {
+                $this->subjectType = get_parent_class($this);
+                $this->pluginList = $pluginList ?? new class ($plugged) implements \Magento\Framework\Interception\PluginListInterface {
+                    public function __construct(private array $plugged) {}
+                    public function getPlugin($type, $code) { return null; }
+                    public function getNext($type, $method, $code = '__self')
+                    {
+                        return $type === \Magento\Email\Model\Template\Filter::class && in_array($method, $this->plugged, true)
+                            ? [\Magento\Framework\Interception\DefinitionInterface::LISTENER_AFTER => ['some_module_plugin']]
+                            : null;
+                    }
+                };
+            }
+
+            public function varDirective($construction) { return ''; }
+            public function transDirective($construction) { return ''; }
+            public function ifDirective($construction) { return ''; }
+            public function dependDirective($construction) { return ''; }
+            public function forDirective($construction) { return ''; }
+            public function templateDirective($construction) { return ''; }
+            public function cssDirective($construction) { return ''; }
+            public function inlinecssDirective($construction) { return ''; }
+            public function blockDirective($construction) { return ''; }
+            public function layoutDirective($construction) { return ''; }
+            public function configDirective($construction) { return ''; }
+            public function customvarDirective($construction) { return ''; }
+            public function storeDirective($construction) { return ''; }
+            public function mediaDirective($construction) { return ''; }
+            public function viewDirective($construction) { return ''; }
+            public function protocolDirective($construction) { return ''; }
+        }
+    }
+}
+
+namespace Acme\Promo\Filter {
+    if (!class_exists(Interceptor::class)) {
+        /** The on-demand shape over a module's subclass: its own directive stays its own. */
+        class Interceptor extends \Acme\Promo\Filter
+        {
+            private $pluginList;
+            private $subjectType;
+
+            public function __construct()
+            {
+                $this->subjectType = get_parent_class($this);
+                $this->pluginList = new class implements \Magento\Framework\Interception\PluginListInterface {
+                    public function getPlugin($type, $code) { return null; }
+                    public function getNext($type, $method, $code = '__self') { return null; }
+                };
+            }
+
+            public function varDirective($construction) { return ''; }
+            public function couponDirective($construction) { return 'SAVE10'; }
+        }
+    }
+}
+
+namespace Acme\Promo {
+    if (!class_exists(HiddenFilter::class)) {
+        /** Directives legacy still reaches: it dispatches through getMethod()->invokeArgs(). */
+        class HiddenFilter extends \Magento\Widget\Model\Template\Filter
+        {
+            protected function couponDirective($construction) { return 'SAVE10'; }
+            private function giftDirective($construction) { return 'GIFT'; }
+            public static function promoDirective($construction) { return 'PROMO'; }
+        }
+    }
+}

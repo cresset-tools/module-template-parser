@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\Port\StylesheetLoader;
-use Cresset\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\StylesheetLoader;
+use MageOS\TemplateParser\Port\RefusedByPort;
 
 /**
  * {{css}} the way Email\Model\Template\Filter resolves it.

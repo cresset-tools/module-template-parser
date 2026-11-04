@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Standalone entrypoint.
  *
  * Finds an autoloader whether this package is the project or a dependency of one, so
- * `bougie tool run cresset/module-template-parser` and a checkout both work.
+ * `bougie tool run mage-os/module-template-parser` and a checkout both work.
  */
 foreach ([
     __DIR__ . '/../vendor/autoload.php',     // installed as the project
@@ -19,10 +19,10 @@ foreach ([
     }
 }
 
-if (!class_exists(\Cresset\TemplateParser\TemplateEngine::class)) {
+if (!class_exists(\MageOS\TemplateParser\TemplateEngine::class)) {
     fwrite(STDERR, "template-parser: could not find an autoloader.\n"
         . "Run `composer install` in the package, or install it into a project.\n");
     exit(1);
 }
 
-exit(\Cresset\TemplateParser\Console\Application::create()->run());
+exit(\MageOS\TemplateParser\Console\Application::create()->run());

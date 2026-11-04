@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Ast;
+namespace MageOS\TemplateParser\Ast;
 
 final class RootNode implements Node
 {
     /**
      * @param Node[] $children
-     * @param \Cresset\TemplateParser\LegacyIncompatibility[] $incompatibilities
+     * @param \MageOS\TemplateParser\LegacyIncompatibility[] $incompatibilities
      */
     public function __construct(
         private readonly array $children = [],
@@ -16,7 +16,7 @@ final class RootNode implements Node
     ) {
     }
 
-    /** @return \Cresset\TemplateParser\LegacyIncompatibility[] */
+    /** @return \MageOS\TemplateParser\LegacyIncompatibility[] */
     public function incompatibilities(): array
     {
         return $this->incompatibilities;

@@ -1,29 +1,29 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
-use Cresset\TemplateParser\Magento\Config\Source\EngineModeOptions;
-use Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
-use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
-use Cresset\TemplateParser\Magento\ShadowComparator;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Magento\TemplateFilterInterface;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\CustomVariableReader;
-use Cresset\TemplateParser\Port\StylesheetLoader;
-use Cresset\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\Config\Source\EngineModeOptions;
+use MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
+use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
+use MageOS\TemplateParser\Magento\ShadowComparator;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Magento\TemplateFilterInterface;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\CustomVariableReader;
+use MageOS\TemplateParser\Port\StylesheetLoader;
+use MageOS\TemplateParser\RenderPolicy;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 use PHPUnit\Framework\TestCase;
-use Cresset\TemplateParser\Magento\Plugin\EmailFilterStatePlugin;
+use MageOS\TemplateParser\Magento\Plugin\EmailFilterStatePlugin;
 use Magento\Email\Model\Template\Filter as EmailFilter;
 
 /**

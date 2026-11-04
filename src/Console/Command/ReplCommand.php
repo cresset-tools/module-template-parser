@@ -1,15 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\EngineFactory;
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\Mode;
-use Cresset\TemplateParser\Console\StoreEmulator;
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Console\StoreOption;
+use MageOS\TemplateParser\Console\EngineFactory;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\Mode;
+use MageOS\TemplateParser\Console\StoreEmulator;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateError;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,7 +26,7 @@ class ReplCommand extends Command
     protected function configure(): void
     {
         $this->addPostureOption()
-            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store id to render in')
+            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store view to render in, by id or code')
             ->addOption('var', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Preset a variable, name=value');
     }
 
@@ -33,7 +34,7 @@ class ReplCommand extends Command
     {
         $magento = $this->magento();
         $mode = $this->posture($input, $output);
-        $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
+        $storeId = StoreOption::resolve($input->getOption('store'), StoreOption::codes((new StoreEmulator($magento))->stores()));
         $variables = $this->parseVariables((array)$input->getOption('var'));
 
         $factory = new EngineFactory($magento);
@@ -187,7 +188,7 @@ class ReplCommand extends Command
 
             case ':help':
                 $output->writeln(<<<'HELP'
-  <comment>:posture</comment> strict|lenient|compatible switch engine posture (:mode too)
+  <comment>:posture</comment> strict|lenient|compatible switch engine posture
   <comment>:set</comment> name=value                   set a variable (see :types)
   <comment>:unset</comment> name                       remove one
   <comment>:vars</comment>                             list variables in scope
@@ -219,12 +220,8 @@ TYPES);
                 return true;
 
             case ':posture':
-            case ':mode':
                 try {
-                    // :mode is the 0.2 spelling, and 0.2 read "legacy" as compatible.
-                    $mode = $name === ':mode' && strtolower(trim((string)$argument)) === 'legacy'
-                        ? Mode::Compatible
-                        : Mode::parse((string)$argument);
+                    $mode = Mode::parse((string)$argument);
                     $output->writeln('  ' . $mode->describe());
                 } catch (\InvalidArgumentException $e) {
                     $output->writeln('<error>' . $e->getMessage() . '</error>');
@@ -256,7 +253,12 @@ TYPES);
                 return true;
 
             case ':store':
-                $storeId = $argument === null || trim($argument) === '' ? null : (int)$argument;
+                try {
+                    $storeId = StoreOption::resolve($argument, StoreOption::codes((new StoreEmulator($magento))->stores()));
+                } catch (\InvalidArgumentException $e) {
+                    $output->writeln('  <error>' . $e->getMessage() . '</error>');
+                    return true;
+                }
                 $output->writeln('  store ' . ($storeId ?? 'none'));
                 return true;
 

@@ -1,22 +1,22 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
-use Cresset\TemplateParser\Magento\Plugin\CmsBlockIdentityPlugin;
-use Cresset\TemplateParser\Magento\Plugin\CmsPageIdentityPlugin;
-use Cresset\TemplateParser\Magento\Plugin\EmailSubjectIdentityPlugin;
-use Cresset\TemplateParser\Magento\Plugin\EmailTemplateIdentityPlugin;
-use Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
-use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
-use Cresset\TemplateParser\Magento\ShadowComparator;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\SyntaxError;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\Plugin\CmsBlockIdentityPlugin;
+use MageOS\TemplateParser\Magento\Plugin\CmsPageIdentityPlugin;
+use MageOS\TemplateParser\Magento\Plugin\EmailSubjectIdentityPlugin;
+use MageOS\TemplateParser\Magento\Plugin\EmailTemplateIdentityPlugin;
+use MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
+use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
+use MageOS\TemplateParser\Magento\ShadowComparator;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\SyntaxError;
 use Magento\Cms\Model\Block;
 use Magento\Cms\Model\Page;
 use Magento\Email\Model\AbstractTemplate;
@@ -122,7 +122,7 @@ final class ShadowRecordingTest extends TestCase
             public function getTemplateSubject() { return 'News from {{var store.frontend_name}}'; }
         };
 
-        (new \Cresset\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin($identity))
+        (new \MageOS\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin($identity))
             ->beforeGetProcessedTemplateSubject($subject, []);
 
         self::assertSame('newsletter:4/subject', $identity->identify('News from {{var store.frontend_name}}'));
@@ -141,7 +141,7 @@ final class ShadowRecordingTest extends TestCase
             public function getNewsletterSubject() { return 'queued subject'; }
         };
 
-        (new \Cresset\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin($identity))->beforeSendPerSubscriber($queue, 20);
+        (new \MageOS\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin($identity))->beforeSendPerSubscriber($queue, 20);
         (new EmailTemplateIdentityPlugin($identity))->beforeGetProcessedTemplate($this->emailModel(AbstractTemplate::class, null, 'queued body'));
         (new EmailSubjectIdentityPlugin($identity))->beforeGetProcessedTemplateSubject(new class extends EmailTemplate {
             public function getId() { return null; }
@@ -201,7 +201,7 @@ final class ShadowRecordingTest extends TestCase
     public function testCatalogContentIsNamedOnlyWhenItHoldsADirective(): void
     {
         $identity = new TemplateIdentity();
-        $plugin = new \Cresset\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin($identity);
+        $plugin = new \MageOS\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin($identity);
         $output = new \Magento\Catalog\Helper\Output();
         $product = new class { public function getId() { return 42; } };
         $category = new class { public function getId() { return '3'; } };
@@ -369,7 +369,7 @@ final class ShadowRecordingTest extends TestCase
         $recorder->flush();
 
         [$sql, $bind] = $queries[0];
-        self::assertStringStartsWith('INSERT INTO `m2_cresset_template_shadow` (`store_id`, `template`, ', $sql);
+        self::assertStringStartsWith('INSERT INTO `m2_mageos_template_parser_shadow` (`store_id`, `template`, ', $sql);
         self::assertStringContainsString('ON DUPLICATE KEY UPDATE', $sql);
         self::assertStringContainsString('`agreed` = `agreed` + VALUES(`agreed`)', $sql);
         self::assertStringContainsString(
@@ -421,13 +421,14 @@ final class ShadowRecordingTest extends TestCase
      */
     public function testAFailedWriteIsWarnedAboutOnceAndNeverThrows(): void
     {
+        self::forgetTheWarning();
         $logger = new CollectingLogger();
         $resource = new class extends ResourceConnection {
             public int $attempts = 0;
             public function getConnection($resourceName = 'default')
             {
                 $this->attempts++;
-                throw new \RuntimeException("Table 'cresset_template_shadow' doesn't exist");
+                throw new \RuntimeException("Table 'mageos_template_parser_shadow' doesn't exist");
             }
         };
         $recorder = new ShadowRecorder($resource, $this->stores(), $logger, false);
@@ -442,6 +443,18 @@ final class ShadowRecordingTest extends TestCase
         self::assertCount(1, $logger->records);
         self::assertSame('warning', $logger->records[0][0]);
         self::assertStringContainsString("doesn't exist", $logger->records[0][2]['error']);
+
+        // A DI-shared recorder lives for one request: the next request's is a new instance,
+        // and "once" has to hold across them, or it is a warning per page view.
+        $next = new ShadowRecorder($resource, $this->stores(), $logger, false);
+        $next->record(1, 'email:1', ShadowOutcome::agreed());
+        $next->flush();
+        self::assertCount(1, $logger->records, 'warned again by the next request\'s recorder');
+    }
+
+    private static function forgetTheWarning(): void
+    {
+        (new \ReflectionProperty(ShadowRecorder::class, 'warned'))->setValue(null, false);
     }
 
     /** "The current store" is resolved when the render happens, and a failure is store 0. */
@@ -499,16 +512,16 @@ final class ShadowRecordingTest extends TestCase
 
         self::assertSame([
             TemplateFilterPlugin::class => LegacyTemplate::class,
-            \Cresset\TemplateParser\Magento\Plugin\EmailFilterStatePlugin::class => EmailFilter::class,
+            \MageOS\TemplateParser\Magento\Plugin\EmailFilterStatePlugin::class => EmailFilter::class,
             EmailTemplateIdentityPlugin::class => AbstractTemplate::class,
             EmailSubjectIdentityPlugin::class => EmailTemplate::class,
-            \Cresset\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin::class => NewsletterTemplate::class,
-            \Cresset\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin::class => \Magento\Newsletter\Model\Queue::class,
+            \MageOS\TemplateParser\Magento\Plugin\NewsletterSubjectIdentityPlugin::class => NewsletterTemplate::class,
+            \MageOS\TemplateParser\Magento\Plugin\NewsletterQueueIdentityPlugin::class => \Magento\Newsletter\Model\Queue::class,
             CmsBlockIdentityPlugin::class => Block::class,
             CmsPageIdentityPlugin::class => Page::class,
-            \Cresset\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin::class => \Magento\Catalog\Helper\Output::class,
-            \Cresset\TemplateParser\Magento\Plugin\AddressIdentityPlugin::class => \Magento\Customer\Block\Address\Renderer\DefaultRenderer::class,
-            \Cresset\TemplateParser\Magento\Plugin\StoreAddressIdentityPlugin::class => \Magento\Store\Model\Address\Renderer::class,
+            \MageOS\TemplateParser\Magento\Plugin\CatalogOutputIdentityPlugin::class => \Magento\Catalog\Helper\Output::class,
+            \MageOS\TemplateParser\Magento\Plugin\AddressIdentityPlugin::class => \Magento\Customer\Block\Address\Renderer\DefaultRenderer::class,
+            \MageOS\TemplateParser\Magento\Plugin\StoreAddressIdentityPlugin::class => \Magento\Store\Model\Address\Renderer::class,
         ], $declared);
 
         foreach ($declared as $pluginClass => $intercepted) {
@@ -542,6 +555,10 @@ final class ShadowRecordingTest extends TestCase
 
         $template = $table[0]->xpath('column[@name="template"]')[0];
         self::assertSame('255', (string)$template['length']);
+
+        // Every upsert reserves an id whether it inserts or not; an int ran out.
+        $id = $table[0]->xpath('column[@name="entity_id"]')[0];
+        self::assertSame('bigint', (string)($id->attributes('xsi', true)['type'] ?? $id->attributes('http://www.w3.org/2001/XMLSchema-instance')['type']));
 
         $whitelist = json_decode((string)file_get_contents(__DIR__ . '/../etc/db_schema_whitelist.json'), true);
         self::assertSame($columns, array_keys($whitelist[ShadowRecorder::TABLE]['column']));

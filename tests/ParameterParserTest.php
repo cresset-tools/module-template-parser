@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\ParameterParser;
+use MageOS\TemplateParser\ParameterParser;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

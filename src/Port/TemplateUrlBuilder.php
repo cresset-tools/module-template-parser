@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Port;
+namespace MageOS\TemplateParser\Port;
 
 /**
  * The one method call a template is allowed to make with arguments.

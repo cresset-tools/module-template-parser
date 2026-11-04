@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Port;
+namespace MageOS\TemplateParser\Port;
 
 /**
  * A UrlBuilder that can also answer for a store other than the current one.

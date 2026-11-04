@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
 /**
  * Parses a directive parameter blob into key/value pairs.
@@ -19,7 +19,7 @@ namespace Cresset\TemplateParser;
  */
 final class ParameterParser
 {
-    /** @return array<string,string> */
+    /** @return array<string|int,string> a numeric name is an int key, as in any PHP array */
     public function parse(string $params): array
     {
         // setString() rawurldecodes before it tokenizes, so the decoding happens BEFORE the

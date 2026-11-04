@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\Shadow\ShadowReport;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Console\Shadow\ShadowReport;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -88,7 +88,7 @@ HELP);
         }
 
         if ($format === 'json') {
-            $output->writeln((string)json_encode([
+            $output->writeln(json_encode([
                 'shadow_table' => $recorded,
                 'websites' => array_map(
                     static fn (int $id, array $website): array => ['website_id' => $id] + $website,
@@ -96,7 +96,7 @@ HELP);
                     array_values($websites)
                 ),
                 'stores' => $rows,
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            ], JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
             return Command::SUCCESS;
         }

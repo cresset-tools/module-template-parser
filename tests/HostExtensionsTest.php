@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Console\HostExtensions;
-use Cresset\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\HostExtensions;
+use MageOS\TemplateParser\Console\MagentoContext;
 use Magento\Framework\Filter\DirectiveProcessor\Filter\FilterPool;
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use PHPUnit\Framework\TestCase;
@@ -143,12 +143,12 @@ final class HostExtensionsTest extends TestCase
             }
         });
 
-        $engine = (new \Cresset\TemplateParser\Console\EngineFactory($context))
-            ->create(\Cresset\TemplateParser\Console\Mode::Compatible);
+        $engine = (new \MageOS\TemplateParser\Console\EngineFactory($context))
+            ->create(\MageOS\TemplateParser\Console\Mode::Compatible);
 
-        $render = static fn (string $t): string => $engine->render($t, context: new \Cresset\TemplateParser\Context(
+        $render = static fn (string $t): string => $engine->render($t, context: new \MageOS\TemplateParser\Context(
             [],
-            \Cresset\TemplateParser\RenderPolicy::unrestricted()
+            \MageOS\TemplateParser\RenderPolicy::unrestricted()
         ));
 
         self::assertSame('[v:NULL]', $render('{{mydir "v"}}'));
@@ -196,11 +196,25 @@ final class HostExtensionsTest extends TestCase
     public function testDirectiveMethodsAModuleAddedToTheFilterAreFound(): void
     {
         self::assertSame(
-            // An added directive and an override of a stock one. Not: the core base's own
-            // methods, a name longer than legacy's ten-letter capture, a static, a protected.
-            ['coupon' => \Acme\Coupons\Filter::class, 'var' => \Acme\Coupons\Filter::class],
+            // An added directive, an override of a stock one, and a static and a protected
+            // one - legacy reaches those through getMethod()->invokeArgs() too. Not: the core
+            // base's own methods, or a name longer than legacy's ten-letter capture.
+            [
+                'coupon' => \Acme\Coupons\Filter::class,
+                'hidden' => \Acme\Coupons\Filter::class,
+                'static' => \Acme\Coupons\Filter::class,
+                'var' => \Acme\Coupons\Filter::class,
+            ],
             $this->withVendorFilter()->methodDirectives()
         );
+    }
+
+    /** The store's name capture is greedy over letters only: `{{coupon2}}` dispatches couponDirective. */
+    public function testANameFollowedByADigitOrUnderscoreIsStillThatDirective(): void
+    {
+        self::assertTrue(HostExtensions::mentions('{{coupon2 code="x"}}', 'coupon'));
+        self::assertTrue(HostExtensions::mentions('{{coupon_x}}', 'coupon'));
+        self::assertFalse(HostExtensions::mentions('{{coupons}}', 'coupon'));
     }
 
     public function testATemplateUsingOneIsToldWhoseItIs(): void
@@ -218,6 +232,67 @@ final class HostExtensionsTest extends TestCase
 
         // A longer name is not a use: the store matches {{coupons}} as `coupons`.
         self::assertSame([], $extensions->methodNotesFor('{{coupons}}', ['var']));
+    }
+
+    /**
+     * A store whose filters are generated Interceptors - every one, once any module plugs
+     * filter(), this one included. The on-demand generator redeclares every public method, and
+     * over a module's preference subclass the Interceptor is `Acme\...\Interceptor`: read by
+     * declaration, every stock directive was reported, about 1,300 warnings on one store. Only
+     * the module's own method and the one a plugin is really configured on count.
+     */
+    private function withInterceptedFilters(): HostExtensions
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+
+        return new HostExtensions(MagentoContext::fromObjectManager(new class {
+            public function get(string $class): ?object
+            {
+                return match ($class) {
+                    \Magento\Framework\ObjectManager\ConfigInterface::class => new class implements \Magento\Framework\ObjectManager\ConfigInterface {
+                        public function getPreference($type)
+                        {
+                            return match ($type) {
+                                'Magento\\Email\\Model\\Template\\Filter' => \Magento\Email\Model\Template\Filter\Interceptor::class,
+                                'Magento\\Widget\\Model\\Template\\Filter' => \Acme\Promo\Filter\Interceptor::class,
+                                default => $type,
+                            };
+                        }
+                        public function getInstanceType($instanceName) { return $instanceName; }
+                    },
+                    \Magento\Framework\Interception\PluginListInterface::class => new class implements \Magento\Framework\Interception\PluginListInterface {
+                        public function getPlugin($type, $code) { return null; }
+                        public function getNext($type, $method, $code = '__self')
+                        {
+                            return $method === 'customvarDirective' && $code === '__self'
+                                ? [\Magento\Framework\Interception\DefinitionInterface::LISTENER_AFTER => ['pagebuilder_customvar']]
+                                : null;
+                        }
+                    },
+                    default => null,
+                };
+            }
+        }));
+    }
+
+    public function testOnlyAModulesOwnAndAReallyPluggedDirectiveAreReported(): void
+    {
+        self::assertSame(
+            [
+                'coupon' => \Acme\Promo\Filter::class,
+                'customvar' => \Magento\Email\Model\Template\Filter::class,
+            ],
+            $this->withInterceptedFilters()->methodDirectives()
+        );
+    }
+
+    public function testAPluggedDirectiveIsReportedAsAPlugin(): void
+    {
+        $notes = $this->withInterceptedFilters()->methodNotesFor('{{customvar code="phone"}} {{var x}}', ['var', 'customvar']);
+
+        self::assertCount(1, $notes);
+        self::assertStringContainsString('Magento\\Email\\Model\\Template\\Filter::customvarDirective() with the plugin pagebuilder_customvar on it', $notes[0]);
+        self::assertStringNotContainsString('override', $notes[0]);
     }
 
     public function testNoObjectManagerConfigMeansNothingIsClaimed(): void

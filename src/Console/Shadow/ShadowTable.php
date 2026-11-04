@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Shadow;
+namespace MageOS\TemplateParser\Console\Shadow;
 
-use Cresset\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\MagentoContext;
 
 /**
  * Read and clear access to what Shadow mode recorded, and to the store and config tables the
@@ -21,7 +21,7 @@ use Cresset\TemplateParser\Console\MagentoContext;
  */
 class ShadowTable
 {
-    public const TABLE = 'cresset_template_shadow';
+    public const TABLE = 'mageos_template_parser_shadow';
 
     /** @var \Closure(string):string */
     private \Closure $tableName;
@@ -90,16 +90,22 @@ class ShadowTable
     }
 
     /**
-     * Every store view except admin, keyed by id.
+     * Every store view, keyed by id - and admin (store 0) when asked for.
+     *
+     * Admin for the report, because renders are recorded there: an email sent with no store
+     * view - a payment-failure notice, an admin-triggered send - is store 0. Leaving it out
+     * reported those rows as belonging to deleted store views, and kept them out of the gate.
+     * Not for status, which lists the stages store views can be switched to.
      *
      * @return array<int,array{code:string,name:string,website_id:int}>
      */
-    public function stores(): array
+    public function stores(bool $withAdmin = false): array
     {
         $stores = [];
         foreach ($this->connection->fetchAll(sprintf(
-            'SELECT store_id, code, name, website_id FROM %s WHERE store_id <> 0 ORDER BY website_id, sort_order, store_id',
-            $this->table('store')
+            'SELECT store_id, code, name, website_id FROM %s%s ORDER BY website_id, sort_order, store_id',
+            $this->table('store'),
+            $withAdmin ? '' : ' WHERE store_id <> 0'
         )) as $row) {
             $stores[(int)$row['store_id']] = [
                 'code' => (string)$row['code'],

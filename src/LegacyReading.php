@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
+
+use MageOS\TemplateParser\Lexer\Lexer;
 
 /**
  * Where the legacy filter would READ a template differently from this engine.
@@ -22,7 +24,8 @@ namespace Cresset\TemplateParser;
  *   construct where this engine reads text and a directive - `.a{{{var c}}}`, `{{A{{var x}}`,
  *   a missing brace (`{{var a}, bye {{var a}}`), a quoted `{{` (`{{trans "a {{b}}"}}`).
  * - a quote still open at that first `}}`: `{{trans "a }}b"}}` ends there for the filter,
- *   while this engine reads the quoted string whole.
+ *   while this engine reads the quoted string whole - decided by Lexer::readsPastFirstCloser(),
+ *   so by exactly the rules the lexer reads it with.
  * - `{{if` or `{{depend` running straight into more letters with a closer later on: IF_PATTERN
  *   needs no space after the name, so `{{iframe}}...{{/if}}` is an {{if}} with the condition
  *   `rame` there, and an unknown directive here.
@@ -53,6 +56,10 @@ final class LegacyReading
             return ['rule' => sprintf('a name the filter reads as {{%s}}', strtolower($m[1][0])), 'offset' => $m[0][1]];
         }
 
+        // The lexer's own reading, so the two cannot drift: the rules for where a quote opens
+        // and closes once differed here, and a template the lexer read past its first `}}`
+        // passed as one the filter reads the same way.
+        $lexer = new Lexer();
         $offset = 0;
         while (($open = strpos($source, '{{', $offset)) !== false) {
             $close = strpos($source, '}}', $open + 2);
@@ -66,7 +73,7 @@ final class LegacyReading
             if (str_contains($extent, '{{') || str_starts_with($extent, '{')) {
                 return ['rule' => 'a construct the filter reads to the first }}', 'offset' => $open];
             }
-            if (self::endsInsideAQuote($extent)) {
+            if ($lexer->readsPastFirstCloser($source, $open + 2, $close)) {
                 return ['rule' => 'a quoted }} the filter ends the directive at', 'offset' => $open];
             }
 
@@ -74,24 +81,5 @@ final class LegacyReading
         }
 
         return null;
-    }
-
-    /** Whether a quote opened in `$text` is still open at its end. */
-    private static function endsInsideAQuote(string $text): bool
-    {
-        $quote = null;
-        $length = strlen($text);
-        for ($i = 0; $i < $length; $i++) {
-            $char = $text[$i];
-            if ($quote === null) {
-                if ($char === '"' || $char === "'") {
-                    $quote = $char;
-                }
-            } elseif ($char === $quote) {
-                $quote = null;
-            }
-        }
-
-        return $quote !== null;
     }
 }

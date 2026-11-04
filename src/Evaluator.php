@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
-use Cresset\TemplateParser\Ast\DirectiveNode;
-use Cresset\TemplateParser\Ast\Node;
-use Cresset\TemplateParser\Ast\RootNode;
-use Cresset\TemplateParser\Ast\TextNode;
+use MageOS\TemplateParser\Ast\DirectiveNode;
+use MageOS\TemplateParser\Ast\Node;
+use MageOS\TemplateParser\Ast\RootNode;
+use MageOS\TemplateParser\Ast\TextNode;
 
 /**
  * Renders an AST.
@@ -101,6 +101,22 @@ final class Evaluator
             return $this->renderNodes($root->children(), $context);
         } finally {
             $this->source = $outer;
+        }
+    }
+
+    /**
+     * Renders an {{if}}, {{else}} or {{depend}} body, which the legacy filter renders with a
+     * filter() call of its own - see Context::topLevelBodyDepth().
+     *
+     * @param Node[] $nodes
+     */
+    public function renderBody(array $nodes, Context $context): string
+    {
+        $context->enterBody();
+        try {
+            return $this->renderNodes($nodes, $context);
+        } finally {
+            $context->leaveBody();
         }
     }
 
@@ -209,6 +225,29 @@ final class Evaluator
     }
 
     /**
+     * Whether the legacy filter would inline this stylesheet over one {{if}} or {{depend}}
+     * body rather than over the whole document.
+     *
+     * The filter runs the inlining step at the end of whichever filter() call resolved the
+     * {{inlinecss}}, and renders each body of the root template with a filter() call of its
+     * own. Named in the root template, the directive is resolved where it stands, in every
+     * version. Named in an include, it is deferred: Mage-OS 3.6.0 resolves it at the root,
+     * and before that the innermost body of the root template around the include did.
+     *
+     * This engine hands every stylesheet to the host for the whole document, so it cannot
+     * render the narrower placement - and a stylesheet inlined over different markup is a
+     * different email. Declined instead; Parser mode hands the render to the filter.
+     */
+    private function inlinedOverPartOfTheDocument(Context $context): bool
+    {
+        if ($context->topLevelBodyDepth() === 0) {
+            return false;
+        }
+
+        return !$context->inInclude() || !$this->options->deferralResolvedAtRoot;
+    }
+
+    /**
      * Records the policy refusals inside a subtree that is being emitted verbatim.
      *
      * Emitting is not executing, so this changes no output; it exists so that a refused
@@ -294,7 +333,7 @@ final class Evaluator
      * @param array<string,mixed> $params
      * @return array<string,mixed>
      */
-    public function resolveParameterValues(array $params, Context $context, DirectiveNode $node): array
+    public function resolveParameterValues(array $params, Context $context, DirectiveNode $node, bool $keepArrays = false): array
     {
         foreach ($params as $key => $value) {
             if (!is_string($value) || !str_starts_with($value, '$')) {
@@ -313,7 +352,9 @@ final class Evaluator
                 continue;
             }
 
-            $params[$key] = $this->toStringValue($resolution->value);
+            $params[$key] = $keepArrays && is_array($resolution->value)
+                ? $resolution->value
+                : $this->toStringValue($resolution->value);
         }
 
         return $params;
@@ -392,13 +433,13 @@ final class Evaluator
 
         $this->handlers['if'] = function (DirectiveNode $n, Context $c, self $e): string {
             if ($this->condition($n, $c, 'if')) {
-                return $e->renderNodes($n->children(), $c);
+                return $e->renderBody($n->children(), $c);
             }
-            return $n->hasAlternate() ? $e->renderNodes($n->alternate(), $c) : '';
+            return $n->hasAlternate() ? $e->renderBody($n->alternate(), $c) : '';
         };
 
         $this->handlers['depend'] = function (DirectiveNode $n, Context $c, self $e): string {
-            return $this->condition($n, $c, 'depend') ? $e->renderNodes($n->children(), $c) : '';
+            return $this->condition($n, $c, 'depend') ? $e->renderBody($n->children(), $c) : '';
         };
 
         $this->handlers['for'] = function (DirectiveNode $n, Context $c, self $e): string {
@@ -501,13 +542,19 @@ final class Evaluator
                 return '';
             }
 
-            $params = $this->parameters->parse($n->params());
-            $file = $params['file'] ?? '';
+            // Through params(), as every other directive: `{{inlinecss file=$path}}` names the
+            // file a variable holds. Parsed raw, the literal `$path` was guarded and dropped,
+            // and the email went out without its inline styles.
+            $file = $this->params($n, $c)['file'] ?? '';
+            $file = is_scalar($file) ? (string)$file : '';
             // Guarded like {{css file=}} is. Deferring is still handing a path to the host,
             // and PathGuard's own contract is that the handlers apply it "so a host cannot
             // forget it" - this was the one handler that passed a path outward without it.
             if ($file !== '' && PathGuard::isSafeRelativePath($file)) {
                 $c->defer('inlinecss', ['file' => $file]);
+                if ($this->options->legacyQuirks && $this->inlinedOverPartOfTheDocument($c)) {
+                    $this->refusedByPolicy($n, $c, 'stylesheet the filter inlines over part of the document', $file);
+                }
             }
             return '';
         };
@@ -595,7 +642,13 @@ final class Evaluator
         }
 
         $resolved = [];
-        foreach ($this->resolveParameterValues($args, $context, $node) as $key => $value) {
+        foreach ($this->resolveParameterValues($args, $context, $node, keepArrays: true) as $key => $value) {
+            // An array argument is a warning when Phrase's renderer casts it - an exception on
+            // a store, and Phrase::render() catches anything its renderer throws and hands back
+            // its raw text: untranslated, nothing substituted.
+            if ($this->options->legacyQuirks && is_array($value)) {
+                return $this->applyModifiers($text, $modifiers, $context, $node->offset());
+            }
             // toStringValue(), not a cast - an object with no __toString is a perfectly
             // ordinary template variable and must not be a fatal.
             $resolved[self::placeholderFor($key)] = $this->toStringValue($value);
@@ -803,7 +856,7 @@ final class Evaluator
             // varDirective defaults to, so the no-modifier path has to behave exactly like
             // an explicit one - including recursing into an array, which is where legacy
             // dies on an element it cannot cast.
-            return $this->toStringValue($this->applyEscapeModifier($value, 'html', $context, $offset));
+            return $this->outputString($this->applyEscapeModifier($value, 'html', $context, $offset), $context, $offset);
         }
 
         /** @var list<array{0:string,1:string[]}> $parsed */
@@ -855,6 +908,29 @@ final class Evaluator
                 'escape' => $this->applyEscapeModifier($value, $params[0] ?? 'html', $context, $offset),
                 default => $value,      // legacy skips an unknown modifier
             };
+        }
+
+        return $this->outputString($value, $context, $offset);
+    }
+
+    /**
+     * What {{var}} puts in the output.
+     *
+     * An array there is cast to string, which is a PHP warning - and on a store, whose error
+     * handler turns every warning into an exception, the Email filter catches it and renders
+     * its error text in place of the whole template. So compatible mode does not render the
+     * "Array" PHP leaves when the warning is swallowed: no store sends that.
+     */
+    private function outputString(mixed $value, Context $context, int $offset): string
+    {
+        if ($this->options->legacyQuirks && is_array($value)) {
+            $this->noteLegacyIncompatible(
+                $context,
+                'the value is an array, which {{var}} casts to a string - a PHP warning, which '
+                . "a store's error handler makes an exception and the filter renders as its "
+                . 'error message in place of the template',
+                $offset
+            );
         }
 
         return $this->toStringValue($value);

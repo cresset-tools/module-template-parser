@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Magento\AssetStylesheetLoader;
-use Cresset\TemplateParser\Magento\StoreUrlBuilder;
-use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
+use MageOS\TemplateParser\Magento\AssetStylesheetLoader;
+use MageOS\TemplateParser\Magento\RenderScope;
+use MageOS\TemplateParser\Magento\StoreUrlBuilder;
+use MageOS\TemplateParser\Magento\VariableCustomVariableReader;
 use Magento\Email\Model\Template\Css\Processor;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository;
@@ -75,6 +76,27 @@ final class MagentoUrlAdapterTest extends TestCase
      * on it: {{store url='admin/auth/resetpassword/' _query_id=... _query_token=...}} only
      * produces a working link if both land in _query.
      */
+    /** A written `_query` is the query string; storeDirective only fills in [] when it is absent. */
+    public function testAWrittenQueryStringIsKept(): void
+    {
+        $calls = [];
+        $builder = new StoreUrlBuilder($this->urlModel($calls), $this->storeManager(), new Repository());
+
+        $builder->storeUrl('promo', ['_query' => 'utm_source=newsletter']);
+
+        self::assertSame('utm_source=newsletter', $calls[0][1]['_query']);
+    }
+
+    /** Both a string and `_query_*` keys make storeDirective write into a string, which raises. */
+    public function testAQueryStringWithQueryKeysIsLeftToTheFilter(): void
+    {
+        $calls = [];
+        $builder = new StoreUrlBuilder($this->urlModel($calls), $this->storeManager(), new Repository());
+
+        $this->expectException(\MageOS\TemplateParser\Port\RefusedByPort::class);
+        $builder->storeUrl('promo', ['_query' => 'a=1', '_query_b' => '2']);
+    }
+
     public function testQueryParametersAreLiftedIntoTheQueryArray(): void
     {
         $calls = [];
@@ -365,6 +387,57 @@ final class MagentoUrlAdapterTest extends TestCase
             'plain text' => [true, Variable::TYPE_TEXT, 'PLAIN'],
             'html'       => [false, Variable::TYPE_HTML, '<b>HTML</b>'],
         ];
+    }
+
+    /**
+     * A store view's own value, not the default one: with no store, Magento quotes null as ''
+     * and MySQL matches store 0. The store is the rendering filter's, else the current one.
+     */
+    public function testACustomVariableIsReadForTheRenderingStore(): void
+    {
+        $asked = [];
+        $factory = $this->recordingVariables($asked);
+        $scope = new RenderScope();
+        $stores = new class implements StoreManagerInterface {
+            public function getStore($storeId = null)
+            {
+                return new class { public function getId() { return 5; } };
+            }
+        };
+        $reader = new VariableCustomVariableReader($factory, scope: $scope, stores: $stores);
+
+        $scope->push(2, null);
+        $reader->value('banner', false);
+        $scope->pop();
+        self::assertContains(['store', 2], $asked, "the filter's own store");
+
+        $asked = [];
+        $reader->value('banner', false);
+        self::assertContains(['store', 5], $asked, 'the current store, when the filter holds none');
+    }
+
+    public function testDiWiresTheReadersStore(): void
+    {
+        $xml = simplexml_load_file(dirname(__DIR__) . '/etc/di.xml');
+        $arguments = $xml->xpath('//type[@name="MageOS\\TemplateParser\\Magento\\VariableCustomVariableReader"]/arguments/argument/@name');
+
+        self::assertEqualsCanonicalizing(['scope', 'stores'], array_map('strval', $arguments ?: []));
+    }
+
+    private function recordingVariables(array &$asked): VariableFactory
+    {
+        return new class ($asked) extends VariableFactory {
+            public function __construct(private array &$asked) {}
+            public function create(array $data = [])
+            {
+                return new class ($this->asked) extends Variable {
+                    public function __construct(private array &$asked) {}
+                    public function setStoreId($storeId) { $this->asked[] = ['store', $storeId]; return $this; }
+                    public function loadByCode($code) { return $this; }
+                    public function getValue($type = null) { return 'V'; }
+                };
+            }
+        };
     }
 
     /** An unknown code loads an empty Variable, which must read as absent, not as ''. */

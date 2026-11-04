@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Magento;
+namespace MageOS\TemplateParser\Console\Magento;
 
-use Cresset\TemplateParser\Console\Command\CheckCommand as BaseCommand;
+use MageOS\TemplateParser\Console\Command\CheckCommand as BaseCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**

@@ -1,5 +1,5 @@
 {
-    "cresset_template_shadow": {
+    "mageos_template_parser_shadow": {
         "column": {
             "entity_id": true,
             "store_id": true,
@@ -20,7 +20,7 @@
         },
         "constraint": {
             "PRIMARY": true,
-            "CRESSET_TEMPLATE_SHADOW_STORE_ID_TEMPLATE": true
+            "MAGEOS_TEMPLATE_PARSER_SHADOW_STORE_ID_TEMPLATE": true
         }
     }
 }

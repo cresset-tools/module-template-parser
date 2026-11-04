@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
 /**
  * Evaluation scope for one render.
@@ -30,13 +30,24 @@ final class Context
      */
     private \stdClass $includeBudget;
 
-    /** @var \Cresset\TemplateParser\LegacyIncompatibility[] */
+    /** @var \MageOS\TemplateParser\LegacyIncompatibility[] */
     private array $incompatibilities = [];
 
-    /** @var \Cresset\TemplateParser\PolicyViolation[] */
+    /** @var \MageOS\TemplateParser\PolicyViolation[] */
     private array $violations = [];
 
     private RenderPolicy $policy;
+
+    /**
+     * How many {{if}} or {{depend}} bodies enclose the node being rendered, in this
+     * template - an includer's bodies are not counted. The legacy filter renders each body
+     * with a filter() call of its own, and where a stylesheet is inlined depends on which
+     * call resolves it - see Options::$deferralResolvedAtRoot.
+     */
+    private int $bodyDepth = 0;
+
+    /** In an included template: the top-level template's body depth at the outermost include. */
+    private ?int $includedAtBodyDepth = null;
 
     /**
      * @param array<string,mixed> $variables
@@ -91,7 +102,7 @@ final class Context
         $this->violations[] = $violation;
     }
 
-    /** @return \Cresset\TemplateParser\PolicyViolation[] */
+    /** @return \MageOS\TemplateParser\PolicyViolation[] */
     public function violations(): array
     {
         return $this->violations;
@@ -127,7 +138,49 @@ final class Context
         $clone->includeStack = $this->includeStack;
         $clone->policy = $this->policy;
         $clone->includeBudget = $this->includeBudget;
+        // The same template, in a narrower scope - a loop iteration - so the same position.
+        $clone->bodyDepth = $this->bodyDepth;
+        $clone->includedAtBodyDepth = $this->includedAtBodyDepth;
         return $clone;
+    }
+
+    /**
+     * A scope for an included template: a document of its own, whose bodies are not the
+     * top-level template's, remembering where in the top-level template it was included.
+     *
+     * @param array<string,mixed> $variables
+     */
+    public function forInclude(array $variables): self
+    {
+        $child = $this->withVariables($variables);
+        $child->bodyDepth = 0;
+        $child->includedAtBodyDepth = $this->topLevelBodyDepth();
+        return $child;
+    }
+
+    public function enterBody(): void
+    {
+        $this->bodyDepth++;
+    }
+
+    public function leaveBody(): void
+    {
+        $this->bodyDepth--;
+    }
+
+    /**
+     * How deep in {{if}} or {{depend}} bodies of the TOP-LEVEL template this point is: its
+     * own body depth there, or the depth its outermost include sits at in an include.
+     */
+    public function topLevelBodyDepth(): int
+    {
+        return $this->includedAtBodyDepth ?? $this->bodyDepth;
+    }
+
+    /** Whether this scope renders an included template rather than the top-level one. */
+    public function inInclude(): bool
+    {
+        return $this->includedAtBodyDepth !== null;
     }
 
     /**
@@ -176,7 +229,7 @@ final class Context
     /**
      * Records a construct that renders here but not on the legacy filter.
      *
-     * @param \Cresset\TemplateParser\LegacyIncompatibility[] $found
+     * @param \MageOS\TemplateParser\LegacyIncompatibility[] $found
      */
     public function noteIncompatibilities(array $found): void
     {
@@ -185,7 +238,7 @@ final class Context
         }
     }
 
-    /** @return \Cresset\TemplateParser\LegacyIncompatibility[] */
+    /** @return \MageOS\TemplateParser\LegacyIncompatibility[] */
     public function incompatibilities(): array
     {
         return $this->incompatibilities;

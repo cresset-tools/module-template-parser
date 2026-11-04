@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
-use Cresset\TemplateParser\Ast\DirectiveNode;
-use Cresset\TemplateParser\Ast\Node;
-use Cresset\TemplateParser\Ast\RootNode;
-use Cresset\TemplateParser\Ast\TextNode;
-use Cresset\TemplateParser\Lexer\Lexer;
-use Cresset\TemplateParser\Lexer\Token;
-use Cresset\TemplateParser\Lexer\TokenType;
+use MageOS\TemplateParser\Ast\DirectiveNode;
+use MageOS\TemplateParser\Ast\Node;
+use MageOS\TemplateParser\Ast\RootNode;
+use MageOS\TemplateParser\Ast\TextNode;
+use MageOS\TemplateParser\Lexer\Lexer;
+use MageOS\TemplateParser\Lexer\Token;
+use MageOS\TemplateParser\Lexer\TokenType;
 
 /**
  * Builds an AST from template source.
@@ -61,6 +61,12 @@ final class Parser
         $this->refuseLegacyParsingDifferences($source);
 
         $tokens = $this->lexer->tokenize($source);
+        $this->lastCloseIndex = [];
+        foreach ($tokens as $i => $token) {
+            if ($token->type === TokenType::DirectiveClose) {
+                $this->lastCloseIndex[$token->name] = $i;
+            }
+        }
         $this->refuseRunOnsLegacyDiesOn();
         $index = 0;
         // A variable, because parseUntil() takes the stack by reference so that nesting costs
@@ -179,7 +185,7 @@ final class Parser
         // Deciding it here rather than in the lexer keeps the lookahead over tokens, where a
         // close is already a token rather than a string that might be one.
         $paired = $this->spec->isBlock($token->name)
-            || ($this->spec->isOptionalBlock($token->name) && self::closesLater($tokens, $index, $token->name));
+            || ($this->spec->isOptionalBlock($token->name) && $this->closesLater($index, $token->name));
 
         if (!$paired) {
             $index++;
@@ -367,11 +373,22 @@ final class Parser
             return;
         }
 
+        $this->refuseStrayClosingTagsIn($nodes, $source);
+    }
+
+    /**
+     * The walk itself, without refuseStrayClosingTagsInText()'s whole-source checks - which,
+     * made at every node, were a scan of the source per directive: quadratic in a long body.
+     *
+     * @param Node[] $nodes
+     */
+    private function refuseStrayClosingTagsIn(array $nodes, string $source): void
+    {
         foreach ($nodes as $node) {
             if ($node instanceof DirectiveNode) {
-                $this->refuseStrayClosingTagsInText($node->children(), $source);
+                $this->refuseStrayClosingTagsIn($node->children(), $source);
                 if ($node->hasAlternate()) {
-                    $this->refuseStrayClosingTagsInText($node->alternate(), $source);
+                    $this->refuseStrayClosingTagsIn($node->alternate(), $source);
                 }
                 continue;
             }
@@ -446,7 +463,8 @@ final class Parser
      * or as an opener inside the stretch whose closer is then left dangling. A void directive
      * has no body group to be missing and no closer to orphan, which is why the first line
      * above renders. Those stay a declared divergence; these are refused, because rendering
-     * what the old filter died on is inventing behaviour rather than reproducing it.
+     * what the old filter died on is inventing behaviour rather than reproducing it. The
+     * lexer decides which is which, and lists only these - see Lexer::runOns().
      */
     private function refuseRunOnsLegacyDiesOn(): void
     {
@@ -454,12 +472,7 @@ final class Parser
             return;
         }
 
-        foreach ($this->lexer->runOns() as [$offset, $name, $span]) {
-            $culprit = $this->spec->isBlock($name) ? $name : $this->pairedOpenerIn($span);
-            if ($culprit === null) {
-                continue;
-            }
-
+        foreach ($this->lexer->runOns() as [$offset, $name, $culprit]) {
             $this->refuseIfLegacyCannotRender(
                 $offset,
                 LegacyIncompatibility::RUN_ON_CONSTRUCT,
@@ -476,19 +489,6 @@ final class Parser
         }
     }
 
-    /** The first paired directive opened inside a swallowed span, if any. */
-    private function pairedOpenerIn(string $span): ?string
-    {
-        foreach ($this->matches('/\{\{([a-zA-Z]{1,10})\b/', $span) as $match) {
-            $name = strtolower($match[1][0]);
-            if ($this->spec->isBlock($name)) {
-                return $name;
-            }
-        }
-
-        return null;
-    }
-
     /**
      * The legacy filter's own loop pattern, which is what decides where a body begins and ends.
      *
@@ -499,11 +499,14 @@ final class Parser
     private const LEGACY_LOOP_PATTERN =
         '/{{for(?P<loopItem>.*? )(in)(?P<loopData>.*?)}}(?P<loopBody>.*?){{\/for}}/si';
 
-    /** The opening half of LEGACY_LOOP_PATTERN, anchored, for asking about one construct. */
-    private const LEGACY_LOOP_OPENER = '/^{{for.*? in.*?}}/si';
-
     /** @var list<array{0:int,1:int}> half-open [from, to) offsets of each loop body */
     private array $loopBodySpans = [];
+
+    /** @var array<int,true> offsets in a loop body where a nested loop opener matches */
+    private array $nestedLoopOpeners = [];
+
+    /** @var array<string,int> the index of the last closing token for each name */
+    private array $lastCloseIndex = [];
 
     /**
      * Nothing inside a `{{for}}` body reaches a directive processor, so nothing there can be a
@@ -526,15 +529,7 @@ final class Parser
      */
     private function insideLoopBody(int $offset): bool
     {
-        $bodyEnd = null;
-        foreach ($this->loopBodySpans as [$from, $to]) {
-            if ($offset >= $from && $offset < $to) {
-                $bodyEnd = $to;
-                break;
-            }
-        }
-
-        if ($bodyEnd === null) {
+        if (self::spanAt($this->loopBodySpans, $offset, 1) === null) {
             return false;
         }
 
@@ -551,10 +546,33 @@ final class Parser
         // here - claiming a crash the filter does not have, where it renders as an empty
         // variable read. The window stops at the body's end because a match beyond it would
         // not be nested inside this loop.
-        return preg_match(
-            self::LEGACY_LOOP_OPENER,
-            substr($this->source, $offset, $bodyEnd - $offset)
-        ) !== 1;
+        return !isset($this->nestedLoopOpeners[$offset]);
+    }
+
+    /**
+     * The `[from, to)` span holding all of [$offset, $offset + $length), from a sorted list of
+     * disjoint spans, or null - by binary search, since this is asked once per token.
+     *
+     * @param list<array{0:int,1:int}> $spans
+     * @return ?array{0:int,1:int}
+     */
+    private static function spanAt(array $spans, int $offset, int $length): ?array
+    {
+        $low = 0;
+        $high = count($spans) - 1;
+        while ($low <= $high) {
+            $middle = intdiv($low + $high, 2);
+            [$from, $to] = $spans[$middle];
+            if ($offset < $from) {
+                $high = $middle - 1;
+            } elseif ($offset >= $to) {
+                $low = $middle + 1;
+            } else {
+                return $offset + $length <= $to ? $spans[$middle] : null;
+            }
+        }
+
+        return null;
     }
 
     /** @var list<array{0:int,1:int}> half-open [from, to) offsets legacy hands back verbatim */
@@ -652,13 +670,7 @@ final class Parser
     /** Whether [$offset, $offset + $length) lies wholly inside one swallowed span. */
     private function insideVerbatimSpan(int $offset, int $length): bool
     {
-        foreach ($this->verbatimSpans as [$from, $to]) {
-            if ($offset >= $from && $offset + $length <= $to) {
-                return true;
-            }
-        }
-
-        return false;
+        return self::spanAt($this->verbatimSpans, $offset, $length) !== null;
     }
 
     /** Walked one match at a time: a match table over a large source is how this once OOMed. */
@@ -677,6 +689,42 @@ final class Parser
                 $this->loopBodySpans[] = [$offset, $offset + strlen($body)];
             }
         }
+
+        $this->findNestedLoopOpeners($source);
+    }
+
+    /**
+     * Every offset inside a loop body where the opening half of LEGACY_LOOP_PATTERN,
+     * `{{for.*? in.*?}}`, matches within that body.
+     *
+     * Found once, not per question: matching the opener against the rest of the body at each
+     * offset copied the body out every time, which is quadratic in a large loop. The lazy
+     * opener ends at the first ` in` after `{{for` and then the first `}}` after that, so both
+     * are found by forward scans whose positions only ever grow.
+     */
+    private function findNestedLoopOpeners(string $source): void
+    {
+        $this->nestedLoopOpeners = [];
+        $nextIn = -1;
+        $nextClose = -1;
+
+        foreach ($this->loopBodySpans as [$from, $to]) {
+            $at = $from;
+            while (($at = stripos($source, '{{for', $at)) !== false && $at < $to) {
+                if ($nextIn !== false && $nextIn < $at + 5) {
+                    $nextIn = stripos($source, ' in', $at + 5);
+                }
+                if ($nextIn !== false) {
+                    if ($nextClose !== false && $nextClose < $nextIn + 3) {
+                        $nextClose = strpos($source, '}}', $nextIn + 3);
+                    }
+                    if ($nextClose !== false && $nextClose + 2 <= $to) {
+                        $this->nestedLoopOpeners[$at] = true;
+                    }
+                }
+                $at++;
+            }
+        }
     }
 
     /**
@@ -687,17 +735,13 @@ final class Parser
      * first closer and leaves the rest as text. Looking for a balanced pair would read that
      * template differently from the store.
      *
-     * @param Token[] $tokens
+     * Asked of the last one, which is enough: there is a later close exactly when the last
+     * close comes after this token. Scanning forward per opener made a template of unclosed
+     * custom directives quadratic.
      */
-    private static function closesLater(array $tokens, int $index, string $name): bool
+    private function closesLater(int $index, string $name): bool
     {
-        for ($i = $index + 1, $n = count($tokens); $i < $n; $i++) {
-            if ($tokens[$i]->type === TokenType::DirectiveClose && $tokens[$i]->name === $name) {
-                return true;
-            }
-        }
-
-        return false;
+        return ($this->lastCloseIndex[$name] ?? -1) > $index;
     }
 
     /**

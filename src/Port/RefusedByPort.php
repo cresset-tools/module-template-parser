@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Port;
+namespace MageOS\TemplateParser\Port;
 
 /**
  * Thrown by a port to decline a request on policy grounds rather than fail it.

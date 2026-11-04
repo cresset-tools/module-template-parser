@@ -14,12 +14,16 @@ docker run --rm -v "$PWD":/m -w /m composer:2 sh -c 'composer install && vendor/
 ```
 
 The `composer` image rather than `php:8.3-cli`: the suite needs the autoloader and Symfony
-Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console tests, and
-`php:8.3-cli`'s default 128M `memory_limit` is below what the suite peaks at, which
-`GuardTripwireTest` is what pushes it to.
+Console, so a bare PHP with a downloaded PHPUnit phar errors out on the console tests.
+`tests/bootstrap.php` raises a `memory_limit` below 512M to 512M - the suite peaks near 240 MB,
+most of it `LegacyParityTest`'s replay of the corpus - so php-cli's stock 128M no longer dies
+part way through.
 
-13359 tests. 307 are skipped by design: they are the shapes compatible mode deliberately
-refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`.
+A PHP warning, notice or deprecation fails the run (`phpunit.xml`): on a store, Magento's error
+handler makes each of them an exception.
+
+24422 tests. 590 are skipped by design: they are the shapes compatible mode deliberately
+refuses, listed in `LegacyParityTest::DELIBERATE_OVER_REFUSALS`, once per target release.
 
 ### Mutation testing, without taking the machine down
 
@@ -41,27 +45,38 @@ with `-d memory_limit=-1`; a deliberate lower limit on the command line is left 
 ## The parity corpus
 
 `tools/record-legacy.php` runs the real Magento filter over a generated corpus and records
-what it produced into `tests/fixtures/legacy/cases.json`. `LegacyParityTest` replays those
-recordings, so the differential runs anywhere with no Magento installation.
+what it produced, once per Mage-OS release compatible mode targets:
+`tests/fixtures/legacy/cases-3.5.0.json` and `cases-3.6.0.json`. `LegacyParityTest` replays
+each recording with the options a store on that release gets, so the differential runs
+anywhere with no Magento installation. Both hold the same cases; they differ only where 3.6.0
+moved deferral, which `LegacyParityTest::DEFERRAL_MOVED` pins, and `DeferralParityTest`
+replays those cases with their includes.
 
 The corpus is a matrix of value shapes against construct shapes, plus a no-variables pass and
 the 45 real templates in `tests/fixtures/corpus/`. Those templates are harvested from the
 Magento/Mage-OS tree and include `.html` files whose `{{` sequences are not directives at all,
-such as translation strings and JS templates. 4788 cases in total, 804 of which crash the
-stock filter. 751 carry a second expectation for the filter as it was before the
+such as translation strings and JS templates. A deferral pass renders `{{inlinecss}}` through
+included child templates, which is where 3.6.0 changed the filter. 4896 cases in total, 920 of which crash the
+stock filter, or warn - which a store's error handler makes the same thing. 763 carry a second expectation for the filter as it was before the
 [StyleSmuggler](https://sansec.io/research/stylesmuggler-0day) hardening in Mage-OS 3.5.0,
 which compatible mode can target with `Options::withOutputNeutralizer(false)`.
 
 ### Re-recording
 
-Point `MAGENTO_ROOT` at a Magento or Mage-OS checkout. The recorder loads about twenty
-framework files by path, so a plain source checkout is enough - no composer install, no
-database, no services:
+Point `MAGENTO_ROOT` at a Mage-OS tree of each target release. The recorder loads about
+twenty framework files by path, so a plain source tree is enough - no composer install, no
+database, no services - and it reads which release's file to write off the tree itself:
 
 ```sh
-git clone --depth 1 https://github.com/mage-os/mageos-magento2 /tmp/mageos
-MAGENTO_ROOT=/tmp/mageos php tools/record-legacy.php
+for tag in 3.5.0 3.6.0; do
+    mkdir /tmp/mageos-$tag
+    git -C /path/to/mageos-magento2 archive $tag | tar -x -C /tmp/mageos-$tag
+    MAGENTO_ROOT=/tmp/mageos-$tag php tools/record-legacy.php
+done
 ```
+
+`git archive` of the tag rather than a working checkout, so nothing uncommitted in a clone can
+end up in the recording.
 
 `tools/harness.php` supplies the framework leaves those classes touch. Everything under test
 is Magento's own code.
@@ -84,8 +99,10 @@ it writes anything, because recording against one object and replaying against a
 measures nothing.
 
 The `Parity drift` workflow does exactly this against Mage-OS `main` on a weekly schedule, so
-fixtures going stale surfaces as a failing job rather than as an unnoticed assumption. It
-re-records `cases.json` only, and asserts `stylesmuggler.json` was left alone.
+fixtures going stale surfaces as a failing job rather than as an unnoticed assumption. Current
+Mage-OS defers through the registry, so it re-records `cases-3.6.0.json` only, and asserts the
+3.5.0 recording and `stylesmuggler.json` were left alone. Should `main` change the filter
+again, that is a new target rather than a re-recording of 3.6.0.
 
 ### The store recording
 
@@ -108,7 +125,7 @@ something is leaking.
 Re-record it from inside a store:
 
 ```sh
-cd /path/to/store && php vendor/cresset/module-template-parser/tools/record-store-ports.php
+cd /path/to/store && php vendor/mage-os/module-template-parser/tools/record-store-ports.php
 ```
 
 It writes next to the package it is run from, so copy the result back if the store holds a
@@ -159,7 +176,7 @@ erode the agreeing set one case at a time in silence.
 ### The sensitivity canary
 
 Green assertions mean nothing if the corpus cannot tell a correct engine from a broken one, so
-each deliberate mis-configuration must produce divergences over the 2834 rendering-comparable
+each deliberate mis-configuration must produce divergences over the 2730 rendering-comparable
 cases:
 
 | Engine | Divergences |

@@ -1,21 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Magento\AllowlistedConfigReader;
-use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
-use Cresset\TemplateParser\Magento\AssetStylesheetLoader;
-use Cresset\TemplateParser\Magento\TemplateModelUrlBuilder;
-use Cresset\TemplateParser\Magento\ConfigTemplateLoader;
-use Cresset\TemplateParser\Magento\LayoutBlockRenderer;
-use Cresset\TemplateParser\Magento\PhraseTranslator;
-use Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer;
-use Cresset\TemplateParser\Magento\StoreUrlBuilder;
-use Cresset\TemplateParser\Magento\TypeCheckedWidgetRenderer;
-use Cresset\TemplateParser\Magento\VariableCustomVariableReader;
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Magento\AllowlistedConfigReader;
+use MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer;
+use MageOS\TemplateParser\Magento\AssetStylesheetLoader;
+use MageOS\TemplateParser\Magento\TemplateModelUrlBuilder;
+use MageOS\TemplateParser\Magento\ConfigTemplateLoader;
+use MageOS\TemplateParser\Magento\HostBlockClassPolicy;
+use MageOS\TemplateParser\Magento\HostDeferral;
+use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
+use MageOS\TemplateParser\Magento\PhraseTranslator;
+use MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer;
+use MageOS\TemplateParser\Magento\StoreUrlBuilder;
+use MageOS\TemplateParser\Magento\TypeCheckedWidgetRenderer;
+use MageOS\TemplateParser\Magento\VariableCustomVariableReader;
+use MageOS\TemplateParser\TemplateEngine;
 
 /**
  * Builds an engine for a mode, wiring whatever ports the host can supply.
@@ -40,7 +42,14 @@ class EngineFactory
 
     public function create(Mode $mode, ?int $storeId = null): TemplateEngine
     {
-        return TemplateEngine::forHost($this->hostServices($storeId), $mode->options());
+        $options = $mode->options();
+        // Inside a store, compatible mode targets that store's filter - see HostDeferral.
+        // Without one there is no filter to ask, and the default is the current Mage-OS.
+        if ($this->magento->isAvailable()) {
+            $options = $options->withDeferralResolvedAtRoot(HostDeferral::resolvesAtRoot());
+        }
+
+        return TemplateEngine::forHost($this->hostServices($storeId), $options);
     }
 
     /** @return string[] which directives the current host can actually resolve, for reporting */
@@ -72,14 +81,16 @@ class EngineFactory
                     ? new LayoutBlockRenderer(
                         $layout,
                         $config,
-                        // Mage-OS's deny list for exactly this directive. Null on a tree that
-                        // predates it, which is the behaviour that tree has anyway.
-                        blockDirectivePolicy: $m->get(
-                            \Magento\Email\Model\Template\Filter\BlockDirectivePolicy::class
-                        ),
+                        // Mage-OS's deny list for exactly this directive, where the tree has
+                        // one; a tree that predates it restricts nothing, as its filter does.
+                        blockClassPolicy: ($om = $m->get(\Magento\Framework\ObjectManagerInterface::class))
+                            ? new HostBlockClassPolicy($om)
+                            : null,
                     )
                     : null),
-            translator: $this->build(static fn (MagentoContext $m): ?object => new PhraseTranslator()),
+            translator: $this->build(static fn (MagentoContext $m): ?object => new PhraseTranslator(
+                $m->get(\Magento\Framework\Translate\Inline\StateInterface::class)
+            )),
             templates: $this->build(fn (MagentoContext $m): ?object
                 => ($scope = $m->get(\Magento\Framework\App\Config\ScopeConfigInterface::class))
                     ? new ConfigTemplateLoader(

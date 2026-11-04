@@ -1,15 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento\Plugin;
+namespace MageOS\TemplateParser\Magento\Plugin;
 
-use Cresset\TemplateParser\Magento\Config\EngineMode;
-use Cresset\TemplateParser\Magento\RenderScope;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
-use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
-use Cresset\TemplateParser\Magento\ShadowComparator;
+use MageOS\TemplateParser\Magento\CandidateRenders;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\DirectiveMethods;
+use MageOS\TemplateParser\Magento\HostOnlyDirectives;
+use MageOS\TemplateParser\Magento\LegacyOnlyRenders;
+use MageOS\TemplateParser\Magento\RenderScope;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
+use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
+use MageOS\TemplateParser\Magento\ShadowComparator;
 use Magento\Framework\Filter\Template as LegacyTemplate;
+use Magento\Framework\Interception\DefinitionInterface;
+use Magento\Framework\Interception\PluginListInterface;
 
 /**
  * The integration point.
@@ -71,6 +77,12 @@ class TemplateFilterPlugin
     /** @var array<class-string,list<string>> filter class => directives only it can render */
     private array $legacyOnly = [];
 
+    /**
+     * @var array<class-string,?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string}>
+     *      filter class => the plugins on filter() that run inside this one - see innerChain()
+     */
+    private array $innerChains = [];
+
     /** @var array<class-string,?string> filter class => self::EMAIL, self::PLAIN or null */
     private array $profiles = [];
 
@@ -98,7 +110,10 @@ class TemplateFilterPlugin
         private readonly TemplateIdentity $identity,
         private readonly ShadowRecorder $recorder,
         private readonly ?RenderScope $scope = null,
-        private readonly ?ShadowComparator $plainComparator = null
+        private readonly ?ShadowComparator $plainComparator = null,
+        private readonly ?PluginListInterface $pluginList = null,
+        private readonly ?LegacyOnlyRenders $legacyOnlyRenders = null,
+        private readonly ?CandidateRenders $candidateRenders = null
     ) {
         $this->state = new \WeakMap();
         $this->legacyRunning = new \WeakMap();
@@ -164,13 +179,21 @@ class TemplateFilterPlugin
      */
     public function aroundFilter(LegacyTemplate $subject, callable $proceed, $value)
     {
+        // The console's candidate, served where this engine would serve it - see
+        // CandidateRenders. Before anything else: the console asked for exactly this call.
+        $candidate = is_string($value) ? $this->candidateRenders?->take($subject) : null;
+        if ($candidate !== null) {
+            return $this->servedThroughInnerChain($subject, $value, $candidate);
+        }
+
         // A CHILD render belongs to legacy whatever the stage. The filter renders a child
         // only while rendering its parent - this engine loads {{template}} includes itself,
         // so a parent it serves never reaches one - and a child's output is not a document:
-        // the filter defers {{inlinecss}} by emitting a SIGNED placeholder for its parent to
-        // resolve, a contract only the legacy parent can keep. Nor is one worth comparing:
-        // the signature is random per render, so it could never match, and the parent's
-        // comparison covers the same content.
+        // the filter defers {{inlinecss}} by emitting a placeholder for the legacy root to
+        // resolve - a SIGNED copy of the directive up to Mage-OS 3.5.0, a token from the
+        // request's DeferredDirectiveRegistry since 3.6.0 - a contract only the legacy root
+        // can keep. Nor is one worth comparing: either placeholder is random per request, so
+        // it could never match, and the parent's comparison covers the same content.
         if (!is_string($value) || (method_exists($subject, 'isChildTemplate') && $subject->isChildTemplate())) {
             return $proceed($value);
         }
@@ -181,7 +204,8 @@ class TemplateFilterPlugin
         }
 
         // Part of a render legacy is already running on this instance - see $legacyRunning.
-        if (($this->legacyRunning[$subject] ?? 0) > 0) {
+        // Or one the caller needs to be legacy's own - see LegacyOnlyRenders.
+        if (($this->legacyRunning[$subject] ?? 0) > 0 || $this->legacyOnlyRenders?->active()) {
             return $proceed($value);
         }
 
@@ -224,7 +248,8 @@ class TemplateFilterPlugin
         $result = $this->legacy($subject, $proceed, $value);
 
         try {
-            $unmodelled = $this->unmodelledDirective($subject, $value);
+            $chain = $this->innerChain($subject);
+            $unmodelled = $this->unmodelledDirective($subject, $value) ?? self::unmodelledChain($chain);
             if ($unmodelled !== null) {
                 $this->recorder->record($storeId, $this->templateOf($subject, $value), $unmodelled);
 
@@ -235,15 +260,29 @@ class TemplateFilterPlugin
             // only has to apply them. Registering them again would be harmless here, but not in
             // general: one this engine accepted and legacy did not would then be inlined into
             // later LEGACY renders on the same instance, which Shadow promises not to change.
-            $outcome = $this->inScopeOf($subject, $storeId, fn () => $this->comparatorFor($subject)->compare(
-                $value,
-                (string)$result,
-                $state['variables'],
-                $state['plain'],
-                $this->finisher($subject, registerStylesheets: false),
-                $state['design']
-            ));
-            $this->recorder->record($storeId, $this->templateOf($subject, $value), $outcome);
+            $outcome = $this->inScopeOf($subject, $storeId, function () use ($subject, $chain, $value, $result, $state): ?ShadowOutcome {
+                $comparator = $this->comparatorFor($subject);
+                $candidate = $this->throughInnerChain($subject, $chain, $value, fn (string $input) => $comparator->render(
+                    $input,
+                    $state['variables'],
+                    $state['plain'],
+                    $this->finisher($subject, registerStylesheets: false),
+                    $state['design']
+                ));
+
+                if ($candidate instanceof ShadowOutcome) {
+                    return $candidate;
+                }
+
+                // Legacy's render left deferrals for a root that never came - nothing to
+                // compare against. See ShadowComparator::legacyLeftDeferrals().
+                return ShadowComparator::legacyLeftDeferrals((string)$candidate, (string)$result)
+                    ? null
+                    : $comparator->judge((string)$candidate, (string)$result);
+            });
+            if ($outcome !== null) {
+                $this->recorder->record($storeId, $this->templateOf($subject, $value), $outcome);
+            }
         } catch (\Throwable) {
             // The comparator and the recorder each contain their own failures; this is the
             // backstop for the promise that Shadow never changes a render.
@@ -281,13 +320,20 @@ class TemplateFilterPlugin
         }
 
         try {
+            $chain = $this->innerChain($subject);
             $candidate = $this->unmodelledDirective($subject, $value)
-                ?? $this->inScopeOf($subject, $storeId, fn () => $this->comparatorFor($subject)->render(
+                ?? self::unmodelledChain($chain)
+                ?? $this->inScopeOf($subject, $storeId, fn () => $this->throughInnerChain(
+                    $subject,
+                    $chain,
                     $value,
-                    $state['variables'],
-                    $state['plain'],
-                    $this->finisher($subject, registerStylesheets: true),
-                    $state['design']
+                    fn (string $input) => $this->comparatorFor($subject)->render(
+                        $input,
+                        $state['variables'],
+                        $state['plain'],
+                        $this->finisher($subject, registerStylesheets: true),
+                        $state['design']
+                    )
                 ));
         } catch (\Throwable $e) {
             // render() contains its own failures; this is the backstop.
@@ -303,9 +349,9 @@ class TemplateFilterPlugin
         }
 
         $outcome = null;
-        if ($sampled && !$legacyRaised) {
+        if ($sampled && !$legacyRaised && !ShadowComparator::legacyLeftDeferrals((string)$candidate, (string)$legacy)) {
             try {
-                $outcome = $this->comparatorFor($subject)->judge($candidate, (string)$legacy);
+                $outcome = $this->comparatorFor($subject)->judge((string)$candidate, (string)$legacy);
             } catch (\Throwable) {
                 // Nothing to record but the serve.
             }
@@ -338,7 +384,7 @@ class TemplateFilterPlugin
             })->call($subject)
             : null;
 
-        $this->scope->push($storeId, is_object($urlModel) ? $urlModel : null);
+        $this->scope->push($storeId, is_object($urlModel) ? $urlModel : null, $this->hostOnly($subject));
         try {
             return $render();
         } finally {
@@ -404,6 +450,173 @@ class TemplateFilterPlugin
     }
 
     /**
+     * The plugins on filter() that run INSIDE this one, or null when there are none.
+     *
+     * Whatever this plugin returns, every plugin around it still applies - the generated
+     * Interceptor runs the `after` plugins of its stretch of the chain once the around plugin
+     * returns. But a plugin sorted after this one runs only inside `$proceed`: on legacy's
+     * render, never on this engine's. Magento sorts by `sortOrder` with a comparison that
+     * overflows for a plugin that has none against one that has, so which side of this one
+     * Page Builder's `afterFilter` - no sortOrder, and the stock plugin that decodes its HTML
+     * Code elements - lands on follows module load order, not anything here. Inside, Parser
+     * served the elements undecoded and Shadow compared a render with them against one
+     * without.
+     *
+     * So the plugins inside are run on this engine's render as they would have been on the
+     * filter's: `before` plugins on the value, `after` plugins on the result. An `around`
+     * plugin inside cannot be - only the filter's own body is what it wraps - so a filter with
+     * one is the filter's to render; see unmodelledChain().
+     *
+     * Asked of the plugin list the subject dispatches through, as DirectiveMethods does.
+     * This plugin is found by instance, not by name, so a project di.xml that renamed it is
+     * still found.
+     *
+     * @return ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string}
+     */
+    private function innerChain(LegacyTemplate $subject): ?array
+    {
+        $class = $subject::class;
+        if (!array_key_exists($class, $this->innerChains)) {
+            $this->innerChains[$class] = $this->findInnerChain($subject);
+        }
+
+        return $this->innerChains[$class];
+    }
+
+    /** @return ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string} */
+    private function findInnerChain(LegacyTemplate $subject): ?array
+    {
+        $original = DirectiveMethods::originalClass($subject::class);
+        if ($original === $subject::class) {
+            return null;
+        }
+        [$list, $type] = DirectiveMethods::pluginListOf($subject, $this->pluginList, $original);
+        if ($list === null) {
+            return null;
+        }
+
+        try {
+            $code = '__self';
+            $seen = [];
+            while (!isset($seen[$code]) && is_array($info = $list->getNext($type, 'filter', $code))) {
+                $seen[$code] = true;
+                // Keyed as PluginListGenerator::inheritPlugins() builds it - see DirectiveMethods.
+                $around = $info[DefinitionInterface::LISTENER_AROUND] ?? null;
+                if (!is_string($around)) {
+                    return null;
+                }
+                if ($list->getPlugin($type, $around) !== $this) {
+                    $code = $around;
+                    continue;
+                }
+
+                $inner = $list->getNext($type, 'filter', $around);
+                if (!is_array($inner)) {
+                    return null;
+                }
+
+                return [
+                    'list' => $list,
+                    'type' => $type,
+                    'before' => array_values(array_map('strval', (array)($inner[DefinitionInterface::LISTENER_BEFORE] ?? []))),
+                    'after' => array_values(array_map('strval', (array)($inner[DefinitionInterface::LISTENER_AFTER] ?? []))),
+                    'around' => isset($inner[DefinitionInterface::LISTENER_AROUND])
+                        ? (string)$inner[DefinitionInterface::LISTENER_AROUND]
+                        : null,
+                ];
+            }
+        } catch (\Throwable) {
+        }
+
+        return null;
+    }
+
+    /**
+     * An around plugin on filter() inside this one: only the filter's own render runs it.
+     *
+     * @param ?array{around:?string} $chain
+     */
+    private static function unmodelledChain(?array $chain): ?ShadowOutcome
+    {
+        return ($chain['around'] ?? null) === null ? null : ShadowOutcome::policyRefused([sprintf(
+            'filter() has the around plugin "%s" inside this engine\'s, which only the filter\'s own render runs',
+            $chain['around']
+        )]);
+    }
+
+    /**
+     * Renders `$value` with `$render`, with the plugins inside this one run around it.
+     *
+     * The same calls the Interceptor makes: each `before` plugin may replace the value, and
+     * each `after` plugin is handed the result and the value. A plugin that raises is a
+     * crash, which in Parser falls back to the filter - where it raises again, as it would
+     * under Legacy.
+     *
+     * @param ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string} $chain
+     * @param callable(string):mixed $render
+     */
+    private function throughInnerChain(LegacyTemplate $subject, ?array $chain, string $value, callable $render): mixed
+    {
+        if ($chain === null || ($chain['before'] === [] && $chain['after'] === [])) {
+            return $render($value);
+        }
+
+        try {
+            return $this->runInnerChain($subject, $chain, $value, $render);
+        } catch (\Throwable $e) {
+            return ShadowOutcome::crashed($e);
+        }
+    }
+
+    /**
+     * @param ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string} $chain
+     * @param callable(string):mixed $render
+     */
+    private function runInnerChain(LegacyTemplate $subject, ?array $chain, string $value, callable $render): mixed
+    {
+        foreach ($chain['before'] ?? [] as $code) {
+            $arguments = $chain['list']->getPlugin($chain['type'], $code)->beforeFilter($subject, $value);
+            if ($arguments !== null) {
+                $value = array_values((array)$arguments)[0] ?? $value;
+                if (!is_string($value)) {
+                    throw new \UnexpectedValueException(sprintf('the plugin "%s" made the template a %s', $code, get_debug_type($value)));
+                }
+            }
+        }
+
+        $result = $render($value);
+        if ($result instanceof ShadowOutcome) {
+            return $result;
+        }
+
+        foreach ($chain['after'] ?? [] as $code) {
+            $result = $chain['list']->getPlugin($chain['type'], $code)->afterFilter($subject, $result, $value);
+        }
+
+        return $result;
+    }
+
+    /**
+     * The console's candidate, run as a Parser render would be - see CandidateRenders.
+     *
+     * Raises what Parser would decline on, so the console reports it as refused here.
+     *
+     * @param callable(string):mixed $render
+     */
+    private function servedThroughInnerChain(LegacyTemplate $subject, string $value, callable $render): mixed
+    {
+        $chain = $this->innerChain($subject);
+        $refusal = self::unmodelledChain($chain);
+        if ($refusal !== null) {
+            throw new \RuntimeException((string)$refusal->detail['problem']);
+        }
+
+        // Unwrapped: the console's own render raises its own errors, and a plugin's are the
+        // plugin's.
+        return $this->runInnerChain($subject, $chain, $value, $render);
+    }
+
+    /**
      * A directive this template uses that only the subject itself knows how to render.
      *
      * The filter dispatches `{{name}}` to any public `nameDirective()` method by reflection;
@@ -423,31 +636,50 @@ class TemplateFilterPlugin
      */
     private function unmodelledDirective(LegacyTemplate $subject, string $value): ?ShadowOutcome
     {
-        $names = $this->legacyOnly[$subject::class] ??= self::legacyOnlyDirectives($subject);
-        if ($names === [] || !preg_match('/\{\{(' . implode('|', $names) . ')(?![a-z])/i', $value, $m)) {
+        $name = HostOnlyDirectives::firstIn([...$this->hostOnly($subject), ...self::processorless($subject)], $value);
+        if ($name === null) {
             return null;
         }
 
         return ShadowOutcome::policyRefused([sprintf(
             'directive "%s" is rendered by %s itself, which this engine does not model',
-            strtolower($m[1]),
+            $name,
             self::originalClass($subject::class)
         )]);
     }
 
-    /** @return list<string> */
-    private static function legacyOnlyDirectives(LegacyTemplate $subject): array
+    /**
+     * `{{template}}` on a filter no template model is driving.
+     *
+     * Only `AbstractTemplate::getProcessedTemplate()` gives a filter a template processor, so
+     * the CMS, Widget and catalog filters never have one, and legacy's TemplateDirective prints
+     * `{Error in template processing}` there. Per instance, not per class: the Email filter has
+     * one while an email renders through it, and not otherwise.
+     *
+     * @return list<string>
+     */
+    private static function processorless(LegacyTemplate $subject): array
     {
-        $names = [];
-        foreach ((new \ReflectionClass($subject))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-            if ($method->isStatic() || !preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m)) {
-                continue;
-            }
-            $declaring = $method->getDeclaringClass()->getName();
-            if (str_ends_with($declaring, '\\Interceptor') || !str_starts_with($declaring, 'Magento\\')) {
-                $names[] = strtolower($m[1]);
-            }
-        }
+        return method_exists($subject, 'getTemplateProcessor') && $subject->getTemplateProcessor() === null
+            ? ['template']
+            : [];
+    }
+
+    /** @return list<string> */
+    private function hostOnly(LegacyTemplate $subject): array
+    {
+        return $this->legacyOnly[$subject::class] ??= $this->legacyOnlyDirectives($subject);
+    }
+
+    /**
+     * A directive method a module added or overrode, or a stock one a module has plugged -
+     * see DirectiveMethods - and the directives this engine leaves to particular filters.
+     *
+     * @return list<string>
+     */
+    private function legacyOnlyDirectives(LegacyTemplate $subject): array
+    {
+        $names = array_keys(DirectiveMethods::of($subject::class, $this->pluginList, $subject));
 
         if (is_a($subject, 'Magento\\Cms\\Model\\Template\\Filter')
             && !is_a($subject, 'Magento\\Widget\\Model\\Template\\Filter')
@@ -455,10 +687,14 @@ class TemplateFilterPlugin
             $names[] = 'media';
         }
 
-        // The newsletter filter renders each widget inside a frontend area emulation; this
+        // Only the Widget filter has a widgetDirective(); on any other - the transactional
+        // Email filter, the CMS one, the plain one - legacy prints `{{widget ...}}` as text.
+        // And the newsletter filter renders each widget inside a frontend area emulation; this
         // engine renders it in whatever area is current, which in a newsletter send is not
         // frontend. Emulating around the whole render would move every OTHER directive too.
-        if (is_a($subject, 'Magento\\Widget\\Model\\Template\\FilterEmulate')) {
+        if (!is_a($subject, 'Magento\\Widget\\Model\\Template\\Filter')
+            || is_a($subject, 'Magento\\Widget\\Model\\Template\\FilterEmulate')
+        ) {
             $names[] = 'widget';
         }
 
@@ -468,7 +704,7 @@ class TemplateFilterPlugin
     /** The class a generated Interceptor stands in for, for a message a person reads. */
     private static function originalClass(string $class): string
     {
-        return str_ends_with($class, '\\Interceptor') ? (string)get_parent_class($class) : $class;
+        return DirectiveMethods::originalClass($class);
     }
 
     private function templateOf(LegacyTemplate $subject, string $value): string

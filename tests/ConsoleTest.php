@@ -1,19 +1,19 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Console\Application;
-use Cresset\TemplateParser\Console\Auditor;
-use Cresset\TemplateParser\Console\LegacyRender;
-use Cresset\TemplateParser\Console\EngineFactory;
-use Cresset\TemplateParser\Console\HostExtensions;
-use Cresset\TemplateParser\Console\Finding;
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\Mode;
-use Cresset\TemplateParser\Console\Source\CodebaseEmailTemplates;
-use Cresset\TemplateParser\Console\StoreEmulator;
-use Cresset\TemplateParser\Console\TemplateSubject;
+use MageOS\TemplateParser\Console\Application;
+use MageOS\TemplateParser\Console\Auditor;
+use MageOS\TemplateParser\Console\LegacyRender;
+use MageOS\TemplateParser\Console\EngineFactory;
+use MageOS\TemplateParser\Console\HostExtensions;
+use MageOS\TemplateParser\Console\Finding;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\Mode;
+use MageOS\TemplateParser\Console\Source\CodebaseEmailTemplates;
+use MageOS\TemplateParser\Console\StoreEmulator;
+use MageOS\TemplateParser\Console\TemplateSubject;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -89,6 +89,50 @@ final class ConsoleTest extends TestCase
 
         self::assertCount(1, $divergences);
         self::assertStringContainsString('no port wired for {{layout}}', (string)$divergences[0]->note);
+    }
+
+    /**
+     * The candidate goes through the filter's plugin chain when the legacy side offers it, as
+     * a Parser render does - Page Builder's afterFilter made most CMS content differ.
+     */
+    public function testTheCandidateGoesThroughTheFiltersPluginsToo(): void
+    {
+        $subject = new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: 'a{{var x}}b');
+
+        $divergences = $this->auditor()->diff(
+            [$subject],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender(
+                'DECODED(a1b)',
+                ['x' => 1],
+                through: static fn (callable $render): string => 'DECODED(' . $render($subject->content) . ')'
+            )
+        );
+
+        self::assertSame([], $divergences);
+    }
+
+    /**
+     * The Email filter's error message in place of the template is legacy failing, not a
+     * render: with this engine refusing too - a theme `.phtml` the CLI cannot find fails both
+     * - nobody has ever received it, and it was reported as "renders today, refused here".
+     */
+    public function testTheFiltersErrorMessageIsALegacyFailure(): void
+    {
+        $refused = new TemplateSubject(id: 'a', label: 'a', origin: 'test', content: '{{if a}}unclosed');
+        $rendered = new TemplateSubject(id: 'b', label: 'b', origin: 'test', content: 'fine');
+        $message = "Error filtering template: Invalid template file: 'Vendor_Theme::x.phtml'";
+
+        $divergences = $this->auditor()->diff(
+            [$refused, $rendered],
+            Mode::Compatible,
+            static fn (): LegacyRender => new LegacyRender($message, [], failure: $message)
+        );
+
+        self::assertCount(1, $divergences);
+        self::assertSame('b', $divergences[0]->subject->id);
+        self::assertNull($divergences[0]->legacy);
+        self::assertStringContainsString('the legacy filter cannot render this', (string)$divergences[0]->note);
     }
 
     /**
@@ -339,9 +383,51 @@ final class ConsoleTest extends TestCase
      * - the floor `DiffCommand` clamps to - the window ended one byte before the difference
      * and both sides printed identically.
      */
+    /**
+     * A byte cut through a multibyte character is invalid UTF-8, and json_encode() then
+     * returned false for the whole `diff --format=json` report - one empty line, exit 0.
+     */
+    public function testAnExcerptNeverCutsACharacterInHalf(): void
+    {
+        foreach (range(15, 40) as $lead) {
+            $divergence = new \MageOS\TemplateParser\Console\Divergence(
+                new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: ''),
+                legacy: str_repeat('я', $lead) . 'Привет LEFT ' . str_repeat('ж', 40),
+                candidate: str_repeat('я', $lead) . 'Привет RIGHT ' . str_repeat('ж', 40),
+                note: null
+            );
+
+            foreach ($divergence->excerpt() as $side) {
+                self::assertTrue(mb_check_encoding($side, 'UTF-8'), "lead $lead: " . bin2hex($side));
+            }
+        }
+    }
+
+    /**
+     * Invalid UTF-8 can come from the store too - a template saved with a stray Latin-1 byte
+     * renders one on both sides. The report substitutes it rather than printing nothing.
+     */
+    public function testTheJsonDiffReportSurvivesInvalidUtf8InAnOutput(): void
+    {
+        $divergence = new \MageOS\TemplateParser\Console\Divergence(
+            new TemplateSubject(id: 'x', label: "caf\xE9", origin: 'test', content: ''),
+            legacy: "caf\xE9 LEFT",
+            candidate: "caf\xE9 RIGHT",
+            note: null
+        );
+        $output = new \Symfony\Component\Console\Output\BufferedOutput();
+
+        $exit = (new \ReflectionMethod(\MageOS\TemplateParser\Console\Command\DiffCommand::class, 'reportJson'))
+            ->invoke(new \MageOS\TemplateParser\Console\Command\DiffCommand(), [$divergence], 1, $output, 60, true);
+
+        $report = json_decode($output->fetch(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame(1, $exit);
+        self::assertSame("caf\u{FFFD} LEFT", $report['divergences'][0]['legacy_excerpt']);
+    }
+
     public function testANarrowExcerptStillReachesTheDifference(): void
     {
-        $divergence = new \Cresset\TemplateParser\Console\Divergence(
+        $divergence = new \MageOS\TemplateParser\Console\Divergence(
             new TemplateSubject(id: 'x', label: 'x', origin: 'test', content: ''),
             legacy: str_repeat('same', 10) . 'LEFT',
             candidate: str_repeat('same', 10) . 'RIGHT',
@@ -476,46 +562,12 @@ final class ConsoleTest extends TestCase
         self::assertNotEmpty($report['findings']);
     }
 
-    /** --mode still works for a release, says it is going, and keeps stdout clean for JSON. */
-    public function testModeIsADeprecatedSpellingOfPosture(): void
+    /** --mode, the 0.2 spelling, was kept for one release with a warning, and is gone. */
+    public function testTheRemovedModeOptionIsRefused(): void
     {
-        $tester = $this->tester('check');
-        $file = $this->writeTemplate('Hi {{var custmer}}');
+        $this->expectException(\Symfony\Component\Console\Exception\InvalidOptionException::class);
 
-        $exit = $tester->execute(
-            ['path' => $file, '--mode' => 'strict', '--fail-on' => 'warning', '--format' => 'json'],
-            ['capture_stderr_separately' => true]
-        );
-
-        self::assertSame(1, $exit, 'strict reports the unknown variable, so --mode was honoured');
-        self::assertStringContainsString('--mode is deprecated; use --posture', $tester->getErrorOutput());
-        json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
-    }
-
-    /** 0.2 accepted --mode=legacy; the deprecated option keeps doing so while it lasts. */
-    public function testTheDeprecatedModeStillReadsLegacyAsCompatible(): void
-    {
-        $tester = $this->tester('check');
-        $file = $this->writeTemplate('Hi {{var custmer}}');
-
-        $exit = $tester->execute(
-            ['path' => $file, '--mode' => 'legacy', '--fail-on' => 'error', '--format' => 'json'],
-            ['capture_stderr_separately' => true]
-        );
-
-        self::assertSame(0, $exit, 'compatible renders an unknown variable empty, as the filter does');
-        self::assertStringContainsString('--mode is deprecated', $tester->getErrorOutput());
-    }
-
-    public function testPostureAndModeThatDisagreeAreRefused(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/disagree; pass only --posture/');
-
-        $this->tester('check')->execute(
-            ['path' => $this->writeTemplate('x'), '--posture' => 'strict', '--mode' => 'compatible'],
-            ['capture_stderr_separately' => true]
-        );
+        $this->tester('check')->execute(['path' => $this->writeTemplate('x'), '--mode' => 'strict']);
     }
 
     /** Parser mode runs the compatible posture, so that is what an unqualified run measures. */
@@ -573,7 +625,7 @@ final class ConsoleTest extends TestCase
 
     public function testReplSwitchesModeAndReportsErrors(): void
     {
-        $display = $this->repl([':mode strict', ':set customer_name=Ada', '{{var custmer_name}}']);
+        $display = $this->repl([':posture strict', ':set customer_name=Ada', '{{var custmer_name}}']);
 
         self::assertStringContainsString('Unknown variable', $display);
         // The engine's did-you-mean only fires when there is something to suggest, which is
@@ -680,7 +732,7 @@ final class ConsoleTest extends TestCase
             $class = str_replace(' ', '', ucwords(str_replace(':', ' ', $name))) . 'Command';
 
             // bin/magento: under template:, built from an ObjectManager, and in the CommandList.
-            $magento = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class;
+            $magento = 'MageOS\\TemplateParser\\Console\\Magento\\' . $class;
             self::assertTrue(class_exists($magento), $magento . ' is missing');
             self::assertSame('template:' . $name, (new $magento($objectManager))->getName());
             self::assertContains($magento, $registered, $magento . ' is not registered in etc/di.xml');
@@ -713,7 +765,7 @@ final class ConsoleTest extends TestCase
         };
 
         foreach (['Check', 'Diff', 'Repl', 'ShadowReport', 'ShadowClear', 'Status'] as $class) {
-            $class = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
+            $class = 'MageOS\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
             self::assertInstanceOf(\Symfony\Component\Console\Command\Command::class, new $class($objectManager));
         }
     }
@@ -734,7 +786,7 @@ final class ConsoleTest extends TestCase
         };
 
         foreach (['Check' => 'check', 'Diff' => 'diff', 'Repl' => 'repl', 'ShadowReport' => 'shadow:report', 'ShadowClear' => 'shadow:clear', 'Status' => 'status'] as $class => $name) {
-            $parent = 'Cresset\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
+            $parent = 'MageOS\\TemplateParser\\Console\\Magento\\' . $class . 'Command';
             $interceptor = 'InterceptedFixture' . $class . 'Command';
             if (!class_exists($interceptor, false)) {
                 eval(sprintf('class %s extends \\%s {}', $interceptor, $parent));
@@ -744,6 +796,36 @@ final class ConsoleTest extends TestCase
             self::assertSame('template:' . $name, $command->getName());
             self::assertNotSame('', $command->getDescription(), $interceptor . ' lost its description');
         }
+    }
+
+    /** A checkout under a `tests/` directory - a CI workspace - had every file judged a test fixture. */
+    public function testTheCodebaseSourceJudgesPathsBelowItsRoot(): void
+    {
+        $root = sys_get_temp_dir() . '/tp-' . bin2hex(random_bytes(4)) . '/tests/shop';
+        mkdir($root . '/app/code/Acme/Mail/view/frontend/email', 0777, true);
+        mkdir($root . '/app/code/Acme/Mail/Test/email', 0777, true);
+        file_put_contents($root . '/app/code/Acme/Mail/view/frontend/email/hello.html', 'Hi');
+        file_put_contents($root . '/app/code/Acme/Mail/Test/email/fixture.html', 'Hi');
+
+        try {
+            $found = array_map(
+                static fn (TemplateSubject $s): string => $s->label,
+                iterator_to_array((new CodebaseEmailTemplates($root))->subjects(), false)
+            );
+        } finally {
+            exec('rm -rf ' . escapeshellarg(dirname($root, 2)));
+        }
+
+        self::assertSame(['app/code/Acme/Mail/view/frontend/email/hello.html'], $found);
+    }
+
+    /** Nothing to check is not a pass: "0 error(s)" from a scan of nothing exited 0. */
+    public function testCheckWithNothingToCheckExitsTwo(): void
+    {
+        $tester = $this->tester('check');
+
+        self::assertSame(2, $tester->execute(['--source' => 'codebase']));
+        self::assertStringContainsString('Nothing to check', $tester->getDisplay());
     }
 
     public function testTheCodebaseSourceIsInertWithoutARoot(): void

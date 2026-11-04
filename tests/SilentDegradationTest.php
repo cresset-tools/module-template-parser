@@ -1,28 +1,29 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Magento\Config\EngineMode;
-use Cresset\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
-use Cresset\TemplateParser\Magento\Shadow\ShadowOutcome;
-use Cresset\TemplateParser\Magento\Shadow\ShadowRecorder;
-use Cresset\TemplateParser\Magento\Shadow\TemplateIdentity;
-use Cresset\TemplateParser\Magento\ShadowComparator;
-use Cresset\TemplateParser\Magento\TemplateFilterAdapter;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\ConfigReader;
-use Cresset\TemplateParser\Port\CustomDirectiveRenderer;
-use Cresset\TemplateParser\Port\CustomVariableReader;
-use Cresset\TemplateParser\Port\LayoutRenderer;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\Port\StylesheetLoader;
-use Cresset\TemplateParser\Port\TemplateLoader;
-use Cresset\TemplateParser\Port\TemplateUrlBuilder;
-use Cresset\TemplateParser\Port\UrlBuilder;
-use Cresset\TemplateParser\Port\WidgetRenderer;
+use MageOS\TemplateParser\HostServices;
+use Magento\Framework\Interception\DefinitionInterface;
+use MageOS\TemplateParser\Magento\Config\EngineMode;
+use MageOS\TemplateParser\Magento\Plugin\TemplateFilterPlugin;
+use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
+use MageOS\TemplateParser\Magento\Shadow\ShadowRecorder;
+use MageOS\TemplateParser\Magento\Shadow\TemplateIdentity;
+use MageOS\TemplateParser\Magento\ShadowComparator;
+use MageOS\TemplateParser\Magento\TemplateFilterAdapter;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\ConfigReader;
+use MageOS\TemplateParser\Port\CustomDirectiveRenderer;
+use MageOS\TemplateParser\Port\CustomVariableReader;
+use MageOS\TemplateParser\Port\LayoutRenderer;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\StylesheetLoader;
+use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\Port\TemplateUrlBuilder;
+use MageOS\TemplateParser\Port\UrlBuilder;
+use MageOS\TemplateParser\Port\WidgetRenderer;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Filter\Template as LegacyTemplate;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -200,6 +201,12 @@ final class SilentDegradationTest extends TestCase
             "a module's own directive" => [\Acme\Promo\Filter::class, 'Use {{COUPON}} today', 'coupon'],
             'a plugged stock directive' => [\Magento\Widget\Model\Template\Filter\Interceptor::class, 'Dear {{var name}}', 'var'],
             "the CMS filter's filesystem {{media}}" => [\Magento\Cms\Model\Template\Filter::class, '{{media url="wysiwyg/a.png"}}', 'media'],
+            "a module's protected directive" => [\Acme\Promo\HiddenFilter::class, 'Use {{coupon}} today', 'coupon'],
+            "a module's private directive" => [\Acme\Promo\HiddenFilter::class, 'A {{gift}}', 'gift'],
+            "a module's static directive" => [\Acme\Promo\HiddenFilter::class, 'A {{promo}}', 'promo'],
+            // No widgetDirective() on the transactional Email filter: legacy prints the text.
+            '{{widget}} on the Email filter' => [\Magento\Email\Model\Template\Filter::class, '{{widget type="Magento\\CatalogWidget\\Block\\Product\\ProductsList"}}', 'widget'],
+            'a name the store reads as a shorter one' => [\Acme\Promo\Filter::class, 'Use {{coupon2 code="x"}}', 'coupon'],
         ];
     }
 
@@ -246,6 +253,273 @@ final class SilentDegradationTest extends TestCase
         self::assertSame([true, true], [$records[0][2], $records[1][2]], 'declined a render it can serve');
     }
 
+    /**
+     * Developer mode, or default mode without setup:di:compile: the generated Interceptor
+     * redeclares every public method, so the declaration says nothing about plugins. Classing
+     * them all as plugged declined every render with a directive in it - Shadow recorded
+     * refusals, which count as clean, and the report said "No divergences" over nothing.
+     */
+    public function testAnOnDemandInterceptorWithNothingPluggedIsServedInParser(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $records = [];
+        $plugin = $this->plugin($records, EngineMode::PARSER);
+        $subject = new \Magento\Email\Model\Template\Filter\Interceptor();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}{{if name}}!{{/if}}');
+
+        self::assertSame('Dear Ada!', $result);
+        self::assertSame([null, true, false], [$records[0][0], $records[0][2], $records[0][3]]);
+    }
+
+    public function testAnOnDemandInterceptorWithNothingPluggedIsComparedInShadow(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $records = [];
+        $plugin = $this->plugin($records, EngineMode::SHADOW);
+        $subject = new \Magento\Email\Model\Template\Filter\Interceptor();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $plugin->aroundFilter($subject, static fn () => 'Dear Ada', 'Dear {{var name}}');
+
+        self::assertSame(ShadowOutcome::AGREE, $records[0][0]);
+    }
+
+    /** The same shape, with a plugin really configured on one directive: that one is the filter's. */
+    public function testAnOnDemandInterceptorDeclinesOnlyThePluggedDirective(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $records = [];
+        $plugin = $this->plugin($records, EngineMode::PARSER);
+        $subject = new \Magento\Email\Model\Template\Filter\Interceptor(['cssDirective']);
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        self::assertSame('LEGACY', $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{css file="a.css"}}'));
+        self::assertStringContainsString('directive "css"', $records[0][1]['problem']);
+        self::assertSame('Ada', $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{var name}}'));
+    }
+
+    /** Over a module's subclass, its own directive is still its own however the Interceptor was made. */
+    public function testAnOnDemandInterceptorKeepsAModulesOwnDirective(): void
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $records = [];
+        $plugin = $this->plugin($records, EngineMode::PARSER);
+        $subject = new \Acme\Promo\Filter\Interceptor();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        self::assertSame('LEGACY', $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Use {{coupon}}'));
+        self::assertSame('Ada', $plugin->aroundFilter($subject, static fn () => 'LEGACY', '{{var name}}'));
+    }
+
+    // ---------------------------------------------------------------- other plugins on filter()
+
+    /**
+     * An Email filter Interceptor whose plugin list puts `$chain` on filter(), with this
+     * plugin as the around named `mageos_template_parser`.
+     *
+     * @param array<string,array<string,mixed>> $chain code => what getNext('filter', code) answers
+     * @param array<string,object> $plugins code => the other plugins
+     * @return array{0:object,1:\Closure(TemplateFilterPlugin):void} the subject, and how to put the plugin in its list
+     */
+    private function chained(array $chain, array $plugins): array
+    {
+        require_once __DIR__ . '/fixtures/LegacyOnlyDirectives.php';
+        $list = new class ($chain, $plugins) implements \Magento\Framework\Interception\PluginListInterface {
+            public ?object $self = null;
+            public function __construct(private array $chain, private array $plugins) {}
+            public function getPlugin($type, $code) { return $code === 'mageos_template_parser' ? $this->self : $this->plugins[$code]; }
+            public function getNext($type, $method, $code = '__self')
+            {
+                return $method === 'filter' ? ($this->chain[$code] ?? null) : null;
+            }
+        };
+
+        return [
+            new \Magento\Email\Model\Template\Filter\Interceptor([], $list),
+            static function (TemplateFilterPlugin $plugin) use ($list): void { $list->self = $plugin; },
+        ];
+    }
+
+    /** Page Builder's shape: an afterFilter that rewrites the finished render. */
+    private static function afterPlugin(): object
+    {
+        return new class {
+            public function afterFilter($subject, $result, $value) { return 'DECODED(' . $result . ')'; }
+        };
+    }
+
+    private static function beforePlugin(): object
+    {
+        return new class {
+            public function beforeFilter($subject, $value) { return [str_replace('Dear', 'Hi', $value)]; }
+        };
+    }
+
+    /**
+     * A plugin sorted after this one runs only inside `$proceed` - which Parser does not call.
+     * Magento's sort puts Page Builder's afterFilter, which has no sortOrder, on either side of
+     * this one by module load order; inside, Parser served its HTML Code elements undecoded.
+     */
+    public function testPluginsInsideThisOneRunOnAParserRender(): void
+    {
+        [$subject, $wire] = $this->chained(
+            ['__self' => [DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser'], 'mageos_template_parser' => [DefinitionInterface::LISTENER_BEFORE => ['b'], DefinitionInterface::LISTENER_AFTER => ['pb']]],
+            ['b' => self::beforePlugin(), 'pb' => self::afterPlugin()]
+        );
+        $records = [];
+        $wire($plugin = $this->plugin($records, EngineMode::PARSER));
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        self::assertSame('DECODED(Hi Ada)', $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}'));
+        self::assertSame([null, true, false], [$records[0][0], $records[0][2], $records[0][3]]);
+    }
+
+    /** Shadow compares legacy's render, which they ran on, with ours after the same plugins. */
+    public function testShadowComparesAfterThePluginsInsideThisOne(): void
+    {
+        [$subject, $wire] = $this->chained(
+            ['__self' => [DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser'], 'mageos_template_parser' => [DefinitionInterface::LISTENER_BEFORE => ['b'], DefinitionInterface::LISTENER_AFTER => ['pb']]],
+            ['b' => self::beforePlugin(), 'pb' => self::afterPlugin()]
+        );
+        $records = [];
+        $wire($plugin = $this->plugin($records, EngineMode::SHADOW));
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        self::assertSame('DECODED(Hi Ada)', $plugin->aroundFilter($subject, static fn () => 'DECODED(Hi Ada)', 'Dear {{var name}}'));
+        self::assertSame(ShadowOutcome::AGREE, $records[0][0]);
+    }
+
+    /**
+     * A legacy render that still holds a `:deferred:` placeholder was not resolved as a root.
+     * The shared depth meter leaks a level on every render that raises, so in a long-running
+     * process every later render is taken for a child - Magento's output, not this engine's
+     * difference, and not compared.
+     */
+    public function testShadowDoesNotCompareALegacyRenderThatLeftADeferral(): void
+    {
+        [$subject, $wire] = $this->chained([], []);
+        $records = [];
+        $wire($plugin = $this->plugin($records, EngineMode::SHADOW));
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+        $unresolved = 'Dear Ada :deferred:' . str_repeat('ab', 32) . ':';
+
+        self::assertSame($unresolved, $plugin->aroundFilter($subject, static fn () => $unresolved, 'Dear {{var name}}'));
+        self::assertSame([], $records);
+
+        self::assertSame('Dear Bob', $plugin->aroundFilter($subject, static fn () => 'Dear Bob', 'Dear {{var name}}'));
+        self::assertSame(ShadowOutcome::DIVERGE, $records[0][0]);
+    }
+
+    public function testASampledParserRenderDoesNotCompareALegacyRenderThatLeftADeferral(): void
+    {
+        [$subject, $wire] = $this->chained([], []);
+        $records = [];
+        $wire($plugin = $this->plugin($records, EngineMode::PARSER, shadowRate: '100'));
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+        $unresolved = 'Dear Ada :deferred:' . str_repeat('ab', 32) . ':';
+
+        self::assertSame('Dear Ada', $plugin->aroundFilter($subject, static fn () => $unresolved, 'Dear {{var name}}'));
+        self::assertSame([[null, null, true, false]], $records);
+    }
+
+    /** One outside this plugin is the Interceptor's to run, on whatever this returns: not run twice. */
+    public function testPluginsOutsideThisOneAreLeftToTheInterceptor(): void
+    {
+        [$subject, $wire] = $this->chained(
+            ['__self' => [DefinitionInterface::LISTENER_AFTER => ['pb'], DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser']],
+            ['pb' => self::afterPlugin()]
+        );
+        $records = [];
+        $wire($plugin = $this->plugin($records, EngineMode::PARSER));
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        self::assertSame('Dear Ada', $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}'));
+    }
+
+    /** An around plugin inside wraps only the filter's own body: the filter renders. */
+    public function testAnAroundPluginInsideThisOneLeavesTheRenderToTheFilter(): void
+    {
+        [$subject, $wire] = $this->chained(
+            ['__self' => [DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser'], 'mageos_template_parser' => [DefinitionInterface::LISTENER_AROUND => 'wrapper']],
+            []
+        );
+        $records = [];
+        $wire($plugin = $this->plugin($records, EngineMode::PARSER));
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        self::assertSame('LEGACY', $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}'));
+        self::assertStringContainsString('around plugin "wrapper"', $records[0][1]['problem']);
+    }
+
+    /**
+     * template:diff's candidate is served where a Parser render would be, so it gets the
+     * same plugins - once, and on that filter only: a render nested inside is legacy's.
+     */
+    public function testTheConsolesCandidateIsServedThroughThePluginsInsideThisOne(): void
+    {
+        [$subject, $wire] = $this->chained(
+            ['__self' => [DefinitionInterface::LISTENER_AROUND => 'mageos_template_parser'], 'mageos_template_parser' => [DefinitionInterface::LISTENER_AFTER => ['pb']]],
+            ['pb' => self::afterPlugin()]
+        );
+        $records = [];
+        $candidates = new \MageOS\TemplateParser\Magento\CandidateRenders();
+        $wire($plugin = $this->plugin($records, EngineMode::LEGACY, null, $candidates));
+
+        $nested = null;
+        [$result, $used] = $candidates->run(
+            $subject,
+            function (string $value) use ($plugin, $subject, &$nested): string {
+                $nested = $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'inner');
+                return 'OURS:' . $value;
+            },
+            static fn () => $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'X')
+        );
+
+        self::assertSame(['DECODED(OURS:X)', true], [$result, $used]);
+        self::assertSame('LEGACY', $nested);
+        self::assertSame([], $records);
+        self::assertNull($candidates->take($subject));
+    }
+
+    public function testTheConsoleIsToldWhenThePluginNeverSawItsCandidate(): void
+    {
+        $candidates = new \MageOS\TemplateParser\Magento\CandidateRenders();
+        $subject = new \Magento\Email\Model\Template\Filter();
+
+        self::assertSame(['LEGACY', false], $candidates->run($subject, static fn (string $v): string => 'OURS', static fn () => 'LEGACY'));
+    }
+
+    /**
+     * template:diff renders "today" through the store's filter, which carries this plugin: on
+     * a Parser store view "today" was this engine, compared with itself, and in Shadow every
+     * CLI render went into the live table. Inside LegacyOnlyRenders the plugin stands aside.
+     */
+    #[DataProvider('stages')]
+    public function testARenderMarkedLegacyOnlyIsTheFiltersAndIsNotRecorded(string $stage): void
+    {
+        $records = [];
+        $legacyOnly = new \MageOS\TemplateParser\Magento\LegacyOnlyRenders();
+        $plugin = $this->plugin($records, $stage, $legacyOnly);
+        $subject = new \Magento\Email\Model\Template\Filter();
+        $plugin->beforeSetVariables($subject, ['name' => 'Ada']);
+
+        $result = $legacyOnly->run(static fn () => $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}'));
+
+        self::assertSame('LEGACY', $result);
+        self::assertSame([], $records);
+
+        // The control: outside it, the same render is the plugin's again, and recorded.
+        $plugin->aroundFilter($subject, static fn () => 'LEGACY', 'Dear {{var name}}');
+        self::assertCount(1, $records);
+    }
+
+    public static function stages(): array
+    {
+        return ['shadow' => [EngineMode::SHADOW], 'parser' => [EngineMode::PARSER]];
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private function adapter(HostServices $services): TemplateFilterAdapter
@@ -267,7 +541,7 @@ final class SilentDegradationTest extends TestCase
                 public function __construct(private \Closure $refuse) {}
                 public function render(string $class, array $data, string $method): string { ($this->refuse)('blocks'); return 'BLOCK'; }
             },
-            translator: new class implements \Cresset\TemplateParser\Port\Translator {
+            translator: new class implements \MageOS\TemplateParser\Port\Translator {
                 public function translate(string $text, array $arguments): string { return $text; }
             },
             templates: new class ($refuse) implements TemplateLoader {
@@ -322,8 +596,13 @@ final class SilentDegradationTest extends TestCase
     }
 
     /** @param list<array{0:?string,1:?array,2:bool,3:bool}> $records outcome, detail, served, fell back */
-    private function plugin(array &$records, string $stage): TemplateFilterPlugin
-    {
+    private function plugin(
+        array &$records,
+        string $stage,
+        ?\MageOS\TemplateParser\Magento\LegacyOnlyRenders $legacyOnly = null,
+        ?\MageOS\TemplateParser\Magento\CandidateRenders $candidates = null,
+        string $shadowRate = '0'
+    ): TemplateFilterPlugin {
         $recorder = new class ($records) extends ShadowRecorder {
             public function __construct(private array &$records) {}
             public function record(int|string|null $storeId, string $template, ?ShadowOutcome $outcome, bool $served = false, bool $fellBack = false): void
@@ -331,11 +610,15 @@ final class SilentDegradationTest extends TestCase
                 $this->records[] = [$outcome?->outcome, $outcome?->detail, $served, $fellBack];
             }
         };
-        $mode = new EngineMode(new class ($stage) implements ScopeConfigInterface {
-            public function __construct(private string $stage) {}
+        $mode = new EngineMode(new class ($stage, $shadowRate) implements ScopeConfigInterface {
+            public function __construct(private string $stage, private string $rate) {}
             public function getValue($path, $scope = 'default', $scopeCode = null)
             {
-                return $path === EngineMode::XML_PATH ? $this->stage : '0';
+                return match ($path) {
+                    EngineMode::XML_PATH => $this->stage,
+                    EngineMode::XML_PATH_PARSER_SHADOW_RATE => $this->rate,
+                    default => '0',
+                };
             }
             public function isSetFlag($path, $scope = 'default', $scopeCode = null) { return false; }
         });
@@ -344,7 +627,9 @@ final class SilentDegradationTest extends TestCase
             new ShadowComparator($this->adapter($this->everyPort())),
             $mode,
             new TemplateIdentity(),
-            $recorder
+            $recorder,
+            legacyOnlyRenders: $legacyOnly,
+            candidateRenders: $candidates
         );
     }
 }

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Magento;
+namespace MageOS\TemplateParser\Console\Magento;
 
-use Cresset\TemplateParser\Console\Command\DiffCommand as BaseCommand;
+use MageOS\TemplateParser\Console\Command\DiffCommand as BaseCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**

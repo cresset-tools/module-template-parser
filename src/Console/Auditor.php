@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
-use Cresset\TemplateParser\Console\Source\TemplateSource;
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\PolicyViolation;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Console\Source\TemplateSource;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\PolicyViolation;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateError;
 
 /**
  * Renders subjects through the engine and reports what happened.
@@ -62,18 +62,21 @@ class Auditor
                         . 'opener this engine knows.',
                 )];
 
-                // A directive a module added as a method on the filter class. Legacy finds it by
-                // reflection and this engine never will, so it renders differently here - or,
-                // for an override of a stock directive, through different code.
+                // A directive a module added as a method on the filter class, or a plugin on a
+                // stock one. Legacy runs that code and this engine never will, so it renders
+                // differently here - or, for an override, through different code.
                 foreach ($this->extensions?->methodNotesFor($subject->content, $engine->evaluator()->registered()) ?? [] as $note) {
                     $extensionFinding[] = new Finding(
                         severity: Finding::WARNING,
                         subject: $subject,
                         summary: $note,
                         fix: 'The legacy filter dispatches {{name}} to a nameDirective() method by '
-                            . 'reflection; this engine does not, by design. In compatible mode an '
-                            . 'unhandled directive comes back as its own text. Keep this template '
-                            . 'on the legacy filter, or give the engine a handler for the directive.',
+                            . 'reflection, plugins included; this engine does neither, by design. '
+                            . 'On a store, Shadow and Parser hand templates using it to the filter, '
+                            . 'so they render as today and are never compared. Elsewhere, in '
+                            . 'compatible mode an unhandled directive comes back as its own text. '
+                            . 'Keep this template on the legacy filter, or give the engine a handler '
+                            . 'for the directive.',
                     );
                 }
 
@@ -156,7 +159,8 @@ class Auditor
                     $legacyRender = null;
                 }
 
-                $legacyOutput = $legacyRender?->output;
+                // The filter's error message in place of the template is no render of it.
+                $legacyOutput = $legacyRender?->failure === null ? $legacyRender?->output : null;
                 // The variables Magento built for the legacy render, not the ones this tool
                 // was handed - rendering our side without them compares two different inputs.
                 // See LegacyRender for what the model adds.
@@ -170,18 +174,28 @@ class Auditor
                     // so anything this one refused on policy would be reported as a divergence
                     // in the engine rather than as the posture it is. The policy that matters
                     // is the one the host sets at render time; this is a measurement.
-                    $ours = $engine->render($subject->content, context: new Context(
-                        $variables,
-                        RenderPolicy::unrestricted(),
-                        false,
-                        // The design the filter resolved its stylesheets against. Looking it
-                        // up here gives a different theme - see Port\StylesheetLoader::load().
-                        $legacyRender?->designParams ?? []
-                    ));
-                    // Whatever the host does to a finished render, it does to both.
-                    if ($legacyRender?->finish !== null) {
-                        $ours = ($legacyRender->finish)($ours);
-                    }
+                    $render = static function (string $content) use ($engine, $variables, $legacyRender): string {
+                        $ours = $engine->render($content, context: new Context(
+                            $variables,
+                            RenderPolicy::unrestricted(),
+                            false,
+                            // The design the filter resolved its stylesheets against. Looking it
+                            // up here gives a different theme - see Port\StylesheetLoader::load().
+                            $legacyRender?->designParams ?? []
+                        ));
+                        // Whatever the host does to a finished render, it does to both.
+                        if ($legacyRender?->finish !== null) {
+                            $ours = ($legacyRender->finish)($ours);
+                        }
+
+                        return $ours;
+                    };
+                    // And whatever other modules' plugins on filter() do to it: through the
+                    // same filter, served where a Parser render would be. Page Builder's
+                    // afterFilter alone made most CMS content differ.
+                    $ours = $legacyRender?->through !== null
+                        ? ($legacyRender->through)($render)
+                        : $render($subject->content);
                 } catch (\Throwable $e) {
                     $ourFailure = (new \ReflectionClass($e))->getShortName() . ': ' . $this->firstLine($e->getMessage());
                 }
@@ -208,7 +222,8 @@ class Auditor
                         'the legacy filter cannot render this, but this engine does');
                 }
 
-                if ($legacyOutput === $ours) {
+                // Including a link id Magento draws at random per render - see RandomMarkup.
+                if (\MageOS\TemplateParser\Magento\RandomMarkup::sameRender($legacyOutput, $ours)) {
                     return null;
                 }
 

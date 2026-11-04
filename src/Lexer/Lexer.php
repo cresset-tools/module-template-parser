@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Lexer;
+namespace MageOS\TemplateParser\Lexer;
 
 /**
  * Splits template source into text and directive tokens.
@@ -29,24 +29,26 @@ final class Lexer
     /** Enough to see any legal directive name plus its delimiter. */
     private const MAX_PEEK = 64;
 
-    private readonly \Cresset\TemplateParser\DirectiveSpec $spec;
+    private readonly \MageOS\TemplateParser\DirectiveSpec $spec;
 
     /*
      * Nullable, not `= new DirectiveSpec()` - a constructor default is fatal under the DI
      * compiler. See TemplateEngine.
      */
-    public function __construct(?\Cresset\TemplateParser\DirectiveSpec $spec = null)
+    public function __construct(?\MageOS\TemplateParser\DirectiveSpec $spec = null)
     {
-        $this->spec = $spec ?? new \Cresset\TemplateParser\DirectiveSpec();
+        $this->spec = $spec ?? new \MageOS\TemplateParser\DirectiveSpec();
     }
 
     /**
-     * Run-on sites from the last tokenize(): offset, candidate name, and the swallowed span.
+     * The run-on sites from the last tokenize() that the legacy filter dies on: offset,
+     * candidate name, and the paired directive the swallow leaves without a body or an opener.
      *
-     * Capped, and deliberately so. The rescan after a run-on starts one byte along, so a
-     * document that is mostly broken openers produces a run-on at nearly every one of them,
-     * and an uncapped list is the same unbounded allocation that a match table was. The
-     * parser refuses on the first site it cares about, so a handful is all any caller reads.
+     * Only those. A run-on of a void directive over plain text merely loses output there, and
+     * listing it bought nothing: the parser refuses only the fatal ones, and with every
+     * run-on listed, sixteen harmless ones filled the cap and hid a fatal one after them.
+     * Still capped - a document of broken openers is a run-on at nearly every brace - but now
+     * only fatal sites count against it.
      *
      * @return list<array{0:int,1:string,2:string}>
      */
@@ -60,10 +62,40 @@ final class Lexer
 
     private const MAX_RUN_ONS = 16;
 
+    /** Characters a directive name is spelled with, as peek() reads one. */
+    private const NAME_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+
+    /** What a walk stopped at: an unquoted `{{`, an unquoted `}}`, or the end of the source. */
+    private const STOP_OPEN = 1;
+    private const STOP_CLOSE = 2;
+    private const STOP_END = 3;
+
+    /**
+     * The last walk inside each quote character: where it entered and where the quote closed,
+     * or -1 for never. A later walk entering the same character inside that stretch is in the
+     * same state from the next byte on, so it closes in the same place; without this, a run of
+     * unterminated quotes was walked to the end of the source once per opener.
+     *
+     * @var array<string,array{0:int,1:int}>
+     */
+    private array $quoteWalks = [];
+
+    /** @var array{0:int,1:int,2:int,3:int} from, to, and the parity of `"` and `'` between */
+    private array $parity = [-1, -1, 0, 0];
+
+    /** @var ?list<array{0:int,1:string}> where each paired directive opens, found on first need */
+    private ?array $blockOpeners = null;
+
+    private int $nextBlockOpener = 0;
+
     /** @return Token[] */
     public function tokenize(string $source): array
     {
         $this->runOns = [];
+        $this->quoteWalks = [];
+        $this->parity = [-1, -1, 0, 0];
+        $this->blockOpeners = null;
+        $this->nextBlockOpener = 0;
 
         $tokens = [];
         $length = strlen($source);
@@ -87,27 +119,6 @@ final class Lexer
                 continue;
             }
 
-            // A `{{` with ANOTHER `{{` inside its span is not the opener - the inner one is.
-            // `.a{{{var color}}}` is the common shape: someone writes CSS and pastes a
-            // directive straight after the brace. Legacy matches the outer span with an empty
-            // name, rescues it through SimpleDirective at the inner offset, and prints an
-            // encoded literal; treating the stray braces as text and letting the real
-            // directive resolve is both more useful and what this engine already does one
-            // character along, for `{{A{{var x}}`.
-            //
-            // Applies to a well-formed-looking name too, not only a degenerate one. A span
-            // ends at the first `}}`, so one missing brace makes a directive run on and
-            // swallow whatever structure follows:
-            //
-            //     {{if a}}A{{var b}B{{/if}}   ->   var's parameters become ` b}B{{/if`
-            //
-            // The closing tag vanishes into the parameters and the {{if}} looks unclosed;
-            // with `{{else}}` in the way it is worse, because BOTH branches then render.
-            // Nothing legitimate puts an UNQUOTED `{{` inside a directive's parameters -
-            // legacy's own lazy capture mangles that too - so the run-on reading is never the
-            // right one. A quoted one is a different matter, and openerInsideSpan() below
-            // does not count it.
-
             // Only a plausible construct needs the closer located.
             if ($knownClose <= $open) {
                 $found = strpos($source, self::CLOSE, $afterOpen);
@@ -116,62 +127,43 @@ final class Lexer
             if ($knownClose === -1) {
                 break;                       // unterminated: the remainder is text
             }
-            $close = $knownClose;
 
-            // A quoted parameter may legitimately contain both `{{` and `}}`:
-            //
-            //     {{trans "a {{b}}"}}
-            //
-            // The legacy filter cannot express that - its lazy `(.*?)}}` stops at the first
-            // closer wherever it is, and it renders the leftovers as text - but a lexer can,
-            // and there is no reason to inherit the limitation. Only re-scan when the naive
-            // span actually holds a quote, so the common case keeps the plain strpos and the
-            // cached closer.
-            $spanLength = $close - $afterOpen;
-            $quotesClose = false;
-            if (self::closerMayBeQuoted($source, $afterOpen, $spanLength)) {
-                // An unterminated quote falls back to the naive closer rather than eating
-                // the rest of the document: `{{trans "unterminated}}` is malformed either
-                // way, and the filter reads it as a directive whose text will not parse.
-                $quoted = self::closeOutsideQuotes($source, $afterOpen);
-                if ($quoted !== null) {
-                    $close = $quoted;
-                    $knownClose = -1;        // the cache holds the naive closer; drop it
-                    $quotesClose = true;
-                }
-            } else {
-                // Balance is what the flag below actually needs, and the walk is not the only
-                // thing that proves it: closerMayBeQuoted() says no precisely when the span
-                // holds no quote at all or an EVEN number of each with no escape. Reading
-                // the flag as "the walk ran" instead left an unterminated `{{` inside a
-                // quoted value unsheltered, so `{{trans "50{{ off"}}` - which the filter
-                // renders as `50&#123;&#123; off` - was re-scanned from the inner brace and
-                // refused for a directive name that does not start with a letter.
-                $quotesClose = true;
-            }
-
-            // Quotes only shelter a `{{` when they are quotes. In `{{var c}"{{else}}` the
-            // `"` never closes - it is HTML around a directive that lost a brace - so
-            // honouring it would hide the {{else}} and both branches would render again.
-            // One of the two proofs that the quotes balance; the other is closerMayBeQuoted()
-            // answering no, which is the else path above.
-            if (self::openerInsideSpan($source, $afterOpen, $close, $quotesClose)) {
-                // Where this engine and the legacy regex part company, so the parser is told.
-                // Here the opener is text and the directive after it renders; there, the lazy
-                // `(.*?)}}` swallows the opener, everything after it and that directive too,
-                // out to whatever `}}` it reaches first. Sometimes that merely loses output -
-                // and sometimes it leaves a paired directive with no body or a closer with no
-                // opener, which is a legacy fatal. The parser decides which; the lexer only
-                // knows where it happened.
-                if (count($this->runOns) < self::MAX_RUN_ONS) {
-                    $this->runOns[] = [$open, $candidate[1], substr($source, $afterOpen, $close - $afterOpen)];
+            $close = $this->closeOf($source, $afterOpen, $knownClose);
+            if ($close === null) {
+                // A `{{` with ANOTHER `{{` inside its span is not the opener - the inner one
+                // is. `.a{{{var color}}}` is the common shape: someone writes CSS and pastes a
+                // directive straight after the brace. Legacy matches the outer span with an
+                // empty name, rescues it through SimpleDirective at the inner offset, and
+                // prints an encoded literal; treating the stray braces as text and letting the
+                // real directive resolve is both more useful and what this engine already does
+                // one character along, for `{{A{{var x}}`.
+                //
+                // Applies to a well-formed-looking name too. A span ends at the first `}}`, so
+                // one missing brace makes a directive run on and swallow what follows:
+                //
+                //     {{if a}}A{{var b}B{{/if}}   ->   var's parameters become ` b}B{{/if`
+                //
+                // The closing tag vanishes into the parameters and the {{if}} looks unclosed;
+                // with `{{else}}` in the way it is worse, because BOTH branches then render.
+                // Nothing legitimate puts an UNQUOTED `{{` inside a directive's parameters, so
+                // the run-on reading is never the right one.
+                //
+                // Where this engine and the legacy regex part company the parser is told: here
+                // the opener is text and the directive after it renders; there, the lazy
+                // `(.*?)}}` swallows everything out to the first `}}` - which can leave a
+                // paired directive with no body or a closer with no opener, a legacy fatal.
+                $culprit = $this->runOnCulprit($source, $candidate[1], $afterOpen, $knownClose);
+                if ($culprit !== null && count($this->runOns) < self::MAX_RUN_ONS) {
+                    $this->runOns[] = [$open, $candidate[1], $culprit];
                 }
 
                 // Advance ONE byte, not two: in `{{{` the inner opener overlaps the outer, so
-                // skipping the whole `{{` would step straight over it. peek() is O(1) on the
-                // window, so a run of braces stays linear.
+                // skipping the whole `{{` would step straight over it.
                 $cursor = $open + 1;
                 continue;
+            }
+            if ($close !== $knownClose) {
+                $knownClose = -1;            // the cache holds the naive closer; drop it
             }
 
             [$type, $name] = $candidate;
@@ -202,120 +194,245 @@ final class Lexer
     }
 
     /**
-     * Whether the naive closer might be inside a quoted value, cheaply.
-     *
-     * This runs for every directive in the document, so it has to stay at C speed. If the
-     * closer were inside a quote, that quote would be open at the closer - which means an ODD
-     * number of its character precedes it. Even counts of both quote characters therefore
-     * prove the naive closer is outside quotes, and the careful character walk can be skipped.
-     *
-     * A backslash is NOT a reason to walk, though the walk itself honours one. An escaped
-     * quote leaves the count even, so `{{trans "a\\"b}}c"}}` closes at the first `}}` - which
-     * is where the legacy filter closes it too, its construction regex being lazy and
-     * escape-blind. Walking there would extend the quoted-closer divergence to escaped
-     * quotes and buy nothing; see the divergence list in the README.
-     *
-     * Wrong only in the safe direction: a false positive costs one scan, never a mis-parse.
+     * Whether this engine closes the construct opened just before `$afterOpen` anywhere but at
+     * `$firstCloser`, the first `}}` - which is where the legacy filter's lazy `(.*?)}}`
+     * always closes it. LegacyReading asks, so that what the Magento layer declines is exactly
+     * what this lexer reads differently, by the same rules.
      */
-    private static function closerMayBeQuoted(string $source, int $from, int $length): bool
+    public function readsPastFirstCloser(string $source, int $afterOpen, int $firstCloser): bool
     {
-        if ($length <= 0) {
-            return false;
-        }
-        if (strcspn($source, '"\'', $from, $length) === $length) {
-            return false;                    // no quote in the span at all
-        }
-
-        return substr_count($source, '"', $from, $length) % 2 === 1
-            || substr_count($source, "'", $from, $length) % 2 === 1;
+        return $this->closeOf($source, $afterOpen, $firstCloser) !== $firstCloser;
     }
 
     /**
-     * The offset of the closing `}}` that is not inside a quoted parameter value.
+     * Where the construct opened just before `$afterOpen` closes, or null when another `{{`
+     * opens inside it first - a run-on.
      *
-     * Returns null when the construct never closes outside quotes, in which case the rest of
-     * the source is text. A backslash escapes the next character, as the parameter tokenizer
-     * treats it, so `"a\"b"` does not end early.
+     * A quoted parameter may legitimately contain both `{{` and `}}`:
+     *
+     *     {{trans "a {{b}}"}}
+     *
+     * The legacy filter cannot express that - its lazy `(.*?)}}` stops at the first closer
+     * wherever it is - but a lexer can, and there is no reason to inherit the limitation. So
+     * quotes shelter both, by the rules in walk(). They only move the closer, though, when the
+     * span to the first `}}` holds an ODD number of a quote character, so that a quote may be
+     * open there. A backslash is not a reason to look further: an escaped quote leaves the
+     * count even, so `{{trans "a\"b}}c"}}` closes at the first `}}` - where the filter closes
+     * it too, its construction regex being lazy and escape-blind.
+     *
+     * Linear over a document: a walk stops at the first unquoted `{{` or `}}`, so a run-on
+     * costs only the distance to the brace that ends it, and the quote count is kept as a
+     * running parity against the shared first closer rather than recounted per opener.
      */
-    private static function closeOutsideQuotes(string $source, int $from): ?int
+    private function closeOf(string $source, int $afterOpen, int $naive): ?int
+    {
+        // `{{{`: the opener's second brace and the next one open a construct of their own.
+        if (($source[$afterOpen] ?? '') === '{') {
+            return null;
+        }
+
+        [$stop, $at] = $this->walk($source, $afterOpen, true);
+        if ($stop === self::STOP_OPEN && $at < $naive) {
+            return null;                     // an unquoted `{{` before the first `}}`
+        }
+        if (!$this->oddQuotes($source, $afterOpen, $naive)) {
+            return $naive;
+        }
+
+        // A quote may be open at the first `}}`: the closer is the first one outside quotes.
+        [$closeStop, $closeAt] = $stop === self::STOP_CLOSE ? [$stop, $at] : $this->walk($source, $afterOpen, false);
+        if ($closeStop === self::STOP_CLOSE) {
+            // Unless an unquoted `{{` comes first, beyond the first `}}`.
+            return $stop === self::STOP_OPEN && $at < $closeAt ? null : $closeAt;
+        }
+
+        // The quotes never balance. `{{trans "unterminated}}` is malformed either way, so the
+        // first `}}` stands - and with nothing shown to be quoted, any `{{` before it runs on.
+        $inner = strpos($source, self::OPEN, $afterOpen - 1);
+
+        return $inner !== false && $inner < $naive ? null : $naive;
+    }
+
+    /**
+     * The first `{{` (when `$stopAtOpen`) or `}}` outside a quoted value, from `$afterOpen`.
+     *
+     * A quote opens a value only where a value starts - right after `=`, or as the first thing
+     * after the directive's name - and closes it only where it ends a word, not followed by a
+     * letter or digit. Both halves are the apostrophe: `{{trans 'Don't forget'}}` is one
+     * string in the filter, whose trans pattern accepts a closing quote only before whitespace
+     * or the end, and reading `n't` as its end opened a new "quote" that swallowed the
+     * document out to the next apostrophe. A backslash escapes the next character inside a
+     * quote, as the parameter tokenizer reads it.
+     *
+     * @return array{0:int,1:int} STOP_OPEN, STOP_CLOSE or STOP_END, and where
+     */
+    private function walk(string $source, int $afterOpen, bool $stopAtOpen): array
     {
         $length = strlen($source);
-        $quote = null;
+        $nameEnd = self::nameEnd($source, $afterOpen);
+        $stops = $stopAtOpen ? '{}"\'' : '}"\'';
 
-        for ($i = $from; $i < $length; $i++) {
+        for ($i = $afterOpen; ; ) {
+            $i += strcspn($source, $stops, $i);
+            if ($i >= $length) {
+                return [self::STOP_END, $length];
+            }
+
             $char = $source[$i];
-
-            if ($quote !== null) {
-                if ($char === '\\') {
-                    $i++;
-                } elseif ($char === $quote) {
-                    $quote = null;
+            if ($char === '{' || $char === '}') {
+                if (($source[$i + 1] ?? '') === $char) {
+                    return [$char === '{' ? self::STOP_OPEN : self::STOP_CLOSE, $i];
                 }
+                $i++;
                 continue;
             }
 
-            if ($char === '"' || $char === "'") {
-                $quote = $char;
-            } elseif ($char === '}' && ($source[$i + 1] ?? '') === '}') {
-                return $i;
+            if (!self::opensValue($source, $nameEnd, $i)) {
+                $i++;
+                continue;
             }
+            $end = $this->quoteEnd($source, $i, $char);
+            if ($end === null) {
+                return [self::STOP_END, $length];
+            }
+            $i = $end + 1;
+        }
+    }
+
+    /** Where the quote opened at `$from` closes, or null when it never does. */
+    private function quoteEnd(string $source, int $from, string $quote): ?int
+    {
+        // Inside the last walk's quoted stretch for this character: the same state from the
+        // next byte on, so the same end. See $quoteWalks.
+        $last = $this->quoteWalks[$quote] ?? null;
+        if ($last !== null && $from > $last[0] && ($last[1] === -1 || $from < $last[1])) {
+            return $last[1] === -1 ? null : $last[1];
         }
 
-        return null;
+        $length = strlen($source);
+        $end = -1;
+        for ($i = $from + 1; $i < $length; ) {
+            $i += strcspn($source, '\\' . $quote, $i);
+            if ($i >= $length) {
+                break;
+            }
+            if ($source[$i] === '\\') {
+                $i += 2;
+                continue;
+            }
+            if (!self::continuesAWord($source, $i + 1)) {
+                $end = $i;
+                break;
+            }
+            $i++;
+        }
+
+        $this->quoteWalks[$quote] = [$from, $end];
+
+        return $end === -1 ? null : $end;
+    }
+
+    /** Whether the quote at `$at` starts a value: right after `=`, or first after the name. */
+    private static function opensValue(string $source, int $nameEnd, int $at): bool
+    {
+        $before = $at - 1;
+        while ($before >= $nameEnd && self::isSpace($source[$before])) {
+            $before--;
+        }
+
+        return $before < $nameEnd || $source[$before] === '=';
+    }
+
+    /** A letter or digit, or a byte of a multibyte character - which is a letter too. */
+    private static function continuesAWord(string $source, int $at): bool
+    {
+        if (!isset($source[$at])) {
+            return false;
+        }
+        $byte = $source[$at];
+
+        return ctype_alnum($byte) || ord($byte) >= 0x80;
+    }
+
+    private static function isSpace(string $char): bool
+    {
+        return $char === ' ' || $char === "\t" || $char === "\n" || $char === "\r" || $char === "\f" || $char === "\v";
+    }
+
+    /** Where the directive's name ends: after `name` or `/name`, at `$afterOpen` for neither. */
+    private static function nameEnd(string $source, int $afterOpen): int
+    {
+        $at = $afterOpen + (($source[$afterOpen] ?? '') === '/' ? 1 : 0);
+
+        return $at + strspn($source, self::NAME_CHARS, $at);
     }
 
     /**
-     * Whether another `{{` opens inside this span before it closes.
+     * Whether `"` or `'` occurs an odd number of times in [$from, $to).
      *
-     * Looks from one byte BEFORE the window so the overlapping `{{{` case is seen: there the
-     * inner opener is the outer's second brace plus the next one.
+     * Kept as a running parity: the openers of a run-on chain share one first closer, so each
+     * is the last one's count minus the bytes between them, rather than a recount of the span.
      */
-    private static function openerInsideSpan(
-        string $source,
-        int $afterOpen,
-        int $close,
-        bool $respectQuotes
-    ): bool {
-        // Fast path first, because this runs for every directive in the document and the
-        // answer is almost always no. From one byte back: the span starts on the outer's
-        // SECOND brace, so a `{{` there is that brace plus a new one - the overlap `{{{`
-        // produces. A quoted `{{` cannot be found by a scan that has not seen one at all.
-        $inner = strpos($source, self::OPEN, $afterOpen - 1);
-        if ($inner === false || $inner >= $close) {
-            return false;
+    private function oddQuotes(string $source, int $from, int $to): bool
+    {
+        [$lastFrom, $lastTo, $double, $single] = $this->parity;
+        if ($lastTo === $to && $lastFrom <= $from && $lastFrom >= 0) {
+            $double ^= substr_count($source, '"', $lastFrom, $from - $lastFrom) % 2;
+            $single ^= substr_count($source, "'", $lastFrom, $from - $lastFrom) % 2;
+        } else {
+            $double = substr_count($source, '"', $from, $to - $from) % 2;
+            $single = substr_count($source, "'", $from, $to - $from) % 2;
         }
-        if (!$respectQuotes) {
-            return true;
+        $this->parity = [$from, $to, $double, $single];
+
+        return $double === 1 || $single === 1;
+    }
+
+    /**
+     * Why the filter dies on this run-on, as the paired directive it breaks - or null when it
+     * merely loses output.
+     *
+     *   `Hi {{var a}, bye {{var a}}`   swallowed, renders `Hi ` - a divergence, not a crash
+     *   `A{{if a} B {{var a}} C`       `if` with no body group - TypeError
+     *   `Hi {{var a}, {{if a}}Y{{/if}}` the `{{if}}` opener is swallowed, so `{{/if}}` is a
+     *                                  close with no opener - TypeError
+     *
+     * So it is a paired directive: the run-on candidate itself, or one opened inside the
+     * stretch legacy swallows - which runs to the first `}}`, quotes or not. Found against a
+     * list of every paired opener in the source, walked forward once.
+     */
+    private function runOnCulprit(string $source, string $name, int $afterOpen, int $firstCloser): ?string
+    {
+        if ($this->spec->isBlock($name)) {
+            return $name;
         }
 
-        // Only now, with an opener really inside a span whose quotes balance, is it worth
-        // walking the characters to find out which side of a quote it fell on.
-        $span = substr($source, $afterOpen - 1, min(self::MAX_PEEK, $close - $afterOpen + 2));
-        $length = strlen($span);
-        $quote = null;
+        $this->blockOpeners ??= $this->blockOpeners($source);
+        while (isset($this->blockOpeners[$this->nextBlockOpener])
+            && $this->blockOpeners[$this->nextBlockOpener][0] < $afterOpen
+        ) {
+            $this->nextBlockOpener++;
+        }
+        $next = $this->blockOpeners[$this->nextBlockOpener] ?? null;
 
-        for ($i = 0; $i < $length; $i++) {
-            $char = $span[$i];
+        return $next !== null && $next[0] < $firstCloser ? $next[1] : null;
+    }
 
-            if ($quote !== null) {
-                if ($char === '\\') {
-                    $i++;
-                } elseif ($char === $quote) {
-                    $quote = null;
-                }
-                continue;
+    /** @return list<array{0:int,1:string}> offset and name of every paired directive's opener */
+    private function blockOpeners(string $source): array
+    {
+        $found = [];
+        $offset = 0;
+        // One match at a time: a match table over a large source is how this once OOMed.
+        while (preg_match('/\{\{([a-zA-Z]{1,10})\b/', $source, $m, PREG_OFFSET_CAPTURE, $offset) === 1) {
+            $name = strtolower($m[1][0]);
+            if ($this->spec->isBlock($name)) {
+                $found[] = [$m[0][1], $name];
             }
-
-            // A quoted value may hold `{{` legitimately - `{{trans "a {{b}}"}}` - so an
-            // opener only counts when it is part of the construct rather than of its text.
-            if ($char === '"' || $char === "'") {
-                $quote = $char;
-            } elseif ($char === '{' && ($span[$i + 1] ?? '') === '{') {
-                return true;
-            }
+            $offset = $m[0][1] + 2;
         }
 
-        return false;
+        return $found;
     }
 
     /**

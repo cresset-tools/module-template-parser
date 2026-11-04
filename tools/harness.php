@@ -23,7 +23,7 @@ declare(strict_types=1);
 // list covers only `/Test`, not `tools/`. Without this guard, `setup:di:compile` runs
 // this file: it would exit(1) for want of MAGENTO_ROOT, and the stub classes below
 // would collide with the real Magento ones. Returning here declares none of them.
-if (!defined('CRESSET_TEMPLATE_PARSER_TOOL')) {
+if (!defined('MAGEOS_TEMPLATE_PARSER_TOOL')) {
     return;
 }
 
@@ -72,6 +72,19 @@ if (is_file($optional)) {
 }
 
 /*
+ * Mage-OS 3.6.0 replaced signature-based deferral with Template\DeferredDirectiveRegistry,
+ * resolved through the global ObjectManager the same way. Without it every render on a 3.6
+ * tree raised the harness's "no binding" RuntimeException, and a re-recording looked like a
+ * corpus where every case is a legacy fatal. registryFor() below returns null on an older
+ * tree, which Template's constructor ignores.
+ *
+ * The registry needs Math\Random, which every tool already loads before the filter itself;
+ * it is required on demand there rather than here, so the require order stays the tool's.
+ */
+define('MAGEOS_DEFERRED_REGISTRY_FILE',
+    MROOT . '/lib/internal/Magento/Framework/Filter/Template/DeferredDirectiveRegistry.php');
+
+/*
  * Phrase and __() come from the tree, not from a stub.
  *
  * {{trans}} renders through Phrase\Renderer\Placeholder, and its keyToPlaceholder() adds
@@ -105,6 +118,9 @@ foreach ([
 //
 // Each stub guards its declarations on class_exists: inside a real installation the genuine
 // classes exist and redeclaring them is fatal.
+// Legacy renders run as a store runs them, warnings and all - see StoreErrorHandler.
+require_once PKGROOT . '/src/Console/StoreError.php';
+require_once PKGROOT . '/src/Console/StoreErrorHandler.php';
 require __DIR__ . '/stubs/Harness.php.stub';
 require __DIR__ . '/stubs/LaminasFilter.php.stub';
 require __DIR__ . '/stubs/MagentoFramework.php.stub';

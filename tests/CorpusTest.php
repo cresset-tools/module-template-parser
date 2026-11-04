@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Parser;
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Parser;
+use MageOS\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -59,12 +59,12 @@ final class CorpusTest extends TestCase
         }
     }
 
-    /** @param \Cresset\TemplateParser\Ast\Node[] $nodes */
+    /** @param \MageOS\TemplateParser\Ast\Node[] $nodes */
     private static function countDirectives(array $nodes): int
     {
         $found = 0;
         foreach ($nodes as $node) {
-            if ($node instanceof \Cresset\TemplateParser\Ast\DirectiveNode) {
+            if ($node instanceof \MageOS\TemplateParser\Ast\DirectiveNode) {
                 $found++;
                 $found += self::countDirectives($node->children());
                 if ($node->hasAlternate()) {
@@ -120,7 +120,7 @@ final class CorpusTest extends TestCase
     {
         $runs = [];
         foreach ((new Parser(options: Options::lenient()))->parse($source)->children() as $node) {
-            if (!$node instanceof \Cresset\TemplateParser\Ast\TextNode) {
+            if (!$node instanceof \MageOS\TemplateParser\Ast\TextNode) {
                 continue;
             }
             foreach (preg_split('/\s+/', $node->text()) ?: [] as $word) {
@@ -138,11 +138,11 @@ final class CorpusTest extends TestCase
      */
     public function testKnownDirectiveNamesAreLexedAsDirectives(): void
     {
-        $lexer = new \Cresset\TemplateParser\Lexer\Lexer();
+        $lexer = new \MageOS\TemplateParser\Lexer\Lexer();
         $seen = [];
         foreach (self::corpusFiles() as [$file]) {
             foreach ($lexer->tokenize((string)file_get_contents($file)) as $token) {
-                if ($token->type !== \Cresset\TemplateParser\Lexer\TokenType::Text) {
+                if ($token->type !== \MageOS\TemplateParser\Lexer\TokenType::Text) {
                     $seen[$token->name] = true;
                 }
             }

@@ -1,12 +1,306 @@
 # Changelog
 
-Notable changes to `cresset/module-template-parser`.
+Notable changes to `mage-os/module-template-parser`. Releases up to 0.3.0 were published as
+`cresset/module-template-parser`, and 0.1.0 as `cresset-tools/module-template-parser`.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [semantic versioning](https://semver.org/spec/v2.0.0.html). Pre-1.0, so the public API may
 still move between minor versions.
 
 Entries say what changed and why it mattered. A line that only names a file has been left out.
+
+## [Unreleased]
+
+The move to [Mage-OS Lab](https://github.com/mage-os-lab/module-template-parser), under the
+lab's naming, the fixes from a whole-project review before the donation, and Mage-OS 3.6.0.
+
+### Added
+
+- **Mage-OS 3.6.0.** Compatible mode matches 3.6.0's deferral and neutralizer behaviour as well
+  as 3.5.0's. 3.6.0 resolves a directive an included template defers - `{{inlinecss}}` - at the
+  root template through `Template\DeferredDirectiveRegistry`, where 3.5.0 resolved it in the
+  innermost `{{if}}`, `{{else}}` or `{{depend}}` body of the root around the include and so
+  inlined the stylesheet over that body alone. The neutralizer now always encodes, which this
+  engine's always did. Recorded against both releases, the corpus differs only in that
+  placement. The Magento layer reads which the store runs - `HostDeferral` looks for the
+  registry among the framework filter's constructor arguments - and on 3.5.0 declines a render
+  whose include asks for a stylesheet from inside a body, so Parser mode hands it to the
+  filter. Outside a store, `Options::withDeferralResolvedAtRoot(false)` targets 3.5.0.
+- **A parity corpus per target release**: `tests/fixtures/legacy/cases-3.5.0.json` (was
+  `cases.json`) and `cases-3.6.0.json`, each replayed with the options a store on that release
+  gets. A deferral pass renders `{{inlinecss}}` through included child templates, which the
+  corpus never reached before, and `DeferralParityTest` replays those cases with their
+  includes. The recorder reads the target off the tree, and the "Fixtures vs current Mage-OS"
+  job re-records the 3.6.0 file only.
+
+### Changed
+
+- **Renamed** to the lab convention:
+
+  | | was | now |
+  |---|---|---|
+  | Composer package | `cresset/module-template-parser` | `mage-os/module-template-parser` |
+  | PHP namespace | `Cresset\TemplateParser` | `MageOS\TemplateParser` |
+  | Magento module | `Cresset_TemplateParser` | `MageOS_TemplateParser` |
+  | Shadow table | `cresset_template_shadow` | `mageos_template_parser_shadow` |
+
+  The configuration paths (`system/template_engine/mode`, `parser_shadow_rate`), the
+  `bin/magento template:*` commands and `vendor/bin/template-parser` keep their names. Code
+  that referenced the engine's classes directly - a custom port, a `di.xml` argument - needs
+  the new namespace, and a project `di.xml` that named one of this module's plugins
+  (`cresset_template_parser*`) should use `mageos_template_parser*`.
+- **Shadow's history carries over.** A schema patch moves every row of
+  `cresset_template_shadow` into the new table and drops the old one, so "clean since" and the
+  renders since the last divergence survive the upgrade. A row the store recorded under the new
+  name before the patch ran - `setup:upgrade` creates the table and enables the module first,
+  and cron does not wait - is merged with the old one rather than replacing it: counters add
+  up, the earliest first comparison and the latest divergence stand. Refusals and crashes
+  recorded under `Cresset\TemplateParser\...` class names are renamed, so the report's advice
+  still recognises them. A data patch could not do it: data patches run in a transaction,
+  where Magento refuses the `DROP TABLE`. Magento's `migrateDataFromAnotherTable` could not
+  either: it fails a fresh install, which has no old table.
+- **`composer.json` conflicts with `cresset/module-template-parser`**, so the two cannot be
+  installed side by side - two plugins on every filter, and the old module recreating the
+  table the patch drops. The unused `symfony/string` requirement is gone.
+
+### Fixed
+
+- **The module no longer breaks every render on Magento Open Source 2.4.x and Mage-OS 3.4.0
+  and earlier.** `LayoutBlockRenderer`'s constructor was typed against
+  `Magento\Email\Model\Template\Filter\BlockDirectivePolicy`, which only Mage-OS trees
+  hardened since 2026-09-08 have. Magento's DI reflects constructor types before it builds
+  anything, so on every other host the plugin on every template filter could not be built -
+  every CMS page, email and address format failed, Legacy mode included, and
+  `setup:di:compile` failed in production mode. The policy is now reached through the
+  module's own `BlockClassPolicy` port, which looks it up by name and restricts nothing
+  where the host has none. A project `di.xml` that set the `blockDirectivePolicy` argument
+  should drop it.
+- **Shadow and Parser work on a store without compiled DI.** In developer mode, or default
+  mode without `setup:di:compile`, Magento's generated Interceptors redeclare every public
+  method, and the plugin read each redeclared `*Directive()` as one a module had plugged. Every
+  render with a directive in it was declined: Shadow recorded refusals, which count as clean,
+  so `template:shadow:report` said "No divergences" over zero comparisons. The plugin now asks
+  the plugin list whether a directive method really has a plugin.
+- **`template:check` reports a plugged directive as a plugin, and stops reporting stock
+  ones.** It read a directive method as a module's whenever a non-Magento class declared it,
+  so over a module's preference subclass - whose generated `Vendor\...\Interceptor`
+  redeclares every inherited method - each stock directive was a warning (about 1,300 on one
+  store), while a real plugin such as Page Builder's `afterCustomvarDirective` went
+  unreported. It now uses the plugin's own rule: a generated Interceptor's method counts as
+  the one it stands in for, and a stock directive counts only when the plugin list has a
+  plugin on it, named in the warning.
+- **Other modules' plugins on `filter()` apply to a Parser render whichever side of this
+  module's plugin Magento sorts them.** A plugin sorted inside this one ran only inside
+  `$proceed` - on legacy's render, never on this engine's - so Parser served without it and
+  Shadow compared a render with it against one without. Which side Page Builder's
+  `afterFilter` lands on is not up to either module: it has no `sortOrder`, and Magento's sort
+  compares a missing `sortOrder` with an overflowing subtraction, so the order follows module
+  load order. The `before` and `after` plugins inside this one now run on this engine's
+  render as the Interceptor runs them on the filter's; a filter with an `around` plugin
+  inside is left to the filter.
+- **Shadow does not compare a legacy render that left a `:deferred:` placeholder.** The
+  filter's depth meter stays a level deep after any render that raised (see the
+  `template:diff` entry below), and on a store that holds for the rest of the PHP process -
+  a cron or queue consumer sending many emails - so each later email whose include defers
+  `{{inlinecss}}` is rendered as a child and keeps the placeholder. That is what the store
+  sends, under Legacy too, but compared it was recorded as this engine diverging. Such a
+  render is now not recorded in Shadow, and not compared in a sampled Parser render. Parser
+  itself does not use the meter, and serves those emails resolved.
+- **The plugin chain is read the way Magento's `PluginList` returns it.** `getNext()` keys its
+  answer by `DefinitionInterface::LISTENER_BEFORE`, `LISTENER_AROUND` and `LISTENER_AFTER`
+  (1, 2 and 4), and the two entries above read `'before'`, `'around'` and `'after'` - the
+  keys of the test suite's fake plugin lists. On a store, then, no plugin inside this one
+  ran on a Parser render, an `around` plugin inside was not detected and so not left to the
+  filter, `template:diff`'s candidate got only the plugins outside this one, and
+  `template:check` named no plugin on a plugged directive (it still found the directive).
+  Every fake list now uses the constants, and `RealPluginListTest` checks the reading against
+  Magento's own `PluginListGenerator` and Interceptor trait when `MAGENTO_ROOT` names an
+  install.
+- **A directive only the store's filter renders is declined inside `{{template}}` includes
+  too.** A module's `{{coupon}}`, or a plugged stock directive, was handed to the filter at the
+  top level but served as escaped text when it appeared in an included header or footer.
+- **Protected, private and static `*Directive()` methods count.** Legacy dispatches through
+  `ReflectionClass::getMethod()->invokeArgs()`, which reaches all of them; the plugin and
+  `template:check` only looked at public ones. `template:check` also now recognises
+  `{{coupon2}}` and `{{coupon_x}}` as `{{coupon}}`, as the store does.
+- **Parser mode no longer serves output the store would not render.**
+  - `{{customvar}}` reads the rendering filter's store, or the current one, where it read the
+    default-scope value for every store view.
+  - A `{{template}}` include in a plain-text email has its tags stripped and is trimmed, as
+    `AbstractTemplate::getTemplateContent()` does; the text/plain body carried the header's
+    `<!DOCTYPE html>` and tables.
+  - `{{template}}` on a filter no template model drives - CMS, Widget, catalog - is left to the
+    filter, which prints `{Error in template processing}`; it was served the email footer.
+  - `{{widget}}` is left to the filter everywhere but the Widget filter, which is the only one
+    with a `widgetDirective()`; on the transactional Email filter legacy prints it as text.
+  - A widget type no `widget.xml` declares renders nothing, as `generateWidget` does.
+  - `{{media}}` entity-decodes its parameters like every legacy `mediaDirective`, so images
+    the WYSIWYG editor saved as `{{media url=&quot;...&quot;}}` render instead of being
+    refused.
+  - `{{inlinecss file=$var}}` resolves the variable.
+  - `{{store _query="..."}}` keeps the written query string.
+  - `{{trans}}` translates with Translate Inline suspended, as `transDirective` does, so no
+    `{{{...}}}` editing markers reach a page or an email.
+  - A custom directive's modifiers count only right against its `}}`, as `SimpleDirective`
+    reads them, and a ProcessorPool entry named like a stock directive no longer replaces it.
+  - The custom-directive `FilterPool` is wired, so a custom directive with modifiers or
+    default filters renders on a store instead of being refused.
+- **A port's refusal is a declined directive, never an error.** `{{store}}` through the
+  backend URL model, and the same from `{{media}}`, `{{view}}`, `{{customvar}}` and
+  `{{protocol}}`, escaped the render and became "Error filtering template".
+- **A numeric parameter name (`1="x"`) is no longer a TypeError.**
+- **No method on a template variable is ever called, in any posture.** Strict and lenient
+  fell back to any public argument-less `get*`/`has*`/`is*` method and to public properties,
+  chaining through what each returned, so template text could walk from the email model to
+  whatever its accessors reach - running each one. Every posture now reaches objects only
+  through `getData()`, as Magento's `StrictResolver` does: `a.getB()` reads `getData('b')`,
+  and the one real call is the host's `this.getUrl()`. Library code that relied on getters in
+  strict or lenient mode should put the values in the data bag or the variables. Compatible
+  mode also reads `getData()` without asking `hasData()` first, as the filter does, so a value
+  a model computes in an overridden `getData()` renders.
+- **`--mode` and the REPL's `:mode` are gone**, as 0.3.0 announced; use `--posture` and
+  `:posture`.
+- **The `bin/magento` command items in `di.xml` are named `mageos_template_parser_*`**
+  throughout; four of the six had lost the `_parser`. A project `di.xml` that removed or
+  replaced one by name should use the new name.
+- **`entity_id` in the Shadow table is a `bigint`.** Every upsert reserves an id whether or not
+  it inserts a row, so a busy Parser store used up an `int`'s ids long before it had that many
+  rows - after which MySQL updates the wrong template's row and MariaDB rejects every write.
+- **A Shadow table that cannot be written is warned about once per PHP process**, not once per
+  request, which with a DI-shared recorder was once per page view.
+- **The rollout gate (`template:shadow:report`) no longer passes on no evidence.**
+  - `--since=-24h`, `-7d`, `-30m` and `-1w` count back from now; PHP read them as UTC
+    offsets, landing hours in the future, so every divergence predated them and the gate
+    passed for ever. A `--since` that parses as the future ("7 days", "tomorrow") is refused.
+  - Exit 2 ("nothing recorded") now means no comparisons in scope, not no rows: a store view
+    in Parser that only served, or a `--since` window no template was compared in, exited 0.
+  - Renders recorded against admin (store 0) - emails sent with no store view - are reported
+    and gated instead of being filed under deleted store views.
+- **`--store` takes a store view code as well as an id, and refuses anything else.** It was
+  cast with `(int)`, so `--store=nl` was store 0 - and `template:shadow:clear --store=nl`
+  deleted the admin store's rows and reported success.
+- **`template:diff` compares against the filter's own render, in the store asked for.** The
+  "today" side went through the store's filter, which carries this module's plugin: on a store
+  view in Parser it was this engine, compared with itself, and in Shadow every CLI render was
+  recorded into the live table. And `getProcessedTemplate()` stopped the store emulation
+  before the comparison ran, so `--store=2` compared the CLI's own store.
+- **`template:diff`'s candidate gets the store's other plugins on `filter()`.** The "today"
+  side went through the filter, so every module's `afterFilter` ran on it - Page Builder's,
+  which decodes its HTML Code elements, among them - and the candidate was this engine's bare
+  output: 427 of 578 CMS items on one store differed for that alone. The candidate is now
+  handed back into the same filter and served where a Parser render is, so it gets exactly
+  the plugins a Parser render gets. Emails included.
+- **`template:diff` renders each CMS item for its own store view.** The CMS page filter is
+  one shared instance that remembers the first store it was asked about, so in a run over
+  several store views every view after the first rendered `{{config}}` and `{{customvar}}`
+  for the first - false phone number and address differences.
+- **`template:diff` counts the filter's error message as legacy failing.** The Email filter
+  catches what a render raised and prints `Error filtering template: ...` (developer mode)
+  or "We're sorry, an error has occurred while generating this content." in place of the
+  template. Taken as a render, a template neither engine could render - a theme `.phtml` the
+  CLI cannot find, a warning under the store's error handler - was reported as "renders
+  today, refused here"; it is now agreement, as both failing always was.
+- **`template:diff` no longer corrupts the rest of a run after the first legacy failure.**
+  `Framework\Filter\Template::filter()` steps the shared `FilteringDepthMeter` down on entry
+  and back up only when it returns - no `finally`, on 2.4.x and Mage-OS 3.5.0 and 3.6.0
+  alike - and the filter takes a render to be the root by that depth. A render that raised
+  (the Email filter catches it, and under the store's error handler a warning raises) left
+  the meter a level deep, so every later render acted as a child and left its includes'
+  deferred directives unresolved: 112 templates on one 2.4.5 store differed only for that,
+  with a `:deferred:` placeholder in the "today" output. Each legacy render, and each call
+  back into the filter for the candidate, now restores the meter to the depth it found.
+- **A CMS Page Link widget no longer counts as a divergence.** Without a template it renders
+  through `Html\Link::_toHtml()`, which gives the link a random `id="idXXXXXXXX"` per render,
+  so Shadow and `template:diff` counted every page with one. The comparisons look past that
+  one id; what is served is unchanged.
+- **`diff --format=json` no longer prints an empty line** when an excerpt cut a multibyte
+  character; every console JSON output substitutes invalid UTF-8 and fails loudly otherwise.
+- **`template:check` and `template:diff` no longer leave out a source without saying so.**
+  With the store's database down, `diff --source=all` compared the codebase files alone and
+  exited 0, and `check` named the skip only under `-v`. The database sources did not even
+  count as unavailable: `ResourceConnection` builds without a database, and the failed query
+  was taken for a missing table, so each read as empty. The database is now asked (`SELECT 1`),
+  a read that fails partway is a failure rather than an empty table, and every skipped source
+  is named on stderr with the reason (and under `skipped` in the JSON report). Both commands
+  exit **3** when a source could not be read while a store is there, or when it was asked for
+  by name; an error in what was read still exits 1.
+- **`template:check` exits 2 when there was nothing to check**, and the codebase source judges
+  paths below its root, so a checkout under a `tests/` directory is no longer empty.
+- **The report's advice fits the refusal.** A construct the filter reads differently points at
+  `diff`, which shows both readings, not `check`; a CMS block by id says nothing needs
+  changing; and a product, category or address template is no longer sent to
+  `--source=all`, which holds none of them.
+- **The test suite fails on any PHP warning, notice or deprecation**, and raises a
+  `memory_limit` below 512M so `php vendor/bin/phpunit` runs on a stock php-cli.
+- **CI:** `setup-bougie` runs with telemetry off; the parity-drift job resolves dependencies
+  before `tools/document-language.php` needs them, and runs on changes to `src/` and
+  `docs/directives.md` too.
+- **Compatible mode answers as a store does when legacy warns.** Every store installs
+  Magento's error handler, which turns a PHP warning into an exception, and the Email filter
+  renders that as its error message in place of the whole template. The parity corpus was
+  recorded with warnings swallowed, so it pinned output no store sends: `{{var a}}` of an
+  array as `Array`, `{{var a.b}}` on an array without `b` as nothing. Both are now refused in
+  compatible mode, so Parser falls back and the customer gets what they get today; an array
+  argument to `{{trans}}` renders `Phrase`'s raw text, as the store does. The corpus is
+  re-recorded under the store's handler (`tools/record-legacy.php` records such a case as
+  outcome `error`), and so are `docs/directives.md`, `tools/parity.php` and the "today" side
+  of `template:diff`.
+- **An apostrophe no longer ends a single-quoted value.** `{{trans 'Don't forget'}}` read
+  `n't` as the closing quote, and the "quote" opened at the real one swallowed the template
+  out to the next apostrophe - three paragraphs became `<p>.</p>`, in every posture and with
+  no error. A quote now opens a value only where one starts (after `=`, or first after the
+  directive's name) and closes it only where it ends a word, as the filter's trans pattern
+  reads it. `LegacyReading` uses the lexer's own rule, so what the Magento layer declines is
+  exactly what the lexer reads differently; a stock template like the order-cancellation email
+  is no longer declined for its apostrophes.
+- **Lexing and parsing are linear.** A chain of broken openers, unterminated quotes, many
+  unknown paired directives, a long `{{if}}` or `{{for}}` body and unclosed custom directives
+  were each quadratic - 100 KB of crafted CMS content cost seconds on every Shadow render. A
+  run-on is now seen however far away the next `{{` is (it was missed beyond 64 bytes, and
+  both branches of an `{{if}}` rendered), and harmless run-ons no longer fill the list that
+  hid a fatal one after sixteen of them.
+- **`{{layout}}` drops `template`, `module_name` and `area` however they are spelled.**
+  `setDataUsingMethod()` resolves `Template=` and `tem_plate=` to `setTemplate()` just as it
+  does `template=`, so dropping only the lowercase keys let template text choose an admin
+  `.phtml` for every block in an allowed handle.
+- **`{{widget}}` never forwards a non-frontend `area`**, which let template text render an
+  admin `.phtml` through a widget's `template`, as `{{block}}` already prevented.
+- **An `{{inlinecss}}` inside an `{{if}}`, `{{else}}` or `{{depend}}` is declined in
+  compatible mode.** The filter inlines that stylesheet over the body it sits in, on every
+  version; this engine handed it to the host for the whole email, so Parser mode served
+  different markup without saying so. It is now a policy violation, and Parser mode hands the
+  render to the filter. The stock templates name their one stylesheet in the header include,
+  at the top level, and are unaffected.
+- **The recording tools work against Mage-OS 3.6.0.** Its filter resolves
+  `DeferredDirectiveRegistry` through the global ObjectManager, which the tools' harness could
+  not serve, so every case recorded as a legacy fatal - the 23k-line drift the "Fixtures vs
+  current Mage-OS" job reported. With the registry handed in, 3.6.0 records the old corpus
+  byte for byte as 3.5.0 did.
+
+### Upgrading from cresset/module-template-parser 0.3.0
+
+On a store that runs the old module, in this order:
+
+1. `bin/magento module:disable Cresset_TemplateParser`, while the old code is still
+   installed. It clears the generated classes and the cache, which still name the old
+   classes; without this, step 3 cannot boot (`Class "Cresset\TemplateParser\..." not found`).
+   Do not run `setup:upgrade` between this step and the next: with the old module disabled
+   but installed, the declarative schema drops `cresset_template_shadow` before anything can
+   move its rows.
+2. `composer remove cresset/module-template-parser && composer require mage-os/module-template-parser`
+   - both, in one go. The packages conflict, so `composer require` alone refuses.
+3. `bin/magento setup:upgrade` - enables `MageOS_TemplateParser`, drops the stale entry from
+   `app/etc/config.php`, creates the new table and moves the rows across.
+4. In production mode, `setup:di:compile` and the static content deploy, as after any module
+   change.
+
+The engine setting is unchanged, so each store view stays on the stage it was on. A
+`Cresset_TemplateParser` row stays behind in `setup_module`; it is harmless, and can be deleted.
+
+A build-and-deploy pipeline that keeps `app/etc/config.php` in version control can skip step
+1: change the package, replace `Cresset_TemplateParser` with `MageOS_TemplateParser` in
+`config.php` in the same commit, and let the build compile from scratch. The deploy's
+`setup:upgrade` moves the rows.
 
 ## [0.3.0] - 2026-10-13
 

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
 /**
  * Renders through the pipeline the store is running today.
@@ -25,6 +25,8 @@ namespace Cresset\TemplateParser\Console;
  */
 class LegacyRenderer
 {
+    private ?FilteringDepth $depth = null;
+
     /**
      * @param ?StoreEmulator $stores the ONE emulator in the process - see StoreEmulator::$depth.
      *        A fresh one here would have its own counter and so would not see a caller's
@@ -34,6 +36,11 @@ class LegacyRenderer
         private readonly MagentoContext $magento,
         private readonly ?StoreEmulator $stores = null
     ) {
+    }
+
+    private function depth(): FilteringDepth
+    {
+        return $this->depth ??= new FilteringDepth($this->magento);
     }
 
     public function isAvailable(): bool
@@ -49,19 +56,25 @@ class LegacyRenderer
         ?int $storeId = null,
         string $kind = TemplateSubject::KIND_EMAIL,
     ): ?LegacyRender {
-        // The legacy filter emits notices for exactly the constructs this tool exists to
-        // find, so letting them through would bury the report in PHP warnings about
-        // templates the report is already telling you about.
-        set_error_handler(static fn (): bool => true);
+        // Under the store's own error handler, so "today" is what the store sends: a warning
+        // there is an exception, which the Email filter catches and renders as its error
+        // message in place of the template. Swallowing the warning showed output no store
+        // produces, and the diff called the engine wrong for refusing it.
+        // And as the filter's own: the store's filter carries this module's plugin, which on a
+        // store view in Parser would make "today" this engine. See LegacyOnlyRenders.
+        $render = fn (): ?LegacyRender => StoreErrorHandler::run(fn (): ?LegacyRender => $kind === TemplateSubject::KIND_CMS
+            ? $this->renderCms($template, $storeId)
+            : $this->renderEmail($template, $variables, $storeId, $kind));
+        $legacyOnly = $this->magento->get(\MageOS\TemplateParser\Magento\LegacyOnlyRenders::class);
 
         try {
-            return $kind === TemplateSubject::KIND_CMS
-                ? $this->renderCms($template)
-                : $this->renderEmail($template, $variables, $storeId, $kind);
+            // And with the filter's nesting depth put back afterwards, which a render that
+            // raised leaves one level deep for every render after it - see FilteringDepth.
+            return $this->depth()->keep(fn (): ?LegacyRender => $legacyOnly instanceof \MageOS\TemplateParser\Magento\LegacyOnlyRenders
+                ? $legacyOnly->run($render)
+                : $render());
         } catch (\Throwable) {
             return null;
-        } finally {
-            restore_error_handler();
         }
     }
 
@@ -123,7 +136,7 @@ class LegacyRenderer
         // the package's emulator instead - never directly; see StoreEmulator::$depth.
         return $stores->around(
             $storeId,
-            fn (): LegacyRender => $this->renderEmailIn($model, $template, $variables)
+            fn (): LegacyRender => $this->renderEmailIn($model, $template, $variables, $stores)
         );
     }
 
@@ -132,7 +145,7 @@ class LegacyRenderer
      *
      * @param array<string,mixed> $variables
      */
-    private function renderEmailIn(object $model, string $template, array $variables): LegacyRender
+    private function renderEmailIn(object $model, string $template, array $variables, StoreEmulator $stores): LegacyRender
     {
         // Render once through the model and throw the result away. getProcessedTemplate() is
         // the only public path that configures the filter the way production configures it -
@@ -140,11 +153,14 @@ class LegacyRenderer
         // variables addEmailVariables() adds - and it does all of that inline, with no way to
         // ask for the setup on its own.
         try {
-            $model->getProcessedTemplate($variables);
+            // Kept to its own depth, so a failure here does not make the render below a child.
+            $this->depth()->keep(static fn () => $model->getProcessedTemplate($variables));
         } catch (\Throwable) {
             // A template the pipeline as a whole cannot render still has a filter worth
             // comparing, and the filter is what this tool is about.
         }
+        // ...which ended by stopping the emulation this render runs in. Start it again.
+        $stores->reestablish();
 
         $filter = $model->getTemplateFilter();
 
@@ -162,12 +178,76 @@ class LegacyRenderer
             }
         };
 
-        return new LegacyRender(
-            (string)$filter->filter($template),
+        return $this->rendered(
+            $filter,
+            $template,
             $this->variablesUsedBy($model, $variables),
             method_exists($filter, 'applyInlineCss') ? $finish : null,
             $this->designParamsOf($filter)
         );
+    }
+
+    /**
+     * The filter's render of `$template`, and the way back into the same filter for the
+     * candidate - see LegacyRender::$through.
+     *
+     * @param array<string,mixed> $variables
+     * @param array<string,mixed> $designParams
+     */
+    private function rendered(object $filter, string $template, array $variables, ?\Closure $finish, array $designParams): LegacyRender
+    {
+        $depth = $this->depth();
+        $output = (string)$depth->keep(static fn () => $filter->filter($template));
+
+        $candidates = $this->magento->get(\MageOS\TemplateParser\Magento\CandidateRenders::class);
+        $through = $candidates instanceof \MageOS\TemplateParser\Magento\CandidateRenders
+            ? static function (callable $render) use ($candidates, $filter, $template, $depth): string {
+                // filter() again, later, outside render(): the same depth to keep.
+                [$result, $used] = $depth->keep(static fn (): array => $candidates->run($filter, $render, static fn () => $filter->filter($template)));
+
+                // Not used: this module's plugin is not on the filter - disabled, or a store
+                // that never had it - so there is no Parser render to imitate, and what came
+                // back is the filter's own. The bare render is the honest candidate then.
+                return (string)($used ? $result : $render($template));
+            }
+            : null;
+
+        return new LegacyRender($output, $variables, $finish, $designParams, $through, self::failureIn($output));
+    }
+
+    /**
+     * The Email filter's error message, when that is what it rendered.
+     *
+     * `Email\Model\Template\Filter::filter()` catches whatever the render raised and returns
+     * a message in place of the template: `Error filtering template: <message>` in developer
+     * mode, and a fixed apology otherwise. That is not a render of the template. Taken as
+     * one, a template neither engine can render - a theme `.phtml` the CLI cannot find, a
+     * warning under the store's error handler - read as "renders today, refused here".
+     * Matched in English and in the locale the render ran in, as the filter translates both.
+     */
+    public static function failureIn(string $output): ?string
+    {
+        $prefixes = ['Error filtering template: '];
+        $messages = ["We're sorry, an error has occurred while generating this content."];
+        if (function_exists('__')) {
+            try {
+                $translated = (string)__('Error filtering template: %s');
+                $prefix = strstr($translated, '%s', true);
+                if (is_string($prefix) && trim($prefix) !== '') {
+                    $prefixes[] = $prefix;
+                }
+                $messages[] = (string)__("We're sorry, an error has occurred while generating this content.");
+            } catch (\Throwable) {
+            }
+        }
+
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($output, $prefix)) {
+                return $output;
+            }
+        }
+
+        return in_array(trim($output), $messages, true) ? $output : null;
     }
 
     /**
@@ -176,14 +256,26 @@ class LegacyRenderer
      * FilterProvider::getPageFilter() is what Cms\Block\Page and the widget renderers use.
      * It takes no variables - a CMS page has none - so there is nothing to read back.
      */
-    private function renderCms(string $template): ?LegacyRender
+    private function renderCms(string $template, ?int $storeId): ?LegacyRender
     {
         $provider = $this->magento->get(\Magento\Cms\Model\Template\FilterProvider::class);
         if ($provider === null) {
             return null;
         }
 
-        return new LegacyRender((string)$provider->getPageFilter()->filter($template), []);
+        // The provider hands out ONE shared filter per class, and the filter's getStoreId()
+        // fills in the current store the first time it is asked and keeps it. A page renders
+        // once per request, so on a store that is right; in one run over several store views
+        // every view after the first rendered {{config}} and {{customvar}} for the first -
+        // its phone number and address. So the store is set on every render, as
+        // Cms\Block\Block does for a block.
+        $filter = $provider->getPageFilter();
+        $storeId ??= ($this->stores ?? new StoreEmulator($this->magento))->currentStoreId();
+        if ($storeId !== null && method_exists($filter, 'setStoreId')) {
+            $filter->setStoreId($storeId);
+        }
+
+        return $this->rendered($filter, $template, [], null, []);
     }
 
     /**

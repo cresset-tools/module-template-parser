@@ -3,8 +3,8 @@
 Please do not open a public issue or pull request for a security problem.
 
 **Issues in this package** should be reported privately through GitHub's
-["Report a vulnerability"](../../security/advisories/new) form on this repository. There is no
-paid bounty.
+["Report a vulnerability"](../../security/advisories/new) form on this repository, or to
+`security@mage-os.org`. There is no paid bounty.
 
 **Issues that also affect Magento Open Source** — including anything in
 `Magento\Framework\Filter\Template` itself, which this package exists to replace — should go to

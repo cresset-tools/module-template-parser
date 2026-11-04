@@ -1,5 +1,13 @@
 <?xml version="1.0"?>
-<phpunit bootstrap="tests/bootstrap.php" colors="false" cacheDirectory=".phpunit.cache">
+<!--
+    A warning, notice or deprecation fails the run. Magento's error handler turns every one into
+    an exception on a store, so a warning here is a render a store would have failed - the class
+    of defect the parity corpus once pinned as correct output.
+-->
+<phpunit bootstrap="tests/bootstrap.php" colors="false" cacheDirectory=".phpunit.cache"
+         failOnWarning="true" failOnNotice="true" failOnDeprecation="true" failOnPhpunitDeprecation="true"
+         displayDetailsOnTestsThatTriggerWarnings="true" displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true" displayDetailsOnPhpunitDeprecations="true">
     <testsuites>
         <testsuite name="template-parser">
             <directory>tests</directory>

@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Ast\DirectiveNode;
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\Ast\DirectiveNode;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\TemplateEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -81,7 +82,7 @@ final class SecurityTest extends TestCase
             '{{block class=Some\Real\Block}}',
             [],
             null,
-            \Cresset\TemplateParser\RenderPolicy::unrestricted()
+            \MageOS\TemplateParser\RenderPolicy::unrestricted()
         );
         self::assertSame(['Some\Real\Block'], $this->instantiated);
         self::assertSame('[BLOCK]', $out);
@@ -118,23 +119,64 @@ final class SecurityTest extends TestCase
         self::assertSame('<b>', $this->engine->render('{{var x|raw}}', ['x' => '<b>']));
     }
 
-    /** Method calls are limited to argument-less accessors. */
-    public function testOnlyAccessorMethodsAreCallable(): void
+    /**
+     * No method is ever called, in any posture: `o.getName()` is a spelling of getData('name'),
+     * as in Magento's StrictResolver. Strict and lenient used to call any public get/has/is
+     * method - and chain through what it returned - so a template could walk from the email
+     * model to whatever its accessors reach, running each on the way.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('postures')]
+    public function testNoMethodIsEverCalled(Options $options): void
     {
+        $engine = TemplateEngine::withOptions($options);
         $subject = new class {
-            public bool $wiped = false;
-            public function getName(): string { return 'ok'; }
-            public function deleteEverything(): string { $this->wiped = true; return 'boom'; }
+            public int $calls = 0;
+            public string $secret = 'S3CRET';
+            public function getName(): string { $this->calls++; return 'ran'; }
+            public function getResource(): object { $this->calls++; return $this; }
+            public function isAdmin(): bool { $this->calls++; return true; }
         };
-        self::assertSame('ok', $this->engine->render('{{var o.getName()}}', ['o' => $subject]));
 
-        // A non-accessor does not resolve; strict mode reports it rather than calling it.
-        try {
-            $this->engine->render('{{var o.deleteEverything()}}', ['o' => $subject]);
-            self::fail('expected the call to be refused');
-        } catch (\Cresset\TemplateParser\UnknownVariableError $e) {
-            self::assertStringContainsString('deleteEverything()', $e->getMessage());
+        foreach (['{{var o.getName()}}', '{{var o.name}}', '{{var o.resource.secret}}', '{{var o.secret}}', '{{if o.isAdmin()}}yes{{/if}}'] as $template) {
+            try {
+                self::assertSame('', $engine->render($template, ['o' => $subject]), $template);
+            } catch (\MageOS\TemplateParser\UnknownVariableError) {
+                // strict says so out loud; either way nothing ran
+            }
         }
-        self::assertFalse($subject->wiped, 'the method must never have been invoked');
+        self::assertSame(0, $subject->calls, 'a method on a template variable was invoked');
+    }
+
+    /** @return array<string,array{Options}> */
+    public static function postures(): array
+    {
+        return ['strict' => [Options::strict()], 'lenient' => [Options::lenient()], 'compatible' => [Options::compatible()]];
+    }
+
+    /** Through the data bag, a getter-shaped call reads the mapped key - and only that. */
+    public function testAGetterCallReadsTheDataBag(): void
+    {
+        $bag = new class {
+            public function getData($key = '') { return ['first_name' => 'Ada'][$key] ?? null; }
+            public function hasData($key = '') { return $key === 'first_name'; }
+            public function getFirstName() { throw new \LogicException('the real method must not run'); }
+        };
+
+        self::assertSame('Ada', $this->engine->render('{{var c.getFirstName()}}', ['c' => $bag]));
+        self::assertSame('Ada', $this->engine->render('{{var c.first_name}}', ['c' => $bag]));
+    }
+
+    /**
+     * Compatible mode reads the bag unconditionally, as StrictResolver does: a model computing
+     * a value in an overridden getData() holds nothing hasData() can see.
+     */
+    public function testCompatibleModeReadsAComputedDataValue(): void
+    {
+        $model = new class {
+            public function getData($key = '') { return $key === 'total_due' ? '12.50' : null; }
+            public function hasData($key = '') { return false; }
+        };
+
+        self::assertSame('12.50', TemplateEngine::compatible()->render('{{var o.total_due}}', ['o' => $model]));
     }
 }
