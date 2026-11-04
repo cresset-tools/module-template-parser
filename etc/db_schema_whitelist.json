@@ -8,6 +8,7 @@
             "diverged": true,
             "refused": true,
             "crashed": true,
+            "deliberate": true,
             "served": true,
             "fell_back": true,
             "first_seen": true,

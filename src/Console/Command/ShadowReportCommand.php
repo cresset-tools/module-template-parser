@@ -20,6 +20,17 @@ class ShadowReportCommand extends Command
     /** Exit code when nothing in scope was ever compared. */
     public const NOTHING_RECORDED = 2;
 
+    /**
+     * What a deliberate difference is, in one paragraph for the report.
+     *
+     * Not a divergence and nothing to fix, but listed, so nobody reading the counts wonders
+     * where these renders went.
+     */
+    public const DELIBERATE = 'Deliberate: this store\'s filter predates the output neutralizer of Mage-OS 3.5.0, so '
+        . 'where a value contains {{ it prints it as written or re-parses it as a directive. The new engine '
+        . 'never re-parses a value. These renders differ ONLY there - checked against a second render - and '
+        . 'the new engine\'s output is the intended one, so they count as clean and Parser mode serves them.';
+
     protected function configure(): void
     {
         $this->addOption('store', null, InputOption::VALUE_REQUIRED, 'Only this store view, by id or code')
@@ -46,6 +57,12 @@ of failures, and only one of them is evidence for switching to Parser.
 
 Refusals are listed but never fail the report: Parser mode falls back to the
 legacy filter for them, so the customer gets exactly what they get today.
+
+Deliberate differences are listed and never fail it either. On a filter from
+before Mage-OS 3.5.0's output neutralizer, a value containing {{ is printed as
+written or re-parsed as a directive; the new engine never re-parses a value.
+A render that differs only there - checked against a second render - counts as
+clean, and Parser mode serves it.
 
   template:shadow:report --store=1
   template:shadow:report --template="cms_block:*" --since="-7 days"
@@ -77,6 +94,7 @@ HELP);
                 'clean' => $exit === Command::SUCCESS,
                 'recorded' => !$report->isEmpty(),
                 'stores' => array_map(fn (array $store): array => $this->jsonStore($store), $report->stores()),
+                'deliberate_note' => array_sum(array_column($report->stores(), 'deliberate')) > 0 ? self::DELIBERATE : null,
                 'orphaned_rows' => $report->orphanedRows(),
             ], JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
@@ -116,11 +134,12 @@ HELP);
             $store['last_seen']
         ));
         $output->writeln(sprintf(
-            '  %d agreed, %d diverged, %d refused, %d crashed',
+            '  %d agreed, %d diverged, %d refused, %d crashed%s',
             $store['agreed'],
             $store['diverged'],
             $store['refused'],
-            $store['crashed']
+            $store['crashed'],
+            $store['deliberate'] > 0 ? sprintf(', %d deliberate', $store['deliberate']) : ''
         ));
         if ($store['served'] > 0 || $store['fell_back'] > 0) {
             $output->writeln(sprintf(
@@ -144,6 +163,22 @@ HELP);
                 $this->textRefused($row, (int)$store['store_id'], $output);
             }
         }
+
+        $deliberate = array_values(array_filter($store['rows'], static fn (array $row): bool => $row['deliberate'] > 0));
+        foreach ($deliberate as $row) {
+            $output->writeln(sprintf('  <info>DELIBERATE</info> %s', $row['template']));
+            $output->writeln(sprintf('    %d of %d render(s)', $row['deliberate'], self::renders($row)));
+        }
+        if ($deliberate !== []) {
+            $output->writeln('    <fg=gray>' . self::DELIBERATE . '</>');
+            $output->writeln('');
+        }
+    }
+
+    /** @param array<string,mixed> $row */
+    private static function renders(array $row): int
+    {
+        return $row['agreed'] + $row['diverged'] + $row['refused'] + $row['crashed'] + $row['deliberate'];
     }
 
     /** @param array<string,mixed> $row */
@@ -176,7 +211,7 @@ HELP);
     {
         $refusal = $row['last_refusal'] ?? [];
         $output->writeln(sprintf('  <comment>REFUSED </comment> %s', $row['template']));
-        $output->writeln(sprintf('    %d refused of %d render(s)', $row['refused'], $row['agreed'] + $row['diverged'] + $row['refused'] + $row['crashed']));
+        $output->writeln(sprintf('    %d refused of %d render(s)', $row['refused'], self::renders($row)));
         if (isset($refusal['problem'])) {
             $output->writeln(sprintf(
                 '    %s%s',

@@ -112,7 +112,8 @@ final class RenameMigrationTest extends TestCase
 
         $this->patch()->apply();
 
-        self::assertEquals($old, $this->row(1, 'email:sales_email_order_template'), 'every column, as it was');
+        // The old table had no `deliberate`; the new one starts it at zero.
+        self::assertEquals($old + ['deliberate' => 0], $this->row(1, 'email:sales_email_order_template'), 'every column, as it was');
         self::assertSame(7, (int)$this->row(2, 'cms_page:1')['agreed']);
         self::assertFalse($this->db->isTableExists(MoveShadowRowsFromCressetTable::OLD_TABLE));
     }

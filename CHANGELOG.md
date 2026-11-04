@@ -32,6 +32,25 @@ lab's naming, the fixes from a whole-project review before the donation, and Mag
   corpus never reached before, and `DeferralParityTest` replays those cases with their
   includes. The recorder reads the target off the tree, and the "Fixtures vs current Mage-OS"
   job re-records the 3.6.0 file only.
+- **A deliberate difference on filters from before Mage-OS 3.5.0.** A filter without
+  `Template\DirectiveOutputNeutralizer` prints a value's `{{` as written or re-parses it as a
+  directive; this engine encodes it on every host and never re-parses a value. On a Mage-OS
+  3.4.0 store every address render with `{{` in a value differed for that reason alone - in
+  the one-line format a street of `Hoofdstraat 1 {{var city}}` came out as
+  `Hoofdstraat 1 Utrecht`.
+  The module's output stays as it is and is no longer reported as a divergence:
+  `HostOutputNeutralizer` reads whether the framework filter takes the neutralizer, and on
+  one that does not, a render that differs is rendered again with the neutralizer marking
+  instead of encoding. If that shows the difference is only where a value's own `{{...}}`
+  construct stands (`DeliberateDifference`), Shadow and Parser record it in a new
+  `deliberate` counter of the Shadow table, which counts as clean; Parser serves its own
+  output for it, and does not fall back. Any other difference in the same render is still a
+  divergence, and a filter that cannot be read counts as the current one.
+  `template:shadow:report` lists those templates under `DELIBERATE` with the reason, and
+  `template:diff` lists them as `deliberate` - not counted by `--fail-on-divergence`, and in
+  JSON under `deliberate` and `deliberate_differences`, apart from `divergences`.
+  `tests/fixtures/legacy/address-formats-3.4.0.json` records 3.4.0's own address renders,
+  and every one agrees or differs only this way. `setup:upgrade` adds the column.
 
 ### Changed
 

@@ -278,7 +278,7 @@ class TemplateFilterPlugin
                 // compare against. See ShadowComparator::legacyLeftDeferrals().
                 return ShadowComparator::legacyLeftDeferrals((string)$candidate, (string)$result)
                     ? null
-                    : $comparator->judge((string)$candidate, (string)$result);
+                    : $this->judged($subject, $chain, $value, $state, (string)$candidate, (string)$result);
             });
             if ($outcome !== null) {
                 $this->recorder->record($storeId, $this->templateOf($subject, $value), $outcome);
@@ -351,7 +351,10 @@ class TemplateFilterPlugin
         $outcome = null;
         if ($sampled && !$legacyRaised && !ShadowComparator::legacyLeftDeferrals((string)$candidate, (string)$legacy)) {
             try {
-                $outcome = $this->comparatorFor($subject)->judge((string)$candidate, (string)$legacy);
+                // The candidate is served whatever this finds: a deliberate difference is this
+                // engine's output being the one meant, and a divergence is only recorded.
+                $outcome = $this->inScopeOf($subject, $storeId, fn (): ShadowOutcome
+                    => $this->judged($subject, $chain, $value, $state, (string)$candidate, (string)$legacy));
             } catch (\Throwable) {
                 // Nothing to record but the serve.
             }
@@ -359,6 +362,38 @@ class TemplateFilterPlugin
         $this->record($storeId, $template, $outcome, served: true, fellBack: false);
 
         return $candidate;
+    }
+
+    /**
+     * judge(), and for a divergence that may be the deliberate difference from a filter
+     * without the output neutralizer, the marked render that decides it - see
+     * DeliberateDifference.
+     *
+     * Call straight after the render() of `$candidate`: judge() reads its causes off the
+     * adapter. The marked render goes through the same inner plugins and finisher the
+     * candidate did, so the two are the same pipeline; it registers no stylesheets, since
+     * nothing it produces is served.
+     *
+     * @param ?array{list:PluginListInterface,type:string,before:list<string>,after:list<string>,around:?string} $chain
+     * @param array{variables:array<string,mixed>,plain:bool,design:array<string,mixed>} $state
+     */
+    private function judged(LegacyTemplate $subject, ?array $chain, string $value, array $state, string $candidate, string $legacy): ShadowOutcome
+    {
+        $comparator = $this->comparatorFor($subject);
+        $outcome = $comparator->judge($candidate, $legacy);
+        if (!$comparator->mayBeDeliberate($outcome, $candidate)) {
+            return $outcome;
+        }
+
+        $marked = $this->throughInnerChain($subject, $chain, $value, fn (string $input) => $comparator->renderMarked(
+            $input,
+            $state['variables'],
+            $state['plain'],
+            $this->finisher($subject, registerStylesheets: false),
+            $state['design']
+        ));
+
+        return $comparator->settle($outcome, $candidate, is_string($marked) ? $marked : ShadowOutcome::crashed(new \RuntimeException('no marked render')), $legacy);
     }
 
     /**

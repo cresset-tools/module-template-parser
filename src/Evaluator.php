@@ -198,15 +198,23 @@ final class Evaluator
      * It exists so compatible mode still matches the filter byte for byte now the hardening
      * has landed. The signed-span handling upstream has no analogue here, because nothing is
      * ever signed - deferral is structured.
+     *
+     * With Options::$markNeutralizedOutput it marks instead of encoding, for a comparison
+     * against a filter from before the neutralizer - see DeliberateDifference.
      */
     private function neutralizeOutput(string $output, DirectiveNode $node): string
     {
         if (!$this->options->legacyQuirks
-            || !$this->options->neutralizeDirectiveOutput
             || $output === ''
             || !str_contains($output, '{')
             || $output === $node->fullRaw()
         ) {
+            return $output;
+        }
+        if ($this->options->markNeutralizedOutput) {
+            return DeliberateDifference::mark($output);
+        }
+        if (!$this->options->neutralizeDirectiveOutput) {
             return $output;
         }
 

@@ -27,9 +27,14 @@ use MageOS\TemplateParser\TemplateError;
  * after running ShadowComparator over real content - not a side effect of installing this
  * module.
  */
-class TemplateFilterAdapter implements TemplateFilterInterface
+class TemplateFilterAdapter implements TemplateFilterInterface, MarksNeutralizedOutput
 {
     private TemplateEngine $engine;
+
+    /** The same engine with the neutralizer marking - see filterMarked(). Built when first asked for. */
+    private ?TemplateEngine $markingEngine = null;
+
+    private readonly HostServices $services;
 
     /** @var array<string,mixed> */
     private array $variables = [];
@@ -87,18 +92,48 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         $this->options = ($options ?? Options::compatible())
             ->withDeferralResolvedAtRoot($deferralResolvedAtRoot ?? HostDeferral::resolvesAtRoot());
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
-        $this->engine = TemplateEngine::forHost($services, $this->options);
+        $this->services = $services;
+        $this->engine = $this->engineFor($this->options);
         $this->context = new Context();
         $this->unwired = $plainFilter ? self::PLAIN_DECLINED : self::unwiredDirectives($services);
+    }
 
-        if ($plainFilter) {
+    private function engineFor(Options $options): TemplateEngine
+    {
+        $engine = TemplateEngine::forHost($this->services, $options);
+        if ($this->plainFilter) {
             // Neither is a directive of the plain filter: it has no transDirective() or
             // inlinecssDirective(), so `{{trans "x"}}` reaches SimpleDirective, finds no
             // processor of that name, and comes out as its own text. Unregistered, this
             // engine renders them as text too.
-            $this->engine->evaluator()->unregister('trans');
-            $this->engine->evaluator()->unregister('inlinecss');
+            $engine->evaluator()->unregister('trans');
+            $engine->evaluator()->unregister('inlinecss');
         }
+
+        return $engine;
+    }
+
+    /**
+     * The render filter() would make, with the neutralizer marking rather than encoding - see
+     * DeliberateDifference - and the work it deferred; null when it did not render cleanly.
+     *
+     * For comparing only. Nothing about it is published: lastError(), violations() and the
+     * rest still describe the last filter(), which is the render being judged.
+     *
+     * @return ?array{0:string,1:array<int,array{kind:string,payload:array}>}
+     */
+    public function filterMarked(string $value): ?array
+    {
+        $this->markingEngine ??= $this->engineFor($this->options->withNeutralizedOutputMarked(true));
+        $context = new Context($this->variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode, $this->designParams);
+
+        try {
+            $rendered = $this->markingEngine->render($value, context: $context);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $context->violations() === [] ? [$rendered, $context->deferred()] : null;
     }
 
     /**

@@ -8,11 +8,14 @@ use MageOS\TemplateParser\TemplateError;
 /**
  * What one Shadow comparison found.
  *
- * Four outcomes, because they call for four different things. An agreement is evidence for
+ * Five outcomes, because they call for five different things. An agreement is evidence for
  * switching. A divergence is a render Parser would have served differently. A refusal is a
  * construct this engine declines on purpose, which Parser mode answers by falling back to
  * legacy - safe, but a template that still leans on the old filter. A crash is anything
- * else the engine raised: a bug here, not a property of the template.
+ * else the engine raised: a bug here, not a property of the template. A deliberate
+ * difference is a render that differs ONLY where a filter from before the output
+ * neutralizer would re-parse a value - see DeliberateDifference - where this engine's
+ * output is the one meant, so it counts as clean and Parser serves it.
  *
  * The detail never holds rendered output. A rendered email carries a customer's name and
  * address, so a divergence is described by lengths, the first differing byte and the causes
@@ -24,6 +27,7 @@ final class ShadowOutcome
     public const DIVERGE = 'diverge';
     public const REFUSED = 'refused';
     public const CRASHED = 'crashed';
+    public const DELIBERATE = 'deliberate';
 
     /** Enough to name the cause; a template that trips hundreds of these repeats one. */
     private const MAX_CAUSES = 10;
@@ -56,6 +60,20 @@ final class ShadowOutcome
             'first_difference_at' => $firstDifferenceAt,
             'policy_violations' => self::causes($violations),
             'legacy_incompatibilities' => self::causes($incompatibilities),
+        ]);
+    }
+
+    /**
+     * Differs from legacy only by values whose `{{` this engine encodes and a filter from
+     * before the neutralizer re-parses or prints as written - shown, by DeliberateDifference,
+     * to be the whole difference.
+     */
+    public static function deliberate(int $legacyLength, int $candidateLength, ?int $firstDifferenceAt): self
+    {
+        return new self(self::DELIBERATE, [
+            'legacy_length' => $legacyLength,
+            'candidate_length' => $candidateLength,
+            'first_difference_at' => $firstDifferenceAt,
         ]);
     }
 

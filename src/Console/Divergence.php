@@ -13,6 +13,12 @@ class Divergence
         public readonly ?string $legacy,
         public readonly ?string $candidate,
         public readonly ?string $note,
+        /**
+         * Differs only where a filter from before the output neutralizer re-parses or prints
+         * a value's `{{` - shown by DeliberateDifference - so this engine's output is the one
+         * meant, and it is listed apart from the divergences.
+         */
+        public readonly bool $deliberate = false,
     ) {
     }
 

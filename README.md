@@ -206,10 +206,10 @@ and template:
 | Column | Holds |
 |---|---|
 | `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3` (and `/subject`) for a newsletter template, `newsletter_queue:5` (and `/subject`) for a queued send, `cms_block:7`, `cms_page:2`, `address:html` (`text`, `oneline`, `pdf`) for a customer address format, `store_address` for the store's own, `product:42/description` and `category:3/description` for a WYSIWYG attribute holding a directive, or `unidentified:<filter class>` |
-| `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
+| `agreed`, `diverged`, `refused`, `crashed`, `deliberate` | how many renders had each outcome |
 | `served`, `fell_back` | Parser mode: how many renders it served, and how many it handed to legacy |
 | `first_seen`, `last_seen` | when it was first and last compared (UTC) |
-| `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many renders have agreed or been refused since |
+| `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many clean renders - agreed, refused or deliberate - since |
 | `last_divergence`, `last_refusal`, `last_crash` | JSON describing the most recent of each |
 
 A **refusal** is a construct this engine declines on purpose, a render the policy cut short
@@ -219,6 +219,12 @@ rendered; Parser mode falls back to legacy for it, so it counts as clean. A
 bug in this engine rather than a property of the template, so it counts against the template
 like a divergence. "Clean since" is `last_divergence_at`, or `first_seen` for a template that
 has never diverged.
+
+A **deliberate** difference only occurs on a filter from before Mage-OS 3.5.0's output
+neutralizer: the render differs *only* where a value contains `{{`, which that filter prints as
+written or re-parses as a directive and this engine never does. It counts as clean, and Parser
+serves this engine's output for it — see [Before 3.5.0: values are never
+re-parsed](#before-350-values-are-never-re-parsed).
 
 Parser records into the same rows. A served render that was sampled counts as a comparison,
 exactly like a Shadow one — so a divergence after the switch fails `template:shadow:report` the
@@ -568,7 +574,9 @@ Quirks it does not reproduce:
   values in scope, and it is the one accepted gap in "nothing the filter crashes on is
   rendered here".
 - **A value re-parsed as source.** Never, in any mode. This one is structural rather than a
-  mode setting, which is why it is not in the table above.
+  mode setting, which is why it is not in the table above. On a filter from before Mage-OS
+  3.5.0 it is also a difference you can see, and it is intended — see [Before 3.5.0: values
+  are never re-parsed](#before-350-values-are-never-re-parsed).
 - **Reflection dispatch of arbitrary filter methods.** There is none here; every directive
   reaches a named handler.
 - **`{{layout}}` without an allowlist.** A layout handle decides which blocks get built, so
@@ -635,6 +643,43 @@ passes reach them - `{{depend}}` bodies, `{{if}}` bodies, `{{template}}`, then t
 this engine in document order. It shows only where two stylesheets set the same property on the
 same element, which Shadow measures on a store's own templates; the stock templates inline one
 stylesheet, from the header include.
+
+#### Before 3.5.0: values are never re-parsed
+
+On a filter from before the neutralizer — Mage-OS before 3.5.0, and Magento Open Source,
+whose filter has no `DirectiveOutputNeutralizer` — a value containing `{{` comes out as written,
+or is **re-parsed as a directive**: the filter `str_replace`s each directive's result over a
+text that already holds the results before it, so a value naming a directive the template also
+uses is replaced again. Recorded on Mage-OS 3.4.0's `FilterManager::template()`, for the
+one-line address format:
+
+```
+street = 'Hoofdstraat 1 {{var city}}', city = 'Utrecht'
+  Mage-OS 3.4.0:  Hoofdstraat 1 Utrecht, Utrecht, ...
+  this engine:    Hoofdstraat 1 &#123;&#123;var city}}, Utrecht, ...
+```
+
+This engine never re-parses a value, and encodes its `{{` on every host. **That is a
+deliberate, known difference, and the module keeps it:** its output is the intended one, so it
+is not counted as a divergence, and Parser does not fall back to the filter for it — falling
+back would serve the re-parsed text.
+
+It is never assumed, though. The Magento layer reads which filter the store has —
+`HostOutputNeutralizer` looks for the neutralizer among the framework filter's constructor
+arguments, and anything it cannot read counts as the current filter — and only on one without
+it, a render that differs is rendered a second time with the neutralizer *marking* instead of
+encoding (`DeliberateDifference`). It is called deliberate only if that shows the difference
+is the whole of it: the marked render is the served one up to brace encoding, and the filter's
+output matches it byte for byte except where a value's own `{{...}}` construct stands — whatever
+the filter made of that. A difference anywhere else in the same render, including in the rest
+of that value, leaves it a divergence.
+
+Shadow and Parser's sampled comparisons record such a render as `deliberate`;
+`template:shadow:report` lists those templates under `DELIBERATE` with the reason, and they
+never fail it. `template:diff` lists them as `deliberate`, apart from what differs, without
+counting them for `--fail-on-divergence`; its JSON has them under `deliberate_differences`.
+All 316 recorded address-format renders of Mage-OS 3.4.0
+(`tests/fixtures/legacy/address-formats-3.4.0.json`) either agree or differ only this way.
 
 ### What it refuses
 
@@ -932,13 +977,18 @@ emails use - the five the module allows in a store:
 template-parser diff --source=codebase --allow-layout-handle=stock-email
 ```
 
+On a store whose filter predates Mage-OS 3.5.0's output neutralizer, a template whose only
+difference is a value containing `{{` is listed as `deliberate` rather than `differs`, and does
+not fail `--fail-on-divergence`; see [Before 3.5.0](#before-350-values-are-never-re-parsed).
+
 ### Reading what Shadow measured
 
 `shadow:report` summarises the `mageos_template_parser_shadow` table per store view: templates and
 renders compared, how many diverged, were refused or crashed, and since when the store view has
 been clean. Each diverging template is listed with its causes and the `diff` command that
 reproduces it; refusals are listed too, but never fail the report, because Parser mode falls
-back to legacy for them.
+back to legacy for them. So are deliberate differences, on a filter from before Mage-OS 3.5.0 —
+see [Before 3.5.0](#before-350-values-are-never-re-parsed).
 
 ```sh
 bin/magento template:shadow:report --store=1

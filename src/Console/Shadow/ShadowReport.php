@@ -13,8 +13,9 @@ namespace MageOS\TemplateParser\Console\Shadow;
  *
  * Pure: rows in, summaries out, so the arithmetic the rollout decision rests on is tested
  * without a database. See Shadow\ShadowRecorder for what each column means; in short, a
- * divergence or a crash counts against a template, an agreement or a refusal counts as clean,
- * and "clean since" is the last divergence or, failing one, the first comparison.
+ * divergence or a crash counts against a template, an agreement, a refusal or a deliberate
+ * difference counts as clean, and "clean since" is the last divergence or, failing one, the
+ * first comparison.
  *
  * `$since` narrows what counts against a template to divergences at or after that moment -
  * the question after fixing something is whether it has diverged SINCE the fix, and a
@@ -57,6 +58,7 @@ final class ShadowReport
                 'diverged' => 0,
                 'refused' => 0,
                 'crashed' => 0,
+                'deliberate' => 0,
                 'served' => 0,
                 'fell_back' => 0,
                 'first_seen' => null,
@@ -73,7 +75,7 @@ final class ShadowReport
                 && ($this->since === null || $template['last_divergence_at'] >= $this->since);
 
             $store['templates']++;
-            foreach (['agreed', 'diverged', 'refused', 'crashed'] as $counter) {
+            foreach (['agreed', 'diverged', 'refused', 'crashed', 'deliberate'] as $counter) {
                 $store[$counter] += $template[$counter];
                 $store['renders'] += $template[$counter];
             }
@@ -87,7 +89,7 @@ final class ShadowReport
                 $store['last_divergence_template'] = $template['template'];
             }
             $store['failing'] += $template['failing'] ? 1 : 0;
-            $comparisons = $template['agreed'] + $template['diverged'] + $template['refused'] + $template['crashed'];
+            $comparisons = $template['agreed'] + $template['diverged'] + $template['refused'] + $template['crashed'] + $template['deliberate'];
             if ($comparisons > 0 && ($this->since === null || (string)$template['last_seen'] >= $this->since)) {
                 $this->compared = true;
             }
@@ -150,6 +152,9 @@ final class ShadowReport
             $store['refused'],
             $store['crashed']
         );
+        if ($store['deliberate'] > 0) {
+            $line .= sprintf(', %d deliberate', $store['deliberate']);
+        }
 
         if ($store['served'] > 0 || $store['fell_back'] > 0) {
             $line .= sprintf('; Parser served %d, fell back %d', $store['served'], $store['fell_back']);
@@ -172,6 +177,8 @@ final class ShadowReport
             'diverged' => (int)$row['diverged'],
             'refused' => (int)$row['refused'],
             'crashed' => (int)$row['crashed'],
+            // Absent until setup:upgrade adds the column, as served and fell_back once were.
+            'deliberate' => (int)($row['deliberate'] ?? 0),
             // Absent from a table created before Parser mode, until setup:upgrade adds them.
             'served' => (int)($row['served'] ?? 0),
             'fell_back' => (int)($row['fell_back'] ?? 0),

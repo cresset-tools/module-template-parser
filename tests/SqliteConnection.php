@@ -37,6 +37,7 @@ SQL);
     diverged INTEGER NOT NULL DEFAULT 0,
     refused INTEGER NOT NULL DEFAULT 0,
     crashed INTEGER NOT NULL DEFAULT 0,
+    deliberate INTEGER NOT NULL DEFAULT 0,
     served INTEGER NOT NULL DEFAULT 0,
     fell_back INTEGER NOT NULL DEFAULT 0,
     first_seen TEXT NOT NULL,

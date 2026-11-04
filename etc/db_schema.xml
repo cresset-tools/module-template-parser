@@ -39,6 +39,14 @@
                 comment="Renders the new engine declined; Parser mode falls back to legacy for these"/>
         <column xsi:type="bigint" name="crashed" unsigned="true" nullable="false" default="0"
                 comment="Renders where the new engine raised anything else"/>
+        <!--
+            Not a divergence, and not folded into agreed either: on a filter from before
+            Mage-OS 3.5.0's output neutralizer, renders that differ only where that filter
+            re-parses a value containing {{. This engine's output is the one meant. Counted
+            apart so the report can say how many there were and why.
+        -->
+        <column xsi:type="bigint" name="deliberate" unsigned="true" nullable="false" default="0"
+                comment="Renders that differ only by the deliberate difference from a filter without the output neutralizer"/>
         <column xsi:type="bigint" name="served" unsigned="true" nullable="false" default="0"
                 comment="Parser mode: renders served by the new engine"/>
         <column xsi:type="bigint" name="fell_back" unsigned="true" nullable="false" default="0"

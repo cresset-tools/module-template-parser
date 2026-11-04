@@ -11,6 +11,7 @@ use MageOS\TemplateParser\Magento\TemplateModelUrlBuilder;
 use MageOS\TemplateParser\Magento\ConfigTemplateLoader;
 use MageOS\TemplateParser\Magento\HostBlockClassPolicy;
 use MageOS\TemplateParser\Magento\HostDeferral;
+use MageOS\TemplateParser\Magento\HostOutputNeutralizer;
 use MageOS\TemplateParser\Magento\LayoutBlockRenderer;
 use MageOS\TemplateParser\Magento\PhraseTranslator;
 use MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer;
@@ -32,17 +33,25 @@ use MageOS\TemplateParser\TemplateEngine;
  */
 class EngineFactory
 {
-    /** @param string[] $allowedLayoutHandles */
+    /**
+     * @param string[] $allowedLayoutHandles
+     * @param ?bool $hostEncodesValues see hostEncodesValues(); null reads the store
+     */
     public function __construct(
         private readonly MagentoContext $magento,
         private readonly array $allowedLayoutHandles = [],
         private readonly string $area = 'frontend',
+        private readonly ?bool $hostEncodesValues = null,
     ) {
     }
 
-    public function create(Mode $mode, ?int $storeId = null): TemplateEngine
+    /**
+     * @param bool $marked the neutralizer marks rather than encodes - a render to compare
+     *        against, never to show as the candidate; see DeliberateDifference
+     */
+    public function create(Mode $mode, ?int $storeId = null, bool $marked = false): TemplateEngine
     {
-        $options = $mode->options();
+        $options = $mode->options()->withNeutralizedOutputMarked($marked);
         // Inside a store, compatible mode targets that store's filter - see HostDeferral.
         // Without one there is no filter to ask, and the default is the current Mage-OS.
         if ($this->magento->isAvailable()) {
@@ -50,6 +59,15 @@ class EngineFactory
         }
 
         return TemplateEngine::forHost($this->hostServices($storeId), $options);
+    }
+
+    /**
+     * Whether the store's filter encodes `{{` in resolved directive output, as this engine
+     * always does - see HostOutputNeutralizer. Without a store, the current Mage-OS: yes.
+     */
+    public function hostEncodesValues(): bool
+    {
+        return $this->hostEncodesValues ?? (!$this->magento->isAvailable() || HostOutputNeutralizer::encodesValues());
     }
 
     /** @return string[] which directives the current host can actually resolve, for reporting */

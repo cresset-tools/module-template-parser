@@ -52,6 +52,11 @@ the repository. Without one, only syntax can be checked - use `check` for that.
   template-parser diff --source=email --store=1
   template-parser diff --source=all --format=json --fail-on-divergence
 
+On a store whose filter predates Mage-OS 3.5.0's output neutralizer, a template
+whose only difference is a value containing {{ - printed as written or re-parsed
+there, encoded here - is listed as "deliberate", apart from the rest, and never
+fails --fail-on-divergence: the new engine never re-parses a value, by design.
+
 A selected source that cannot be read - a database that is down, say - is named
 on stderr and exits 3, whatever the comparison of the rest found.
 HELP);
@@ -115,6 +120,8 @@ HELP);
      */
     private function reportText(array $divergences, int $examined, OutputInterface $output, int $width, bool $failOnDivergence, array $skipped = []): int
     {
+        [$deliberate, $divergences] = self::partition($divergences);
+
         foreach ($divergences as $divergence) {
             $output->writeln('<comment>differs</comment> ' . $divergence->subject->label);
             if ($divergence->note !== null) {
@@ -130,7 +137,21 @@ HELP);
             $output->writeln('');
         }
 
-        $output->writeln(sprintf('%d of %d templates differ', count($divergences), $examined));
+        // Listed, so nobody wonders where they went, and briefly: each is the same difference.
+        foreach ($deliberate as $divergence) {
+            [$legacy, $ours] = $divergence->excerpt($width);
+            $output->writeln('<info>deliberate</info> ' . $divergence->subject->label);
+            $output->writeln('  <fg=gray>today</> ' . $this->oneLine($legacy));
+            $output->writeln('  <fg=cyan>ours </> ' . $this->oneLine($ours));
+        }
+        if ($deliberate !== []) {
+            $output->writeln('  <fg=gray>' . Auditor::DELIBERATE_NOTE . '.</>');
+            $output->writeln('  <fg=gray>Not a divergence: the output above is the one intended, and Parser serves it.</>');
+            $output->writeln('');
+        }
+
+        $output->writeln(sprintf('%d of %d templates differ', count($divergences), $examined)
+            . ($deliberate !== [] ? sprintf(', %d more deliberately', count($deliberate)) : ''));
         if ($skipped !== []) {
             $output->writeln(sprintf('<comment>not compared:</comment> %s - see above', implode(', ', array_keys($skipped))));
         }
@@ -148,10 +169,11 @@ HELP);
      */
     private function reportJson(array $divergences, int $examined, OutputInterface $output, int $width, bool $failOnDivergence, array $skipped = []): int
     {
-        $rows = [];
-        foreach ($divergences as $divergence) {
+        [$deliberate, $divergences] = self::partition($divergences);
+        $row = static function (Divergence $divergence) use ($width): array {
             [$legacy, $ours] = $divergence->excerpt($width);
-            $rows[] = [
+
+            return [
                 'id' => $divergence->subject->id,
                 'label' => $divergence->subject->label,
                 'origin' => $divergence->subject->origin,
@@ -160,14 +182,43 @@ HELP);
                 'legacy_excerpt' => $legacy,
                 'candidate_excerpt' => $ours,
             ];
-        }
+        };
+        $rows = array_map($row, $divergences);
 
         $output->writeln(json_encode(
-            ['examined' => $examined, 'divergent' => count($rows), 'divergences' => $rows, 'skipped' => self::skippedRows($skipped)],
+            [
+                'examined' => $examined,
+                'divergent' => count($rows),
+                'divergences' => $rows,
+                // Not in `divergent`, and never failing --fail-on-divergence - see
+                // DeliberateDifference.
+                'deliberate' => count($deliberate),
+                'deliberate_differences' => array_map($row, $deliberate),
+                'skipped' => self::skippedRows($skipped),
+            ],
             JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
         ));
 
         return $failOnDivergence && $rows !== [] ? Command::FAILURE : Command::SUCCESS;
+    }
+
+    /**
+     * @param Divergence[] $divergences
+     * @return array{0:list<Divergence>,1:list<Divergence>} the deliberate ones, and the rest
+     */
+    private static function partition(array $divergences): array
+    {
+        $deliberate = [];
+        $rest = [];
+        foreach ($divergences as $divergence) {
+            if ($divergence->deliberate) {
+                $deliberate[] = $divergence;
+            } else {
+                $rest[] = $divergence;
+            }
+        }
+
+        return [$deliberate, $rest];
     }
 
     private function oneLine(string $value): string

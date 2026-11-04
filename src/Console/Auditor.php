@@ -5,6 +5,8 @@ namespace MageOS\TemplateParser\Console;
 
 use MageOS\TemplateParser\Console\Source\TemplateSource;
 use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\DeliberateDifference;
+use MageOS\TemplateParser\Magento\RandomMarkup;
 use MageOS\TemplateParser\PolicyViolation;
 use MageOS\TemplateParser\RenderPolicy;
 use MageOS\TemplateParser\TemplateEngine;
@@ -19,6 +21,11 @@ use MageOS\TemplateParser\TemplateError;
  */
 class Auditor
 {
+    /** What a deliberate difference is, for the one line diff prints under it. */
+    public const DELIBERATE_NOTE = 'deliberate: the store\'s filter predates the output neutralizer, so it prints a '
+        . 'value\'s {{ as written or re-parses it; this engine encodes it and never re-parses a value. '
+        . 'Checked against a second render: nothing else differs';
+
     private readonly Fixer $fixer;
 
     public function __construct(
@@ -174,7 +181,7 @@ class Auditor
                     // so anything this one refused on policy would be reported as a divergence
                     // in the engine rather than as the posture it is. The policy that matters
                     // is the one the host sets at render time; this is a measurement.
-                    $render = static function (string $content) use ($engine, $variables, $legacyRender): string {
+                    $render = static fn (TemplateEngine $engine): \Closure => static function (string $content) use ($engine, $variables, $legacyRender): string {
                         $ours = $engine->render($content, context: new Context(
                             $variables,
                             RenderPolicy::unrestricted(),
@@ -193,9 +200,10 @@ class Auditor
                     // And whatever other modules' plugins on filter() do to it: through the
                     // same filter, served where a Parser render would be. Page Builder's
                     // afterFilter alone made most CMS content differ.
-                    $ours = $legacyRender?->through !== null
-                        ? ($legacyRender->through)($render)
-                        : $render($subject->content);
+                    $candidate = static fn (TemplateEngine $engine): string => $legacyRender?->through !== null
+                        ? ($legacyRender->through)($render($engine))
+                        : $render($engine)($subject->content);
+                    $ours = $candidate($engine);
                 } catch (\Throwable $e) {
                     $ourFailure = (new \ReflectionClass($e))->getShortName() . ': ' . $this->firstLine($e->getMessage());
                 }
@@ -223,8 +231,26 @@ class Auditor
                 }
 
                 // Including a link id Magento draws at random per render - see RandomMarkup.
-                if (\MageOS\TemplateParser\Magento\RandomMarkup::sameRender($legacyOutput, $ours)) {
+                if (RandomMarkup::sameRender($legacyOutput, $ours)) {
                     return null;
+                }
+
+                // On a filter from before the output neutralizer, the one difference this
+                // engine makes on purpose - see DeliberateDifference. Decided by rendering
+                // again with the neutralizer marking, through the same pipeline.
+                if (str_contains($ours, '&#123;') && !$this->engines->hostEncodesValues()) {
+                    try {
+                        $marked = $candidate($this->engines->create($mode, $store, marked: true));
+                    } catch (\Throwable) {
+                        $marked = null;
+                    }
+                    if ($marked !== null && DeliberateDifference::explains(
+                        RandomMarkup::normalized($ours),
+                        RandomMarkup::normalized($marked),
+                        RandomMarkup::normalized($legacyOutput)
+                    )) {
+                        return new Divergence($subject, $legacyOutput, $ours, self::DELIBERATE_NOTE, deliberate: true);
+                    }
                 }
 
                 return new Divergence($subject, $legacyOutput, $ours, $this->divergenceNote($subject->content, $legacyOutput, $ours, $engine));

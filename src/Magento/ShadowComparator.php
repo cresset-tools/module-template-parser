@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MageOS\TemplateParser\Magento;
 
+use MageOS\TemplateParser\DeliberateDifference;
 use MageOS\TemplateParser\Diagnostics;
 use MageOS\TemplateParser\Magento\Shadow\ShadowOutcome;
 use MageOS\TemplateParser\TemplateError;
@@ -24,8 +25,14 @@ use MageOS\TemplateParser\TemplateError;
  */
 class ShadowComparator
 {
-    public function __construct(private readonly TemplateFilterInterface $adapter)
-    {
+    /**
+     * @param ?bool $hostEncodesValues whether the host's filter encodes `{{` in resolved
+     *        directive output; null asks the host - see HostOutputNeutralizer
+     */
+    public function __construct(
+        private readonly TemplateFilterInterface $adapter,
+        private readonly ?bool $hostEncodesValues = null
+    ) {
     }
 
     /**
@@ -148,6 +155,89 @@ class ShadowComparator
     }
 
     /**
+     * Whether a divergence from judge() could be the deliberate difference, and is worth a
+     * marked render to find out - see DeliberateDifference.
+     *
+     * Only on a host whose filter predates the output neutralizer, and only when the candidate
+     * holds an encoded brace, the one trace the neutralizer leaves. Everything else is decided
+     * without a second render.
+     */
+    public function mayBeDeliberate(ShadowOutcome $outcome, string $candidate): bool
+    {
+        return $outcome->outcome === ShadowOutcome::DIVERGE
+            && str_contains($candidate, '&#123;')
+            && $this->adapter instanceof MarksNeutralizedOutput
+            && !($this->hostEncodesValues ?? HostOutputNeutralizer::encodesValues());
+    }
+
+    /**
+     * The render render() would make, with the neutralizer marking instead of encoding, or a
+     * crash standing in for one. Never recorded: a marked render that does not complete only
+     * leaves the divergence a divergence.
+     *
+     * The same arguments as the render() it checks, finished the same way.
+     *
+     * @param array<string,mixed> $variables
+     * @param ?callable(string,list<string>):string $finish
+     * @param array<string,mixed> $designParams
+     */
+    public function renderMarked(
+        string $source,
+        array $variables = [],
+        bool $plainTemplateMode = false,
+        ?callable $finish = null,
+        array $designParams = []
+    ): string|ShadowOutcome {
+        try {
+            if (!$this->adapter instanceof MarksNeutralizedOutput) {
+                return ShadowOutcome::crashed(new \LogicException('the adapter cannot render marked'));
+            }
+            $this->adapter
+                ->setPlainTemplateMode($plainTemplateMode)
+                ->setDesignParams($designParams)
+                ->setVariables($variables);
+            $marked = $this->adapter->filterMarked($source);
+            if ($marked === null) {
+                return ShadowOutcome::crashed(new \RuntimeException('the marked render did not complete'));
+            }
+
+            [$rendered, $deferred] = $marked;
+            $stylesheets = self::stylesheetsIn($deferred);
+            if ($finish !== null && $stylesheets !== []) {
+                $rendered = $finish($rendered, $stylesheets);
+            }
+
+            return $rendered;
+        } catch (\Throwable $e) {
+            return ShadowOutcome::crashed($e);
+        }
+    }
+
+    /**
+     * The divergence `$outcome`, or the deliberate difference when the marked render shows it
+     * is the whole of it - see DeliberateDifference.
+     */
+    public function settle(ShadowOutcome $outcome, string $candidate, string|ShadowOutcome $marked, string $legacyResult): ShadowOutcome
+    {
+        if ($outcome->outcome !== ShadowOutcome::DIVERGE
+            || !is_string($marked)
+            || !DeliberateDifference::explains(
+                RandomMarkup::normalized($candidate),
+                RandomMarkup::normalized($marked),
+                RandomMarkup::normalized($legacyResult)
+            )
+        ) {
+            return $outcome;
+        }
+
+        return ShadowOutcome::deliberate(
+            strlen($legacyResult),
+            strlen($candidate),
+            Diagnostics::firstDifferingByte($legacyResult, $candidate)
+        );
+    }
+
+    /**
      * render() and judge() in one: what Shadow mode does with every render.
      *
      * @param array<string,mixed> $variables
@@ -163,8 +253,15 @@ class ShadowComparator
         array $designParams = []
     ): ShadowOutcome {
         $candidate = $this->render($source, $variables, $plainTemplateMode, $finish, $designParams);
+        if ($candidate instanceof ShadowOutcome) {
+            return $candidate;
+        }
 
-        return $candidate instanceof ShadowOutcome ? $candidate : $this->judge($candidate, $legacyResult);
+        $outcome = $this->judge($candidate, $legacyResult);
+
+        return $this->mayBeDeliberate($outcome, $candidate)
+            ? $this->settle($outcome, $candidate, $this->renderMarked($source, $variables, $plainTemplateMode, $finish, $designParams), $legacyResult)
+            : $outcome;
     }
 
     /**
@@ -175,8 +272,17 @@ class ShadowComparator
      */
     private function stylesheetsToInline(): array
     {
+        return self::stylesheetsIn($this->adapter->deferred());
+    }
+
+    /**
+     * @param array<int,array{kind:string,payload:array}> $deferred
+     * @return list<string>
+     */
+    private static function stylesheetsIn(array $deferred): array
+    {
         $files = [];
-        foreach ($this->adapter->deferred() as $entry) {
+        foreach ($deferred as $entry) {
             if (($entry['kind'] ?? null) === 'inlinecss') {
                 $files[] = (string)($entry['payload']['file'] ?? '');
             }

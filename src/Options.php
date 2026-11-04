@@ -90,7 +90,18 @@ final class Options
          * stylesheet named directly inside a body of the root template is inlined over that
          * body by every version, and is declined whatever this says.
          */
-        public readonly bool $deferralResolvedAtRoot = true
+        public readonly bool $deferralResolvedAtRoot = true,
+        /**
+         * Where the neutralizer would encode `{{`, leave it as a filter without the neutralizer
+         * prints it and mark the place instead - see DeliberateDifference.
+         *
+         * For comparisons only: the Magento layer and `template:diff` render a template a
+         * second time with this, on a store whose filter predates the neutralizer, to tell this
+         * engine's deliberate difference from any other. The marks replace the braces, so
+         * nothing in such a render can be read as a directive, but it is not output to serve.
+         * Only meaningful together with compatible mode.
+         */
+        public readonly bool $markNeutralizedOutput = false
     ) {
         if ($this->maxNestingDepth < 1) {
             throw new \InvalidArgumentException('maxNestingDepth must be at least 1');
@@ -194,6 +205,12 @@ final class Options
         return $this->with(neutralizeDirectiveOutput: $enabled);
     }
 
+    /** See $markNeutralizedOutput: a render to compare, never one to serve. */
+    public function withNeutralizedOutputMarked(bool $marked): self
+    {
+        return $this->with(markNeutralizedOutput: $marked);
+    }
+
     /** See $plainFilter. */
     public function withPlainFilter(bool $enabled): self
     {
@@ -214,7 +231,7 @@ final class Options
     /**
      * The one place a field is carried over, so a `with*()` cannot set a neighbour instead.
      *
-     * Nine of the ten fields are bool, so a positional constructor call that transposed
+     * Ten of the eleven fields are bool, so a positional constructor call that transposed
      * two of them type-checks and quietly returns options with the wrong flag set. Every
      * caller names its field; null leaves a field as it is, which loses nothing because no
      * field is nullable and so none can legitimately be set to null.
@@ -229,7 +246,8 @@ final class Options
         ?bool $failOnPolicyViolation = null,
         ?bool $neutralizeDirectiveOutput = null,
         ?bool $plainFilter = null,
-        ?bool $deferralResolvedAtRoot = null
+        ?bool $deferralResolvedAtRoot = null,
+        ?bool $markNeutralizedOutput = null
     ): self {
         return new self(
             strictSyntax: $strictSyntax ?? $this->strictSyntax,
@@ -241,7 +259,8 @@ final class Options
             failOnPolicyViolation: $failOnPolicyViolation ?? $this->failOnPolicyViolation,
             neutralizeDirectiveOutput: $neutralizeDirectiveOutput ?? $this->neutralizeDirectiveOutput,
             plainFilter: $plainFilter ?? $this->plainFilter,
-            deferralResolvedAtRoot: $deferralResolvedAtRoot ?? $this->deferralResolvedAtRoot
+            deferralResolvedAtRoot: $deferralResolvedAtRoot ?? $this->deferralResolvedAtRoot,
+            markNeutralizedOutput: $markNeutralizedOutput ?? $this->markNeutralizedOutput
         );
     }
 }

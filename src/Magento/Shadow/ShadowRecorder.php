@@ -27,6 +27,9 @@ use Psr\Log\LoggerInterface;
  *   bug in this engine rather than a property of the template, and not evidence for it;
  * - an agreement or a refusal adds one. A refusal counts as clean because Parser mode falls
  *   back to legacy for it, so the customer gets exactly what they get today;
+ * - so does a deliberate difference (`deliberate`): on a filter from before the output
+ *   neutralizer, a render that differs only where that filter re-parses a value, and where
+ *   this engine's output is the one meant - see DeliberateDifference;
  * - "clean since" is `last_divergence_at`, or `first_seen` for a template that never diverged.
  *
  * Aggregated in memory and written in one INSERT ... ON DUPLICATE KEY UPDATE, so a page that
@@ -56,7 +59,7 @@ class ShadowRecorder
 
     private const COLUMNS = [
         'store_id', 'template',
-        'agreed', 'diverged', 'refused', 'crashed', 'served', 'fell_back',
+        'agreed', 'diverged', 'refused', 'crashed', 'deliberate', 'served', 'fell_back',
         'first_seen', 'last_seen',
         'last_divergence_at', 'renders_since_divergence',
         'last_divergence', 'last_refusal', 'last_crash',
@@ -169,6 +172,7 @@ class ShadowRecorder
             'diverged' => 0,
             'refused' => 0,
             'crashed' => 0,
+            'deliberate' => 0,
             'served' => 0,
             'fell_back' => 0,
             'first_seen' => $now,
@@ -187,6 +191,12 @@ class ShadowRecorder
         switch ($outcome?->outcome) {
             case ShadowOutcome::AGREE:
                 $row['agreed']++;
+                $row['renders_since_divergence']++;
+                break;
+            case ShadowOutcome::DELIBERATE:
+                // This engine's output is the one meant - see DeliberateDifference - so it is
+                // as clean as an agreement, and counted apart so the report can say so.
+                $row['deliberate']++;
                 $row['renders_since_divergence']++;
                 break;
             case ShadowOutcome::REFUSED:
@@ -234,7 +244,7 @@ class ShadowRecorder
         }
 
         $update = [];
-        foreach (['agreed', 'diverged', 'refused', 'crashed', 'served', 'fell_back'] as $counter) {
+        foreach (['agreed', 'diverged', 'refused', 'crashed', 'deliberate', 'served', 'fell_back'] as $counter) {
             $update[] = sprintf('%1$s = %1$s + VALUES(%1$s)', $quote($counter));
         }
         $update[] = sprintf(
