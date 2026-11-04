@@ -215,6 +215,15 @@ lab's naming, the fixes from a whole-project review before the donation, and Mag
   one id; what is served is unchanged.
 - **`diff --format=json` no longer prints an empty line** when an excerpt cut a multibyte
   character; every console JSON output substitutes invalid UTF-8 and fails loudly otherwise.
+- **`template:check` and `template:diff` no longer leave out a source without saying so.**
+  With the store's database down, `diff --source=all` compared the codebase files alone and
+  exited 0, and `check` named the skip only under `-v`. The database sources did not even
+  count as unavailable: `ResourceConnection` builds without a database, and the failed query
+  was taken for a missing table, so each read as empty. The database is now asked (`SELECT 1`),
+  a read that fails partway is a failure rather than an empty table, and every skipped source
+  is named on stderr with the reason (and under `skipped` in the JSON report). Both commands
+  exit **3** when a source could not be read while a store is there, or when it was asked for
+  by name; an error in what was read still exits 1.
 - **`template:check` exits 2 when there was nothing to check**, and the codebase source judges
   paths below its root, so a checkout under a `tests/` directory is no longer empty.
 - **The report's advice fits the refusal.** A construct the filter reads differently points at

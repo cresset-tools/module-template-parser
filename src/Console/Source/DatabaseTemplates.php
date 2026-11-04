@@ -29,6 +29,11 @@ class DatabaseTemplates implements TemplateSource
     ) {
     }
 
+    /** The probe's answer, so a run asks the database once per source rather than per call. */
+    private ?string $unavailable = null;
+
+    private bool $probed = false;
+
     public static function emailTemplates(MagentoContext $magento): self
     {
         return new self($magento, 'database email templates', 'email_template', 'template_id', 'template_code', 'template_text');
@@ -56,25 +61,59 @@ class DatabaseTemplates implements TemplateSource
 
     public function isAvailable(): bool
     {
-        return $this->connection() !== null;
+        return $this->unavailableReason() === null;
+    }
+
+    /**
+     * Asks the database, not just the object manager.
+     *
+     * ResourceConnection builds without a database - Magento connects on first query - so
+     * "the service resolved" said nothing. With the database down every table read failed,
+     * the failure was taken for a missing table, and the source counted as empty.
+     */
+    public function unavailableReason(): ?string
+    {
+        if ($this->probed) {
+            return $this->unavailable;
+        }
+        $this->probed = true;
+
+        if (!$this->magento->isAvailable()) {
+            return $this->unavailable = 'no store: ' . ($this->magento->reason() ?? 'Magento could not be booted');
+        }
+        $connection = $this->connection();
+        if ($connection === null) {
+            return $this->unavailable = "the store's database connection could not be built";
+        }
+        try {
+            $connection->getConnection()->fetchOne('SELECT 1');
+        } catch (\Throwable $e) {
+            return $this->unavailable = 'the database could not be reached: ' . self::firstLine($e->getMessage());
+        }
+
+        return null;
     }
 
     public function subjects(): iterable
     {
-        $connection = $this->connection();
-        if ($connection === null) {
-            return;
+        $reason = $this->unavailableReason();
+        if ($reason !== null) {
+            throw new SourceUnavailable($reason);
         }
+        $connection = $this->connection();
 
         try {
             $table = $connection->getTableName($this->table);
+            if (!$connection->getConnection()->isTableExists($table)) {
+                return;                  // the module that owns the table is not installed
+            }
             $select = $connection->getConnection()->select()->from(
                 $table,
                 [$this->idColumn, $this->nameColumn, $this->bodyColumn]
             );
             $rows = $connection->getConnection()->fetchAll($select);
-        } catch (\Throwable) {
-            return;                      // table absent - the module is not installed
+        } catch (\Throwable $e) {
+            throw new SourceUnavailable(sprintf('%s could not be read: %s', $this->table, self::firstLine($e->getMessage())), 0, $e);
         }
 
         foreach ($rows as $row) {
@@ -91,6 +130,13 @@ class DatabaseTemplates implements TemplateSource
                 kind: $this->kind,
             );
         }
+    }
+
+    private static function firstLine(string $message): string
+    {
+        $line = trim(strtok($message, "\n") ?: $message);
+
+        return mb_strlen($line) > 200 ? mb_substr($line, 0, 200) . '…' : $line;
     }
 
     private function connection(): ?object

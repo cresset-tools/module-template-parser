@@ -18,6 +18,12 @@ interface TemplateSource
 
     public function isAvailable(): bool;
 
-    /** @return iterable<TemplateSubject> */
+    /** Why this source cannot be read here, or null when it can. Said to the person running the command. */
+    public function unavailableReason(): ?string;
+
+    /**
+     * @return iterable<TemplateSubject>
+     * @throws SourceUnavailable when the source fails partway, so the failure is not read as "empty"
+     */
     public function subjects(): iterable;
 }

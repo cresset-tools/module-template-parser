@@ -27,7 +27,16 @@ class CodebaseEmailTemplates implements TemplateSource
 
     public function isAvailable(): bool
     {
-        return $this->root !== null && is_dir($this->root);
+        return $this->unavailableReason() === null;
+    }
+
+    public function unavailableReason(): ?string
+    {
+        if ($this->root === null) {
+            return 'no Magento root was found';
+        }
+
+        return is_dir($this->root) ? null : sprintf('%s is not a directory', $this->root);
     }
 
     public function subjects(): iterable

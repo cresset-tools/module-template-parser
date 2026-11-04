@@ -25,6 +25,9 @@ class DiffCommand extends Command
     use MagentoAware;
     use SourceSelection;
 
+    /** A selected source could not be read, so the comparison did not cover what was asked. */
+    public const SOURCE_UNAVAILABLE = 3;
+
     protected function configure(): void
     {
         $this->addPostureOption()
@@ -48,6 +51,9 @@ the repository. Without one, only syntax can be checked - use `check` for that.
 
   template-parser diff --source=email --store=1
   template-parser diff --source=all --format=json --fail-on-divergence
+
+A selected source that cannot be read - a database that is down, say - is named
+on stderr and exits 3, whatever the comparison of the rest found.
 HELP);
     }
 
@@ -86,25 +92,28 @@ HELP);
 
         $divergences = [];
         $examined = 0;
-        foreach ($this->selectedSources($input, $magento) as $source) {
-            if (!$source->isAvailable()) {
-                continue;
-            }
-            $subjects = [];
-            foreach ($source->subjects() as $subject) {
-                $subjects[] = $subject;
-                $examined++;
-            }
+        [$groups, $skipped] = $this->readSources($input, $magento, $output);
+        foreach ($groups as $subjects) {
+            $examined += count($subjects);
             $divergences = array_merge($divergences, $auditor->diff($subjects, $mode, $render, $storeId));
         }
 
-        return $input->getOption('format') === 'json'
-            ? $this->reportJson($divergences, $examined, $output, $width, (bool)$input->getOption('fail-on-divergence'))
-            : $this->reportText($divergences, $examined, $output, $width, (bool)$input->getOption('fail-on-divergence'));
+        $exit = $input->getOption('format') === 'json'
+            ? $this->reportJson($divergences, $examined, $output, $width, (bool)$input->getOption('fail-on-divergence'), $skipped)
+            : $this->reportText($divergences, $examined, $output, $width, (bool)$input->getOption('fail-on-divergence'), $skipped);
+
+        // "0 of N differ" over part of what was asked is not a pass. diff always has a store,
+        // so a source it could not read is a store that is broken, not one that is absent.
+        return $exit === Command::SUCCESS && $this->skipsMakeRunIncomplete($input, $magento, $skipped)
+            ? self::SOURCE_UNAVAILABLE
+            : $exit;
     }
 
-    /** @param Divergence[] $divergences */
-    private function reportText(array $divergences, int $examined, OutputInterface $output, int $width, bool $failOnDivergence): int
+    /**
+     * @param Divergence[] $divergences
+     * @param array<string,string> $skipped
+     */
+    private function reportText(array $divergences, int $examined, OutputInterface $output, int $width, bool $failOnDivergence, array $skipped = []): int
     {
         foreach ($divergences as $divergence) {
             $output->writeln('<comment>differs</comment> ' . $divergence->subject->label);
@@ -122,6 +131,9 @@ HELP);
         }
 
         $output->writeln(sprintf('%d of %d templates differ', count($divergences), $examined));
+        if ($skipped !== []) {
+            $output->writeln(sprintf('<comment>not compared:</comment> %s - see above', implode(', ', array_keys($skipped))));
+        }
         if ($divergences !== []) {
             $output->writeln('<fg=gray>A difference is not automatically a problem - compatible mode refuses some</>');
             $output->writeln('<fg=gray>constructs the old filter also could not render. Read each one.</>');
@@ -130,8 +142,11 @@ HELP);
         return $failOnDivergence && $divergences !== [] ? Command::FAILURE : Command::SUCCESS;
     }
 
-    /** @param Divergence[] $divergences */
-    private function reportJson(array $divergences, int $examined, OutputInterface $output, int $width, bool $failOnDivergence): int
+    /**
+     * @param Divergence[] $divergences
+     * @param array<string,string> $skipped
+     */
+    private function reportJson(array $divergences, int $examined, OutputInterface $output, int $width, bool $failOnDivergence, array $skipped = []): int
     {
         $rows = [];
         foreach ($divergences as $divergence) {
@@ -148,7 +163,7 @@ HELP);
         }
 
         $output->writeln(json_encode(
-            ['examined' => $examined, 'divergent' => count($rows), 'divergences' => $rows],
+            ['examined' => $examined, 'divergent' => count($rows), 'divergences' => $rows, 'skipped' => self::skippedRows($skipped)],
             JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
         ));
 

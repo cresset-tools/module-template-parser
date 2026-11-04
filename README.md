@@ -887,7 +887,10 @@ template-parser check --source=all --format=json > findings.json
 ```
 
 The exit code is what makes it useful in CI: non-zero at or above `--fail-on`, which defaults
-to `error` so a first run over a decade of templates is not a wall of red.
+to `error` so a first run over a decade of templates is not a wall of red. It exits 2 when
+there was nothing to check, and 3 when a selected source could not be read — a store whose
+database is down, say. Skipped sources are always named on stderr, and `diff` follows the
+same rule.
 
 `--posture` picks how strictly the engine reads (see [Modes](#modes)); it defaults to
 compatible, the posture Parser mode runs. (`--mode`, its 0.2 spelling, is gone.)
