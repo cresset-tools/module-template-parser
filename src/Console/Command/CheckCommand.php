@@ -1,15 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\Auditor;
-use Cresset\TemplateParser\Console\EngineFactory;
-use Cresset\TemplateParser\Console\HostExtensions;
-use Cresset\TemplateParser\Console\Finding;
-use Cresset\TemplateParser\Console\Mode;
-use Cresset\TemplateParser\Console\StoreEmulator;
-use Cresset\TemplateParser\Console\TemplateSubject;
+use MageOS\TemplateParser\Console\StoreOption;
+use MageOS\TemplateParser\Console\Auditor;
+use MageOS\TemplateParser\Console\EngineFactory;
+use MageOS\TemplateParser\Console\HostExtensions;
+use MageOS\TemplateParser\Console\Finding;
+use MageOS\TemplateParser\Console\Mode;
+use MageOS\TemplateParser\Console\StoreEmulator;
+use MageOS\TemplateParser\Console\TemplateSubject;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,6 +21,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'check', description: 'Check templates render, and say what to fix when they do not')]
 class CheckCommand extends Command
 {
+    /** No selected source had a template to check - not a pass. */
+    public const NOTHING_CHECKED = 2;
+
+    /** A selected source could not be read, so the run did not cover what was asked. */
+    public const SOURCE_UNAVAILABLE = 3;
+
     use MagentoAware;
     use SourceSelection;
 
@@ -29,14 +36,15 @@ class CheckCommand extends Command
             ->addLayoutOption()
             ->addSourceOptions()
             ->addArgument('path', InputArgument::OPTIONAL, 'A single template file to check instead of a source')
-            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store id to render in')
+            ->addOption('store', null, InputOption::VALUE_REQUIRED, 'Store view to render in, by id or code')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'text or json', 'text')
             ->addOption('fail-on', null, InputOption::VALUE_REQUIRED, 'Exit non-zero at this severity or worse: error, warning, note', 'error')
             ->setHelp(<<<'HELP'
 Renders every template it can find and reports what stops it.
 
 Exit code is what makes this useful in CI: 0 when nothing at or above --fail-on
-was found, 1 otherwise. The default only fails on errors, so a first run does not
+was found, 1 otherwise, 2 when there was nothing to check at all, and 3 when a
+selected source could not be read (a store whose database is down, say). The default only fails on errors, so a first run does not
 drown you in the warnings a decade of templates will produce.
 
   template-parser check --source=codebase --posture=strict --fail-on=error
@@ -49,7 +57,7 @@ HELP);
         $magento = $this->magento();
         $mode = $this->posture($input, $output);
         $failOn = $this->failOn($input);
-        $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
+        $storeId = StoreOption::resolve($input->getOption('store'), StoreOption::codes((new StoreEmulator($magento))->stores()));
 
         $auditor = new Auditor(
             new EngineFactory($magento, $this->layoutHandles($input)),
@@ -57,6 +65,7 @@ HELP);
             new HostExtensions($magento)
         );
 
+        $skipped = [];
         $path = $input->getArgument('path');
         if ($path !== null) {
             if (!is_file($path)) {
@@ -68,24 +77,37 @@ HELP);
             $findings = $auditor->check($subjects, $mode, $storeId);
         } else {
             $findings = [];
-            foreach ($this->selectedSources($input, $magento) as $source) {
-                if (!$source->isAvailable()) {
-                    if ($output->isVerbose()) {
-                        $output->writeln(sprintf('<fg=gray>skipping %s - not available here</>', $source->name()));
-                    }
-                    continue;
-                }
-                $findings = array_merge($findings, $auditor->check($source->subjects(), $mode, $storeId));
+            $checked = 0;
+            [$groups, $skipped] = $this->readSources($input, $magento, $output);
+            foreach ($groups as $subjects) {
+                $checked += count($subjects);
+                $findings = array_merge($findings, $auditor->check($subjects, $mode, $storeId));
+            }
+
+            // Nothing found to check is not a pass. A CI job pointed at the wrong root, or run
+            // outside a store for --source=email, reported "0 error(s)" and exited 0.
+            if ($checked === 0) {
+                $output->writeln('<comment>Nothing to check:</comment> no selected source had any templates here.');
+
+                return self::NOTHING_CHECKED;
             }
         }
 
-        return $input->getOption('format') === 'json'
-            ? $this->reportJson($findings, $output, $failOn)
-            : $this->reportText($findings, $output, $failOn, $mode);
+        $exit = $input->getOption('format') === 'json'
+            ? $this->reportJson($findings, $output, $failOn, $skipped)
+            : $this->reportText($findings, $output, $failOn, $mode, $skipped);
+
+        // A partial scan is not a pass, however clean the part was.
+        return $exit === Command::SUCCESS && $this->skipsMakeRunIncomplete($input, $magento, $skipped)
+            ? self::SOURCE_UNAVAILABLE
+            : $exit;
     }
 
-    /** @param Finding[] $findings */
-    private function reportText(array $findings, OutputInterface $output, string $failOn, Mode $mode): int
+    /**
+     * @param Finding[] $findings
+     * @param array<string,string> $skipped
+     */
+    private function reportText(array $findings, OutputInterface $output, string $failOn, Mode $mode, array $skipped = []): int
     {
         $counts = [Finding::ERROR => 0, Finding::WARNING => 0, Finding::NOTE => 0];
 
@@ -118,12 +140,18 @@ HELP);
             $counts[Finding::WARNING],
             $counts[Finding::NOTE]
         ));
+        if ($skipped !== []) {
+            $output->writeln(sprintf('<comment>not checked:</comment> %s - see above', implode(', ', array_keys($skipped))));
+        }
 
         return $this->exitCode($counts, $failOn);
     }
 
-    /** @param Finding[] $findings */
-    private function reportJson(array $findings, OutputInterface $output, string $failOn): int
+    /**
+     * @param Finding[] $findings
+     * @param array<string,string> $skipped
+     */
+    private function reportJson(array $findings, OutputInterface $output, string $failOn, array $skipped = []): int
     {
         $counts = [Finding::ERROR => 0, Finding::WARNING => 0, Finding::NOTE => 0];
         $rows = [];
@@ -141,7 +169,7 @@ HELP);
             ];
         }
 
-        $output->writeln((string)json_encode(['findings' => $rows, 'counts' => $counts], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $output->writeln(json_encode(['findings' => $rows, 'counts' => $counts, 'skipped' => self::skippedRows($skipped)], JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         return $this->exitCode($counts, $failOn);
     }

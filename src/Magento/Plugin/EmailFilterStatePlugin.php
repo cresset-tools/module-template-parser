@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento\Plugin;
+namespace MageOS\TemplateParser\Magento\Plugin;
 
 use Magento\Email\Model\Template\Filter;
 

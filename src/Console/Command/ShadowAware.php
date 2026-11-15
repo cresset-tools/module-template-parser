@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\Shadow\ShadowTable;
+use MageOS\TemplateParser\Console\Shadow\ShadowTable;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**

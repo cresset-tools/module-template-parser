@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\UnknownVariableError;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\UnknownVariableError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -77,8 +77,8 @@ final class EvaluatorTest extends TestCase
     public function testOptionsAloneConfigureTheCollaboratorsToo(): void
     {
         $engine = new TemplateEngine(
-            new \Cresset\TemplateParser\Parser(options: Options::compatible()),
-            new \Cresset\TemplateParser\Evaluator(options: Options::compatible())
+            new \MageOS\TemplateParser\Parser(options: Options::compatible()),
+            new \MageOS\TemplateParser\Evaluator(options: Options::compatible())
         );
 
         // rawurldecode in the resolver, and the trailing-'=' quirk in the parameter parser.
@@ -186,7 +186,7 @@ final class EvaluatorTest extends TestCase
         );
 
         // Strict: reading it afterwards is a mistake worth reporting.
-        $this->expectException(\Cresset\TemplateParser\UnknownVariableError::class);
+        $this->expectException(\MageOS\TemplateParser\UnknownVariableError::class);
         $this->engine->render('{{for i in xs}}{{var i}}{{/for}}[{{var i}}]', ['xs' => ['a']]);
     }
 }

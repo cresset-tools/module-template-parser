@@ -1,0 +1,80 @@
+<?php
+// strict_types for the same reason as RecorderEmailLike: Email\Model\Template\Filter declares it.
+declare(strict_types=1);
+// Declared in a *.php.stub so Magento's DI scanners never see it - see harness.php.
+
+use Magento\Framework\Filter\Template as LegacyTemplate;
+
+/**
+ * The Email filter's half of deferral: child-template mode and {{inlinecss}}.
+ *
+ * Deferral is the one part of the filter Mage-OS 3.6.0 changed. Up to 3.5.0 a child template
+ * returned a deferred {{inlinecss}} as its own text, signed for the parent's second pass; from
+ * 3.6.0 it returns a placeholder from Template\DeferredDirectiveRegistry, which only the root
+ * template resolves. Both end in the root registering the stylesheet, and the corpus is how
+ * that stays a measurement rather than a reading of two diffs.
+ *
+ * inlinecssDirective() is Email\Model\Template\Filter's, as the tree under MAGENTO_ROOT has
+ * it: which branch runs is decided by what that tree's deferToParent() returns - a string
+ * (the placeholder, 3.6.0), nothing (3.5.0), or no such method at all (before 3.5.0, where
+ * the construct came back unchanged and was signed by the filter on its own). Only the
+ * stylesheet work is stood in for: applyInlineCss() prefixes the files the root registered
+ * instead of running Emogrifier, so what the root ended up inlining is in the recorded output.
+ *
+ * Includes come from $includes by config path, rendered by a new filter in child mode that
+ * shares the depth meter, signature provider, neutralizer and registry with its parent -
+ * AbstractTemplate::getTemplateContent() builds a new template model for each, and those
+ * four are request-wide singletons on a store.
+ */
+class DeferringEmailLikeLegacy extends EmailLikeLegacy
+{
+    /** @var array<string,string> config path => template source */
+    public static array $includes = [];
+
+    private bool $childTemplate = false;
+
+    /** @var string[] */
+    private array $inlineCssFiles = [];
+
+    public function setIsChildTemplate($isChildTemplate)
+    {
+        $this->childTemplate = (bool)$isChildTemplate;
+        return $this;
+    }
+
+    public function isChildTemplate()
+    {
+        return $this->childTemplate;
+    }
+
+    public function inlinecssDirective($construction)
+    {
+        if ($this->isChildTemplate()) {
+            if (!method_exists($this, 'deferToParent')) {
+                return $construction[0];
+            }
+            $returnType = (new \ReflectionMethod($this, 'deferToParent'))->getReturnType();
+            if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'string') {
+                return $this->deferToParent($construction[0]);
+            }
+            $this->deferToParent($construction[0]);
+            return $construction[0];
+        }
+
+        $params = $this->getParameters($construction[2]);
+        if (!isset($params['file']) || !$params['file']) {
+            throw new \RuntimeException('"file" parameter must be specified and must not be empty');
+        }
+
+        $this->inlineCssFiles[] = $params['file'];
+        $this->addAfterFilterCallback([$this, 'applyInlineCss']);
+        return '';
+    }
+
+    public function applyInlineCss($html)
+    {
+        // getCssFilesContent() drops a file named twice before reading any, so the files
+        // inlined are the distinct ones, in first-registered order.
+        return '<!--inlined:' . implode(',', array_unique($this->inlineCssFiles)) . '-->' . $html;
+    }
+}

@@ -19,3 +19,30 @@ function neutralizerFor(
 
     return class_exists($class) ? new $class($signatures, $enabled) : null;
 }
+
+/**
+ * The deferral registry to hand Template, or null on a tree that has none.
+ *
+ * Mage-OS 3.6.0's filter defers out of band through Template\DeferredDirectiveRegistry, a
+ * request-wide singleton on a store; a tool that renders through several filters in one
+ * flow should share one instance between them, as a store does. Before 3.6.0 there is no
+ * such class and the filter takes no such argument - passing null there is harmless,
+ * because PHP ignores a trailing argument a constructor does not declare.
+ */
+function registryFor(): mixed
+{
+    $class = \Magento\Framework\Filter\Template\DeferredDirectiveRegistry::class;
+    if (!class_exists($class, false) && is_file(\MAGEOS_DEFERRED_REGISTRY_FILE)) {
+        require_once \MAGEOS_DEFERRED_REGISTRY_FILE;
+    }
+
+    return class_exists($class, false)
+        ? new $class(new \Magento\Framework\Math\Random())
+        : null;
+}
+
+/** Which deferral model the tree under MAGENTO_ROOT has: "registry" (3.6.0+) or "signature". */
+function deferralModel(): string
+{
+    return is_file(\MAGEOS_DEFERRED_REGISTRY_FILE) ? 'registry' : 'signature';
+}

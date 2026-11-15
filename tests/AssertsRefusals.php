@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\RefusedByPort;
 
 /**
  * A port refusing out loud, where it used to return '' or null.

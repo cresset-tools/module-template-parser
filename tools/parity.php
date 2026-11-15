@@ -11,7 +11,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }
-define('CRESSET_TEMPLATE_PARSER_TOOL', true);
+define('MAGEOS_TEMPLATE_PARSER_TOOL', true);
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
@@ -31,7 +31,7 @@ use Magento\Framework\Filter\DirectiveProcessor\{IfDirective, DependDirective, T
 use Magento\Framework\Filter\DirectiveProcessor\Filter\{FilterApplier, FilterPool};
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use Magento\Framework\Filter\Template\Tokenizer\{VariableFactory, ParameterFactory};
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateEngine;
 
 function parityLegacyFilter(array $vars): LegacyTemplate {
     $r = new StrictResolver(new VariableFactory());
@@ -40,25 +40,33 @@ function parityLegacyFilter(array $vars): LegacyTemplate {
     $t = new LegacyTemplate(new StringUtils(), [], ['depend'=>new DependDirective($r),'if'=>new IfDirective($r),
         'template'=>new TemplateDirective($r,new ParameterFactory()),'legacy'=>new LegacyDirective($s)],
         $r, $sig = new SignatureProvider(new Random()), new FilteringDepthMeter(),
-        \Harness\neutralizerFor($sig));
+        \Harness\neutralizerFor($sig), \Harness\registryFor());
     $t->setVariables($vars); return $t;
 }
 function parityAttempt(callable $fn): string {
-    try { return 'OK:' . $fn(); } catch (\Throwable $e) { return 'THROW:' . get_class($e); }
+    try { return 'OK:' . $fn(); }
+    // The store's error page, reached from either side: legacy warning under the store's
+    // handler, or compatible mode refusing what would warn. The same answer.
+    catch (\MageOS\TemplateParser\Console\StoreError) { return 'STORE ERROR'; }
+    catch (\MageOS\TemplateParser\LegacyIncompatibleError $e) {
+        return str_contains($e->getMessage(), "store's error handler") ? 'STORE ERROR' : 'THROW:' . get_class($e);
+    }
+    catch (\Throwable $e) { return 'THROW:' . get_class($e); }
 }
 /**
- * The legacy half of one comparison, with legacy's own notices swallowed.
+ * The legacy half of one comparison, as a store runs it.
  *
  * `VarDirective::process()` casts a resolved array to string and
- * `StrictResolver::handleDataAccess()` reads an array key that is not there, so the matrix
- * below draws 36 "Array to string conversion" / "Undefined array key" warnings ahead of the
- * two reports. The guard is deliberately on this side only: a notice out of the new engine is
- * a finding, and parityAttempt() must not eat it.
+ * `StrictResolver::handleDataAccess()` reads an array key that is not there; on a store each
+ * warning is the error handler's exception, so here it is a THROW, and compatible mode's
+ * refusal is the matching answer. Only this side runs under the handler: a notice out of the
+ * new engine is a finding, and parityAttempt() must not eat it.
  */
 function parityLegacy(string $tpl, array $vars): string {
-    set_error_handler(static fn () => true);
-    try { return parityAttempt(static fn () => parityLegacyFilter($vars)->filter($tpl)); }
-    finally { restore_error_handler(); }
+    // Under the store's error handler: those warnings are the store's error page.
+    return parityAttempt(static fn () => \MageOS\TemplateParser\Console\StoreErrorHandler::run(
+        static fn () => parityLegacyFilter($vars)->filter($tpl)
+    ));
 }
 
 $values = [

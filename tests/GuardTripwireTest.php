@@ -1,27 +1,27 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\DirectiveSpec;
-use Cresset\TemplateParser\Evaluator;
-use Cresset\TemplateParser\HostDirectives;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Lexer\Lexer;
-use Cresset\TemplateParser\Lexer\TokenType;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Parser;
-use Cresset\TemplateParser\PathGuard;
-use Cresset\TemplateParser\PolicyViolationError;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\TemplateLoader;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\SyntaxError;
-use Cresset\TemplateParser\TemplateCycleError;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\TemplateError;
-use Cresset\TemplateParser\UnknownVariableError;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\DirectiveSpec;
+use MageOS\TemplateParser\Evaluator;
+use MageOS\TemplateParser\HostDirectives;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Lexer\Lexer;
+use MageOS\TemplateParser\Lexer\TokenType;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Parser;
+use MageOS\TemplateParser\PathGuard;
+use MageOS\TemplateParser\PolicyViolationError;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\SyntaxError;
+use MageOS\TemplateParser\TemplateCycleError;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateError;
+use MageOS\TemplateParser\UnknownVariableError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -205,9 +205,9 @@ final class GuardTripwireTest extends TestCase
 
     // ---------------------------------------------------------------- resolver
 
-    /** Every reflection guard in invokeAccessor, one test each. */
+    /** No method is reachable from template text, whatever its shape. */
     #[DataProvider('unreachableMethods')]
-    public function testOnlyPublicNonStaticArglessAccessorsAreCallable(string $expression, string $marker): void
+    public function testNoAccessorIsCallable(string $expression, string $marker): void
     {
         $object = new class {
             public static function getFactory(): string { return 'STATIC-REACHED'; }
@@ -227,27 +227,19 @@ final class GuardTripwireTest extends TestCase
             'static'    => ['getFactory()', 'a static factory'],
             'protected' => ['getSecret()', 'a protected method'],
             'arguments' => ['getWithArg()', 'a method requiring arguments'],
+            // An ordinary getter too: only getData() is ever called, as in StrictResolver.
+            'ordinary'  => ['getOk()', 'an ordinary getter'],
+            'member'    => ['ok', 'a getter through a member'],
         ];
     }
 
-    public function testAnOrdinaryAccessorStillWorks(): void
-    {
-        $object = new class {
-            public function getOk(): string { return 'OK'; }
-        };
-        self::assertSame(
-            '[OK]',
-            TemplateEngine::withOptions(Options::lenient())->render('[{{var o.getOk()}}]', ['o' => $object])
-        );
-    }
-
-    /** getData must be public, non-static, and able to take a key. */
+    /** getData must be public, non-static, and able to take a key - and nothing stands in for it. */
     #[DataProvider('unusableDataBags')]
     public function testOnlyAUsableDataBagIsWalked(object $object, string $marker): void
     {
         $out = TemplateEngine::withOptions(Options::lenient())->render('[{{var o.title}}]', ['o' => $object]);
 
-        self::assertSame('[REAL]', $out, $marker);
+        self::assertSame('[]', $out, $marker);
     }
 
     public static function unusableDataBags(): array
@@ -325,11 +317,11 @@ final class GuardTripwireTest extends TestCase
             ->render('{{var o.nope}}', ['o' => new \FakeDataObject(['a' => 1])]);
     }
 
-    /** A host accessor that raises must not escape the render as a host exception. */
+    /** A data bag that raises - a lazily loading getData() - must not escape the render. */
     public function testAnAccessorExceptionIsReportedAsATemplateError(): void
     {
         $object = new class {
-            public function getBoom(): string
+            public function getData($key = '')
             {
                 throw new \RuntimeException('accessor blew up: /etc/secret');
             }
@@ -340,7 +332,7 @@ final class GuardTripwireTest extends TestCase
             self::fail('expected a TemplateError');
         } catch (TemplateError $e) {
             self::assertStringNotContainsString('/etc/secret', $e->getMessage());
-            self::assertStringContainsString('getBoom', $e->getMessage());
+            self::assertStringContainsString('getData', $e->getMessage());
         }
     }
 
@@ -580,6 +572,55 @@ final class GuardTripwireTest extends TestCase
             'close then junk'   => ['{{/a}x', '}}'],
             'name run-on'       => ['{{A', '}}'],
             'known name run-on' => ['{{var', '}}'],
+        ];
+    }
+
+    /**
+     * Doubling the input roughly doubles the work, through the lexer AND the parser.
+     *
+     * Each of these was quadratic: a run-on chain recounted its quotes to a shared distant
+     * closer per opener; an unterminated quote was walked to the end of the source per
+     * opener; a verbatim span, a loop body and an unclosed custom directive were each found by
+     * a scan per token. Crafted CMS content paid that on every Shadow render - 100 KB of
+     * `{{var "}}` took five seconds. A ratio, as in SecurityRegressionTest, because a stopwatch
+     * measures the machine as much as the code.
+     */
+    #[DataProvider('quadraticShapes')]
+    public function testParsingStaysLinear(string $unit, string $tail, string $head = ''): void
+    {
+        $spec = new DirectiveSpec([], [], ['mydir']);
+        $elapsed = [];
+        foreach ([20000, 40000] as $count) {
+            $source = $head . str_repeat($unit, $count) . $tail;
+            $started = microtime(true);
+            try {
+                (new Parser($spec, Options::compatible()))->parse($source);
+            } catch (TemplateError) {
+                // Refusing is fine; refusing slowly is not.
+            }
+            $elapsed[$count] = max(microtime(true) - $started, 0.002);
+        }
+
+        $ratio = $elapsed[40000] / $elapsed[20000];
+        self::assertLessThan(
+            3.0,
+            $ratio,
+            sprintf('%s: doubling the input multiplied the work by %.1f (%.3fs then %.3fs)', $unit, $ratio, $elapsed[20000], $elapsed[40000])
+        );
+    }
+
+    /** @return array<string,array{0:string,1:string,2?:string}> unit, tail, head */
+    public static function quadraticShapes(): array
+    {
+        return [
+            'run-on chain'          => ['{{foo ', '}}'],
+            'unterminated quotes'   => ['{{trans "x {{', '}}'],
+            'escaped quotes'        => ['{{var \\"}}', ''],
+            'quoted closers'        => ['{{trans "x}}', '}}'],
+            'apostrophes'           => ["{{trans 'it's", "'}}"],
+            'unknown paired blocks' => ['{{foo}}x{{/foo}}', ''],
+            'one long loop body'    => ['{{var a}}', '{{/for}}', '{{for a in b}}'],
+            'unclosed custom'       => ['{{mydir}}', '{{/mydir}}'],
         ];
     }
 

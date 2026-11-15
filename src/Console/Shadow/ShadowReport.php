@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Shadow;
+namespace MageOS\TemplateParser\Console\Shadow;
 
 /**
  * What Shadow mode's rows say, per store view - and Parser mode's.
@@ -13,8 +13,9 @@ namespace Cresset\TemplateParser\Console\Shadow;
  *
  * Pure: rows in, summaries out, so the arithmetic the rollout decision rests on is tested
  * without a database. See Shadow\ShadowRecorder for what each column means; in short, a
- * divergence or a crash counts against a template, an agreement or a refusal counts as clean,
- * and "clean since" is the last divergence or, failing one, the first comparison.
+ * divergence or a crash counts against a template, an agreement, a refusal or a deliberate
+ * difference counts as clean, and "clean since" is the last divergence or, failing one, the
+ * first comparison.
  *
  * `$since` narrows what counts against a template to divergences at or after that moment -
  * the question after fixing something is whether it has diverged SINCE the fix, and a
@@ -27,6 +28,9 @@ final class ShadowReport
     private array $stores = [];
 
     private int $orphanedRows = 0;
+
+    /** Whether any row in scope holds a comparison - see isEmpty(). */
+    private bool $compared = false;
 
     /**
      * @param list<array<string,mixed>> $rows from ShadowTable::rows()
@@ -54,6 +58,7 @@ final class ShadowReport
                 'diverged' => 0,
                 'refused' => 0,
                 'crashed' => 0,
+                'deliberate' => 0,
                 'served' => 0,
                 'fell_back' => 0,
                 'first_seen' => null,
@@ -70,7 +75,7 @@ final class ShadowReport
                 && ($this->since === null || $template['last_divergence_at'] >= $this->since);
 
             $store['templates']++;
-            foreach (['agreed', 'diverged', 'refused', 'crashed'] as $counter) {
+            foreach (['agreed', 'diverged', 'refused', 'crashed', 'deliberate'] as $counter) {
                 $store[$counter] += $template[$counter];
                 $store['renders'] += $template[$counter];
             }
@@ -84,6 +89,10 @@ final class ShadowReport
                 $store['last_divergence_template'] = $template['template'];
             }
             $store['failing'] += $template['failing'] ? 1 : 0;
+            $comparisons = $template['agreed'] + $template['diverged'] + $template['refused'] + $template['crashed'] + $template['deliberate'];
+            if ($comparisons > 0 && ($this->since === null || (string)$template['last_seen'] >= $this->since)) {
+                $this->compared = true;
+            }
             $store['rows'][] = $template;
             unset($store);
         }
@@ -97,9 +106,17 @@ final class ShadowReport
         return array_values($this->stores);
     }
 
+    /**
+     * Nothing in scope was compared.
+     *
+     * Comparisons, not rows: a store view in Parser records every render it serves, but only
+     * the sampled share is compared, so rows of serves alone are no evidence - and with
+     * --since, a template last seen before then was not compared in the window at all. Both
+     * read as "clean" while proving nothing; this is the report's exit 2.
+     */
     public function isEmpty(): bool
     {
-        return $this->stores === [];
+        return !$this->compared;
     }
 
     /** Anything diverged or crashed (since `$since`, when given). */
@@ -135,6 +152,9 @@ final class ShadowReport
             $store['refused'],
             $store['crashed']
         );
+        if ($store['deliberate'] > 0) {
+            $line .= sprintf(', %d deliberate', $store['deliberate']);
+        }
 
         if ($store['served'] > 0 || $store['fell_back'] > 0) {
             $line .= sprintf('; Parser served %d, fell back %d', $store['served'], $store['fell_back']);
@@ -157,6 +177,8 @@ final class ShadowReport
             'diverged' => (int)$row['diverged'],
             'refused' => (int)$row['refused'],
             'crashed' => (int)$row['crashed'],
+            // Absent until setup:upgrade adds the column, as served and fell_back once were.
+            'deliberate' => (int)($row['deliberate'] ?? 0),
             // Absent from a table created before Parser mode, until setup:upgrade adds them.
             'served' => (int)($row['served'] ?? 0),
             'fell_back' => (int)($row['fell_back'] ?? 0),

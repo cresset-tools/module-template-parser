@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\Shadow\ShadowReport;
+use MageOS\TemplateParser\Console\Shadow\ShadowReport;
+use MageOS\TemplateParser\Console\StoreOption;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,11 +20,22 @@ class ShadowReportCommand extends Command
     /** Exit code when nothing in scope was ever compared. */
     public const NOTHING_RECORDED = 2;
 
+    /**
+     * What a deliberate difference is, in one paragraph for the report.
+     *
+     * Not a divergence and nothing to fix, but listed, so nobody reading the counts wonders
+     * where these renders went.
+     */
+    public const DELIBERATE = 'Deliberate: this store\'s filter predates the output neutralizer of Mage-OS 3.5.0, so '
+        . 'where a value contains {{ it prints it as written or re-parses it as a directive. The new engine '
+        . 'never re-parses a value. These renders differ ONLY there - checked against a second render - and '
+        . 'the new engine\'s output is the intended one, so they count as clean and Parser mode serves them.';
+
     protected function configure(): void
     {
-        $this->addOption('store', null, InputOption::VALUE_REQUIRED, 'Only this store view id')
+        $this->addOption('store', null, InputOption::VALUE_REQUIRED, 'Only this store view, by id or code')
             ->addOption('template', null, InputOption::VALUE_REQUIRED, 'Only this template, e.g. cms_block:7; * matches anything, e.g. "email:*"')
-            ->addOption('since', null, InputOption::VALUE_REQUIRED, 'Only count divergences at or after this time (UTC), e.g. "2026-09-01 12:00" or "-7 days"')
+            ->addOption('since', null, InputOption::VALUE_REQUIRED, 'Only count divergences at or after this time (UTC), e.g. "2026-09-01 12:00", "-7 days" or "-24h"')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'text or json', 'text')
             ->setHelp(<<<'HELP'
 Reads what Shadow mode recorded and says, per store view, whether its templates
@@ -46,6 +58,12 @@ of failures, and only one of them is evidence for switching to Parser.
 Refusals are listed but never fail the report: Parser mode falls back to the
 legacy filter for them, so the customer gets exactly what they get today.
 
+Deliberate differences are listed and never fail it either. On a filter from
+before Mage-OS 3.5.0's output neutralizer, a value containing {{ is printed as
+written or re-parsed as a directive; the new engine never re-parses a value.
+A render that differs only there - checked against a second render - counts as
+clean, and Parser mode serves it.
+
   template:shadow:report --store=1
   template:shadow:report --template="cms_block:*" --since="-7 days"
   template:shadow:report --format=json
@@ -59,25 +77,26 @@ HELP);
             throw new \InvalidArgumentException(sprintf('Unknown --format "%s". Use text or json.', $format));
         }
         $since = $this->since($input);
-        $storeId = $input->getOption('store') !== null ? (int)$input->getOption('store') : null;
         $template = $input->getOption('template') !== null ? (string)$input->getOption('template') : null;
 
         $table = $this->shadowTable($output);
         if ($table === null) {
             return Command::FAILURE;
         }
+        $storeId = StoreOption::resolve($input->getOption('store'), StoreOption::codes($table->stores(withAdmin: true)));
 
-        $report = new ShadowReport($table->rows($storeId, $template), $table->stores(), $since);
+        $report = new ShadowReport($table->rows($storeId, $template), $table->stores(withAdmin: true), $since);
         $exit = $report->isEmpty() ? self::NOTHING_RECORDED : ($report->isFailing() ? Command::FAILURE : Command::SUCCESS);
 
         if ($format === 'json') {
-            $output->writeln((string)json_encode([
+            $output->writeln(json_encode([
                 'since' => $since,
                 'clean' => $exit === Command::SUCCESS,
                 'recorded' => !$report->isEmpty(),
                 'stores' => array_map(fn (array $store): array => $this->jsonStore($store), $report->stores()),
+                'deliberate_note' => array_sum(array_column($report->stores(), 'deliberate')) > 0 ? self::DELIBERATE : null,
                 'orphaned_rows' => $report->orphanedRows(),
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            ], JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
             return $exit;
         }
@@ -115,11 +134,12 @@ HELP);
             $store['last_seen']
         ));
         $output->writeln(sprintf(
-            '  %d agreed, %d diverged, %d refused, %d crashed',
+            '  %d agreed, %d diverged, %d refused, %d crashed%s',
             $store['agreed'],
             $store['diverged'],
             $store['refused'],
-            $store['crashed']
+            $store['crashed'],
+            $store['deliberate'] > 0 ? sprintf(', %d deliberate', $store['deliberate']) : ''
         ));
         if ($store['served'] > 0 || $store['fell_back'] > 0) {
             $output->writeln(sprintf(
@@ -143,6 +163,22 @@ HELP);
                 $this->textRefused($row, (int)$store['store_id'], $output);
             }
         }
+
+        $deliberate = array_values(array_filter($store['rows'], static fn (array $row): bool => $row['deliberate'] > 0));
+        foreach ($deliberate as $row) {
+            $output->writeln(sprintf('  <info>DELIBERATE</info> %s', $row['template']));
+            $output->writeln(sprintf('    %d of %d render(s)', $row['deliberate'], self::renders($row)));
+        }
+        if ($deliberate !== []) {
+            $output->writeln('    <fg=gray>' . self::DELIBERATE . '</>');
+            $output->writeln('');
+        }
+    }
+
+    /** @param array<string,mixed> $row */
+    private static function renders(array $row): int
+    {
+        return $row['agreed'] + $row['diverged'] + $row['refused'] + $row['crashed'] + $row['deliberate'];
     }
 
     /** @param array<string,mixed> $row */
@@ -175,7 +211,7 @@ HELP);
     {
         $refusal = $row['last_refusal'] ?? [];
         $output->writeln(sprintf('  <comment>REFUSED </comment> %s', $row['template']));
-        $output->writeln(sprintf('    %d refused of %d render(s)', $row['refused'], $row['agreed'] + $row['diverged'] + $row['refused'] + $row['crashed']));
+        $output->writeln(sprintf('    %d refused of %d render(s)', $row['refused'], self::renders($row)));
         if (isset($refusal['problem'])) {
             $output->writeln(sprintf(
                 '    %s%s',
@@ -206,7 +242,8 @@ HELP);
     private function advice(array $row, int $storeId): string
     {
         $refusal = $row['last_refusal'] ?? [];
-        $check = sprintf('%s --store=%d --source=%s', $this->sibling('check'), $storeId, self::source((string)$row['template']));
+        $check = $this->command('check', $storeId, (string)$row['template']);
+        $diff = $this->command('diff', $storeId, (string)$row['template']);
 
         foreach (array_merge($refusal['policy_violations'] ?? [], $row['last_divergence']['policy_violations'] ?? []) as $violation) {
             if (!preg_match('/^policy refused (.+?) "(.*)" \(line/', (string)$violation, $m)) {
@@ -219,15 +256,29 @@ HELP);
                     'the template renders layout handle "%s", which is not on the new engine\'s allow list. If it should render, have a developer add it to allowedHandles of AllowlistedLayoutRenderer in a module\'s di.xml.',
                     $name
                 ),
+                // Not a list anyone can add to: this engine has no path to a CMS block by its
+                // identifier, so Parser always hands this template to the filter.
+                $kind === 'block id' => sprintf(
+                    'the template renders CMS block "%s" by its identifier, which the new engine leaves to Magento\'s filter. Parser mode falls back for this template, so customers see what they see today; nothing needs changing.',
+                    $name
+                ),
                 str_starts_with($kind, 'block'), $kind === 'widget type' => sprintf(
                     'the template uses %s "%s", which is not on the new engine\'s allow list. If it should render, have a developer allow it in di.xml; otherwise remove it from the template.',
                     $kind,
                     $name
                 ),
+                // Nothing to allow: the filter applies this stylesheet to part of the email,
+                // which the host's inlining step cannot be asked to do for this engine.
+                $kind === 'stylesheet the filter inlines over part of the document' => sprintf(
+                    'the template asks for stylesheet "%s" inside an {{if}} or {{depend}}, and Magento\'s filter inlines it over that part of the email only. Parser mode falls back for this template, so customers see what they see today; moving the {{inlinecss}} - or the {{template}} include that carries it - out of the {{if}} or {{depend}} lets the new engine render it.',
+                    $name
+                ),
+                // diff, not check: check renders in the engine's own posture and never asks how
+                // the filter would read the template, so it could not show this.
                 $kind === 'construct the filter reads differently' => sprintf(
-                    'the template contains something Magento\'s filter reads differently from how it is written (%s). Run %s to see the line, and rewrite it so it reads the same either way.',
+                    'the template contains something Magento\'s filter reads differently from how it is written (%s). Run %s to see both readings, and rewrite it so it reads the same either way.',
                     $name,
-                    $check
+                    $diff
                 ),
                 default => sprintf(
                     'the new engine would not render %s "%s" here, where Magento\'s filter does. Run %s to see where; usually the template can be changed to avoid it.',
@@ -239,7 +290,7 @@ HELP);
         }
 
         $error = (string)($refusal['error'] ?? '');
-        if ($error === '' || !is_a($error, \Cresset\TemplateParser\TemplateError::class, true) && $error !== 'policy') {
+        if ($error === '' || !is_a($error, \MageOS\TemplateParser\TemplateError::class, true) && $error !== 'policy') {
             return 'code the template calls - a block or a widget - raised an error while rendering; Magento\'s filter handles it as it always has. Look in var/log/exception.log for the cause.';
         }
 
@@ -294,7 +345,7 @@ HELP);
     {
         if ($row['last_crash'] !== null && ($row['last_divergence'] === null || $row['crashed'] >= $row['diverged'])) {
             return 'a crash is a bug in the new engine, not in the template - please report it with the error above at '
-                . 'https://github.com/cresset-tools/module-template-parser/issues';
+                . 'https://github.com/mage-os-lab/module-template-parser/issues';
         }
 
         $template = (string)$row['template'];
@@ -307,7 +358,7 @@ HELP);
         }
 
         $divergence = $row['last_divergence'] ?? [];
-        $reproduce = sprintf('%s --store=%d --source=%s', $this->sibling('diff'), $storeId, self::source($template));
+        $reproduce = $this->command('diff', $storeId, $template);
 
         if (($divergence['policy_violations'] ?? []) !== []) {
             return sprintf('the new engine refused part of this render by policy (above); run %s to see where, and change the template or the policy', $reproduce);
@@ -319,16 +370,35 @@ HELP);
         return sprintf('run %s to see where the outputs differ', $reproduce);
     }
 
-    /** The `--source` of check and diff that holds this template. */
-    private static function source(string $template): string
+    /**
+     * The check or diff command that reaches this template, or - for one no source holds - a
+     * sentence saying so.
+     *
+     * Product and category attributes, address formats and the store address are rendered
+     * from data no source of check or diff reads, and an unsaved email has no template to
+     * read at all; suggesting `--source=all` for them sent an operator to a run that could
+     * never find the template.
+     */
+    private function command(string $command, int $storeId, string $template): string
+    {
+        $source = self::source($template);
+
+        return $source !== null
+            ? sprintf('%s --store=%d --source=%s', $this->sibling($command), $storeId, $source)
+            : sprintf('%s on its text (no source %s reads holds %s - copy it from where it is stored)', $this->sibling('repl'), $command, $template);
+    }
+
+    /** The `--source` of check and diff that holds this template, or null when none does. */
+    private static function source(string $template): ?string
     {
         $kind = strstr($template, ':', true) ?: $template;
         $id = substr($template, strlen($kind) + 1);
 
         return match ($kind) {
-            'email' => ctype_digit(strtok($id, '/') ?: '') ? 'email' : 'codebase',
+            'email' => ctype_digit(strtok($id, '/') ?: '') ? 'email' : ($id === 'unsaved' ? null : 'codebase'),
             'newsletter', 'newsletter_queue' => 'newsletter',
             'cms_block', 'cms_page' => 'cms',
+            'product', 'category', 'address', 'store_address' => null,
             default => 'all',
         };
     }
@@ -359,18 +429,41 @@ HELP);
             return null;
         }
 
+        $since = trim((string)$since);
+        $utc = new \DateTimeZone('UTC');
+        $now = time();
+
+        // `-24h`, `-7d`: the spelling a CI gate reaches for. PHP reads `-24h` as a UTC offset
+        // and `-7d` as one too, with only a warning, so each landed hours in the FUTURE - every
+        // divergence predated it and the gate passed for ever.
+        if (preg_match('/^-?\s*(\d+)\s*(m|min|h|d|w)\z/i', $since, $m) === 1) {
+            $seconds = (int)$m[1] * ['m' => 60, 'min' => 60, 'h' => 3600, 'd' => 86400, 'w' => 604800][strtolower($m[2])];
+            return (new \DateTimeImmutable('@' . ($now - $seconds)))->setTimezone($utc)->format('Y-m-d H:i:s');
+        }
+
         // The procedural form, because it returns false instead of throwing. PHP 8.3's
         // DateMalformedStringException trips older Xdebug releases, which try to add a
         // dynamic property to it and raise an Error in its place - so the constructor turned
         // a typo into a crash on exactly the CI setup that has Xdebug loaded.
-        $moment = date_create_immutable((string)$since, new \DateTimeZone('UTC'));
-        if ($moment === false) {
+        $moment = date_create_immutable($since, $utc);
+        $warnings = date_get_last_errors();
+        if ($moment === false || ($warnings !== false && ($warnings['warning_count'] > 0 || $warnings['error_count'] > 0))) {
             throw new \InvalidArgumentException(sprintf(
-                'Unknown --since "%s". Use a date such as "2026-09-01 12:00", or a relative time such as "-7 days".',
-                (string)$since
+                'Unknown --since "%s". Use a date such as "2026-09-01 12:00", or a relative time such as "-7 days" or "-24h".',
+                $since
+            ));
+        }
+        // "7 days", "monday", "tomorrow" all parse - as times to come. A window that starts
+        // in the future holds nothing, and an empty window passes the gate.
+        if ($moment->getTimestamp() > $now + 60) {
+            throw new \InvalidArgumentException(sprintf(
+                '--since "%s" is %s UTC, which is in the future.%s',
+                $since,
+                $moment->setTimezone($utc)->format('Y-m-d H:i:s'),
+                preg_match('/^\+?\s*\d/', $since) === 1 ? sprintf(' Did you mean "-%s"?', ltrim($since, '+ ')) : ' Give a time in the past, such as "-7 days".'
             ));
         }
 
-        return $moment->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+        return $moment->setTimezone($utc)->format('Y-m-d H:i:s');
     }
 }

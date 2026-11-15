@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Ast;
+namespace MageOS\TemplateParser\Ast;
 
 final class DirectiveNode implements Node
 {

@@ -1,11 +1,11 @@
-# cresset/module-template-parser
+# mage-os/module-template-parser
 
 A parser for Magento's `{{...}}` template directives. It builds an AST and evaluates it once,
 instead of matching regexes against its own output the way `Magento\Framework\Filter\Template`
 does.
 
 ```php
-use Cresset\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateEngine;
 
 $engine = new TemplateEngine();
 
@@ -13,14 +13,20 @@ echo $engine->render('Dear {{var name}},', ['name' => 'Ada']);
 // Dear Ada,
 ```
 
-Everything in this README lives under `Cresset\TemplateParser\`; later snippets leave the
+Everything in this README lives under `MageOS\TemplateParser\`; later snippets leave the
 `use` lines out.
 
 ```sh
-composer require cresset/module-template-parser
+composer require mage-os/module-template-parser
 ```
 
 That puts `vendor/bin/template-parser` in place too, which is what the CLI section below runs.
+
+This is a [Mage-OS Lab](https://github.com/mage-os-lab) project. It started at
+[cresset-tools/module-template-parser](https://github.com/cresset-tools/module-template-parser),
+where releases up to 0.3.0 were published as `cresset/module-template-parser` with the
+`Cresset_TemplateParser` module and `Cresset\TemplateParser` namespace. The
+[changelog](CHANGELOG.md) has the upgrade path; Shadow's recorded history carries over.
 
 Requires PHP 8.3, 8.4 or 8.5. The engine is plain PHP with no Magento dependency; the Magento
 bindings sit behind narrow interfaces — *ports* — in `src/Magento/`.
@@ -83,6 +89,9 @@ it. Parser mode runs the compatible posture, which is why that is the CLI's defa
 
 The package is a `magento2-module` with `registration.php` and `etc/`, so
 `bin/magento setup:upgrade` after the `composer require` above adds it to `app/etc/config.php`.
+It runs on Magento Open Source 2.4.x and on Mage-OS; where the host has Mage-OS's
+`BlockDirectivePolicy`, `{{block}}` uses it. A store on the old `cresset/module-template-parser`
+package follows the [upgrade steps in the changelog](CHANGELOG.md) - the two packages conflict.
 **Installing it changes no rendering behaviour.** The module wires its plugin on install, and
 the plugin does nothing until a store view is told to.
 
@@ -108,8 +117,8 @@ measuring after it: `system/template_engine/parser_shadow_rate` percent of its r
 default, shown in the admin only for Parser) are also rendered by the filter and compared. The
 customer still gets this engine's result.
 
-"Declines" is deliberately wide. Wherever this engine would render less than Mage-OS 3.5.0's
-filter for the same template — a guard stricter than the filter's, a port that cannot answer,
+"Declines" is deliberately wide. Wherever this engine would render less than the store's own
+Mage-OS 3.5.0 or 3.6.0 filter for the same template — a guard stricter than the filter's, a port that cannot answer,
 a directive it does not model — the render records a policy violation instead of rendering an
 unexplained nothing, and Parser hands it to the filter. That covers:
 
@@ -133,7 +142,12 @@ unexplained nothing, and Parser hands it to the filter. That covers:
   brace), a quote still open at that `}}`, and `{{iframe}}`-style names legacy reads as
   `{{if}}`. These are the "Quirks it does not reproduce" below; compatible mode keeps
   rendering them its own way for `check` and `diff`, and the Magento layer declines them
-  (`LegacyReading`), for the top-level template and for every include.
+  (`LegacyReading`), for the top-level template and for every include;
+- a stylesheet the filter inlines over one `{{if}}`, `{{else}}` or `{{depend}}` body rather than
+  over the whole email: an `{{inlinecss}}` written inside such a body, on every version, and -
+  on a filter from before Mage-OS 3.6.0 - one an include inside such a body asks for. This
+  engine hands every stylesheet to the host for the whole document. See [Which legacy
+  filter?](#which-legacy-filter).
 
 And it matches the filter where it can. `{{widget}}` gets what `generateWidget` gives a block -
 `type`, the filter's store as `store_id`, and `name` as the block name - and `{{store}}` and
@@ -186,16 +200,16 @@ models, so the plugin hands it straight to the filter in every stage.
 
 In Shadow, `ShadowComparator` renders the template through this engine as well and the plugin
 returns the *legacy* result — so putting a store view in Shadow changes nothing a customer
-sees. Each comparison is recorded in the `cresset_template_shadow` table, one row per store view
+sees. Each comparison is recorded in the `mageos_template_parser_shadow` table, one row per store view
 and template:
 
 | Column | Holds |
 |---|---|
 | `template` | which template it was: `email:sales_email_order_template`, `email:12`, `email:12/subject`, `newsletter:3` (and `/subject`) for a newsletter template, `newsletter_queue:5` (and `/subject`) for a queued send, `cms_block:7`, `cms_page:2`, `address:html` (`text`, `oneline`, `pdf`) for a customer address format, `store_address` for the store's own, `product:42/description` and `category:3/description` for a WYSIWYG attribute holding a directive, or `unidentified:<filter class>` |
-| `agreed`, `diverged`, `refused`, `crashed` | how many renders had each outcome |
+| `agreed`, `diverged`, `refused`, `crashed`, `deliberate` | how many renders had each outcome |
 | `served`, `fell_back` | Parser mode: how many renders it served, and how many it handed to legacy |
 | `first_seen`, `last_seen` | when it was first and last compared (UTC) |
-| `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many renders have agreed or been refused since |
+| `last_divergence_at`, `renders_since_divergence` | when it last diverged or crashed, and how many clean renders - agreed, refused or deliberate - since |
 | `last_divergence`, `last_refusal`, `last_crash` | JSON describing the most recent of each |
 
 A **refusal** is a construct this engine declines on purpose, a render the policy cut short
@@ -205,6 +219,12 @@ rendered; Parser mode falls back to legacy for it, so it counts as clean. A
 bug in this engine rather than a property of the template, so it counts against the template
 like a divergence. "Clean since" is `last_divergence_at`, or `first_seen` for a template that
 has never diverged.
+
+A **deliberate** difference only occurs on a filter from before Mage-OS 3.5.0's output
+neutralizer: the render differs *only* where a value contains `{{`, which that filter prints as
+written or re-parses as a directive and this engine never does. It counts as clean, and Parser
+serves this engine's output for it — see [Before 3.5.0: values are never
+re-parsed](#before-350-values-are-never-re-parsed).
 
 Parser records into the same rows. A served render that was sampled counts as a comparison,
 exactly like a Shadow one — so a divergence after the switch fails `template:shadow:report` the
@@ -410,9 +430,10 @@ Magento tree over a corpus and records what it produced; it calls Magento's own 
 rather than reimplementing it, because reimplementing the escaper once made the measurement
 circular.
 
-**4788 cases recorded. 804 are constructs the legacy filter cannot render at all, 843 put the
-two engines on surfaces that cannot be compared, and 307 are shapes compatible mode refuses on
-purpose. Over the remaining 2834 cases, where both engines render, output is byte-identical.**
+**4896 cases recorded. 920 are constructs the legacy filter cannot render at all, 951 put the
+two engines on surfaces that cannot be compared, and 295 are shapes compatible mode refuses on
+purpose. Over the remaining 2730 cases, where both engines render, output is byte-identical.**
+The figures are the same for each release the corpus is recorded against, 3.5.0 and 3.6.0.
 
 That corpus is recorded from a filter built out of a handful of files and no application, so
 the directives it can compare are the six the base `Framework\Filter\Template` implements:
@@ -454,7 +475,10 @@ than what is true. Two properties are asserted absolutely:
 
 - **Nothing the legacy filter crashes on is rendered here.** A construct the old filter died
   on is one nobody has ever seen the output of, so rendering it would be inventing behaviour,
-  not reproducing it.
+  not reproducing it. That includes a PHP warning: a store's error handler turns every one
+  into an exception, which the Email filter renders as its error message in place of the
+  template - so the corpus is recorded under that handler, and a construct that warns counts
+  as one the filter cannot render.
 - **Where both render, they agree byte for byte** — for every case in the corpus except the
   declared divergences named below, each of which is *recorded* as a case rather than left
   out of one, so the disagreement is measured and pinned rather than avoided.
@@ -468,8 +492,8 @@ Quirks it reproduces:
 |---|---|
 | truthiness | `resolve(...) == ''`, so on PHP 8 `0`, `'0'`, `0.0` and `[]` are truthy — and `false` and `null` are not |
 | partial paths | member access is only attempted on an array or DataObject parent, so a scalar parent yields itself (`{{var store.frontend_name}}` renders the store) |
-| missing keys | an array parent with a missing key yields nothing, not the parent |
-| arrays | cast to the literal string `Array` |
+| missing keys | an array parent with a missing key is a PHP warning - on a store, the error handler's exception and the filter's error message - so it is refused |
+| arrays | cast to a string with a PHP warning, the same store error - so refused; an array argument to `{{trans}}` makes `Phrase` render its raw text, which is reproduced |
 | no variables | directives pass through verbatim, which is the template-validation path |
 | getter keys | `getAddress1()` reads `address_1`, because a run of digits is its own segment |
 | member access | only through `getData()`; a real getter is never called, bar the one exception below |
@@ -550,7 +574,9 @@ Quirks it does not reproduce:
   values in scope, and it is the one accepted gap in "nothing the filter crashes on is
   rendered here".
 - **A value re-parsed as source.** Never, in any mode. This one is structural rather than a
-  mode setting, which is why it is not in the table above.
+  mode setting, which is why it is not in the table above. On a filter from before Mage-OS
+  3.5.0 it is also a difference you can see, and it is intended — see [Before 3.5.0: values
+  are never re-parsed](#before-350-values-are-never-re-parsed).
 - **Reflection dispatch of arbitrary filter methods.** There is none here; every directive
   reaches a named handler.
 - **`{{layout}}` without an allowlist.** A layout handle decides which blocks get built, so
@@ -565,6 +591,9 @@ Quirks it does not reproduce:
   modifiers correctly, and that is the filter templates actually render through.
 
 ### Which legacy filter?
+
+Compatible mode matches Mage-OS 3.5.0 and 3.6.0, each on its own terms, and the corpus is
+recorded against both - see [the parity corpus](CONTRIBUTING.md#the-parity-corpus).
 
 Mage-OS shipped the [StyleSmuggler](https://sansec.io/research/stylesmuggler-0day) hardening
 in 3.5.0. Part of it, `Template\DirectiveOutputNeutralizer`, encodes `{{` in resolved directive
@@ -583,9 +612,74 @@ by default; for a tree from before the hardening:
 TemplateEngine::withOptions(Options::compatible()->withOutputNeutralizer(false));
 ```
 
-The corpus records both, and 751 cases carry a second expectation for the older behaviour.
+The corpus records both, and 763 cases carry a second expectation for the older behaviour.
 This engine needs none of it — a value is never re-parsed here whatever the setting — so the
 flag does nothing outside compatible mode.
+
+3.6.0 replaced the filter's signature-based deferral with `Template\DeferredDirectiveRegistry`.
+A child template still hands its `{{inlinecss}}` up rather than resolving it, but now only the
+root template resolves it, and the neutralizer no longer has signed spans to leave alone. This
+engine's neutralizer never had that exemption, so it already encodes as 3.6.0 does. What
+changed in output is where an include's stylesheet is inlined when the include sits inside an
+`{{if}}`, `{{else}}` or `{{depend}}` of the root template: the filter renders each such body
+with a `filter()` call of its own, and up to 3.5.0 that call resolved the deferral and inlined
+the stylesheet over the body alone; 3.6.0 inlines it over the whole document. Recorded against
+both releases, that is the only difference across the corpus, and
+`LegacyParityTest::DEFERRAL_MOVED` pins it.
+
+This engine always hands its stylesheets to the host for the whole document. So the Magento
+layer reads which filter the store has - `HostDeferral` looks for the registry among the
+filter's constructor arguments - and on a filter without it, declines a render whose include
+asks for a stylesheet from inside a body; Parser mode hands that render to the filter. An
+`{{inlinecss}}` written directly inside a body is inlined over that body by every version, and
+is declined on every version. Outside a store, compatible mode targets 3.6.0; for 3.5.0:
+
+```php
+TemplateEngine::withOptions(Options::compatible()->withDeferralResolvedAtRoot(false));
+```
+
+One difference is left unmodelled: the filter collects stylesheets in the order its processor
+passes reach them - `{{depend}}` bodies, `{{if}}` bodies, `{{template}}`, then the rest - and
+this engine in document order. It shows only where two stylesheets set the same property on the
+same element, which Shadow measures on a store's own templates; the stock templates inline one
+stylesheet, from the header include.
+
+#### Before 3.5.0: values are never re-parsed
+
+On a filter from before the neutralizer — Mage-OS before 3.5.0, and Magento Open Source,
+whose filter has no `DirectiveOutputNeutralizer` — a value containing `{{` comes out as written,
+or is **re-parsed as a directive**: the filter `str_replace`s each directive's result over a
+text that already holds the results before it, so a value naming a directive the template also
+uses is replaced again. Recorded on Mage-OS 3.4.0's `FilterManager::template()`, for the
+one-line address format:
+
+```
+street = 'Hoofdstraat 1 {{var city}}', city = 'Utrecht'
+  Mage-OS 3.4.0:  Hoofdstraat 1 Utrecht, Utrecht, ...
+  this engine:    Hoofdstraat 1 &#123;&#123;var city}}, Utrecht, ...
+```
+
+This engine never re-parses a value, and encodes its `{{` on every host. **That is a
+deliberate, known difference, and the module keeps it:** its output is the intended one, so it
+is not counted as a divergence, and Parser does not fall back to the filter for it — falling
+back would serve the re-parsed text.
+
+It is never assumed, though. The Magento layer reads which filter the store has —
+`HostOutputNeutralizer` looks for the neutralizer among the framework filter's constructor
+arguments, and anything it cannot read counts as the current filter — and only on one without
+it, a render that differs is rendered a second time with the neutralizer *marking* instead of
+encoding (`DeliberateDifference`). It is called deliberate only if that shows the difference
+is the whole of it: the marked render is the served one up to brace encoding, and the filter's
+output matches it byte for byte except where a value's own `{{...}}` construct stands — whatever
+the filter made of that. A difference anywhere else in the same render, including in the rest
+of that value, leaves it a divergence.
+
+Shadow and Parser's sampled comparisons record such a render as `deliberate`;
+`template:shadow:report` lists those templates under `DELIBERATE` with the reason, and they
+never fail it. `template:diff` lists them as `deliberate`, apart from what differs, without
+counting them for `--fail-on-divergence`; its JSON has them under `deliberate_differences`.
+All 316 recorded address-format renders of Mage-OS 3.4.0
+(`tests/fixtures/legacy/address-formats-3.4.0.json`) either agree or differ only this way.
 
 ### What it refuses
 
@@ -838,11 +932,13 @@ template-parser check --source=all --format=json > findings.json
 ```
 
 The exit code is what makes it useful in CI: non-zero at or above `--fail-on`, which defaults
-to `error` so a first run over a decade of templates is not a wall of red.
+to `error` so a first run over a decade of templates is not a wall of red. It exits 2 when
+there was nothing to check, and 3 when a selected source could not be read — a store whose
+database is down, say. Skipped sources are always named on stderr, and `diff` follows the
+same rule.
 
 `--posture` picks how strictly the engine reads (see [Modes](#modes)); it defaults to
-compatible, the posture Parser mode runs. `--mode` is the old spelling and still works for one
-release, with a warning on stderr.
+compatible, the posture Parser mode runs. (`--mode`, its 0.2 spelling, is gone.)
 
 ### Diffing against the filter you run today
 
@@ -881,13 +977,18 @@ emails use - the five the module allows in a store:
 template-parser diff --source=codebase --allow-layout-handle=stock-email
 ```
 
+On a store whose filter predates Mage-OS 3.5.0's output neutralizer, a template whose only
+difference is a value containing `{{` is listed as `deliberate` rather than `differs`, and does
+not fail `--fail-on-divergence`; see [Before 3.5.0](#before-350-values-are-never-re-parsed).
+
 ### Reading what Shadow measured
 
-`shadow:report` summarises the `cresset_template_shadow` table per store view: templates and
+`shadow:report` summarises the `mageos_template_parser_shadow` table per store view: templates and
 renders compared, how many diverged, were refused or crashed, and since when the store view has
 been clean. Each diverging template is listed with its causes and the `diff` command that
 reproduces it; refusals are listed too, but never fail the report, because Parser mode falls
-back to legacy for them.
+back to legacy for them. So are deliberate differences, on a filter from before Mage-OS 3.5.0 —
+see [Before 3.5.0](#before-350-values-are-never-re-parsed).
 
 ```sh
 bin/magento template:shadow:report --store=1
@@ -928,7 +1029,7 @@ every command twice, so it is gone.)
 package's own CI uses it. If you do too:
 
 ```sh
-bougie tool run cresset/module-template-parser check --source=codebase
+bougie tool run mage-os/module-template-parser check --source=codebase
 bougie run -- vendor/bin/n98-magerun2 template:diff --source=email
 ```
 
@@ -1019,11 +1120,11 @@ composer install
 vendor/bin/phpunit
 ```
 
-13359 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
+24422 tests. The parity corpus and the StyleSmuggler differential are the two that carry the
 argument:
 
-- `LegacyParityTest` replays the 4788 recorded cases, so the differential runs anywhere with
-  no Magento installation, and drift in compatible mode shows up as a failing case rather than
+- `LegacyParityTest` replays the 4896 recorded cases, once per target release, so the
+  differential runs anywhere with no Magento installation, and drift in compatible mode shows up as a failing case rather than
   a surprise in production.
 - `StyleSmugglerDifferentialTest` asserts both halves of the vulnerability: that the recording
   really is the vulnerable behaviour, and that this engine executes nothing given the identical

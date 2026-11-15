@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Port;
+namespace MageOS\TemplateParser\Port;
 
 /**
  * Renders the directives a host has registered that this engine does not implement itself.

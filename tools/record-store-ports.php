@@ -45,21 +45,21 @@ foreach ([$root . '/vendor/autoload.php', __DIR__ . '/../vendor/autoload.php'] a
     }
 }
 
-use Cresset\TemplateParser\Console\EngineFactory;
-use Cresset\TemplateParser\Console\LegacyRenderer;
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\Mode;
-use Cresset\TemplateParser\Console\StoreEmulator;
-use Cresset\TemplateParser\Console\TemplateSubject;
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\DirectiveSpec;
-use Cresset\TemplateParser\Evaluator;
-use Cresset\TemplateParser\HostDirectives;
-use Cresset\TemplateParser\Parser;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\Testing\PortTape;
-use Cresset\TemplateParser\Testing\TapedServices;
+use MageOS\TemplateParser\Console\EngineFactory;
+use MageOS\TemplateParser\Console\LegacyRenderer;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\Mode;
+use MageOS\TemplateParser\Console\StoreEmulator;
+use MageOS\TemplateParser\Console\TemplateSubject;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\DirectiveSpec;
+use MageOS\TemplateParser\Evaluator;
+use MageOS\TemplateParser\HostDirectives;
+use MageOS\TemplateParser\Parser;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\Testing\PortTape;
+use MageOS\TemplateParser\Testing\TapedServices;
 
 /**
  * What of a variable set can go in a fixture.

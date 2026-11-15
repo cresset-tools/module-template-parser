@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\Diagnostics;
-use Cresset\TemplateParser\LegacyReading;
-use Cresset\TemplateParser\PolicyViolation;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\TemplateError;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\Diagnostics;
+use MageOS\TemplateParser\LegacyReading;
+use MageOS\TemplateParser\PolicyViolation;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\TemplateError;
 
 /**
  * Presents the engine with the shape Magento's template filter uses.
@@ -27,9 +27,14 @@ use Cresset\TemplateParser\TemplateError;
  * after running ShadowComparator over real content - not a side effect of installing this
  * module.
  */
-class TemplateFilterAdapter implements TemplateFilterInterface
+class TemplateFilterAdapter implements TemplateFilterInterface, MarksNeutralizedOutput
 {
     private TemplateEngine $engine;
+
+    /** The same engine with the neutralizer marking - see filterMarked(). Built when first asked for. */
+    private ?TemplateEngine $markingEngine = null;
+
+    private readonly HostServices $services;
 
     /** @var array<string,mixed> */
     private array $variables = [];
@@ -63,12 +68,16 @@ class TemplateFilterAdapter implements TemplateFilterInterface
      * RenderPolicy::restricted() here would refuse {{block}} and {{layout}} - the item table
      * of every stock order, invoice, shipment and creditmemo email - and do it silently.
      * Tightening it is an explicit decision, made in di.xml or per render via setPolicy().
+     * @param bool|null $deferralResolvedAtRoot whether the host's filter resolves an include's
+     *        deferred {{inlinecss}} at the root template; null asks the host - see HostDeferral.
+     *        A fact about the host rather than a choice, so it applies to `$options` too.
      */
     public function __construct(
         ?HostServices $services = null,
         ?Options $options = null,
         ?RenderPolicy $policy = null,
-        bool $plainFilter = false
+        bool $plainFilter = false,
+        ?bool $deferralResolvedAtRoot = null
     ) {
         $services ??= new HostServices();
         $this->plainFilter = $plainFilter;
@@ -80,20 +89,51 @@ class TemplateFilterAdapter implements TemplateFilterInterface
         // renders - an unknown variable raises instead of rendering empty, which is a thing
         // stock templates do constantly. Shadow mode over the 48 stock email templates raised
         // 85 times on that alone before this. Pass Options explicitly to choose otherwise.
-        $this->options = $options ?? Options::compatible();
+        $this->options = ($options ?? Options::compatible())
+            ->withDeferralResolvedAtRoot($deferralResolvedAtRoot ?? HostDeferral::resolvesAtRoot());
         $this->defaultPolicy = $policy ?? RenderPolicy::unrestricted();
-        $this->engine = TemplateEngine::forHost($services, $this->options);
+        $this->services = $services;
+        $this->engine = $this->engineFor($this->options);
         $this->context = new Context();
         $this->unwired = $plainFilter ? self::PLAIN_DECLINED : self::unwiredDirectives($services);
+    }
 
-        if ($plainFilter) {
+    private function engineFor(Options $options): TemplateEngine
+    {
+        $engine = TemplateEngine::forHost($this->services, $options);
+        if ($this->plainFilter) {
             // Neither is a directive of the plain filter: it has no transDirective() or
             // inlinecssDirective(), so `{{trans "x"}}` reaches SimpleDirective, finds no
             // processor of that name, and comes out as its own text. Unregistered, this
             // engine renders them as text too.
-            $this->engine->evaluator()->unregister('trans');
-            $this->engine->evaluator()->unregister('inlinecss');
+            $engine->evaluator()->unregister('trans');
+            $engine->evaluator()->unregister('inlinecss');
         }
+
+        return $engine;
+    }
+
+    /**
+     * The render filter() would make, with the neutralizer marking rather than encoding - see
+     * DeliberateDifference - and the work it deferred; null when it did not render cleanly.
+     *
+     * For comparing only. Nothing about it is published: lastError(), violations() and the
+     * rest still describe the last filter(), which is the render being judged.
+     *
+     * @return ?array{0:string,1:array<int,array{kind:string,payload:array}>}
+     */
+    public function filterMarked(string $value): ?array
+    {
+        $this->markingEngine ??= $this->engineFor($this->options->withNeutralizedOutputMarked(true));
+        $context = new Context($this->variables, $this->policy ?? $this->defaultPolicy, $this->plainTemplateMode, $this->designParams);
+
+        try {
+            $rendered = $this->markingEngine->render($value, context: $context);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $context->violations() === [] ? [$rendered, $context->deferred()] : null;
     }
 
     /**

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Magento;
+namespace MageOS\TemplateParser\Console\Magento;
 
-use Cresset\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\MagentoContext;
 use Magento\Framework\ObjectManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 

@@ -21,7 +21,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || realpath($_SERVER['argv'][0] ?? '') !== __FILE__) {
     return;
 }
-define('CRESSET_TEMPLATE_PARSER_TOOL', true);
+define('MAGEOS_TEMPLATE_PARSER_TOOL', true);
 require __DIR__ . '/harness.php';
 $base = MROOT . '/lib/internal/Magento/Framework/Filter';
 require MROOT . '/lib/internal/Magento/Framework/Math/Random.php';
@@ -46,7 +46,7 @@ use Magento\Framework\Filter\DirectiveProcessor\Filter\{FilterApplier, FilterPoo
 use Magento\Framework\Filter\SimpleDirective\ProcessorPool;
 use Magento\Framework\Math\Random;
 use Magento\Framework\Stdlib\StringUtils;
-use Cresset\TemplateParser\{Options, Parser, TemplateEngine};
+use MageOS\TemplateParser\{Options, Parser, TemplateEngine};
 use Magento\Framework\Escaper;
 
 /**
@@ -65,7 +65,11 @@ $VARS = [
     'store_phone' => '123', 'store_hours' => '9-5',
     'logo_width' => '180', 'logo_height' => '50',
     'street1' => '1 Test St', 'city' => 'Andorra la Vella', 'postcode' => 'AD500',
-    'items' => [['n' => 'a'], ['n' => 'b'], ['n' => 'c']],
+    // A string, as the stock failed-payment and wish-list emails declare it ("Shopping Cart
+    // Items", raw HTML). An array there is a warning on {{var}} - the store's error page - and
+    // the two emails dropped out of the timing once the engine refused it as the store does.
+    'items' => '<table><tr><td>Item</td></tr></table>',
+    'rows' => [['n' => 'a'], ['n' => 'b'], ['n' => 'c']],
 ];
 
 $resolver = new StrictResolver(new VariableFactory());
@@ -94,7 +98,7 @@ $legacy = new BenchmarkEmailLikeLegacy(new StringUtils(), [], [
     'for' => new ForDirective($resolver),
     'legacy' => new LegacyDirective($simple),
 ], $resolver, $sig = new SignatureProvider(new Random()), new FilteringDepthMeter(),
-    \Harness\neutralizerFor($sig));
+    \Harness\neutralizerFor($sig), \Harness\registryFor());
 $legacy->setVariables($VARS);
 
 $engines = [
@@ -127,7 +131,7 @@ foreach (glob(PKGROOT . '/tests/fixtures/corpus/*.html') ?: [] as $file) {
 $corpus['synthetic: plain text'] = str_repeat("Dear customer, your order has shipped.\n", 20);
 $corpus['synthetic: variables'] = str_repeat('{{var customer_name}} <{{var store_name}}> ', 40);
 $corpus['synthetic: conditionals'] = str_repeat('{{if a}}{{var name}}{{else}}none{{/if}}', 40);
-$corpus['synthetic: loop'] = str_repeat('{{for i in items}}{{var i.n}}{{/for}}', 40);
+$corpus['synthetic: loop'] = str_repeat('{{for i in rows}}{{var i.n}}{{/for}}', 40);
 
 printf("iterations per template: %d\nPHP %s\n\n", $iterations, PHP_VERSION);
 printf("%-52s %10s %10s %10s %8s\n", 'template', 'legacy', 'compatible', 'lenient', 'ratio');

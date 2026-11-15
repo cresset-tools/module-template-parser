@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\Information;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Variable\Model\Source\Variables;
-use Cresset\TemplateParser\Port\ConfigReader;
-use Cresset\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\ConfigReader;
+use MageOS\TemplateParser\Port\RefusedByPort;
 
 /**
  * {{config}} restricted to the variables Magento declares template-readable.

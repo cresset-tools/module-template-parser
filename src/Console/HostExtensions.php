@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
+
+use MageOS\TemplateParser\Magento\DirectiveMethods;
 
 /**
  * The directives a store has that this engine does not implement.
@@ -51,7 +53,7 @@ class HostExtensions
         // is asking the same thing that renders them and the two cannot drift apart.
         return $pool === null
             ? []
-            : (new \Cresset\TemplateParser\Magento\PoolCustomDirectiveRenderer($pool))->names();
+            : (new \MageOS\TemplateParser\Magento\PoolCustomDirectiveRenderer($pool))->names();
     }
 
     /**
@@ -66,28 +68,34 @@ class HostExtensions
     ];
 
     /**
-     * Directives a module added as `fooDirective()` methods on a template filter.
+     * Directives the store renders through code Magento does not ship.
      *
-     * The older way to extend the language: prefer or subclass a filter and add a public
-     * method. LegacyDirective reflects `$construction[1] . 'Directive'`, so the method IS the
+     * The older way to extend the language: prefer or subclass a filter and add a method.
+     * LegacyDirective reflects `$construction[1] . 'Directive'`, so the method IS the
      * directive. This engine never dispatches by reflection - deliberately, it is part of the
      * security argument - so such a directive has no handler here, and in compatible mode an
-     * unknown `{{foo}}` comes back as its own text, silently.
+     * unknown `{{foo}}` comes back as its own text, silently. And a plugin on a stock
+     * directive method changes what the store renders for it, which this engine does not run.
      *
      * Found without calling anything: the filter classes are resolved through the
-     * ObjectManager's own preferences, and a method counts when the class that DECLARES it is
-     * not Magento's. That catches an added method and an override of a stock one alike, and
-     * ignores every method core ships. Only names legacy can reach are reported - its name
-     * capture is `[a-z]{0,10}`, so `somethingLongerDirective()` is dead code to a template.
+     * ObjectManager's own preferences, and DirectiveMethods applies the plugin's own rule - a
+     * method a non-Magento class declares, or one the plugin list has a plugin for. A
+     * generated Interceptor's redeclarations count as the methods they stand in for, so an
+     * uncompiled store, or a module's preference subclass, does not report every stock
+     * directive.
      *
-     * @return array<string,string> directive name => the class declaring its method
+     * @return array<string,array{kind:string,class:string,plugins:list<string>}> directive name
+     *         => DirectiveMethods::OWN or ::PLUGGED, the class whose method it is, and the
+     *         plugins on it
      */
-    public function methodDirectives(): array
+    public function methodDirectiveDetails(): array
     {
         $config = $this->magento->get(\Magento\Framework\ObjectManager\ConfigInterface::class);
         if ($config === null) {
             return [];
         }
+        $pluginList = $this->magento->get(\Magento\Framework\Interception\PluginListInterface::class);
+        $pluginList = $pluginList instanceof \Magento\Framework\Interception\PluginListInterface ? $pluginList : null;
 
         $found = [];
         foreach (self::FILTER_CLASSES as $filter) {
@@ -100,15 +108,12 @@ class HostExtensions
                 continue;
             }
 
-            foreach ((new \ReflectionClass($class))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-                if ($method->isStatic() || preg_match('/^([a-zA-Z]{1,10})Directive$/', $method->getName(), $m) !== 1) {
-                    continue;
+            foreach (DirectiveMethods::of($class, $pluginList) as $name => $method) {
+                // A module's own method wins over a plugin elsewhere: it is what the note
+                // most needs to name.
+                if (($found[$name]['kind'] ?? null) !== DirectiveMethods::OWN) {
+                    $found[$name] = $method;
                 }
-                $declaring = $method->getDeclaringClass()->getName();
-                if (str_starts_with($declaring, 'Magento\\')) {
-                    continue;
-                }
-                $found[strtolower($m[1])] = $declaring;
             }
         }
 
@@ -118,7 +123,17 @@ class HostExtensions
     }
 
     /**
-     * One sentence per filter-method directive this template uses, saying whose it is.
+     * The same, as directive name => the class whose method the store runs.
+     *
+     * @return array<string,string>
+     */
+    public function methodDirectives(): array
+    {
+        return array_map(static fn (array $method): string => $method['class'], $this->methodDirectiveDetails());
+    }
+
+    /**
+     * One sentence per such directive this template uses, saying whose it is.
      *
      * @param string[] $known the directive names this engine has a handler for
      * @return string[]
@@ -126,25 +141,39 @@ class HostExtensions
     public function methodNotesFor(string $template, array $known = []): array
     {
         $notes = [];
-        foreach ($this->methodDirectives() as $name => $class) {
+        foreach ($this->methodDirectiveDetails() as $name => $method) {
             if (!self::mentions($template, $name)) {
                 continue;
             }
-            $notes[] = in_array($name, $known, true)
-                ? sprintf(
+            $notes[] = match (true) {
+                $method['kind'] === DirectiveMethods::PLUGGED => sprintf(
+                    'this template uses {{%s}}, which the store renders through %s::%sDirective() '
+                    . 'with %s on it - this engine renders the stock directive without %s, so '
+                    . 'Shadow and Parser leave templates using it to the store\'s filter',
+                    $name,
+                    $method['class'],
+                    $name,
+                    $method['plugins'] === []
+                        ? 'a plugin'
+                        : (count($method['plugins']) === 1 ? 'the plugin ' : 'the plugins ')
+                            . implode(', ', $method['plugins']),
+                    count($method['plugins']) > 1 ? 'them' : 'it'
+                ),
+                in_array($name, $known, true) => sprintf(
                     'this template uses {{%s}}, which the store renders through %s::%sDirective() '
                     . '- an override of the stock directive this engine renders instead',
                     $name,
-                    $class,
+                    $method['class'],
                     $name
-                )
-                : sprintf(
+                ),
+                default => sprintf(
                     'this template uses {{%s}}, which the store provides as %s::%sDirective() '
                     . 'and this engine has no handler for',
                     $name,
-                    $class,
+                    $method['class'],
                     $name
-                );
+                ),
+            };
         }
 
         return $notes;
@@ -154,7 +183,8 @@ class HostExtensions
      * Whether this text spells `{{name}}` - the way the store matches it.
      *
      * A registered name immediately after `{{`, and not a longer name that merely starts with
-     * it: the store's `[a-z]{0,10}` is greedy, so `{{mydir}}` is not `my`. Deliberately not
+     * it: the store's `[a-z]{0,10}` is greedy, so `{{mydir}}` is not `my` - but it is greedy
+     * over LETTERS, so `{{my2}}` and `{{my_x}}` are both `my`. Deliberately not
      * clever - a false positive costs a note nobody needed, and a false negative costs the
      * silence this exists to end.
      *
@@ -163,7 +193,7 @@ class HostExtensions
      */
     public static function mentions(string $text, string $name): bool
     {
-        return preg_match('/\{\{' . preg_quote($name, '/') . '(?![a-z0-9_])/i', $text) === 1;
+        return preg_match('/\{\{' . preg_quote($name, '/') . '(?![a-z])/i', $text) === 1;
     }
 
     /**

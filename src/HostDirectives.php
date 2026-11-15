@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
-use Cresset\TemplateParser\Ast\DirectiveNode;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\Port\StoreAwareUrlBuilder;
+use MageOS\TemplateParser\Ast\DirectiveNode;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\StoreAwareUrlBuilder;
 
 /**
  * Registers the directives that need something from the host application.
@@ -42,9 +42,11 @@ final class HostDirectives
         }
 
         $modifiers = [];
-        // `\s*$` and `\s*\z` read the same: the `\s*` has already taken any trailing
-        // newline. This splits, it does not guard - the guards use `\z`, see PathGuard.
-        if (preg_match('/((?:\|[a-z0-9:_-]+)+)\s*$/i', $text, $m) === 1) {
+        // Only when the modifiers end the directive, right against its `}}`: SimpleDirective's
+        // pattern is `(?P<filters>(?:\|[a-z0-9:_-]+)+)?}}`, so with whitespace before the `}}`
+        // the filter sees no modifiers at all and applies the processor's defaults. Allowing
+        // the whitespace here also cut the wrong bytes - `p=x|raw ` left `p=x|`.
+        if (preg_match('/((?:\|[a-z0-9:_-]+)+)\z/i', $text, $m) === 1) {
             $modifiers = array_values(array_filter(explode('|', ltrim($m[1], '|'))));
             $text = substr($text, 0, -strlen($m[1]));
         }
@@ -129,7 +131,7 @@ final class HostDirectives
 
         $scope = [];
         foreach ($parameters as $key => $value) {
-            $scope[$key] = $context->has($key) ? [$value, $context->get($key)] : $value;
+            $scope[$key] = $context->has((string)$key) ? [$value, $context->get((string)$key)] : $value;
         }
 
         return $scope;
@@ -146,6 +148,24 @@ final class HostDirectives
     private static function unresolvedInclude(Evaluator $evaluator): string
     {
         return $evaluator->options()->legacyQuirks ? '{Error in template processing}' : '';
+    }
+
+    /**
+     * A port's answer, or - when the port refuses - a declined directive like any other.
+     *
+     * Every port may refuse (RefusedByPort), and an uncaught one escaped the render as an
+     * error: `{{store}}` through the backend URL model turned a whole CMS block into
+     * "Error filtering template" where every other refusal is a policy violation.
+     *
+     * @param callable():string $ask
+     */
+    private static function fromPort(DirectiveNode $n, Context $c, Evaluator $e, callable $ask): string
+    {
+        try {
+            return $ask();
+        } catch (RefusedByPort $refused) {
+            return self::declined($n, $c, $e, $refused->kind, $refused->name);
+        }
     }
 
     /**
@@ -295,6 +315,12 @@ final class HostDirectives
                 if ($source === null) {
                     return '';
                 }
+                // AbstractTemplate::getTemplateContent(): an include in a plain-text parent has
+                // its tags stripped and is trimmed before it is processed, and trimmed again
+                // after - so a text/plain email gets the header's words, not its <html>.
+                if ($c->plainText()) {
+                    $source = trim(strip_tags($source));
+                }
 
                 if ($c->includeDepth() >= Options::DEFAULT_MAX_INCLUDE_DEPTH) {
                     throw TemplateCycleError::at(
@@ -320,7 +346,7 @@ final class HostDirectives
                 try {
                     // Child scope. Its deferred work is handed back up explicitly - no
                     // shared state, and nothing survives in the output stream.
-                    $child = $c->withVariables(self::includeScope($params, $c, $e));
+                    $child = $c->forInclude(self::includeScope($params, $c, $e));
                     $ast = $parser->parse($source, $c->policy()->maxNestingDepth());
                     $child->noteIncompatibilities($ast->incompatibilities());
                     $rendered = $e->evaluate($ast, $child);
@@ -329,7 +355,7 @@ final class HostDirectives
                     $c->leaveInclude();
                 }
 
-                return $rendered;
+                return $c->plainText() ? trim($rendered) : $rendered;
             });
         }
 
@@ -363,7 +389,7 @@ final class HostDirectives
                 }
                 // The plain flag decides which stored value is read. Passing false
                 // unconditionally puts the variable's HTML into a text/plain body.
-                return (string)($vars->value($code, $c->plainText()) ?? '');
+                return self::fromPort($n, $c, $e, static fn (): string => (string)($vars->value($code, $c->plainText()) ?? ''));
             });
         }
 
@@ -390,27 +416,39 @@ final class HostDirectives
                 if ($path !== '' && !PathGuard::isSafeRelativePath($path)) {
                     return self::declined($n, $c, $e, 'store url', $path);
                 }
+                // A numeric parameter name is one the filter's own {{store}} raises a TypeError
+                // on; the render is the filter's to fail, not this engine's to answer.
+                foreach (array_keys($params) as $key) {
+                    if (is_int($key)) {
+                        return self::declined($n, $c, $e, 'store url parameter name', (string)$key);
+                    }
+                }
                 // Magento\Framework\Url::getRouteUrl() returns getBaseUrl() . $params['_direct']
                 // with no filtering of its own, so a guard on `url=` alone is not a guard.
                 // Any remaining parameter that names a path gets the same check.
                 if (!PathGuard::routeParametersAreSafe($params)) {
                     return self::declined($n, $c, $e, 'store url parameters', (string)($direct ?? $path));
                 }
-                return $urls->storeUrl($path, $params);
+                return self::fromPort($n, $c, $e, static fn (): string => $urls->storeUrl($path, $params));
             });
 
             $evaluator->register('media', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
-                $path = $e->params($n, $c)['url'] ?? '';
+                // Every legacy mediaDirective - Email, CMS, Widget - entity-decodes its
+                // parameter text before reading it, because the WYSIWYG editor saves images as
+                // `{{media url=&quot;wysiwyg/a.jpg&quot;}}`. Read raw, every editor-inserted
+                // image was refused, and `a&amp;b.jpg` was served as written.
+                $decoded = new DirectiveNode($n->name(), html_entity_decode($n->params(), ENT_QUOTES), $n->fullRaw(), $n->offset());
+                $path = $e->params($decoded, $c)['url'] ?? '';
                 // Legacy concatenates this straight onto the media base URL. An ABSENT path
                 // concatenates nothing, so the directive is the media root - which is what
                 // `{{media url=$p}}` with `$p` unset renders today, and refusing it instead
                 // was a divergence on a shape a merchant reaches by typo'ing a variable name.
                 if ($path === '') {
-                    return $urls->mediaUrl('');
+                    return self::fromPort($n, $c, $e, static fn (): string => $urls->mediaUrl(''));
                 }
                 // The filter concatenates any path onto the media base URL.
                 return PathGuard::isSafeRelativePath($path)
-                    ? $urls->mediaUrl($path)
+                    ? self::fromPort($n, $c, $e, static fn (): string => $urls->mediaUrl($path))
                     : self::declined($n, $c, $e, 'media url', $path);
             });
 
@@ -426,7 +464,7 @@ final class HostDirectives
                 if (!PathGuard::routeParametersAreSafe($params) || !self::designParametersAreSafe($params)) {
                     return self::declined($n, $c, $e, 'view url parameters', $path);
                 }
-                return $urls->viewUrl($path, $params);
+                return self::fromPort($n, $c, $e, static fn (): string => $urls->viewUrl($path, $params));
             });
 
             $evaluator->register('protocol', static function (DirectiveNode $n, Context $c, Evaluator $e) use ($urls): string {
@@ -444,7 +482,11 @@ final class HostDirectives
                         return self::declined($n, $c, $e, $refused->kind, $refused->name);
                     }
                 } else {
-                    $secure = $urls->isSecure();
+                    try {
+                        $secure = $urls->isSecure();
+                    } catch (RefusedByPort $refused) {
+                        return self::declined($n, $c, $e, $refused->kind, $refused->name);
+                    }
                 }
                 $scheme = $secure ? 'https' : 'http';
 
@@ -492,7 +534,10 @@ final class HostDirectives
 
         if ($services->customDirectives !== null) {
             $custom = $services->customDirectives;
-            foreach ($custom->names() as $name) {
+            // Not over a stock directive: the filter tries its own directive methods and
+            // processors before the pool, so a pool entry named `block` or `var` never runs
+            // there - and registered here, it bypassed {{block}}'s guards and {{var}}'s escaping.
+            foreach (array_diff($custom->names(), DirectiveSpec::builtInNames()) as $name) {
                 $evaluator->register(
                     $name,
                     static function (DirectiveNode $n, Context $c, Evaluator $e) use ($custom, $name): string {

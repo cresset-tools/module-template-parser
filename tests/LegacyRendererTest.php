@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Console\LegacyRenderer;
-use Cresset\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\LegacyRenderer;
+use MageOS\TemplateParser\Console\MagentoContext;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -274,7 +274,35 @@ final class LegacyRendererTest extends TestCase
         $emulation = $this->emulation();
         (new LegacyRenderer($this->context($this->model(), $emulation)))->render('X', [], 7);
 
-        self::assertSame(['start:7:frontend:true', 'stop'], $emulation->calls);
+        // Started, started again after getProcessedTemplate() - see the next test - and stopped once.
+        self::assertSame(['start:7:frontend:true', 'start:7:frontend:true', 'stop'], $emulation->calls);
+    }
+
+    /**
+     * getProcessedTemplate() ends in cancelDesignConfig(), which stops the SHARED emulation -
+     * so the filter() the comparison is made from ran in the CLI's own store, and
+     * `diff --store=2` compared store 1's translations and theme.
+     */
+    public function testTheFilterRendersInsideTheEmulationEvenAfterTheModelStoppedIt(): void
+    {
+        $emulation = $this->emulation();
+        $filter = new class ($emulation) extends \Magento\Framework\Filter\Template {
+            public function __construct(private object $emulation) {}
+            public function filter($value) { $this->emulation->calls[] = 'filter'; return 'LEGACY:' . $value; }
+        };
+        $model = new class ($filter, $emulation) {
+            public function __construct(private object $filter, private object $emulation) {}
+            public function setTemplateType($t) { return $this; }
+            public function setTemplateText($t) { return $this; }
+            public function setDesignConfig($c) { return $this; }
+            public function setUseAbsoluteLinks($f) { return $this; }
+            public function getProcessedTemplate(array $v = []) { $this->emulation->stopEnvironmentEmulation(); return ''; }
+            public function getTemplateFilter() { return $this->filter; }
+        };
+
+        (new LegacyRenderer($this->context($model, $emulation)))->render('X', [], 2);
+
+        self::assertSame(['start:2:frontend:true', 'stop', 'start:2:frontend:true', 'filter', 'stop'], $emulation->calls);
     }
 
     /** Emulation left running would leak the store into everything the tool renders next. */
@@ -291,7 +319,7 @@ final class LegacyRendererTest extends TestCase
         };
 
         self::assertNull((new LegacyRenderer($this->context($model, $emulation)))->render('X', [], 7));
-        self::assertSame(['start:7:frontend:true', 'stop'], $emulation->calls);
+        self::assertSame(['start:7:frontend:true', 'start:7:frontend:true', 'stop'], $emulation->calls);
     }
 
     /** A store with no emulation service still gets compared, just without a theme. */
@@ -301,5 +329,178 @@ final class LegacyRendererTest extends TestCase
 
         self::assertNotNull($render);
         self::assertSame('LEGACY:X', $render->output);
+    }
+
+    /** What `Email\Model\Template\Filter::filter()` prints in place of a template it raised on. */
+    public function testTheFiltersErrorMessagesAreRecognised(): void
+    {
+        self::assertNotNull(LegacyRenderer::failureIn("Error filtering template: Invalid template file: 'x.phtml'"));
+        self::assertNotNull(LegacyRenderer::failureIn("We're sorry, an error has occurred while generating this content."));
+        self::assertNull(LegacyRenderer::failureIn('<p>Error filtering template: is what we print</p>'));
+        self::assertNull(LegacyRenderer::failureIn('Dear Ada'));
+    }
+
+    public function testAnEmailRenderedAsTheErrorMessageIsAFailure(): void
+    {
+        $model = $this->model();
+        $model->filter = new class extends \Magento\Framework\Filter\Template {
+            public function __construct() {}
+            public function filter($value) { return 'Error filtering template: Warning: Array to string conversion'; }
+        };
+
+        $render = (new LegacyRenderer($this->context($model)))->render('X', []);
+
+        self::assertNotNull($render?->failure);
+    }
+
+    /**
+     * The CMS page filter is one shared instance, and getStoreId() keeps the first store it
+     * fills in - so every store view after the first rendered the first one's phone number.
+     */
+    public function testEachCmsRenderIsGivenItsOwnStore(): void
+    {
+        $filter = new class {
+            public array $stores = [];
+            public function setStoreId($id) { $this->stores[] = $id; return $this; }
+            public function filter($value) { return (string)$value; }
+        };
+        $context = MagentoContext::fromObjectManager(new class ($filter) {
+            public function __construct(private object $filter) {}
+            public function get(string $class): ?object
+            {
+                return match ($class) {
+                    \Magento\Email\Model\TemplateFactory::class => new \stdClass(),
+                    \Magento\Cms\Model\Template\FilterProvider::class => new class ($this->filter) {
+                        public function __construct(private object $filter) {}
+                        public function getPageFilter() { return $this->filter; }
+                    },
+                    default => null,
+                };
+            }
+        });
+        $renderer = new LegacyRenderer($context);
+
+        $renderer->render('X', [], 2, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS);
+        $renderer->render('X', [], 3, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS);
+
+        self::assertSame([2, 3], $filter->stores);
+    }
+
+    /**
+     * The candidate is handed back into the same filter, where the plugin serves it - so the
+     * plugins on filter() treat it as they treated legacy's. Where the plugin is not on the
+     * filter, the bare candidate stands.
+     */
+    public function testTheCandidateIsServedThroughTheSameFilter(): void
+    {
+        $candidates = new \MageOS\TemplateParser\Magento\CandidateRenders();
+        $filter = new class ($candidates) {
+            public bool $plugged = true;
+            public function __construct(private \MageOS\TemplateParser\Magento\CandidateRenders $candidates) {}
+            public function filter($value)
+            {
+                $ours = $this->plugged ? $this->candidates->take($this) : null;
+                return 'DECODED(' . ($ours !== null ? $ours($value) : 'LEGACY:' . $value) . ')';
+            }
+        };
+        $context = MagentoContext::fromObjectManager(new class ($filter, $candidates) {
+            public function __construct(private object $filter, private object $candidates) {}
+            public function get(string $class): ?object
+            {
+                return match ($class) {
+                    \Magento\Email\Model\TemplateFactory::class => new \stdClass(),
+                    \MageOS\TemplateParser\Magento\CandidateRenders::class => $this->candidates,
+                    \Magento\Cms\Model\Template\FilterProvider::class => new class ($this->filter) {
+                        public function __construct(private object $filter) {}
+                        public function getPageFilter() { return $this->filter; }
+                    },
+                    default => null,
+                };
+            }
+        });
+
+        $render = (new LegacyRenderer($context))->render('X', [], 1, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS);
+
+        self::assertSame('DECODED(LEGACY:X)', $render?->output);
+        self::assertSame('DECODED(OURS:X)', ($render->through)(static fn (string $v): string => 'OURS:' . $v));
+        $filter->plugged = false;
+        self::assertSame('OURS:X', ($render->through)(static fn (string $v): string => 'OURS:' . $v));
+    }
+
+    /**
+     * The filter's nesting depth is the store's one shared meter, and `filter()` steps back
+     * up only when it returns. A legacy render that raised part-way - under the store's error
+     * handler a warning does - left it a level deep, and every later render in the run then
+     * acted as a child: it left its includes' `:deferred:` placeholders unresolved, and the
+     * diff called the engine wrong for 112 templates on one store.
+     */
+    public function testARenderThatRaisesDoesNotLeaveTheNextOneNested(): void
+    {
+        $meter = new \Magento\Framework\Filter\Template\FilteringDepthMeter();
+        $filter = new class ($meter) extends \Magento\Framework\Filter\Template {
+            public array $depths = [];
+            public function __construct(private object $meter) {}
+            public function filter($value)
+            {
+                // Template::filter()'s own shape: descend, render, ascend - no finally.
+                $this->meter->descend();
+                $this->depths[] = $this->meter->showMark();
+                if ($value === 'RAISES') {
+                    throw new \RuntimeException('a warning, under the store\'s handler');
+                }
+                $this->meter->ascend();
+
+                return 'LEGACY:' . $value;
+            }
+        };
+        $context = MagentoContext::fromObjectManager(new class ($filter, $meter) {
+            public function __construct(private object $filter, private object $meter) {}
+            public function get(string $class): ?object
+            {
+                return match ($class) {
+                    \Magento\Email\Model\TemplateFactory::class => new \stdClass(),
+                    \Magento\Framework\Filter\Template\FilteringDepthMeter::class => $this->meter,
+                    \Magento\Cms\Model\Template\FilterProvider::class => new class ($this->filter) {
+                        public function __construct(private object $filter) {}
+                        public function getPageFilter() { return $this->filter; }
+                    },
+                    default => null,
+                };
+            }
+        });
+        $renderer = new LegacyRenderer($context);
+
+        self::assertNull($renderer->render('RAISES', [], 1, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS));
+        self::assertSame(0, $meter->showMark());
+        self::assertSame('LEGACY:X', $renderer->render('X', [], 1, \MageOS\TemplateParser\Console\TemplateSubject::KIND_CMS)?->output);
+        self::assertSame([1, 1], $filter->depths, 'the second render ran as a child of the first');
+        self::assertSame(0, $meter->showMark());
+    }
+
+    /** Put back to where it was, not to zero: a render inside a render keeps its parent's level. */
+    public function testTheDepthIsRestoredToWhereItWas(): void
+    {
+        $meter = new \Magento\Framework\Filter\Template\FilteringDepthMeter();
+        $meter->descend();
+        $depth = new \MageOS\TemplateParser\Console\FilteringDepth(MagentoContext::fromObjectManager(new class ($meter) {
+            public function __construct(private object $meter) {}
+            public function get(string $class): ?object { return $class === \Magento\Framework\Filter\Template\FilteringDepthMeter::class ? $this->meter : null; }
+        }));
+
+        try {
+            $depth->keep(static function () use ($meter): void {
+                $meter->descend();
+                $meter->descend();
+                throw new \RuntimeException();
+            });
+        } catch (\RuntimeException) {
+        }
+        self::assertSame(1, $meter->showMark());
+
+        self::assertSame('done', $depth->keep(static function () use ($meter): string {
+            $meter->ascend();
+            return 'done';
+        }));
+        self::assertSame(1, $meter->showMark());
     }
 }

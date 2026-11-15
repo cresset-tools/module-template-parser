@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser;
+namespace MageOS\TemplateParser;
 
 /**
  * Knows which directives take a body and a closing tag.
@@ -54,7 +54,20 @@ final class DirectiveSpec
     {
         $this->blocks = self::BLOCK_DIRECTIVES + $extraBlocks;
         $this->voids = array_fill_keys(array_merge(self::VOID_DIRECTIVES, $extraVoids), true);
-        $this->optional = array_fill_keys($extraOptional, true);
+        // A ProcessorPool entry named like a stock directive never runs in the filter: its own
+        // directive methods and processors are tried first. So such a name stays what it is,
+        // rather than becoming an optional block that would pair `{{var}}...{{/var}}`.
+        $this->optional = array_fill_keys(array_diff($extraOptional, self::builtInNames()), true);
+    }
+
+    /**
+     * The stock directives, which the filter dispatches before any ProcessorPool entry.
+     *
+     * @return list<string>
+     */
+    public static function builtInNames(): array
+    {
+        return [...array_keys(self::BLOCK_DIRECTIVES), ...self::VOID_DIRECTIVES];
     }
 
     public function isBlock(string $name): bool

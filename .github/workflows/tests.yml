@@ -23,7 +23,7 @@ jobs:
 
       - uses: cresset-tools/setup-bougie@v1
         with:
-          telemetry: true
+          telemetry: false
           # This package is a library and does not commit composer.lock, so key
           # the cache on the manifest instead of the default '**/composer.lock'.
           cache-dependency-glob: composer.json

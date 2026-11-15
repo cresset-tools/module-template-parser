@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento;
+namespace MageOS\TemplateParser\Magento;
 
-use Cresset\TemplateParser\PathGuard;
-use Cresset\TemplateParser\Port\RefusedByPort;
-use Cresset\TemplateParser\Port\TemplateUrlBuilder;
+use MageOS\TemplateParser\PathGuard;
+use MageOS\TemplateParser\Port\RefusedByPort;
+use MageOS\TemplateParser\Port\TemplateUrlBuilder;
 
 /**
  * `{{var this.getUrl($store,'customer/account/',[_nosid:1])}}`, as legacy resolves it.

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Source;
+namespace MageOS\TemplateParser\Console\Source;
 
-use Cresset\TemplateParser\Console\TemplateSubject;
+use MageOS\TemplateParser\Console\TemplateSubject;
 
 /**
  * Somewhere templates live.
@@ -18,6 +18,12 @@ interface TemplateSource
 
     public function isAvailable(): bool;
 
-    /** @return iterable<TemplateSubject> */
+    /** Why this source cannot be read here, or null when it can. Said to the person running the command. */
+    public function unavailableReason(): ?string;
+
+    /**
+     * @return iterable<TemplateSubject>
+     * @throws SourceUnavailable when the source fails partway, so the failure is not read as "empty"
+     */
     public function subjects(): iterable;
 }

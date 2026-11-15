@@ -18,9 +18,14 @@
 -->
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
-    <table name="cresset_template_shadow" resource="default" engine="innodb"
+    <table name="mageos_template_parser_shadow" resource="default" engine="innodb"
            comment="Template engine Shadow comparisons and Parser renders, per store view and template">
-        <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true"
+        <!--
+            bigint: every ON DUPLICATE KEY upsert reserves an id, written or not, so a busy store
+            consumed an int's 4.29e9 ids long before it had that many rows - after which MySQL
+            updates the wrong template's row and MariaDB rejects every write.
+        -->
+        <column xsi:type="bigint" name="entity_id" unsigned="true" nullable="false" identity="true"
                 comment="Entity ID"/>
         <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" default="0"
                 comment="Store view the render was for"/>
@@ -34,6 +39,14 @@
                 comment="Renders the new engine declined; Parser mode falls back to legacy for these"/>
         <column xsi:type="bigint" name="crashed" unsigned="true" nullable="false" default="0"
                 comment="Renders where the new engine raised anything else"/>
+        <!--
+            Not a divergence, and not folded into agreed either: on a filter from before
+            Mage-OS 3.5.0's output neutralizer, renders that differ only where that filter
+            re-parses a value containing {{. This engine's output is the one meant. Counted
+            apart so the report can say how many there were and why.
+        -->
+        <column xsi:type="bigint" name="deliberate" unsigned="true" nullable="false" default="0"
+                comment="Renders that differ only by the deliberate difference from a filter without the output neutralizer"/>
         <column xsi:type="bigint" name="served" unsigned="true" nullable="false" default="0"
                 comment="Parser mode: renders served by the new engine"/>
         <column xsi:type="bigint" name="fell_back" unsigned="true" nullable="false" default="0"
@@ -51,7 +64,7 @@
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="entity_id"/>
         </constraint>
-        <constraint xsi:type="unique" referenceId="CRESSET_TEMPLATE_SHADOW_STORE_ID_TEMPLATE">
+        <constraint xsi:type="unique" referenceId="MAGEOS_TEMPLATE_PARSER_SHADOW_STORE_ID_TEMPLATE">
             <column name="store_id"/>
             <column name="template"/>
         </constraint>

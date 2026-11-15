@@ -1,21 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Test;
+namespace MageOS\TemplateParser\Test;
 
-use Cresset\TemplateParser\Context;
-use Cresset\TemplateParser\DirectiveSpec;
-use Cresset\TemplateParser\Evaluator;
-use Cresset\TemplateParser\HostDirectives;
-use Cresset\TemplateParser\HostServices;
-use Cresset\TemplateParser\Options;
-use Cresset\TemplateParser\Parser;
-use Cresset\TemplateParser\Port\BlockRenderer;
-use Cresset\TemplateParser\Port\TemplateLoader;
-use Cresset\TemplateParser\RenderPolicy;
-use Cresset\TemplateParser\TemplateCycleError;
-use Cresset\TemplateParser\TemplateEngine;
-use Cresset\TemplateParser\UnknownVariableError;
+use MageOS\TemplateParser\Context;
+use MageOS\TemplateParser\DirectiveSpec;
+use MageOS\TemplateParser\Evaluator;
+use MageOS\TemplateParser\HostDirectives;
+use MageOS\TemplateParser\HostServices;
+use MageOS\TemplateParser\Options;
+use MageOS\TemplateParser\Parser;
+use MageOS\TemplateParser\Port\BlockRenderer;
+use MageOS\TemplateParser\Port\TemplateLoader;
+use MageOS\TemplateParser\RenderPolicy;
+use MageOS\TemplateParser\TemplateCycleError;
+use MageOS\TemplateParser\TemplateEngine;
+use MageOS\TemplateParser\UnknownVariableError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -61,6 +61,32 @@ final class TemplateIncludeTest extends TestCase
     // ---------------------------------------------------------------- scope
 
     /**
+     * AbstractTemplate::getTemplateContent(): in a plain-text parent the include has its tags
+     * stripped and is trimmed, before and after rendering. Without it a stock order email
+     * converted to plain text was sent with the header's <!DOCTYPE html> and tables in its
+     * text/plain body.
+     */
+    public function testAnIncludeInAPlainTextParentIsStrippedAndTrimmed(): void
+    {
+        $engine = $this->engine([
+            'design/email/header_template' => "\n<!DOCTYPE html><html><body><table class=\"wrapper\"><tr><td>\n",
+            'design/email/footer_template' => "</td></tr><tr><td><p>Thank you, {{var store_name}}!</p></td></tr></table></body></html>\n",
+        ], Options::compatible());
+        $template = '{{template config_path="design/email/header_template"}}Order 1{{template config_path="design/email/footer_template"}}';
+
+        self::assertSame(
+            'Order 1Thank you, Acme!',
+            $engine->render($template, context: new Context(['store_name' => 'Acme'], RenderPolicy::unrestricted(), plainText: true))
+        );
+        self::assertStringContainsString(
+            '<!DOCTYPE html>',
+            $engine->render($template, context: $this->context(['store_name' => 'Acme'])),
+            'an HTML parent keeps the markup'
+        );
+    }
+
+
+    /**
      * A directive's own parameters become variables inside the include.
      *
      * Legacy hands the processor array_merge_recursive($parameters, $templateVariables), so
@@ -103,13 +129,17 @@ final class TemplateIncludeTest extends TestCase
      * A parameter named after an existing variable collides, and legacy's merge is recursive.
      *
      * array_merge_recursive turns two scalars under one key into an array of both, so the
-     * variable renders as "Array" rather than either value. Reproduced in compatible mode;
-     * elsewhere the parameter wins, which is what writing one implies.
+     * variable is an array - which {{var}} casts with a warning, and a store's error handler
+     * turns into the filter's error message. Compatible mode refuses it; elsewhere the
+     * parameter wins, which is what writing one implies.
      */
     #[DataProvider('collisionModes')]
-    public function testAParameterCollidingWithAVariable(string $mode, Options $options, string $expected): void
+    public function testAParameterCollidingWithAVariable(string $mode, Options $options, ?string $expected): void
     {
         $engine = $this->engine(['greet' => '[{{var name}}]'], $options);
+        if ($expected === null) {
+            $this->expectException(\MageOS\TemplateParser\LegacyIncompatibleError::class);
+        }
 
         self::assertSame(
             $expected,
@@ -121,7 +151,7 @@ final class TemplateIncludeTest extends TestCase
     public static function collisionModes(): array
     {
         return [
-            'compatible reproduces the merge quirk' => ['compatible', Options::compatible(), '[Array]'],
+            'compatible refuses the merged array'   => ['compatible', Options::compatible(), null],
             'lenient lets the parameter win'        => ['lenient', Options::lenient(), '[Bob]'],
         ];
     }

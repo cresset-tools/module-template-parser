@@ -42,6 +42,17 @@ namespace Magento\Widget\Block {
         interface BlockInterface { public function toHtml(); }
     }
 }
+namespace Magento\Widget\Model {
+    if (!class_exists(Widget::class)) {
+        /** The widget.xml declarations; generateWidget renders only a declared type. */
+        class Widget
+        {
+            /** @param list<string> $declared */
+            public function __construct(private array $declared = []) {}
+            public function getWidgetByClassType($type) { return in_array($type, $this->declared, true) ? ['@' => ['type' => $type]] : null; }
+        }
+    }
+}
 namespace Magento\Store\Model {
     if (!interface_exists(ScopeInterface::class)) {
         interface ScopeInterface { public const SCOPE_STORE = 'store'; }
@@ -260,8 +271,23 @@ namespace Magento\Framework\Filter {
     if (!class_exists(Template::class)) {
         class Template {
             protected $templateVars = [];
+            /** Set by AbstractTemplate::getProcessedTemplate(); without it {{template}} is an error. */
+            protected $templateProcessor = null;
             public function setVariables(array $variables) { $this->templateVars = $variables; return $this; }
             public function filter($value) { return $value; }
+            public function setTemplateProcessor(callable $callback) { $this->templateProcessor = $callback; return $this; }
+            public function getTemplateProcessor() { return $this->templateProcessor; }
+        }
+    }
+}
+namespace Magento\Framework\Filter\Template {
+    // Magento's, whole: the shared depth Template::filter() moves with no finally.
+    if (!class_exists(FilteringDepthMeter::class)) {
+        class FilteringDepthMeter {
+            private $depth = 0;
+            public function descend() { $this->depth++; }
+            public function ascend() { $this->depth--; }
+            public function showMark(): int { return $this->depth; }
         }
     }
 }
@@ -341,6 +367,35 @@ namespace Magento\Framework\App {
         }
     }
 }
+namespace Magento\Framework\Translate\Inline {
+    if (!interface_exists(StateInterface::class)) {
+        interface StateInterface {
+            public function disable();
+            public function enable();
+            public function isEnabled();
+            public function suspend($status = false);
+            public function resume($status = true);
+        }
+    }
+}
+namespace Magento\Framework\Interception {
+    if (!interface_exists(PluginListInterface::class)) {
+        interface PluginListInterface {
+            public function getPlugin($type, $code);
+            public function getNext($type, $method, $code = '__self');
+        }
+    }
+    // The keys getNext() answers with - Magento's values, which RealPluginListTest checks
+    // against the real interface when MAGENTO_ROOT is set.
+    if (!interface_exists(DefinitionInterface::class)) {
+        interface DefinitionInterface {
+            const LISTENER_BEFORE = 1;
+            const LISTENER_AROUND = 2;
+            const LISTENER_AFTER = 4;
+            public function getMethodList($type);
+        }
+    }
+}
 namespace Magento\Framework {
     if (!interface_exists(ObjectManagerInterface::class)) {
         interface ObjectManagerInterface {
@@ -393,6 +448,24 @@ namespace Magento\Backend\Model {
         class Url implements \Magento\Framework\UrlInterface {
             public function getUrl($routePath = null, $routeParams = null) { return ''; }
             public function setScope($params) { return $this; }
+        }
+    }
+}
+namespace Magento\Framework\Setup {
+    // The two methods the rename's schema patch uses.
+    if (!interface_exists(SchemaSetupInterface::class)) {
+        interface SchemaSetupInterface {
+            public function getConnection();
+            public function getTable($tableName);
+        }
+    }
+}
+namespace Magento\Framework\Setup\Patch {
+    if (!interface_exists(SchemaPatchInterface::class)) {
+        interface SchemaPatchInterface {
+            public static function getDependencies();
+            public function getAliases();
+            public function apply();
         }
     }
 }

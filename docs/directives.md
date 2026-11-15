@@ -44,15 +44,15 @@ construction whenever the collection is not iterable and an unset path resolves 
 <!-- generated:var -->
 ```
 {{var a}}           a="Ada"        → Ada
-{{var a}}           a="<b>&</b>"   → &lt;b&gt;&amp;&lt;/b&gt;  # escaped by default
-{{var a}}           a=null         → (nothing)                # a variable set to null renders as nothing
-{{var nope}}        a=1            → (nothing)                # strict raises UnknownVariableError; an unknown variable renders as nothing, silently
-{{var a}}           -              → {{var a}}                # strict raises UnknownVariableError; with NO variables at all the directive is passed through verbatim
-{{trans "Hello"}}   -              → Hello                    # but only the variable-reading directives do that - {{trans}} still runs
-{{var a}}           a=["x","y"]    → Array                    # strict: (nothing); an array is cast to the string "Array"
+{{var a}}           a="<b>&</b>"   → &lt;b&gt;&amp;&lt;/b&gt;    # escaped by default
+{{var a}}           a=null         → (nothing)                   # a variable set to null renders as nothing
+{{var nope}}        a=1            → (nothing)                   # strict raises UnknownVariableError; an unknown variable renders as nothing, silently
+{{var a}}           -              → {{var a}}                   # strict raises UnknownVariableError; with NO variables at all the directive is passed through verbatim
+{{trans "Hello"}}   -              → Hello                       # but only the variable-reading directives do that - {{trans}} still runs
+{{var a}}           a=["x","y"]    → (the store's error message)  # strict: (nothing); an array is cast to a string with a warning, which a store's error handler makes an exception
 {{var a}}           a=0            → 0
 {{var a}}           a=true         → 1
-{{var a}}           a=false        → (nothing)                # false casts to the empty string
+{{var a}}           a=false        → (nothing)                   # false casts to the empty string
 ```
 <!-- /generated -->
 
@@ -84,23 +84,23 @@ renders the store when `store` is a string.
 
 <!-- generated:paths -->
 ```
-{{var a.b}}                    a={"b":"deep"}         → deep      # array key
-{{var a.b}}                    a={"x":1}              → (nothing)  # strict raises UnknownVariableError; a missing key yields nothing, not the parent
-{{var c.name}}                 c=DataObject           → Ada       # an object is read through getData()
-{{var c.getName()}}            c=DataObject           → Ada       # a getter maps to getData("name") - it is never called
-{{var c.getAddress1()}}        c=DataObject           → Main St   # a run of digits is its own segment, so this reads address_1
-{{var c.getName("ignored")}}   c=DataObject           → Ada       # arguments are parsed and dropped
-{{var c.nested/q}}             c=DataObject           → DEEP      # a `/` inside a key is a path INSIDE the DataObject - getData() walks it, hasData() does not know the syntax
-{{var a . b}}                  a={"b":"deep"}         → deep      # whitespace anywhere in a path is skipped
-{{var .a}}                     a="Ada"                → Ada       # a leading dot is no action at all
+{{var a.b}}                    a={"b":"deep"}         → deep                        # array key
+{{var a.b}}                    a={"x":1}              → (the store's error message)  # strict raises UnknownVariableError; a missing ARRAY key is an "Undefined array key" warning - the same store error
+{{var c.name}}                 c=DataObject           → Ada                         # an object is read through getData()
+{{var c.getName()}}            c=DataObject           → Ada                         # a getter maps to getData("name") - it is never called
+{{var c.getAddress1()}}        c=DataObject           → Main St                     # a run of digits is its own segment, so this reads address_1
+{{var c.getName("ignored")}}   c=DataObject           → Ada                         # arguments are parsed and dropped
+{{var c.nested/q}}             c=DataObject           → DEEP                        # a `/` inside a key is a path INSIDE the DataObject - getData() walks it, hasData() does not know the syntax
+{{var a . b}}                  a={"b":"deep"}         → deep                        # whitespace anywhere in a path is skipped
+{{var .a}}                     a="Ada"                → Ada                         # a leading dot is no action at all
 {{var a..b}}                   a={"b":"deep"}         → deep
-{{var a%2Eb}}                  a={"b":"deep"}         → deep      # the path is rawurldecode()d before it is split
-{{var a.b}}                    a="scalar"             → scalar    # strict raises UnknownVariableError; member access is not attempted on a scalar, so the parent itself is the result
-{{var a.b.c}}                  a={"b":{"c":"deep"}}   → deep      # paths nest freely
-{{var a b}}                    ab="AB"                → AB        # whitespace ANYWHERE in a name is skipped, not just at the edges
-{{var a()}}                    a="Ada"                → Ada       # a call at the HEAD of a path is the variable itself - the type is ignored there
-{{var c.get()}}                c=DataObject           → Array     # strict: (nothing); .get() maps to getData("") and hands back the whole data bag
-{{var a.getB(}}                a={"b":1}              → !Error    # strict raises UnknownVariableError; an UNCLOSED call is still a call - on an array parent legacy raises, so this is refused
+{{var a%2Eb}}                  a={"b":"deep"}         → deep                        # the path is rawurldecode()d before it is split
+{{var a.b}}                    a="scalar"             → scalar                      # strict raises UnknownVariableError; member access is not attempted on a scalar, so the parent itself is the result
+{{var a.b.c}}                  a={"b":{"c":"deep"}}   → deep                        # paths nest freely
+{{var a b}}                    ab="AB"                → AB                          # whitespace ANYWHERE in a name is skipped, not just at the edges
+{{var a()}}                    a="Ada"                → Ada                         # a call at the HEAD of a path is the variable itself - the type is ignored there
+{{var c.get()}}                c=DataObject           → (the store's error message)  # strict: (nothing); .get() maps to getData("") and hands back the whole data bag, an array - the same store error
+{{var a.getB(}}                a={"b":1}              → !Error                      # strict raises UnknownVariableError; an UNCLOSED call is still a call - on an array parent legacy raises, so this is refused
 ```
 <!-- /generated -->
 
@@ -281,8 +281,9 @@ filename.
 The include is rendered as a child template with its own filter, not pasted into the parent.
 Its scope is the directive's parameters merged over the parent's variables — and the merge is
 `array_merge_recursive`, so a parameter whose name **collides** with an existing variable
-produces an *array of both values* rather than overriding it. That array then casts to the
-string `Array`, which is the usual way this is discovered.
+produces an *array of both values* rather than overriding it. `{{var}}` of that array is a
+PHP warning, which a store's error handler turns into the Email filter's error message in
+place of the whole email - which is the usual way this is discovered.
 
 A `config_path` that is **absent** renders the literal `{Error in template processing}`, and
 so does a template with no include processor wired. A path that is present but resolves to no
@@ -293,7 +294,7 @@ for an unknown path, which is the one example here that is not the filter's own 
 <!-- generated:template -->
 ```
 {{template config_path="greet"}}             a="Ada"   → Hi Ada                              # the include is rendered with the parent's variables
-{{template config_path="greet" a="Bob"}}     a="Ada"   → Hi Array                            # a parameter COLLIDING with a parent variable becomes an array of both - legacy merges recursively
+{{template config_path="greet" a="Bob"}}     a="Ada"   → (the store's error message)         # a parameter COLLIDING with a parent variable becomes an array of both - legacy merges recursively, and {{var}} of an array is the store error
 {{template config_path="greet" who="Bob"}}   a="Ada"   → Hi Bob                              # a parameter that does not collide is just a variable
 {{template config_path="greet" who=$a}}      a="Ada"   → Hi Ada                              # a `$` parameter resolves before the include runs
 {{template}}                                 -         → &#123;Error in template processing}  # a missing config_path renders this literal - the leading brace is encoded by the neutralizer
@@ -364,7 +365,7 @@ walk.
 {{depend a}}{{if a}}{{for i in a}}[{{var i.b}}]{{/for}}{{/if}}{{/depend}}   a=[{"b":"x"}]   → [x]                                                        # depend > if > for
 {{for i in a}}{{if i.b}}[{{var i.b}}]{{/if}}{{/for}}                        a=[{"b":"x"}]   → x                                                          # but {{for}} OUTERMOST does not nest - its body is scanned, not rendered
 {{if a}}{{depend a}}{{for i in a}}[{{var i.b}}]{{/for}}{{/depend}}{{/if}}   a=1             → &#123;&#123;for i in a}}[&#123;&#123;var i.b}}]&#123;&#...  # strict raises TemplateTypeError; and a non-iterable collection leaves the innermost {{for}} verbatim, so nothing nests through it
-{{if a}}{{if a}}Y{{/if}}{{/if}}                                             a=1             → !TypeError                                                 # strict: Y; a directive cannot contain ITSELF - the inner close ends the outer
+{{if a}}{{if a}}Y{{/if}}{{/if}}                                             a=1             → (the store's error message)                                # strict: Y; a directive cannot contain ITSELF - the inner close ends the outer
 {{depend a}}{{if a}}Y{{/if}}{{/depend}}                                     a=1             → Y
 ```
 <!-- /generated -->

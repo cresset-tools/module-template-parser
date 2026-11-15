@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console;
+namespace MageOS\TemplateParser\Console;
 
-use Cresset\TemplateParser\Options;
+use MageOS\TemplateParser\Options;
 
 /**
  * The three engine postures, as a CLI-facing choice - `--posture` on the commands.

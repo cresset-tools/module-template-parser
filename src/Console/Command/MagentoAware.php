@@ -1,14 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Console\Command;
+namespace MageOS\TemplateParser\Console\Command;
 
-use Cresset\TemplateParser\Console\MagentoContext;
-use Cresset\TemplateParser\Console\Mode;
-use Cresset\TemplateParser\Magento\AllowlistedLayoutRenderer;
+use MageOS\TemplateParser\Console\MagentoContext;
+use MageOS\TemplateParser\Console\Mode;
+use MageOS\TemplateParser\Magento\AllowlistedLayoutRenderer;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -55,44 +54,13 @@ trait MagentoAware
             InputOption::VALUE_REQUIRED,
             'Engine posture: ' . implode(', ', Mode::names()) . ' [default: compatible, what Parser mode runs]'
         );
-        $this->addOption(
-            'mode',
-            'm',
-            InputOption::VALUE_REQUIRED,
-            'Deprecated spelling of --posture; removed in the next release'
-        );
-
         return $this;
     }
 
-    /**
-     * Reads --posture, or the deprecated --mode, before any work starts.
-     *
-     * The warning goes to stderr so a `--format=json` run still prints only JSON.
-     */
+    /** Reads --posture before any work starts. */
     protected function posture(InputInterface $input, OutputInterface $output): Mode
     {
-        $posture = $input->getOption('posture');
-        $legacy = $input->getOption('mode');
-
-        if ($legacy !== null) {
-            // 0.2 read "legacy" as compatible; honour that on the old option only.
-            if (strtolower(trim((string)$legacy)) === 'legacy') {
-                $legacy = Mode::Compatible->value;
-            }
-            $errors = $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output;
-            $errors->writeln('<comment>--mode is deprecated; use --posture. It will be removed in the next release.</comment>');
-
-            if ($posture !== null && Mode::parse((string)$posture) !== Mode::parse((string)$legacy)) {
-                throw new \InvalidArgumentException(sprintf(
-                    '--posture=%s and --mode=%s disagree; pass only --posture.',
-                    (string)$posture,
-                    (string)$legacy
-                ));
-            }
-        }
-
-        return Mode::parse((string)($posture ?? $legacy ?? Mode::Compatible->value));
+        return Mode::parse((string)($input->getOption('posture') ?? Mode::Compatible->value));
     }
 
     /**

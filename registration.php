@@ -9,5 +9,5 @@ use Magento\Framework\Component\ComponentRegistrar;
  * `composer require` outside a Magento install from fataling on a missing class.
  */
 if (class_exists(ComponentRegistrar::class)) {
-    ComponentRegistrar::register(ComponentRegistrar::MODULE, 'Cresset_TemplateParser', __DIR__);
+    ComponentRegistrar::register(ComponentRegistrar::MODULE, 'MageOS_TemplateParser', __DIR__);
 }

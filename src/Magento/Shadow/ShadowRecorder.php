@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Cresset\TemplateParser\Magento\Shadow;
+namespace MageOS\TemplateParser\Magento\Shadow;
 
 use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Records Shadow outcomes in `cresset_template_shadow`, one row per store view and template.
+ * Records Shadow outcomes in `mageos_template_parser_shadow`, one row per store view and template.
  *
  * And Parser's: every render Parser mode served (`served`), every one it handed to legacy
  * (`fell_back`, alongside the refusal or crash that caused it), and the outcome of every
@@ -27,6 +27,9 @@ use Psr\Log\LoggerInterface;
  *   bug in this engine rather than a property of the template, and not evidence for it;
  * - an agreement or a refusal adds one. A refusal counts as clean because Parser mode falls
  *   back to legacy for it, so the customer gets exactly what they get today;
+ * - so does a deliberate difference (`deliberate`): on a filter from before the output
+ *   neutralizer, a render that differs only where that filter re-parses a value, and where
+ *   this engine's output is the one meant - see DeliberateDifference;
  * - "clean since" is `last_divergence_at`, or `first_seen` for a template that never diverged.
  *
  * Aggregated in memory and written in one INSERT ... ON DUPLICATE KEY UPDATE, so a page that
@@ -37,14 +40,16 @@ use Psr\Log\LoggerInterface;
  * cron run or queue consumer that lives for hours reports as it goes and holds a bounded
  * buffer.
  *
- * Recording must never cost a render. Every failure is caught; the first is logged as a
- * warning and the rest are not, so a missing table does not write a line per page view. A
+ * Recording must never cost a render. Every failure is caught; the first in each PHP process
+ * is logged as a warning and the rest are not, so a missing table does not write a line per
+ * page view. Per process rather than per instance: a DI-shared instance lives for one request,
+ * so "once" per instance was once per page view after all. A
  * batch that fails to write is dropped rather than retried: holding it would grow without
  * bound against a database that is not coming back.
  */
 class ShadowRecorder
 {
-    public const TABLE = 'cresset_template_shadow';
+    public const TABLE = 'mageos_template_parser_shadow';
 
     public const FLUSH_AT_ROWS = 100;
     public const FLUSH_AFTER_SECONDS = 60;
@@ -54,7 +59,7 @@ class ShadowRecorder
 
     private const COLUMNS = [
         'store_id', 'template',
-        'agreed', 'diverged', 'refused', 'crashed', 'served', 'fell_back',
+        'agreed', 'diverged', 'refused', 'crashed', 'deliberate', 'served', 'fell_back',
         'first_seen', 'last_seen',
         'last_divergence_at', 'renders_since_divergence',
         'last_divergence', 'last_refusal', 'last_crash',
@@ -67,7 +72,8 @@ class ShadowRecorder
 
     private bool $shutdownRegistered = false;
 
-    private bool $warned = false;
+    /** Per process - see the class docblock. */
+    private static bool $warned = false;
 
     /** @var \Closure():int */
     private \Closure $clock;
@@ -166,6 +172,7 @@ class ShadowRecorder
             'diverged' => 0,
             'refused' => 0,
             'crashed' => 0,
+            'deliberate' => 0,
             'served' => 0,
             'fell_back' => 0,
             'first_seen' => $now,
@@ -184,6 +191,12 @@ class ShadowRecorder
         switch ($outcome?->outcome) {
             case ShadowOutcome::AGREE:
                 $row['agreed']++;
+                $row['renders_since_divergence']++;
+                break;
+            case ShadowOutcome::DELIBERATE:
+                // This engine's output is the one meant - see DeliberateDifference - so it is
+                // as clean as an agreement, and counted apart so the report can say so.
+                $row['deliberate']++;
                 $row['renders_since_divergence']++;
                 break;
             case ShadowOutcome::REFUSED:
@@ -231,7 +244,7 @@ class ShadowRecorder
         }
 
         $update = [];
-        foreach (['agreed', 'diverged', 'refused', 'crashed', 'served', 'fell_back'] as $counter) {
+        foreach (['agreed', 'diverged', 'refused', 'crashed', 'deliberate', 'served', 'fell_back'] as $counter) {
             $update[] = sprintf('%1$s = %1$s + VALUES(%1$s)', $quote($counter));
         }
         $update[] = sprintf(
@@ -266,10 +279,10 @@ class ShadowRecorder
 
     private function warnOnce(\Throwable $e): void
     {
-        if ($this->warned) {
+        if (self::$warned) {
             return;
         }
-        $this->warned = true;
+        self::$warned = true;
 
         try {
             $this->logger->warning('template-parser shadow: could not record comparisons', [
